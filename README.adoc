@@ -1,0 +1,17 @@
+= unifi.id Platform
+
+== Build dependencies
+
+* Oracle JDK 9
+* Maven 3.5+
+* PostgreSQL 10.0+ with a `core` database, see below
+
+== Additional runtime dependencies
+* Redis 4.0+
+
+=== Schema generation
+
+The `unifi-core-schema` module requires a local postgres instance with a
+database named `core` in order to generate a jOOQ schema. This step can be
+skipped with `mvn -pl '!unifi-core-schema' ...` if `unifi-core-schema` is
+already installed.

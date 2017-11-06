@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>id.unifi.service</groupId>
+        <artifactId>unifi-service-parent</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>unifi-core</artifactId>
+
+    <name>unifi.id Core</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-core-schema</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.statemachinesystems</groupId>
+            <artifactId>envy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <!--
+                      To start the service, run `mvn install`, start postgres and then:
+
+                          mvn exec:java -pl -Dpostgres.user=<postgres username>
+                    -->
+                    <execution>
+                        <id>default-cli</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>id.unifi.service.core.CoreService</mainClass>
+                            <systemProperties>
+                                <!-- JVM config -->
+                                <property><key>user.timezone</key><value>UTC</value></property>
+                                <property><key>file.encoding</key><value>UTF-8</value></property>
+
+                                <!-- Core database config -->
+                                <property><key>core.jdbc.url</key><value>jdbc:postgresql:core</value></property>
+                                <property><key>core.jdbc.user</key><value>${postgres.user}</value></property>
+                                <property><key>core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
+                                <property><key>core.jooq.dialect</key><value>POSTGRES</value></property>
+                            </systemProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
