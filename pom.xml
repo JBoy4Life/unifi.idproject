@@ -237,24 +237,6 @@
                     <version>${exec.plugin.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>${enforcer.plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>enforce</id>
-                            <configuration>
-                                <rules>
-                                    <dependencyConvergence/>
-                                </rules>
-                            </configuration>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>${build.helper.plugin.version}</version>
@@ -281,6 +263,32 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${enforcer.plugin.version}</version>
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>9</version>
+                        </requireJavaVersion>
+                    </rules>
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
     </build>
 
     <profiles>
