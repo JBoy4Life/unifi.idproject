@@ -403,15 +403,70 @@
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>version-info</id>
+
+            <activation>
+                <file>
+                    <exists>src/main/resources/unifi-version.properties</exists>
+                </file>
+            </activation>
+
+            <properties>
+                <build.number>unknown</build.number><!-- to be replaced by CI -->
+            </properties>
+
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>false</filtering>
+                    </resource>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <includes>
+                            <include>unifi-version.properties</include>
+                        </includes>
+                        <filtering>true</filtering>
+                    </resource>
+                </resources>
+
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+
+                        <executions>
+                            <execution>
+                                <id>add-git-resources</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>add-resource</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>target/generated-resources</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <plugin>
                         <groupId>pl.project13.maven</groupId>
                         <artifactId>git-commit-id-plugin</artifactId>
                         <executions>
-                            <!--<execution>-->
-                                <!--<goals>-->
-                                    <!--<goal>revision</goal>-->
-                                <!--</goals>-->
-                            <!--</execution>-->
+                            <execution>
+                                <goals>
+                                    <goal>revision</goal>
+                                </goals>
+                            </execution>
                         </executions>
 
                         <configuration>
