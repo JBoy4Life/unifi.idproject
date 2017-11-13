@@ -4,10 +4,32 @@
 
 * Oracle JDK 9
 * Maven 3.5+
-* PostgreSQL 10.0+ with a `core` database, see below
+* PostgreSQL 9.6+ with a `core` database, see below
+* Redis 4.0+ (runtime only)
 
-== Additional runtime dependencies
-* Redis 4.0+
+Preferably, just set up a VM as described below.
+
+== Development VM setup
+
+Install https://www.virtualbox.org/wiki/Downloads[VirtualBox] and https://www.vagrantup.com/downloads.html[Vagrant] for your host OS.
+
+Then run:
+
+----
+vagrant up
+vagrant ssh
+cd unifi.id
+mvn clean install
+----
+
+To start again from a clean slate run `vagrant destroy`.
+
+Other useful commands on the VM:
+
+----
+psql -d core
+redis-cli
+----
 
 === Schema generation
 
