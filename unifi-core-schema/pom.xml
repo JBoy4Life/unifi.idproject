@@ -17,7 +17,6 @@
         <jdbc.url>jdbc:postgresql:unifi</jdbc.url>
         <jdbc.driver>org.postgresql.Driver</jdbc.driver>
         <jdbc.user>${user.name}</jdbc.user>
-        <jdbc.default.schema>PUBLIC</jdbc.default.schema>
         <jooq.package.name>id.unifi.service.core.db</jooq.package.name>
     </properties>
 

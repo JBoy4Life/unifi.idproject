@@ -320,7 +320,7 @@
                             <driver>${jdbc.driver}</driver>
                             <user>${jdbc.user}</user>
                             <schemas>
-                                <schema>${jdbc.default.schema}</schema>
+                                <schema>${schema.name}</schema>
                             </schemas>
                             <locations>
                                 <location>filesystem:${basedir}/src/main/resources/migrations/${schema.name}/postgres/</location>
