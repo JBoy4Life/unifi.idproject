@@ -1,4 +1,4 @@
-CREATE TABLE client(
+CREATE TABLE core.client(
   client_id    CITEXT NOT NULL,
   display_name VARCHAR(64),
   logo         BYTEA,

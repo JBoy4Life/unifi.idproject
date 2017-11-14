@@ -22,7 +22,7 @@ for hba_file in /etc/postgresql/*/main/pg_hba.conf; do
 done
 sudo systemctl reload postgresql
 sudo -u postgres createuser -s vagrant
-sudo -u vagrant createdb core
+sudo -u vagrant createdb unifi
 
 sudo -u vagrant ln -sf /vagrant ~vagrant/unifi.id
 BOOTSTRAP

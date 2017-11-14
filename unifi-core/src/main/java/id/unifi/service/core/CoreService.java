@@ -6,6 +6,7 @@ import id.unifi.service.core.db.Tables;
 import id.unifi.service.core.db.Database;
 import id.unifi.service.core.db.DatabaseConfig;
 import id.unifi.service.core.db.DatabaseUtils;
+import static id.unifi.service.core.db.Tables.CLIENT;
 import id.unifi.service.core.version.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +33,8 @@ public class CoreService {
         Database db = DatabaseUtils.prepareSqlDatabase(DatabaseUtils.CORE_DB_NAME, config.core());
         try {
             db.execute(sql -> {
-                sql.insertInto(Tables.CLIENT)
-                        .columns(Tables.CLIENT.CLIENT_ID, Tables.CLIENT.DISPLAY_NAME, Tables.CLIENT.LOGO)
+                sql.insertInto(CLIENT)
+                        .columns(CLIENT.CLIENT_ID, CLIENT.DISPLAY_NAME, CLIENT.LOGO)
                         .values("acme", "Acme Ltd", new byte[0])
                         .execute();
                 return null;

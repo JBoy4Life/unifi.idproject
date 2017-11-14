@@ -323,7 +323,7 @@
                                 <schema>${jdbc.default.schema}</schema>
                             </schemas>
                             <locations>
-                                <location>filesystem:${basedir}/src/main/resources/migrations/${db.name}/postgres/</location>
+                                <location>filesystem:${basedir}/src/main/resources/migrations/${schema.name}/postgres/</location>
                             </locations>
                         </configuration>
                         <dependencies>
@@ -358,7 +358,7 @@
                                     <name>org.jooq.util.postgres.PostgresDatabase</name>
                                     <includes>.*</includes>
                                     <excludes/>
-                                    <inputSchema>PUBLIC</inputSchema>
+                                    <inputSchema>${schema.name}</inputSchema>
                                     <forcedTypes>
                                         <forcedType>
                                             <name>CLOB</name>

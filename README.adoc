@@ -4,7 +4,7 @@
 
 * Oracle JDK 9
 * Maven 3.5+
-* PostgreSQL 9.6+ with a `core` database, see below
+* PostgreSQL 9.6+ with a `unifi` database, see below
 * Redis 4.0+ (runtime only)
 
 Preferably, just set up a VM as described below.
@@ -27,13 +27,13 @@ To start again from a clean slate run `vagrant destroy`.
 Other useful commands on the VM:
 
 ----
-psql -d core
+psql -d unifi
 redis-cli
 ----
 
 === Schema generation
 
 The `unifi-core-schema` module requires a local postgres instance with a
-database named `core` in order to generate a jOOQ schema. This step can be
+database named `unifi` in order to generate a jOOQ schema. This step can be
 skipped with `mvn -pl '!unifi-core-schema' ...` if `unifi-core-schema` is
 already installed.

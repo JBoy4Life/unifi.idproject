@@ -13,8 +13,8 @@
     <name>unifi.id Core Database Schema</name>
 
     <properties>
-        <db.name>core</db.name>
-        <jdbc.url>jdbc:postgresql:core</jdbc.url>
+        <schema.name>core</schema.name>
+        <jdbc.url>jdbc:postgresql:unifi</jdbc.url>
         <jdbc.driver>org.postgresql.Driver</jdbc.driver>
         <jdbc.user>${user.name}</jdbc.user>
         <jdbc.default.schema>PUBLIC</jdbc.default.schema>
