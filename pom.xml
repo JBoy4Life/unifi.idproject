@@ -14,9 +14,11 @@
         <module>unifi-core-schema</module>
         <module>unifi-common</module>
         <module>unifi-core-detection-injector</module>
-        <module>unifi-core-detection-processor</module>
-        <module>unifi-core-event-processor</module>
+        <module>unifi-core-agent</module>
+        <module>unifi-core-matcher</module>
         <module>unifi-core-web</module>
+        <module>unifi-provider-rfid</module>
+        <module>octane-sdk</module>
     </modules>
 
     <properties>
@@ -25,8 +27,12 @@
         <java.target.version>9</java.target.version>
         <postgres.user>${user.name}</postgres.user>
 
-        <llrp4j.version>1.0.6</llrp4j.version>
-        <guava.version>23.3-jre</guava.version>
+        <octane.version>1.28.0.1</octane.version>
+        <ltk.version>10.28.0.0</ltk.version>
+        <jmdns.version>3.5.3</jmdns.version>
+        <mina.version>2.0.16</mina.version>
+        <velocity.version>1.7</velocity.version>
+        <guava.version>23.4-jre</guava.version>
         <jooq.version>3.10.1</jooq.version>
         <jsr205.version>1.0</jsr205.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
@@ -40,7 +46,7 @@
         <logback.version>1.2.3</logback.version>
         <jmustache.version>1.13</jmustache.version>
         <scrypt.version>1.4.0</scrypt.version>
-        <junit.jupiter.version>5.0.1</junit.jupiter.version>
+        <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.platform.version>1.0.1</junit.platform.version>
         <hamcrest.version>2.0.0.0</hamcrest.version>
 
@@ -65,14 +71,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>net.enilink.llrp4j</groupId>
-                <artifactId>llrp4j-net</artifactId>
-                <version>${llrp4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.enilink.llrp4j</groupId>
-                <artifactId>llrp4j-impinj-module</artifactId>
-                <version>${llrp4j.version}</version>
+                <groupId>org.jmdns</groupId>
+                <artifactId>jmdns</artifactId>
+                <version>${jmdns.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
