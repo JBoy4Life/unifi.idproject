@@ -13,10 +13,7 @@
         <module>unifi-core</module>
         <module>unifi-core-schema</module>
         <module>unifi-common</module>
-        <module>unifi-core-detection-injector</module>
         <module>unifi-core-agent</module>
-        <module>unifi-core-matcher</module>
-        <module>unifi-core-web</module>
         <module>unifi-provider-rfid</module>
         <module>octane-sdk</module>
     </modules>
