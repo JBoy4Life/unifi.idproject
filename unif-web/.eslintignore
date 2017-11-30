@@ -1,0 +1,8 @@
+node_modules
+.git
+scripts
+dist
+public
+config
+src/registerServiceWorker.js
+coverage
