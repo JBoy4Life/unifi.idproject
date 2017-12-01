@@ -8,7 +8,7 @@ export default class WebSocketPackage {
       apiVersion,
       protocolVersion,
       type,
-      corelationId: uuid4(),
+      corelationId: btoa(uuid4()),
       payload,
     }
   }
