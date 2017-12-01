@@ -9,6 +9,7 @@ public class DatabaseUtils {
 
     public static Database prepareSqlDatabase(String dbName, DatabaseConfig config) {
         Database db = getSqlDatabase(dbName, config);
+        db.execute(sql -> sql.execute("CREATE EXTENSION IF NOT EXISTS citext"));
         db.migrate();
         return db;
     }

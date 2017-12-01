@@ -5,13 +5,14 @@
 * Oracle JDK 9
 * Maven 3.5+
 * PostgreSQL 9.6+ with a `unifi` database, see below
-* Redis 4.0+ (runtime only)
+* RabbitMQ (runtime only)
 
 Preferably, just set up a VM as described below.
 
 == Development VM setup
 
-Install https://www.virtualbox.org/wiki/Downloads[VirtualBox] and https://www.vagrantup.com/downloads.html[Vagrant] for your host OS.
+Install https://www.virtualbox.org/wiki/Downloads[VirtualBox] and
+https://www.vagrantup.com/downloads.html[Vagrant] for your host OS.
 
 Then run:
 
@@ -20,7 +21,17 @@ vagrant up
 vagrant ssh
 cd unifi.id/unifi-service
 mvn clean install
+
+mvn exec:java -pl unifi-core
 ----
+
+Then connect to the server via the following URLs:
+
+* For MessagePack: ws://127.0.0.1:8000/service/msgpack
+* For JSON: ws://127.0.0.1:8000/service/json
+
+If the SQL schema has changed and migration fails you can recreate the database
+as follows: `dropdb unifi && createdb unifi`
 
 To start again from a clean slate run `vagrant destroy`.
 
@@ -28,7 +39,6 @@ Other useful commands on the VM:
 
 ----
 psql -d unifi
-redis-cli
 ----
 
 === Schema generation

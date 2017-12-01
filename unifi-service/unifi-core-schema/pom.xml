@@ -14,7 +14,7 @@
 
     <properties>
         <schema.name>core</schema.name>
-        <jdbc.url>jdbc:postgresql:unifi</jdbc.url>
+        <jdbc.url>jdbc:postgresql:unifi?currentSchema=core</jdbc.url>
         <jdbc.driver>org.postgresql.Driver</jdbc.driver>
         <jdbc.user>${user.name}</jdbc.user>
         <jooq.package.name>id.unifi.service.core.db</jooq.package.name>
