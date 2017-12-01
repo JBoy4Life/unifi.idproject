@@ -21,7 +21,8 @@ for hba_file in /etc/postgresql/*/main/pg_hba.conf; do
   echo "local all all trust\nhost all all 0.0.0.0/0 trust" > "$hba_file"
 done
 sudo systemctl reload postgresql
-sudo -u postgres createuser -s vagrant
+sudo -u postgres createuser -s vagrant || true
+sudo -u vagrant dropdb --if-exists unifi
 sudo -u vagrant createdb unifi
 
 sudo -u vagrant ln -sf /vagrant ~vagrant/unifi.id
@@ -33,7 +34,7 @@ unifi.id services development VM
 
 Now run `vagrant ssh` to get into the VM, then:
 
-    cd unifi.id
+    cd unifi.id/unifi-services
     mvn clean install
 MSG
 
@@ -41,5 +42,6 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/stretch64"
   config.vm.hostname = "unifi-services.box"
   config.vm.provision :shell, :inline => $bootstrap_script
+  config.vm.network :forwarded_port, guest: 8000, host: 8000
   config.vm.post_up_message = $post_up_msg
 end

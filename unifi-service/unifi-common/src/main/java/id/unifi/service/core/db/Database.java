@@ -60,9 +60,10 @@ public class Database {
     private Flyway getMigrator() {
         Flyway migrator = new Flyway();
         migrator.setDataSource(dataSource);
+        migrator.setSchemas("core");
 
         String dialectPathName = dialect.toString().toLowerCase();
-        migrator.setLocations("classpath:migrations/" + dbName + "/" + dialectPathName);
+        migrator.setLocations("classpath:migrations/" + "core" + "/" + dialectPathName);
 
         return migrator;
     }

@@ -73,7 +73,7 @@
                                 <property><key>file.encoding</key><value>UTF-8</value></property>
 
                                 <!-- Core database config -->
-                                <property><key>core.jdbc.url</key><value>jdbc:postgresql:core</value></property>
+                                <property><key>core.jdbc.url</key><value>jdbc:postgresql:unifi?currentSchema=core</value></property>
                                 <property><key>core.jdbc.user</key><value>${postgres.user}</value></property>
                                 <property><key>core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
                                 <property><key>core.jooq.dialect</key><value>POSTGRES</value></property>
