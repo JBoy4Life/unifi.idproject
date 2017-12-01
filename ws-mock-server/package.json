@@ -1,0 +1,12 @@
+{
+  "name": "ws-mock-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "dependencies": {
+    "msgpack-lite": "^0.1.26",
+    "ws": "^3.3.2"
+  }
+}

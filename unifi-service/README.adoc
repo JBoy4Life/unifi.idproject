@@ -18,7 +18,7 @@ Then run:
 ----
 vagrant up
 vagrant ssh
-cd unifi.id
+cd unifi.id/unifi-service
 mvn clean install
 ----
 
