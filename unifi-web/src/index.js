@@ -20,7 +20,7 @@ wsProtocol
     })
 
     wsProtocol
-      .request(pack)
+      .request(pack.content)
       .then((response) => {
         console.log('received response for', pack.content.corelationId, response)
       })

@@ -20,10 +20,10 @@ export default class WebSocketLayer {
   }
 
   close() {
-
+    this.socket.close()
   }
 
-  listen(callback, parse = true) {
+  listen(callback, parse = true, message = 'message') {
     let handler = callback
     if (parse) {
       handler = (event) => {
@@ -33,12 +33,12 @@ export default class WebSocketLayer {
           })
       }
     }
-    this.socket.addEventListener('message', handler)
+    this.socket.addEventListener(message, handler)
     return handler
   }
 
-  unlisten(callback) {
-    this.socket.removeEventListener('message', callback)
+  unlisten(callback, message = 'message') {
+    this.socket.removeEventListener(message, callback)
   }
 
   encodeJSON(json) {
@@ -46,27 +46,33 @@ export default class WebSocketLayer {
   }
 
   decodeJSONFromBlob(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.addEventListener('load', () => {
-        resolve(msgpack.decode(new Uint8Array(reader.result, 0, reader.result.byteLength)))
+    if (typeof Blob !== 'undefined' && blob instanceof Blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.addEventListener('load', () => {
+          resolve(msgpack.decode(new Uint8Array(reader.result, 0, reader.result.byteLength)))
+        })
+        reader.addEventListener('error', () => {
+          reject(reader.error)
+        })
+        reader.addEventListener('abort', () => {
+          reject(reader.error)
+        })
+        reader.readAsArrayBuffer(blob)
       })
-      reader.addEventListener('error', () => {
-        reject(reader.error)
-      })
-      reader.addEventListener('abort', () => {
-        reject(reader.error)
-      })
-      reader.readAsArrayBuffer(blob)
-    })
+    } else if (typeof Buffer !== 'undefined' && blob instanceof Buffer) {
+      return Promise.resolve(msgpack.decode(new Uint8Array(blob)))
+    }
+
+    return Promise.reject(new Error({ message: 'Unsupported message type' }))
   }
 
-  send(message) {
-    if (typeof message !== 'object') {
+  send(content) {
+    if (typeof content !== 'object') {
       throw new Error('Only JSON objects are supported for sending via socket layer')
     }
 
-    this.socket.send(this.encodeJSON(message.content))
+    this.socket.send(this.encodeJSON(content))
   }
 
   sendEncoded(message) {
