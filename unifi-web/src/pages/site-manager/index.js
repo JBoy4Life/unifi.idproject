@@ -6,7 +6,7 @@ export default class SitemapContainer extends Component {
   render() {
     return (
       <PageContainer>
-        <h1>My Account</h1>
+        <h1>Site Manager</h1>
       </PageContainer>
     )
   }

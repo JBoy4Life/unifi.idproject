@@ -4,8 +4,7 @@ import PropTypes from 'prop-types'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 
-import { PageContainer } from '../../components'
-import { LoginForm } from '../../smart-components'
+import { PageContainer, LoginForm } from '../../smart-components'
 
 import { noop } from '../../utils/helpers'
 

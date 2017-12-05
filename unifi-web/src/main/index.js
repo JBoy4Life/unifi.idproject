@@ -6,7 +6,10 @@ import { Router, Route, Switch /* Redirect */ } from 'react-router'
 import store from './store'
 import * as ROUTES from '../utils/routes'
 
-import { NotFound, Sitemap, MyAccount, Login } from '../pages'
+import {
+  Evacuation, NotFound, Sitemap, MyAccount, Login,
+  Discovery, LiveView, SiteManager, Users, Navigation,
+} from '../pages'
 
 export default class Main extends Component {
   render() {
@@ -15,8 +18,14 @@ export default class Main extends Component {
         <Router history={createHistory()}>
           <Switch>
             <Route exact path={ROUTES.SITEMAP} component={Sitemap} />
-            <Route exact path={ROUTES.MY_ACCOUNT} component={MyAccount} />
             <Route exact path={ROUTES.LOGIN} component={Login} />
+            <Route exact path={ROUTES.MY_ACCOUNT} component={MyAccount} />
+            <Route exact path={ROUTES.DIRECTORY} component={Discovery} />
+            <Route exact path={ROUTES.EVACUATION} component={Evacuation} />
+            <Route exact path={ROUTES.LIVE_VIEW} component={LiveView} />
+            <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
+            <Route exact path={ROUTES.SITE_MANAGER} component={SiteManager} />
+            <Route exact path={ROUTES.USERS} component={Users} />
             <Route component={NotFound} />
           </Switch>
         </Router>

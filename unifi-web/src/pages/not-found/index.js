@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import { PageContainer } from '../../components'
+import { PageContainer } from '../../smart-components'
 
 export default class NotFoundContainer extends Component {
   render() {

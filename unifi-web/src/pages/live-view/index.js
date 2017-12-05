@@ -6,7 +6,7 @@ export default class SitemapContainer extends Component {
   render() {
     return (
       <PageContainer>
-        <h1>My Account</h1>
+        <h1>Live view</h1>
       </PageContainer>
     )
   }

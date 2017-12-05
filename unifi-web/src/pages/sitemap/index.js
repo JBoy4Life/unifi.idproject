@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 
 import * as ROUTES from '../../utils/routes'
-import { PageContainer } from '../../components'
+import { PageContainer } from '../../smart-components'
 
 
 export default class SitemapContainer extends Component {

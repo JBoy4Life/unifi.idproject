@@ -7,6 +7,8 @@ import Checkbox from './checkbox'
 
 import FormItem from './form-item'
 
+import { Row, Col } from './grid-row'
+
 export {
   Aux,
 
@@ -16,6 +18,8 @@ export {
   Checkbox,
 
   Button,
+
+  Row, Col,
 }
 
 export default null

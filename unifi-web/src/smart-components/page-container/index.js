@@ -1,12 +1,12 @@
 import React from 'react'
 
-import { TopNavigation } from '../'
+import { LinkedNavigationMenu } from '../'
 
 import './index.scss'
 
 const PageContainer = ({ className = '', children }) => (
   <div className={`${className} page-contianer`}>
-    <TopNavigation />
+    <LinkedNavigationMenu />
     {children}
   </div>
 )
