@@ -1,16 +1,21 @@
 import Aux from './aux'
 
-import TextInput from './text-input'
+import Button from './button'
 
-import FormItemWrapper from './form-item-wrapper'
+import TextInput from './text-input'
+import Checkbox from './checkbox'
+
+import FormItem from './form-item'
 
 export {
   Aux,
 
-  FormItemWrapper,
+  FormItem,
 
   TextInput,
+  Checkbox,
 
+  Button,
 }
 
 export default null

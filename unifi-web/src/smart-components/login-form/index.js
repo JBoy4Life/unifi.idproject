@@ -1,33 +1,47 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Field, reduxForm } from 'redux-form'
-import { TextInput } from '../../elements'
+import { TextField, CheckboxField } from '../../components'
+import { Button } from '../../elements'
 
-const FormInputText = ({
-  input, id, className, placeholder, alternate,
-}) => (
-  <TextInput
-    type="text"
-    id={id}
-    alternate={alternate}
-    {...input}
-    className={className}
-    placeholder={placeholder}
-  />
-)
+import validate from './validate'
 
 class LoginForm extends Component {
+  static propTypes = {
+    onSubmit: PropTypes.func,
+  }
+
   render() {
+    const { handleSubmit, onSubmit } = this.props
+
     return (
-      <div>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Field
-          name="name"
-          component={FormInputText}
+          name="username"
+          label="Username"
+          id="username"
+          component={TextField}
         />
-      </div>
+        <Field
+          name="password"
+          label="Password"
+          htmlType="password"
+          id="password"
+          component={TextField}
+        />
+        <Field
+          name="rememberme"
+          label="Remember me"
+          id="remember"
+          component={CheckboxField}
+        />
+        <Button htmlType="submit" type="primary">Login</Button>
+      </form>
     )
   }
 }
 
 export default reduxForm({
   form: 'login',
+  validate,
 })(LoginForm)

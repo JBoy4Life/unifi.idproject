@@ -4,8 +4,8 @@ import { TopNavigation } from '../'
 
 import './index.scss'
 
-const PageContainer = ({ children }) => (
-  <div className="page-contianer">
+const PageContainer = ({ className = '', children }) => (
+  <div className={`${className} page-contianer`}>
     <TopNavigation />
     {children}
   </div>
