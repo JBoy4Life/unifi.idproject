@@ -14,6 +14,7 @@ import { linkTo } from '@storybook/addon-links'
 import '../src/index.css'
 
 import './elements'
+import './components'
 
 // import { Button, Welcome } from '@storybook/react/demo'
 

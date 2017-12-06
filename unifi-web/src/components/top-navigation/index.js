@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
-import Menu from 'antd/lib/menu'
-import 'antd/lib/menu/style/index.css'
+import { Menu } from '../../elements'
 
 export default class TopNavigation extends Component {
   render() {

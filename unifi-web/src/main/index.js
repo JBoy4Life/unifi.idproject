@@ -21,7 +21,9 @@ export default class Main extends Component {
             <Route exact path={ROUTES.LOGIN} component={Login} />
             <Route exact path={ROUTES.MY_ACCOUNT} component={MyAccount} />
             <Route exact path={ROUTES.DIRECTORY} component={Discovery} />
-            <Route exact path={ROUTES.EVACUATION} component={Evacuation} />
+
+            <Route path={ROUTES.EVACUATION} component={Evacuation} />
+
             <Route exact path={ROUTES.LIVE_VIEW} component={LiveView} />
             <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
             <Route exact path={ROUTES.SITE_MANAGER} component={SiteManager} />
