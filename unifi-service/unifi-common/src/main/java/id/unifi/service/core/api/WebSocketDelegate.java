@@ -63,6 +63,7 @@ public class WebSocketDelegate {
 
     @OnWebSocketMessage
     public void onTextMessage(Session session, String message) {
+        log.info("Received text message, converting to binary");
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
         try (InputStream stream = new ByteArrayInputStream(bytes)) {
             onBinaryMessage(session, stream);
@@ -86,8 +87,10 @@ public class WebSocketDelegate {
             if (session.isOpen()) {
                 try {
                     if (protocol == Protocol.JSON) {
+                        log.info("Sending JSON response");
                         session.getRemote().sendString(new String(payload.array(), StandardCharsets.UTF_8), writeCallback);
                     } else {
+                        log.info("Sending MessagePack response");
                         session.getRemote().sendBytes(payload, writeCallback);
                     }
                 } catch (Exception e) {
@@ -95,6 +98,7 @@ public class WebSocketDelegate {
                 }
             }
         };
+        log.info("Dispatching call with " + protocol);
         dispatcher.dispatch(stream, protocol, returnChannel);
     }
 }

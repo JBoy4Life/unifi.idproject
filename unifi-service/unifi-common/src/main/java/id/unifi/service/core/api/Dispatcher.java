@@ -68,8 +68,11 @@ public class Dispatcher {
     public void dispatch(InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
         ObjectMapper om = protocol == Protocol.JSON ? jsonMapper : messagePackMapper;
         try {
+            log.info("Parsing request");
             JsonNode requestMessage = om.readTree(stream);
+            log.info("Request parsed: " + requestMessage);
             Message request = om.treeToValue(requestMessage, Message.class);
+            log.info("Request unmarshalled: " + request);
             String[] parts = request.messageType.split("\\.");
 
             String serviceName = parts[1];
@@ -92,14 +95,25 @@ public class Dispatcher {
 
             Object handler = handlerClass.getConstructor(Database.class).newInstance(db);
 
+            log.info("Invoking method " + method + " with: " + Arrays.toString(params));
             Object result = method.invoke(handler, params);
+            log.info("Method returned result: " + result);
 
             JsonNode payload = method.getReturnType().equals(Void.TYPE) ? null : om.valueToTree(result);
             Message response = new Message(request.protocolVersion, request.releaseVersion, request.correlationId, request.messageType + "-result", payload);
+            log.info("Response message: " + response);
             byte[] bytes = om.writeValueAsBytes(response);
+            log.info("Sending marshalled response: " + hex(bytes));
             returnChannel.send(ByteBuffer.wrap(bytes));
         } catch (IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String hex(byte[] array) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : array)
+            sb.append(String.format("%02x ", b));
+        return sb.toString();
     }
 }
