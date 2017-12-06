@@ -14,6 +14,7 @@ export default class WebSocketLayer {
   connect() {
     return new Promise((resolve, reject) => {
       this.socket = new WebSocket(this.wsConnectionURL)
+      this.socket.binaryType = 'blob'
       this.once('error', reject)
       this.once('open', resolve)
     })
@@ -27,6 +28,7 @@ export default class WebSocketLayer {
     let handler = callback
     if (parse) {
       handler = (event) => {
+        console.log('listen', event.data)
         this.decodeJSONFromBlob(event.data)
           .then((content) => {
             callback(event, content)
@@ -71,8 +73,12 @@ export default class WebSocketLayer {
     if (typeof content !== 'object') {
       throw new Error('Only JSON objects are supported for sending via socket layer')
     }
-
-    this.socket.send(this.encodeJSON(content))
+    const encodedContent = this.encodeJSON(content)
+    // console.log(content)
+    // console.log('sending encoded', encodedContent)
+    // console.log('buffer data view', encodedContent.buffer)
+    this.socket.send(encodedContent.buffer)
+    // this.socket.send(content)
   }
 
   sendEncoded(message) {

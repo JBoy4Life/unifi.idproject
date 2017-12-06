@@ -8,7 +8,7 @@ const dummyMessageHandler = (message, ws) => {
       setTimeout(() => {
         ws.send(
           msgpack.encode({
-            corelationId: message.corelationId,
+            correlationId: message.correlationId,
             payload: {
               message: "boop"
             }
@@ -19,7 +19,7 @@ const dummyMessageHandler = (message, ws) => {
     case 'hello': 
       ws.send(
         msgpack.encode({
-          corelationId: message.corelationId,
+          correlationId: message.correlationId,
           payload: {
             message: "world"
           }

@@ -57,36 +57,37 @@ export default class WebSocketProtocol {
   }
 
   handleMessage = (event, content) => {
-    const { corelationId } = content
-    const corelation = this.corelations[corelationId]
+    const { correlationId } = content
+    const corelation = this.corelations[correlationId]
     if (corelation) {
       if (corelation.callback) {
         corelation.callback(content)
       } else {
         corelation.resolve(content)
-        this.corelations[corelationId].handled = true
+        this.corelations[correlationId].handled = true
       }
     }
   }
 
   request(content) {
-    if (this.corelations[content.corelationId]) {
-      return this.corelations[content.corelationId].resource
+    console.log('request data', content)
+    if (this.corelations[content.correlationId]) {
+      return this.corelations[content.correlationId].resource
     }
 
     const resource = new Promise((resolve, reject) => {
-      this.corelations[content.corelationId] = {
+      this.corelations[content.correlationId] = {
         resolve, reject, content,
       }
       this.ws.send(content)
     })
 
-    this.corelations[content.corelationId].resource = resource
+    this.corelations[content.correlationId].resource = resource
     return resource
   }
 
   subscribe(content, callback) {
-    this.corelations[content.corelationId] = {
+    this.corelations[content.correlationId] = {
       callback, content,
     }
     this.ws.send(content)

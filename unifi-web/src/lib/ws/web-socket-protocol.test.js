@@ -55,11 +55,11 @@ describe('WSProtocol', () => {
 
   it('should support request response type messages', async () => {
     const mockServer = new Server('ws://localhost:8080')
-    const corelationId = '123456789'
+    const correlationId = '123456789'
     mockServer.on('connection', (ws) => {
       ws.on('message', () => {
         ws.send(msgpack.encode({
-          corelationId,
+          correlationId,
           payload: {
             message: 'boop',
           },
@@ -77,7 +77,7 @@ describe('WSProtocol', () => {
     instance.start()
 
     const response = await instance.request({
-      corelationId,
+      correlationId,
       payload: null,
     })
 
@@ -90,14 +90,14 @@ describe('WSProtocol', () => {
 
   it('should support subscription response type messages', async () => {
     const mockServer = new Server('ws://localhost:8080')
-    const corelationId = '123456789'
+    const correlationId = '123456789'
     mockServer.on('connection', (ws) => {
       ws.on('message', async () => {
         let i = 0
         await sleep(50)
         while (i < 3) {
           ws.send(msgpack.encode({
-            corelationId,
+            correlationId,
             payload: {
               message: 'boop',
             },
@@ -116,7 +116,7 @@ describe('WSProtocol', () => {
 
     let responseCount = 0
     instance.subscribe({
-      corelationId,
+      correlationId,
       payload: null,
     }, () => {
       responseCount += 1
