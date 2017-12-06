@@ -7,7 +7,8 @@ import Main from './main'
 import registerServiceWorker from './registerServiceWorker'
 import { WSProtocol, WSPackage } from './lib/ws'
 
-const wsProtocol = new WSProtocol({ url: 'ws://127.0.0.1:8000/service/msgpack' })
+// const wsProtocol = new WSProtocol({ url: 'ws://127.0.0.1:8000/service/msgpack' })
+const wsProtocol = new WSProtocol({ url: 'ws://127.0.0.1:8080' })
 
 wsProtocol
   .connect()

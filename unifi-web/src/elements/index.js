@@ -4,6 +4,7 @@ import Menu from './menu'
 
 import Button from './button'
 import Icon from './icon'
+import Table from './table'
 
 import TextInput from './text-input'
 import Checkbox from './checkbox'
@@ -16,6 +17,7 @@ export {
   Aux,
 
   Menu,
+  Table,
 
   FormItem,
 

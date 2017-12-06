@@ -4,6 +4,8 @@
  */
 import msgpack from 'msgpack-lite'
 
+const binarryCodec = msgpack.createCodec({ binarraybuffer: true, preset: true })
+
 export default class WebSocketLayer {
   constructor(wsConnectionURL) {
     this.wsConnectionURL = wsConnectionURL
@@ -14,7 +16,7 @@ export default class WebSocketLayer {
   connect() {
     return new Promise((resolve, reject) => {
       this.socket = new WebSocket(this.wsConnectionURL)
-      this.socket.binaryType = 'blob'
+      this.socket.binaryType = 'arraybuffer'
       this.once('error', reject)
       this.once('open', resolve)
     })
@@ -44,11 +46,11 @@ export default class WebSocketLayer {
   }
 
   encodeJSON(json) {
-    return msgpack.encode(json)
+    return msgpack.encode(json, { codec: binarryCodec })
   }
 
-  decodeJSONFromBlob(blob) {
-    if (typeof Blob !== 'undefined' && blob instanceof Blob) {
+  decodeJSONFromBlob(response) {
+    if (typeof Blob !== 'undefined' && response instanceof Blob) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.addEventListener('load', () => {
@@ -60,10 +62,12 @@ export default class WebSocketLayer {
         reader.addEventListener('abort', () => {
           reject(reader.error)
         })
-        reader.readAsArrayBuffer(blob)
+        reader.readAsArrayBuffer(response)
       })
-    } else if (typeof Buffer !== 'undefined' && blob instanceof Buffer) {
-      return Promise.resolve(msgpack.decode(new Uint8Array(blob)))
+    } else if (typeof Buffer !== 'undefined' && response instanceof Buffer) {
+      return Promise.resolve(msgpack.decode(new Uint8Array(response)))
+    } else if (typeof ArrayBuffer !== 'undefined' && response instanceof ArrayBuffer) {
+      return Promise.resolve(msgpack.decode(new Uint8Array(response)))
     }
 
     return Promise.reject(new Error({ message: 'Unsupported message type' }))
@@ -78,6 +82,7 @@ export default class WebSocketLayer {
     // console.log('sending encoded', encodedContent)
     // console.log('buffer data view', encodedContent.buffer)
     this.socket.send(encodedContent.buffer)
+    // console.log(JSON.stringify(encodedContent))
     // this.socket.send(content)
   }
 
