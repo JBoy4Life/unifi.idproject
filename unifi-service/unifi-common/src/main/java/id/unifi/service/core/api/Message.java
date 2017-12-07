@@ -14,21 +14,21 @@ public class Message {
     public final JsonNode payload;
 
     public static class Version {
-        public final short major;
-        public final short minor;
-        public final short revision;
+        public final int major;
+        public final int minor;
+        public final int revision;
 
         private final Pattern versionSplitter = Pattern.compile("\\.");
 
         @JsonCreator
         public Version(String version) {
             String[] split = versionSplitter.split(version, 3);
-            this.major = Short.parseShort(split[0]);
-            this.minor = Short.parseShort(split[1]);
-            this.revision = Short.parseShort(split[2]);
+            this.major = Integer.parseInt(split[0]);
+            this.minor = Integer.parseInt(split[1]);
+            this.revision = Integer.parseInt(split[2]);
         }
 
-        public Version(short major, short minor, short revision) {
+        public Version(int major, int minor, int revision) {
             this.major = major;
             this.minor = minor;
             this.revision = revision;

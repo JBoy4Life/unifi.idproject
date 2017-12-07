@@ -6,7 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ApiService {
-    String value();
+@Target(ElementType.METHOD)
+public @interface ApiOperation {
+    String name() default "";
+    String resultType() default "";
 }

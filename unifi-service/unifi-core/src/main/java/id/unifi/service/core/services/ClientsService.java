@@ -1,5 +1,6 @@
 package id.unifi.service.core.services;
 
+import id.unifi.service.core.api.annotations.ApiOperation;
 import id.unifi.service.core.api.annotations.ApiService;
 import id.unifi.service.core.db.Database;
 import static id.unifi.service.core.db.Tables.CLIENT;
@@ -40,6 +41,7 @@ public class ClientsService {
         }
     }
 
+    @ApiOperation
     public List<Client> listClients() {
         log.info("Listing clients");
         return db.execute(sql -> sql.selectFrom(CLIENT).fetch().stream()
@@ -47,6 +49,7 @@ public class ClientsService {
                 .collect(toList()));
     }
 
+    @ApiOperation
     public void registerClient(String clientId, String displayName, byte[] logo) {
         log.info("Registering client " + clientId);
         db.execute(sql -> sql.insertInto(CLIENT, CLIENT.CLIENT_ID, CLIENT.DISPLAY_NAME, CLIENT.LOGO)
