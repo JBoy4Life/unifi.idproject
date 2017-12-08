@@ -4,6 +4,8 @@ import PropTypes from 'prop-types'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 
+import { PageContent } from '../../components'
+
 import { PageContainer, LoginForm } from '../../smart-components'
 
 import { noop } from '../../utils/helpers'
@@ -27,10 +29,14 @@ class LoginContainer extends Component {
   render() {
     return (
       <PageContainer className="login-page">
-        <h1>Login</h1>
-        <div className="login-form-container">
-          <LoginForm onSubmit={this.handleLoginFormSubmit} />
-        </div>
+        <PageContent>
+          <PageContent.Main>
+            <h1>Login</h1>
+            <div className="login-form-container">
+              <LoginForm onSubmit={this.handleLoginFormSubmit} />
+            </div>
+          </PageContent.Main>
+        </PageContent>
       </PageContainer>
     )
   }

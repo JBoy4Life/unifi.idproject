@@ -1,44 +1,27 @@
 import React from 'react'
 
-import { Row, Col } from '../../elements'
+import { Layout, Aux } from '../../elements'
 
-export const Sidebar = ({ children }) => (
-  <div className="page-sidebar">
-    {children}
-  </div>
-)
+import './index.scss'
 
-export const Main = ({ children }) => (
-  <div className="page-content">
-    {children}
-  </div>
-)
 
-const hasSidebar = (children) => {
-  let found = false
-  React.Children
-    .forEach(children, (child) => {
+const { Sider, Content } = Layout
+
+export const Sidebar = ({ children }) => (<Aux>{children}</Aux>)
+
+export const Main = ({ children }) => (<Aux>{children}</Aux>)
+
+const PageContent = ({ children }) => (
+  <Layout className="page-content-layout">
+    {React.Children.map(children, (child) => {
       if (child.type === Sidebar) {
-        found = true
-      }
-    })
-  return found
-}
-
-const PageContent = ({ children }) => {
-  const contentSpan = hasSidebar(children) ? 21 : 24
-  return (
-    <Row className="page-content" gutter={16}>
-      {React.Children.map(children, (child) => {
-      if (child.type === Sidebar) {
-        return <Col span={3}>{child}</Col>
+        return <Sider className="page-sidebar">{child}</Sider>
       }
 
-      return <Col span={contentSpan}>{child}</Col>
+      return <Content className="page-content">{child}</Content>
     })}
-    </Row>
-  )
-}
+  </Layout>
+)
 
 PageContent.Main = Main
 PageContent.Sidebar = Sidebar

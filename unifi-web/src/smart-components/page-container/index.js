@@ -1,14 +1,25 @@
 import React from 'react'
 
 import { LinkedNavigationMenu } from '../'
+import { Layout } from '../../elements'
 
 import './index.scss'
 
+
+const { Header, Content, Footer } = Layout
+
 const PageContainer = ({ className = '', children }) => (
-  <div className={`${className} page-contianer`}>
-    <LinkedNavigationMenu />
-    {children}
-  </div>
+  <Layout className={`${className} page-contianer`}>
+    <Header style={{ position: 'fixed', width: '100%' }}>
+      <LinkedNavigationMenu />
+    </Header>
+    <Content className="main-content-container">
+      {children}
+    </Content>
+    <Footer style={{ textAlign: 'center' }}>
+      ©2017
+    </Footer>
+  </Layout>
 )
 
 export default PageContainer

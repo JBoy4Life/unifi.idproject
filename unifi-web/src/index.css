@@ -58,3 +58,14 @@ th {
 body {
   font-family: 'Open Sans', sans-serif;
 }
+
+html, body {
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  overflow: auto;
+  flex-flow: column;
+}

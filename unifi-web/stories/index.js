@@ -7,14 +7,19 @@
 */
 import React from 'react'
 
-import { storiesOf } from '@storybook/react'
+import { storiesOf, addDecorator } from '@storybook/react'
 import { action } from '@storybook/addon-actions'
 import { linkTo } from '@storybook/addon-links'
 
 import '../src/index.css'
 
-import './elements'
-import './components'
+import reduxProvider from './decorators/redux-provider'
+
+addDecorator(reduxProvider)
+
+require('./elements')
+require('./components')
+require('./forms')
 
 // import { Button, Welcome } from '@storybook/react/demo'
 

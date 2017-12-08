@@ -1,10 +1,13 @@
 import React, { Component } from 'react'
 import { Menu } from '../../elements'
 
+import './index.scss'
+
 export default class TopNavigation extends Component {
   render() {
     return (
       <Menu
+        className="top-navigation"
         onClick={this.props.onMenuClick}
         selectedKeys={this.props.selectedKeys}
         mode="horizontal"
