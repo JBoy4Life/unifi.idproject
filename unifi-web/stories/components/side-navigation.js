@@ -32,7 +32,7 @@ const menus = [{
 const menusWithIcons = [{
   key: '/evacuation',
   label: 'Dashboard',
-  icon: 'pie-chart',
+  icon: 'piechart',
 },
 {
   key: '/evacuation/directory',
@@ -49,6 +49,6 @@ storiesOf('Components/Side navigation', module)
   .add('default', () => (
     <SideNavigation menus={menus} selectedKeys={['/evacuation/floor']} />
   ))
-  .add('with icons [borken for now]', () => (
+  .add('with icons', () => (
     <SideNavigation menus={menusWithIcons} selectedKeys={['/evacuation/directory']} />
   ))
