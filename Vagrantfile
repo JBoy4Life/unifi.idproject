@@ -49,6 +49,6 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/stretch64"
   config.vm.hostname = "unifi-services.box"
   config.vm.provision :shell, :inline => $bootstrap_script
-  config.vm.network :forwarded_port, guest: 8000, host: 8000
+  config.vm.network "public_network"
   config.vm.post_up_message = $post_up_msg
 end
