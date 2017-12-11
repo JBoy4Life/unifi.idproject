@@ -9,7 +9,9 @@ import Table from './table'
 import CircularProgressBar from './circular-progress-bar'
 
 import FlippedCardsStack from './flipped-cards-stack'
-import { FloorLayout, FloorSection, EqualSpaceFloorLayout } from './floor-layouts'
+import {
+  FloorLayout, FloorSection, EqualSpaceFloorLayout, StairsIcon,
+} from './floor-layouts'
 
 import TextInput from './text-input'
 import Checkbox from './checkbox'
@@ -44,7 +46,7 @@ export {
 
   FlippedCardsStack,
   EqualSpaceFloorLayout,
-  FloorLayout, FloorSection,
+  FloorLayout, FloorSection, StairsIcon,
 }
 
 export default null

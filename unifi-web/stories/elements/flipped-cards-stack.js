@@ -23,13 +23,37 @@ storiesOf('Elements/FloorView', module)
       justifyContent: 'center',
     }}
     >
-      <FlippedCardsStack />
+      <FlippedCardsStack>
+        <EqualSpaceFloorLayout>
+          <FloorSection status="good" label="SA1" stairsPosition="top-right" />
+          <FloorSection status="warning" label="SA2" />
+          <FloorSection status="critical" label="SA3" />
+        </EqualSpaceFloorLayout>
+        <EqualSpaceFloorLayout>
+          <FloorSection status="good" label="SA1" stairsPosition="top-right" />
+          <FloorSection status="critical" label="SA3" />
+        </EqualSpaceFloorLayout>
+        <EqualSpaceFloorLayout>
+          <FloorSection status="good" label="SA1" stairsPosition="bottom-left" />
+        </EqualSpaceFloorLayout>
+        <EqualSpaceFloorLayout>
+          <FloorSection status="good" label="SA1" stairsPosition="bottm-left" />
+          <FloorSection status="critical" label="SA2" />
+          <FloorSection status="critical" label="SA3" />
+        </EqualSpaceFloorLayout>
+        <EqualSpaceFloorLayout>
+          <FloorSection status="warning" label="SA1" />
+          <FloorSection status="critical" label="SA3" />
+        </EqualSpaceFloorLayout>
+      </FlippedCardsStack>
     </div>
   ))
   .add('EqualSpaceFloorLayout', () => (
-    <EqualSpaceFloorLayout>
-      <div>SA1</div>
-      <div>SA2</div>
-      <div>SA3</div>
-    </EqualSpaceFloorLayout>
+    <div style={{ width: 340, height: 240, display: 'flex' }}>
+      <EqualSpaceFloorLayout>
+        <FloorSection status="good" label="SA1" stairsPosition="top-right" />
+        <FloorSection status="good" label="SA2" />
+        <FloorSection status="critical" label="SA3" />
+      </EqualSpaceFloorLayout>
+    </div>
   ))

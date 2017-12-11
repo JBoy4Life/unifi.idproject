@@ -3,6 +3,8 @@
   background: #d3d3d3;
   margin-bottom: 5px;
   flex: 1;
+  display: flex;
+  padding: 3px;
 
   .floor-section-title {
     position: absolute;
@@ -14,5 +16,49 @@
     min-width: 70px;
     height: 30px;
     text-align: center;
+  }
+
+  &.floor-status-good {
+    background-color: rgb(199, 233, 212)
+  }
+
+  &.floor-status-warning {
+    background-color: rgb(249, 218, 180)
+  }
+
+  &.floor-status-critical {
+    background-color: rgb(245, 154, 154)
+  }
+
+  &.floor-stairs-top-left {
+    justify-content: flex-start;
+
+    .stairs-icon {
+      align-self: flex-start;
+    }
+  }
+
+  &.floor-stairs-top-right {
+    justify-content: flex-end;
+
+    .stairs-icon {
+      align-self: flex-start;
+    }
+  }
+
+  &.floor-stairs-bottom-left {
+    justify-content: flex-start;
+
+    .stairs-icon {
+      align-self: flex-end;
+    }
+  }
+
+  &.floor-stairs-bottom-right {
+    justify-content: flex-end;
+
+    .stairs-icon {
+      align-self: flex-end;
+    }
   }
 }

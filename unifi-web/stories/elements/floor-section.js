@@ -61,16 +61,24 @@ storiesOf('Elements/FloorSection', module)
       display: 'flex',
     }}
       >
-        <FloorSection label="Left stairs" />
+        <FloorSection label="Left stairs" stairsPosition="top-left" />
       </div>
 
       <div style={{
-      width: 300,
-      height: 100,
-      display: 'flex',
-    }}
+          width: 300,
+          height: 100,
+          display: 'flex',
+        }}
       >
-        <FloorSection label="Right stairs" />
+        <FloorSection label="Right stairs" stairsPosition="bottom-right" />
+      </div>
+      <div style={{
+          width: 300,
+          height: 100,
+          display: 'flex',
+        }}
+      >
+        <FloorSection status="good" label="Colored stairs" stairsPosition="top-right" />
       </div>
     </Aux>
   ))
