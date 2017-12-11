@@ -1,0 +1,176 @@
+= unifi.id Core API Specification
+
+JSON or MessagePack (TBD) over a WebSocket.
+
+Most "short" identifier fields, e.g. username, email, clientReference, can be up to 64 characters long and are case-preserving unless specified otherwise. A character is a Unicode code point as per the PostgreSQL definition, and no (de)normalization takes place.
+
+clientId and username have to match `^[a-zA-Z0-9]{1,64}$`.
+
+JSON representation of non-native types:
+
+- Timestamp: "yyyy-mm-ddThh:mm:ssZ"
+- Byte sequence: Base-64 encoded string
+
+Request format:
+
+----
+{
+    "protocolVersion": "1.0.0",
+    "releaseVersion": "1.0.0",
+    "correlationId": "<base64-encoded-id>",
+    "messageType": "<module>.<service>.<operation>",
+    "payload": {
+        "param1": "value1",
+        "param2": 2.0,
+        "anotherParam": null
+    }
+}
+----
+
+Response format:
+
+----
+{
+    "protocolVersion": "1.0.0",
+    "releaseVersion": "1.0.0",
+    "correlationId": "<base64-encoded-id>",
+    "messageType": "<module>.<service>.<operation>-result",
+    "payload": ...
+}
+----
+
+
+== Clients (currently unauthenticated)
+
+=== Register a client
+
+- Message type: core.client.register-client
+- Request params:
+* clientId: string
+- Response params:
+* expiryDate: timestamp
+
+=== List clients
+
+- Message type: core.client.list-clients
+- Request params: <none>
+- Response params: (sequence of)
+* clientId: string
+* displayName: string
+* logo: byte sequence
+
+== Operators
+
+=== Register operator (currently unauthenticated)
+
+Register a new operator, optionally invite by email.
+Invitation tokens and password reset tokens are identical.
+
+- Message type: core.operator.register-operator
+- Request params:
+* clientId: string
+* username: string
+* email: string
+* invite: boolean (invite to set login password?; can also be done later)
+- Response params: <none>
+
+=== Authenticate with a password
+
+- Message type: core.operator.auth-password
+- Request params:
+* clientId: string
+* username: string
+* password: string
+- Response params:
+* token: byte sequence
+* expiryDate: timestamp
+
+=== Authenticate with a token
+
+- Message type: core.operator.auth-token
+- Request params:
+* token: string
+- Response params:
+* expiryDate: timestamp
+
+=== Invalidate current token
+
+- Message type: core.operator.invalidate-auth-token
+- Request params: <none>
+- Response params: <none>
+
+=== List operators
+
+- Message type: core.operator.list-operators
+- Request params:
+* clientId: string
+- Response params: (sequence of)
+* clientId: string
+* username: string
+* email: string
+* active: boolean
+
+=== Get operator
+
+- Message type: core.operator.get-operator
+- Request params:
+* clientId: string
+* username: string
+- Response params:
+* clientId: string
+* username: string
+* email: string
+* active: boolean
+
+=== Invite operator to set password
+
+- Message type: core.operator.invite-operator
+- Request params:
+* clientId: string
+* username: string
+- Response params: <none>
+
+=== Request password reset
+
+- Message type: core.operator.request-password-reset
+- Request params:
+* clientId: string
+* username: string
+- Response params: <none>
+
+=== Get password reset info
+
+- Message type: core.operator.get-password-reset
+- Request params:
+* clientId: string
+* username: string
+* token: byte sequence
+- Response params: (null if invalid)
+* expiryDate: timestamp
+* email: string
+
+=== Set password
+
+Set a password using a valid password reset token.
+
+- Message type: core.operator.set-password
+- Request params:
+* clientId: string
+* username: string
+* token: byte sequence
+- Response params:
+* expiryDate: timestamp
+* email: string
+
+
+=== Change password
+
+- Message type: core.operator.change-password
+- Request params:
+* currentPassword: string
+* password: string
+- Response params: <none>
+
+== Errors
+
+TBD

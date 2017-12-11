@@ -1,11 +1,15 @@
 = unifi.id Platform
 
+== Useful links
+
+- link:doc/api-spec.adoc[API Specification]
+
 == Build dependencies
 
-* Oracle JDK 9
-* Maven 3.5+
-* PostgreSQL 9.6+ with a `unifi` database, see below
-* RabbitMQ (runtime only)
+- Oracle JDK 9
+- Maven 3.5+
+- PostgreSQL 9.6+ with a `unifi` database, see below
+- RabbitMQ (runtime only)
 
 Preferably, just set up a VM as described below.
 
