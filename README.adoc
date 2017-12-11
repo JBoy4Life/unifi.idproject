@@ -1,3 +1,3 @@
 = unifi.id
 
-- link:unifi-service.adoc[unifi.id Platform Services]
+- link:unifi-service/README.adoc[unifi.id Platform Services]
