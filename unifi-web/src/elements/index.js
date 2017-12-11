@@ -8,6 +8,9 @@ import Table from './table'
 
 import CircularProgressBar from './circular-progress-bar'
 
+import FlippedCardsStack from './flipped-cards-stack'
+import { FloorLayout, FloorSection, EqualSpaceFloorLayout } from './floor-layouts'
+
 import TextInput from './text-input'
 import Checkbox from './checkbox'
 import Switch from './switch'
@@ -38,6 +41,10 @@ export {
   Layout,
 
   CircularProgressBar,
+
+  FlippedCardsStack,
+  EqualSpaceFloorLayout,
+  FloorLayout, FloorSection,
 }
 
 export default null

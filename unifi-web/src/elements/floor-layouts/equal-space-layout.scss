@@ -1,0 +1,9 @@
+.equal-space-layout {
+  display: flex;
+  flex-flow: column;
+
+  > div {
+    flex: 1;
+  }
+  
+}
