@@ -37,8 +37,7 @@ public class GallagherDemo {
 
         String serverAddress = "192.168.42.5";
         JISession session = JISession.createSession("localhost", "administrator", "MacFUCK69");
-        //JIComServer comServer = new JIComServer(JIProgId.valueOf("CardaxFTEIAPI"), serverAddress, session);
-        JIComServer comServer = new JIComServer(JIProgId.valueOf("ccft"), serverAddress, session);
+        JIComServer comServer = new JIComServer(JIProgId.valueOf("CardaxFTEIAPI"), serverAddress, session);
         //JIComServer comServer = new JIComServer(JIProgId.valueOf("CardaxFTCAPI"), serverAddress, session);
         //JIComServer comServer = new JIComServer(JIClsid.valueOf("70C694E6-8A64-48B0-A58E-A7766C28B7C9"), serverAddress, session);
 
