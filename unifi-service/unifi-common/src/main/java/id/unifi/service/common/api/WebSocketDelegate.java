@@ -1,0 +1,109 @@
+package id.unifi.service.common.api;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.ConcurrentHashMap;
+
+@WebSocket
+public class WebSocketDelegate {
+    private static final Logger log = LoggerFactory.getLogger(WebSocketDelegate.class);
+
+    private final Dispatcher dispatcher;
+    private final Protocol protocol;
+    private final ConcurrentHashMap<Session, Object> sessionData;
+
+    private WebSocketDelegate(Dispatcher dispatcher, Protocol protocol) {
+        this.dispatcher = dispatcher;
+        this.protocol = protocol;
+        this.sessionData = new ConcurrentHashMap<>();
+    }
+
+    public static class Creator implements WebSocketCreator {
+        private final Dispatcher dispatcher;
+        private final String basePath;
+
+        Creator(Dispatcher dispatcher, String basePath) {
+            this.dispatcher = dispatcher;
+            this.basePath = basePath;
+        }
+
+        public WebSocketDelegate createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse res) {
+            if ((basePath + "/json").equals(req.getHttpServletRequest().getPathInfo())) {
+                return new WebSocketDelegate(dispatcher, Protocol.JSON);
+            } else if ((basePath + "/msgpack").equals(req.getHttpServletRequest().getPathInfo())) {
+                return new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
+            } else {
+                res.setStatusCode(HttpServletResponse.SC_NOT_FOUND);
+                return null;
+            }
+        }
+    }
+
+    @OnWebSocketConnect
+    public void onConnect(Session session) {
+        log.debug("Connected: {}", session);
+        sessionData.put(session, dispatcher.createSessionData());
+    }
+
+    @OnWebSocketClose
+    public void onClose(Session session, int closeCode, String closeReason) {
+        log.debug("Closed: {} {} {}", session, closeCode, closeReason);
+        sessionData.remove(session);
+    }
+
+    @OnWebSocketMessage
+    public void onTextMessage(Session session, String message) {
+        log.info("Received text message, converting to binary");
+        byte[] bytes = message.getBytes(UTF_8);
+        try (InputStream stream = new ByteArrayInputStream(bytes)) {
+            onBinaryMessage(session, stream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnWebSocketMessage
+    public void onBinaryMessage(Session session, InputStream stream) {
+        ReturnChannel returnChannel = payload -> {
+            WriteCallback writeCallback = new WriteCallback() {
+                public void writeFailed(Throwable x) {
+                    log.error("Write failed", x);
+                }
+
+                public void writeSuccess() {
+                    log.debug("Write OK");
+                }
+            };
+            if (session.isOpen()) {
+                try {
+                    if (protocol == Protocol.JSON) {
+                        log.info("Sending JSON response");
+                        session.getRemote().sendString(new String(payload.array(), UTF_8), writeCallback);
+                    } else {
+                        log.info("Sending MessagePack response");
+                        session.getRemote().sendBytes(payload, writeCallback);
+                    }
+                } catch (Exception e) {
+                    log.error("Websocket error", e);
+                }
+            }
+        };
+        log.info("Dispatching call with " + protocol);
+        dispatcher.dispatch(sessionData.get(session), stream, protocol, returnChannel);
+    }
+}

@@ -32,10 +32,6 @@
             <artifactId>postgresql</artifactId>
         </dependency>
         <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.statemachinesystems</groupId>
             <artifactId>envy</artifactId>
         </dependency>
