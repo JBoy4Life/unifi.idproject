@@ -20,6 +20,7 @@ addDecorator(reduxProvider)
 require('./elements')
 require('./components')
 require('./forms')
+require('./smart')
 
 // import { Button, Welcome } from '@storybook/react/demo'
 

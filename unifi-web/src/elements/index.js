@@ -20,6 +20,8 @@ import Select from './select'
 
 import FormItem from './form-item'
 
+import Steps from './steps'
+
 import { Row, Col } from './grid-row'
 import Layout from './layout'
 
@@ -30,6 +32,7 @@ export {
   Table,
 
   FormItem,
+  Steps,
 
   TextInput,
   Checkbox,

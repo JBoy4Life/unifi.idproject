@@ -1,5 +1,6 @@
 import './circular-progress-bar'
 import './text-input'
 import './grid'
+import './steps'
 import './floor-section'
 import './flipped-cards-stack'
