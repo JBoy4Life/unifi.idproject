@@ -1,4 +1,5 @@
 import LoginForm from './login-form'
+import ClientRegisterForm from './client-register-form'
 import NotificationForm from './notification-form'
 
 import LinkedNavigationMenu from './linked-top-navigation'
@@ -12,6 +13,7 @@ import SiteWizzardDetailsForm from './site-wizzard-details-form'
 
 export {
   LoginForm,
+  ClientRegisterForm,
   NotificationForm,
 
   PageContainer,

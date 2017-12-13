@@ -4,6 +4,7 @@ import { TextInput, FormItem } from '../../elements'
 const TextField = ({
   input, id, className, placeholder, label, htmlType = 'text',
   meta: { touched, error },
+  disabled,
 }) => {
   const hasErorr = touched && error
   const validationsProps = {}
@@ -26,6 +27,7 @@ const TextField = ({
         {...input}
         className={className}
         placeholder={placeholder}
+        disabled={disabled}
       />
     </FormItem>
   )

@@ -31,10 +31,14 @@ export default class WebSocketLayer {
     if (parse) {
       handler = (event) => {
         console.log('listen', event.data)
-        this.decodeJSONFromBlob(event.data)
-          .then((content) => {
-            callback(event, content)
-          })
+        if (typeof event.data === 'string') {
+          callback(event, JSON.parse(event.data))
+        } else {
+          this.decodeJSONFromBlob(event.data)
+            .then((content) => {
+              callback(event, content)
+            })
+        }
       }
     }
     this.socket.addEventListener(message, handler)
@@ -73,17 +77,25 @@ export default class WebSocketLayer {
     return Promise.reject(new Error({ message: 'Unsupported message type' }))
   }
 
-  send(content) {
+  send(content, { json = false } = {}) {
     if (typeof content !== 'object') {
       throw new Error('Only JSON objects are supported for sending via socket layer')
     }
-    const encodedContent = this.encodeJSON(content)
+    // const encodedContent = this.encodeJSON(content)
     // console.log(content)
     // console.log('sending encoded', encodedContent)
     // console.log('buffer data view', encodedContent.buffer)
-    this.socket.send(encodedContent.buffer)
-    // console.log(JSON.stringify(encodedContent))
-    // this.socket.send(content)
+    // this.socket.send(encodedContent.buffer)
+
+    console.log(content, json)
+
+    if (json) {
+      console.log('sending', JSON.stringify(content))
+      this.socket.send(JSON.stringify(content))
+    } else {
+      const encodedContent = this.encodeJSON(content)
+      this.socket.send(encodedContent.buffer)
+    }
   }
 
   sendEncoded(message) {

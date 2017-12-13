@@ -69,8 +69,8 @@ export default class WebSocketProtocol {
     }
   }
 
-  request(content) {
-    console.log('request data', content)
+  request(content, params) {
+    // console.log('request data', content)
     if (this.corelations[content.correlationId]) {
       return this.corelations[content.correlationId].resource
     }
@@ -79,7 +79,8 @@ export default class WebSocketProtocol {
       this.corelations[content.correlationId] = {
         resolve, reject, content,
       }
-      this.ws.send(content)
+      // console.log('sending content', content)
+      this.ws.send(content, params)
     })
 
     this.corelations[content.correlationId].resource = resource

@@ -11,6 +11,8 @@ import SiteManager from './site-manager'
 import Users from './users'
 import Navigation from './navigation'
 
+import ClientRegistry from './client-registry'
+
 export {
   Sitemap,
   NotFound,
@@ -24,4 +26,6 @@ export {
   SiteManager,
   Users,
   Navigation,
+
+  ClientRegistry,
 }

@@ -6,6 +6,7 @@ import './index.scss'
 const SwitchField = ({
   input, id, className, label,
   meta: { touched, error },
+  disabled,
 }) => {
   const hasErorr = touched && error
   const validationsProps = {}
@@ -23,6 +24,7 @@ const SwitchField = ({
       <Switch
         id={id}
         {...input}
+        disabled={disabled}
         className={className}
       />
       <span className="switch-field-label">{label}</span>

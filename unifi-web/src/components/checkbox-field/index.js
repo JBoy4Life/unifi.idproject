@@ -4,6 +4,7 @@ import { Checkbox, FormItem } from '../../elements'
 const CheckboxField = ({
   input, id, className, label,
   meta: { touched, error },
+  disabled,
 }) => {
   const hasErorr = touched && error
   const validationsProps = {}
@@ -18,6 +19,7 @@ const CheckboxField = ({
       <Checkbox
         id={id}
         {...input}
+        disabled={disabled}
         className={className}
       >
         {label}

@@ -11,5 +11,7 @@ export const NAVIGATION = '/navigation'
 export const SITE_MANAGER = '/site-manager'
 export const USERS = '/users'
 
+export const CLIENT_REGISTRY = '/clients'
+export const CLIENT_REGISTRY_ADD = '/clients/add'
 
 export default null

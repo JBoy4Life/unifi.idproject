@@ -18,7 +18,7 @@ const getOptionProps = (option) => {
 const SelectField = ({
   input, id, className, label,
   meta: { touched, error },
-  options,
+  options, disabled,
 }) => {
   const hasErorr = touched && error
   const validationsProps = {}
@@ -35,6 +35,7 @@ const SelectField = ({
       <Select
         id={id}
         {...input}
+        disabled={disabled}
         className={className}
       >
         {options.map((option) => {
