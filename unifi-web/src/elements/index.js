@@ -25,6 +25,8 @@ import Steps from './steps'
 import { Row, Col } from './grid-row'
 import Layout from './layout'
 
+import SingleFilePicker from './single-file-picker'
+
 export {
   Aux,
 
@@ -50,6 +52,8 @@ export {
   FlippedCardsStack,
   EqualSpaceFloorLayout,
   FloorLayout, FloorSection, StairsIcon,
+
+  SingleFilePicker,
 }
 
 export default null
