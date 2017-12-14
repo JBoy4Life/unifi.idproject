@@ -8,6 +8,7 @@ export default class WebSocketProtocol {
     reconnectionAttempts = 100,
     reconnectionDelay = 1000,
   }) {
+    console.log('WebSocketProtocol', url)
     this.corelations = []
     this.ws = new WebSocketLayerClass(url)
     this.reconnectionAttempts = reconnectionAttempts

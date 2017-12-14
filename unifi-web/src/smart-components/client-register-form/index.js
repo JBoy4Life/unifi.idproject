@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Field, reduxForm } from 'redux-form'
-import { TextField } from '../../components'
+import { TextField, SingleFilePickerField } from '../../components'
 import { Button } from '../../elements'
 
 import validate from './validate'
@@ -28,7 +28,7 @@ class ClientRegisterForm extends Component {
           label="Logo (just a string for now)"
           id="logo"
           disabled={isSubmiting}
-          component={TextField}
+          component={SingleFilePickerField}
         />
         <Button loading={isSubmiting} htmlType="submit" type="primary">Create</Button>
       </form>

@@ -8,18 +8,25 @@ const binarryCodec = msgpack.createCodec({ binarraybuffer: true, preset: true })
 
 export default class WebSocketLayer {
   constructor(wsConnectionURL) {
+    console.log('websocketlayer', wsConnectionURL)
     this.wsConnectionURL = wsConnectionURL
     this.socket = null
     this.corelations = {}
   }
 
   connect() {
-    return new Promise((resolve, reject) => {
+    this.isConnected = false
+    this.connected = new Promise((resolve, reject) => {
       this.socket = new WebSocket(this.wsConnectionURL)
       this.socket.binaryType = 'arraybuffer'
       this.once('error', reject)
-      this.once('open', resolve)
+      this.once('open', () => {
+        this.isConnected = true
+        resolve()
+      })
     })
+
+    return this.connected
   }
 
   close() {
@@ -77,7 +84,7 @@ export default class WebSocketLayer {
     return Promise.reject(new Error({ message: 'Unsupported message type' }))
   }
 
-  send(content, { json = false } = {}) {
+  async send(content, { json = false } = {}) {
     if (typeof content !== 'object') {
       throw new Error('Only JSON objects are supported for sending via socket layer')
     }
@@ -88,7 +95,11 @@ export default class WebSocketLayer {
     // this.socket.send(encodedContent.buffer)
 
     console.log(content, json)
+    if (!this.isConnected) {
+      await this.connected
+    }
 
+    console.log('connected, sending')
     if (json) {
       console.log('sending', JSON.stringify(content))
       this.socket.send(JSON.stringify(content))

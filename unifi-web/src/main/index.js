@@ -3,7 +3,9 @@ import { Provider } from 'react-redux'
 import createHistory from 'history/createBrowserHistory'
 import { Router, Route, Switch /* Redirect */ } from 'react-router'
 
-import store from './store'
+import { WSProtocol } from '../lib/ws'
+
+import { configureStore } from './store'
 import * as ROUTES from '../utils/routes'
 
 import {
@@ -13,10 +15,35 @@ import {
 } from '../pages'
 
 export default class Main extends Component {
+  state = {
+    loading: true,
+  }
+
+  componentDidMount() {
+    const wsProtocol = new WSProtocol({ url: 'ws://127.0.0.1:8000/service/json' })
+    wsProtocol
+      .connect()
+      .then(() => wsProtocol.start())
+      .then(() => {
+        this.setState({
+          loading: false,
+          store: configureStore(wsProtocol),
+        })
+      })
+      .catch((err) => {
+        console.error(err)
+      })
+  }
+
   render() {
+    const { loading, store } = this.state
+
     return (
+
+      loading ? <div>Loading</div> :
       <Provider store={store}>
         <Router history={createHistory()}>
+
           <Switch>
             <Route exact path={ROUTES.SITEMAP} component={Sitemap} />
             <Route exact path={ROUTES.LOGIN} component={Login} />
@@ -33,6 +60,7 @@ export default class Main extends Component {
 
             <Route component={NotFound} />
           </Switch>
+
         </Router>
       </Provider>
     )

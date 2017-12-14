@@ -28,6 +28,8 @@ export default class ClientAdd extends Component {
 
     this.props.createClient({
       ...data,
+      // logo: data.logo.data,
+      logo: ' ',
       clientId: data.displayName.replace(/ /g, '-').toLowerCase(),
     })
       .then((message) => {

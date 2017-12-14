@@ -46,7 +46,7 @@ export default class SingleFilePicker extends Component {
   }
 
   render() {
-    const { value, buttonLabel } = this.props
+    const { buttonLabel } = this.props
 
     return (
       <div
@@ -64,7 +64,6 @@ export default class SingleFilePicker extends Component {
           type="file"
           accept=""
           onChange={this.handleFilePicked}
-          value={value.file}
         />
       </div>
     )

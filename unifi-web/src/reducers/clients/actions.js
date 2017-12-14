@@ -1,6 +1,6 @@
 import { WSPackage } from '../../lib/ws'
 
-import { CLIENT_CREATE } from './types'
+import { CLIENT_CREATE, CLIENT_LIST_FETCH } from './types'
 
 export const createClient = ({ clientId, displayName, logo }) => {
   const pack = new WSPackage({
@@ -16,8 +16,24 @@ export const createClient = ({ clientId, displayName, logo }) => {
 
 
   return {
-    payload: window.wsProtocol.request(pack.content, { json: true }),
+    socketRequest: pack.content,
     type: CLIENT_CREATE,
+  }
+}
+
+
+export const listClients = () => {
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion: '1.0.0',
+    messageType: 'core.client.list-clients',
+    payload: null,
+  })
+
+
+  return {
+    socketRequest: pack.content,
+    type: CLIENT_LIST_FETCH,
   }
 }
 

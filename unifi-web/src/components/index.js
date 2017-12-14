@@ -6,6 +6,7 @@ import TextField from './text-field'
 import CheckboxField from './checkbox-field'
 import SwitchField from './switch-field'
 import SelectField from './select-field'
+import SingleFilePickerField from './single-file-select-field'
 
 import EvacuationProgressBar from './evacuation-progress-bar'
 
@@ -18,6 +19,7 @@ export {
   CheckboxField,
   SwitchField,
   SelectField,
+  SingleFilePickerField,
 
   EvacuationProgressBar,
 }

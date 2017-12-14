@@ -1,6 +1,6 @@
 import {
   CLIENT_CREATE,
-  CLIENT_LIST_UPDATE,
+  CLIENT_LIST_FETCH,
 } from './types'
 
 const initialState = {
@@ -8,6 +8,7 @@ const initialState = {
 }
 
 const reducer = (state = initialState, action = {}) => {
+  // console.log(action.type, action)
   switch (action.type) {
     case `${CLIENT_CREATE}_FULFILLED`:
       return {
@@ -15,10 +16,10 @@ const reducer = (state = initialState, action = {}) => {
         clientRequestPending: false,
       }
 
-    case CLIENT_LIST_UPDATE:
+    case `${CLIENT_LIST_FETCH}_FULFILLED`:
       return {
         ...state,
-        clients: action.clients,
+        clients: action.payload.payload,
       }
     default:
       return state

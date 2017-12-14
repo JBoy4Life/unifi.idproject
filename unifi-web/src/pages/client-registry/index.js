@@ -5,7 +5,7 @@ import { compose, bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router-dom'
 
-import { actions as clientActions } from '../../reducers/clients'
+import { actions as clientActions, selectors as clientSelectors } from '../../reducers/clients'
 
 import * as ROUTES from '../../utils/routes'
 
@@ -26,6 +26,19 @@ const menus = [{
 }]
 
 class ClientRegistryContainer extends Component {
+  state = {
+    loading: true,
+  }
+
+  componentDidMount() {
+    const { listClients } = this.props
+    listClients().then(() => {
+      this.setState({
+        loading: false,
+      })
+    })
+  }
+
   handleClientCreated = () => this.props.history.push(ROUTES.CLIENT_REGISTRY)
 
   preparedClientListing = routeProps => (
@@ -41,33 +54,42 @@ class ClientRegistryContainer extends Component {
   )
 
   render() {
+    const { loading } = this.state
+
     return (
       <PageContainer>
         <PageContent>
-          <PageContent.Sidebar>
-            <LinkedSideNavigation menus={menus} />
-          </PageContent.Sidebar>
-          <PageContent.Main>
-            <Switch>
-              <Route
-                exact
-                path={ROUTES.CLIENT_REGISTRY}
-                render={this.preparedClientListing}
-              />
-              <Route
-                exact
-                path={ROUTES.CLIENT_REGISTRY_ADD}
-                render={this.preparedClientAdd}
-              />
-            </Switch>
-          </PageContent.Main>
+          {
+           loading ? '' : ([
+             <PageContent.Sidebar>
+               <LinkedSideNavigation menus={menus} />
+             </PageContent.Sidebar>,
+             <PageContent.Main>
+               <Switch>
+                 <Route
+                   exact
+                   path={ROUTES.CLIENT_REGISTRY}
+                   render={this.preparedClientListing}
+                 />
+                 <Route
+                   exact
+                   path={ROUTES.CLIENT_REGISTRY_ADD}
+                   render={this.preparedClientAdd}
+                 />
+               </Switch>
+             </PageContent.Main>,
+           ]
+           )
+         }
         </PageContent>
       </PageContainer>
     )
   }
 }
 
-export const mapStateToProps = state => state
+export const mapStateToProps = state => ({
+  clientList: clientSelectors.getClients(state),
+})
 export const mapDispatch = dispatch => bindActionCreators(clientActions, dispatch)
 
 export default compose(
