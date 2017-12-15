@@ -18,7 +18,7 @@ public class HttpServer {
     private final Dispatcher dispatcher;
     private final long webSocketIdleTimeoutMillis;
 
-    public HttpServer(int port, Dispatcher dispatcher) {
+    public HttpServer(int port, Dispatcher<?> dispatcher) {
         this(port, dispatcher, DEFAULT_WEB_SOCKET_IDLE_TIMEOUT_MILLIS);
     }
 

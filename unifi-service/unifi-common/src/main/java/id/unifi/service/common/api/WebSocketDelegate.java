@@ -25,12 +25,10 @@ public class WebSocketDelegate {
 
     private final Dispatcher dispatcher;
     private final Protocol protocol;
-    private final ConcurrentHashMap<Session, Object> sessionData;
 
     private WebSocketDelegate(Dispatcher dispatcher, Protocol protocol) {
         this.dispatcher = dispatcher;
         this.protocol = protocol;
-        this.sessionData = new ConcurrentHashMap<>();
     }
 
     public static class Creator implements WebSocketCreator {
@@ -57,13 +55,13 @@ public class WebSocketDelegate {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         log.debug("Connected: {}", session);
-        sessionData.put(session, dispatcher.createSessionData());
+        dispatcher.createSession(session);
     }
 
     @OnWebSocketClose
     public void onClose(Session session, int closeCode, String closeReason) {
         log.debug("Closed: {} {} {}", session, closeCode, closeReason);
-        sessionData.remove(session);
+        dispatcher.dropSession(session);
     }
 
     @OnWebSocketMessage
@@ -104,6 +102,6 @@ public class WebSocketDelegate {
             }
         };
         log.info("Dispatching call with " + protocol);
-        dispatcher.dispatch(sessionData.get(session), stream, protocol, returnChannel);
+        dispatcher.dispatch(session, stream, protocol, returnChannel);
     }
 }

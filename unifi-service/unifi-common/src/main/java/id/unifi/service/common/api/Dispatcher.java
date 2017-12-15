@@ -8,16 +8,19 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.google.common.io.BaseEncoding;
+import org.eclipse.jetty.websocket.api.Session;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
-public class Dispatcher {
+public class Dispatcher<S> {
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
@@ -25,11 +28,17 @@ public class Dispatcher {
     private final ObjectMapper jsonMapper;
     private final ObjectMapper messagePackMapper;
     private final ServiceRegistry serviceRegistry;
-    private final Class<?> sessionDataType;
+    private final Class<S> serverSessionDataType;
+    private final Supplier<S> serverSessionDataSupplier;
+    private final ConcurrentMap<Session, S> serverSessionData;
 
-    public Dispatcher(ServiceRegistry serviceRegistry, Class<?> sessionDataType) {
+    public Dispatcher(ServiceRegistry serviceRegistry,
+                      Class<S> serverSessionDataType,
+                      Supplier<S> serverSessionDataSupplier) {
         this.serviceRegistry = serviceRegistry;
-        this.sessionDataType = sessionDataType;
+        this.serverSessionDataType = serverSessionDataType;
+        this.serverSessionDataSupplier = serverSessionDataSupplier;
+        this.serverSessionData = new ConcurrentHashMap<>();
 
         jsonMapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
@@ -44,19 +53,15 @@ public class Dispatcher {
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
-    public void dispatch(Object sessionData, InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
+    public void dispatch(Session session, InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
         ObjectMapper om = protocol == Protocol.JSON ? jsonMapper : messagePackMapper;
         try {
-            log.trace("Parsing request");
-            JsonNode requestMessage = om.readTree(stream);
-            log.trace("Request parsed: {}", requestMessage);
-            Message request = om.treeToValue(requestMessage, Message.class);
-            log.trace("Request unmarshalled: {}", request);
+            Message request = parseMessage(stream, om);
 
             ServiceRegistry.Operation operation = serviceRegistry.getOperation(request.messageType);
             Object[] params = operation.params.entrySet().stream().map(entry -> {
-                if (entry.getValue() == sessionDataType) {
-                    return sessionData;
+                if (entry.getValue() == serverSessionDataType) {
+                    return serverSessionData.get(session);
                 }
                 try {
                     JsonNode paramNode = request.payload.get(entry.getKey());
@@ -84,12 +89,21 @@ public class Dispatcher {
             throw new RuntimeException(e);
         }
     }
+    
+    public void createSession(Session session) {
+        serverSessionData.put(session, serverSessionDataSupplier.get());
+    }
 
-    public Object createSessionData() {
-        try {
-            return sessionDataType.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+    public void dropSession(Session session) {
+        serverSessionData.remove(session);
+    }
+
+    private static Message parseMessage(InputStream stream, ObjectMapper om) throws IOException {
+        log.trace("Parsing request");
+        JsonNode requestMessage = om.readTree(stream);
+        log.trace("Request parsed: {}", requestMessage);
+        Message request = om.treeToValue(requestMessage, Message.class);
+        log.trace("Request unmarshalled: {}", request);
+        return request;
     }
 }

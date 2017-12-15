@@ -23,7 +23,10 @@ public class CoreService {
 
     private interface Config {
         @Default("8000")
-        int httpPort();
+        int apiHttpPort();
+
+        @Default("8001")
+        int agentServiceHttpPort();
     }
 
     public static void main(String[] args) throws Exception {
@@ -37,16 +40,14 @@ public class CoreService {
         VersionInfo.log();
 
         Config config = Envy.configure(Config.class, UnifiConfigSource.get());
-        DatabaseProvider databaseProvider = new DatabaseProvider();
-        Database coreDb = databaseProvider.bySchemaName(DatabaseProvider.CORE_DB_NAME);
 
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.services"),
                 Map.of(
                         SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                         EmailSenderProvider.class, new LoggingEmailSender()));
-        Dispatcher dispatcher = new Dispatcher(registry, SessionData.class);
-        HttpServer server = new HttpServer(config.httpPort(), dispatcher);
-        server.start();
+        Dispatcher<?> dispatcher = new Dispatcher<>(registry, SessionData.class, SessionData::new);
+        HttpServer apiServer = new HttpServer(config.apiHttpPort(), dispatcher);
+        apiServer.start();
     }
 }
