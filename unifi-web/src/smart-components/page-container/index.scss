@@ -1,4 +1,9 @@
 .page-contianer {
+  .ant-layout-header {
+    position: fixed;
+    width: 100%;
+    z-index: 2;
+  }
 
   .main-content-container {
     padding: 0 50px;

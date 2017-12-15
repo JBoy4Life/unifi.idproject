@@ -10,7 +10,7 @@ const { Header, Content, Footer } = Layout
 
 const PageContainer = ({ className = '', children }) => (
   <Layout className={`${className} page-contianer`}>
-    <Header style={{ position: 'fixed', width: '100%' }}>
+    <Header>
       <LinkedNavigationMenu />
     </Header>
     <Content className="main-content-container">

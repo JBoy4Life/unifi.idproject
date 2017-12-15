@@ -1,0 +1,41 @@
+.network-reader-details-card {
+  border-bottom: none;
+
+  .ant-card-head { 
+    padding: 0 16px;
+    height: 59px;
+
+    background-color: #ddd;
+
+    .anticon {
+      cursor: pointer;
+      padding: 2px;
+      margin: 0 5px;
+    }
+  }
+  
+  .ant-card-body {
+    padding: 0;
+    position: relative;
+  }
+
+  .network-reader-antennaes-list {
+    position: relative;
+    z-index: 1;
+  }
+
+  .network-reader-confirm-delete-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 1px;
+    z-index: 2;
+    background: #fff;
+  }
+}

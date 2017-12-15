@@ -10,6 +10,8 @@ import SingleFilePickerField from './single-file-select-field'
 
 import EvacuationProgressBar from './evacuation-progress-bar'
 
+import NetworkReaderDetailsCard from './network-reader-details-card'
+
 export {
   TopNavigation,
   SideNavigation,
@@ -22,6 +24,7 @@ export {
   SingleFilePickerField,
 
   EvacuationProgressBar,
+  NetworkReaderDetailsCard,
 }
 
 export default null

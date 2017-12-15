@@ -34,6 +34,10 @@ storiesOf('Elements/FloorView', module)
           <FloorSection status="critical" label="SA3" />
         </EqualSpaceFloorLayout>
         <EqualSpaceFloorLayout>
+          <FloorSection status="good" label="SA1XXXSX" stairsPosition="top-right" />
+          <FloorSection status="critical" label="SA3" />
+        </EqualSpaceFloorLayout>
+        <EqualSpaceFloorLayout>
           <FloorSection status="good" label="SA1" stairsPosition="bottom-left" />
         </EqualSpaceFloorLayout>
         <EqualSpaceFloorLayout>

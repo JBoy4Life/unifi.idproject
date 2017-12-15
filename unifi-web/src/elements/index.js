@@ -4,6 +4,7 @@ import Menu from './menu'
 
 import Button from './button'
 import Icon from './icon'
+import Card from './card'
 import Table from './table'
 
 import CircularProgressBar from './circular-progress-bar'
@@ -53,6 +54,7 @@ export {
   EqualSpaceFloorLayout,
   FloorLayout, FloorSection, StairsIcon,
 
+  Card,
   SingleFilePicker,
 }
 

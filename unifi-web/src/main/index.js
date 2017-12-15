@@ -55,7 +55,9 @@ export default class Main extends Component {
 
             <Route exact path={ROUTES.LIVE_VIEW} component={LiveView} />
             <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
-            <Route exact path={ROUTES.SITE_MANAGER} component={SiteManager} />
+
+            <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
+
             <Route exact path={ROUTES.USERS} component={Users} />
 
             <Route component={NotFound} />

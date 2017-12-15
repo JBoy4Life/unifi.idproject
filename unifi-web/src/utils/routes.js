@@ -8,7 +8,10 @@ export const EVACUATION_FLOOR_VIEW = '/evacuation/floor'
 
 export const LIVE_VIEW = '/live-view'
 export const NAVIGATION = '/navigation'
+
 export const SITE_MANAGER = '/site-manager'
+export const SITE_MANAGER_NETOWRK = '/site-manager/network'
+
 export const USERS = '/users'
 
 export const CLIENT_REGISTRY = '/clients'
