@@ -2,11 +2,11 @@ package id.unifi.service.core;
 
 import id.unifi.service.common.operator.OperatorPK;
 
-public class SessionData {
+public class OperatorSessionData {
     private byte[] sessionToken;
     private OperatorPK operator;
 
-    public SessionData() {}
+    public OperatorSessionData() {}
 
     public synchronized OperatorPK getOperator() {
         return operator;

@@ -4,9 +4,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.net.HostAndPort;
 import com.statemachinesystems.envy.Default;
+import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.provider.rfid.LlrpReaderDiscovery;
 import id.unifi.service.provider.rfid.RfidDetectionReport;
-import id.unifi.service.provider.rfid.RfidReader;
 import id.unifi.service.provider.rfid.RfidProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +26,8 @@ public class AgentService {
 
         @Default("5672")
         int rabbitMqPort();
+
+        String clientId();
     }
 
     public static void main(String[] args) throws Exception {

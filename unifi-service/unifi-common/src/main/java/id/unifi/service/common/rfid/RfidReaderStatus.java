@@ -1,4 +1,4 @@
-package id.unifi.service.provider.rfid;
+package id.unifi.service.common.rfid;
 
 import com.google.common.net.HostAndPort;
 
@@ -10,7 +10,7 @@ public class RfidReaderStatus {
     private final String firmwareVersion;
     private final Map<Integer, Boolean> antennaeConnected;
 
-    RfidReaderStatus(HostAndPort endpoint, String firmwareVersion, Map<Integer, Boolean> antennaeConnected) {
+    public RfidReaderStatus(HostAndPort endpoint, String firmwareVersion, Map<Integer, Boolean> antennaeConnected) {
         this.endpoint = endpoint;
         this.firmwareVersion = firmwareVersion;
         this.antennaeConnected = Collections.unmodifiableMap(antennaeConnected);

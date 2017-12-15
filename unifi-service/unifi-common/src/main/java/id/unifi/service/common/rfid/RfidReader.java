@@ -1,11 +1,11 @@
-package id.unifi.service.provider.rfid;
+package id.unifi.service.common.rfid;
 
 public class RfidReader {
     private final String serialNumber;
     private final String modelName;
     private final RfidReaderStatus status;
 
-    RfidReader(String serialNumber, String modelName, RfidReaderStatus status) {
+    public RfidReader(String serialNumber, String modelName, RfidReaderStatus status) {
         this.serialNumber = serialNumber;
         this.modelName = modelName;
         this.status = status;

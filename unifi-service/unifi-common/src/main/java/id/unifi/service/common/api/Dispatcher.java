@@ -28,17 +28,17 @@ public class Dispatcher<S> {
     private final ObjectMapper jsonMapper;
     private final ObjectMapper messagePackMapper;
     private final ServiceRegistry serviceRegistry;
-    private final Class<S> serverSessionDataType;
-    private final Supplier<S> serverSessionDataSupplier;
-    private final ConcurrentMap<Session, S> serverSessionData;
+    private final Class<S> sessionDataType;
+    private final Supplier<S> sessionDataSupplier;
+    private final ConcurrentMap<Session, S> sessionData;
 
     public Dispatcher(ServiceRegistry serviceRegistry,
-                      Class<S> serverSessionDataType,
-                      Supplier<S> serverSessionDataSupplier) {
+                      Class<S> sessionDataType,
+                      Supplier<S> sessionDataSupplier) {
         this.serviceRegistry = serviceRegistry;
-        this.serverSessionDataType = serverSessionDataType;
-        this.serverSessionDataSupplier = serverSessionDataSupplier;
-        this.serverSessionData = new ConcurrentHashMap<>();
+        this.sessionDataType = sessionDataType;
+        this.sessionDataSupplier = sessionDataSupplier;
+        this.sessionData = new ConcurrentHashMap<>();
 
         jsonMapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
@@ -60,8 +60,8 @@ public class Dispatcher<S> {
 
             ServiceRegistry.Operation operation = serviceRegistry.getOperation(request.messageType);
             Object[] params = operation.params.entrySet().stream().map(entry -> {
-                if (entry.getValue() == serverSessionDataType) {
-                    return serverSessionData.get(session);
+                if (entry.getValue() == sessionDataType) {
+                    return sessionData.get(session);
                 }
                 try {
                     JsonNode paramNode = request.payload.get(entry.getKey());
@@ -91,11 +91,11 @@ public class Dispatcher<S> {
     }
     
     public void createSession(Session session) {
-        serverSessionData.put(session, serverSessionDataSupplier.get());
+        sessionData.put(session, sessionDataSupplier.get());
     }
 
     public void dropSession(Session session) {
-        serverSessionData.remove(session);
+        sessionData.remove(session);
     }
 
     private static Message parseMessage(InputStream stream, ObjectMapper om) throws IOException {

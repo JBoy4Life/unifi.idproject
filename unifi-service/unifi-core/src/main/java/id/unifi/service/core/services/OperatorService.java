@@ -11,7 +11,7 @@ import id.unifi.service.common.operator.ExpiringToken;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
-import id.unifi.service.core.SessionData;
+import id.unifi.service.core.OperatorSessionData;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
@@ -78,7 +78,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void registerOperator(SessionData session, String clientId, String username, String email, boolean invite) {
+    public void registerOperator(OperatorSessionData session, String clientId, String username, String email, boolean invite) {
         OperatorPK onboarder = session.getOperator() != null ? session.getOperator() : new OperatorPK(clientId, "???");
         db.execute(sql -> {
             sql.insertInto(OPERATOR)
@@ -95,7 +95,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public ExpiringToken authPassword(SessionData session, String clientId, String username, String password) {
+    public ExpiringToken authPassword(OperatorSessionData session, String clientId, String username, String password) {
         if (passwordMatches(clientId, username, password)) {
             OperatorPK operator = new OperatorPK(clientId, username);
             byte[] sessionToken = new byte[18];
@@ -112,7 +112,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public ExpiringToken authToken(SessionData session, byte[] sessionToken) {
+    public ExpiringToken authToken(OperatorSessionData session, byte[] sessionToken) {
         Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
@@ -123,7 +123,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void invalidateAuthToken(SessionData session) {
+    public void invalidateAuthToken(OperatorSessionData session) {
         if (session.getSessionToken() != null) {
             sessionTokenStore.remove(session.getSessionToken());
             session.setAuth(null, null);
@@ -131,7 +131,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public List<OperatorInfo> listOperators(SessionData session, String clientId) {
+    public List<OperatorInfo> listOperators(OperatorSessionData session, String clientId) {
         if (session.getOperator() != null) {
             return db.execute(sql -> sql.selectFrom(OPERATOR)
                     .where(OPERATOR.CLIENT_ID.eq(clientId))
@@ -144,7 +144,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public OperatorInfo getOperator(SessionData session, String clientId, String username) {
+    public OperatorInfo getOperator(OperatorSessionData session, String clientId, String username) {
         if (session.getOperator() != null) {
             return db.execute(sql -> sql.selectFrom(OPERATOR)
                     .where(OPERATOR.CLIENT_ID.eq(clientId))
@@ -158,7 +158,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void inviteOperator(SessionData session, String clientId, String username) {
+    public void inviteOperator(OperatorSessionData session, String clientId, String username) {
         if (session.getOperator() != null) {
             db.execute(sql -> {
                 requestPasswordSet(sql, clientId, username, Optional.empty(), Optional.of(session.getOperator()));
@@ -206,7 +206,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void changePassword(SessionData session, String currentPassword, String password) {
+    public void changePassword(OperatorSessionData session, String currentPassword, String password) {
         OperatorPK operator = session.getOperator();
         if (operator != null) {
             if (passwordMatches(operator.clientId, operator.username, currentPassword)) {

@@ -6,6 +6,8 @@ import com.impinj.octane.FeatureSet;
 import com.impinj.octane.ImpinjReader;
 import com.impinj.octane.OctaneSdkException;
 import com.impinj.octane.Status;
+import id.unifi.service.common.rfid.RfidReader;
+import id.unifi.service.common.rfid.RfidReaderStatus;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import org.slf4j.Logger;
