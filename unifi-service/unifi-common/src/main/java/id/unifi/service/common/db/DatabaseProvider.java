@@ -9,7 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DatabaseProvider {
-    public static final String CORE_DB_NAME = "core";
+    public static final String CORE_SCHEMA_NAME = "core";
     
     private final Map<String, Database> databases;
 

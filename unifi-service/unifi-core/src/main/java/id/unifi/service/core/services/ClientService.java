@@ -3,6 +3,8 @@ package id.unifi.service.core.services;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.db.Database;
+import id.unifi.service.common.db.DatabaseProvider;
+import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import static id.unifi.service.core.db.Tables.CLIENT;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
@@ -17,8 +19,8 @@ public class ClientService {
 
     private final Database db;
 
-    public ClientService(Database db) {
-        this.db = db;
+    public ClientService(DatabaseProvider dbProvider) {
+        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
     }
 
     private static class Client {

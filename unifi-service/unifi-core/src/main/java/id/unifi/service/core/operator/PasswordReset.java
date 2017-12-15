@@ -3,6 +3,8 @@ package id.unifi.service.core.operator;
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.db.Database;
+import id.unifi.service.common.db.DatabaseProvider;
+import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD_RESET;
 import static id.unifi.service.core.operator.SecretHashing.SCRYPT_FORMAT_NAME;
 import org.jooq.DSLContext;
@@ -38,8 +40,8 @@ public class PasswordReset {
     }
 
     public PasswordReset(@ApiConfigPrefix("operator.password.reset") Config config,
-                         Database db) {
-        this.db = db;
+                         DatabaseProvider dbProvider) {
+        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
         this.tokenHashing = new SecretHashing(config.hashing());
         this.sqlExpiryDate = timestampAdd(currentTimestamp(), config.validitySeconds(), DatePart.SECOND)
                 .cast(LocalDateTime.class);

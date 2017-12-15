@@ -44,7 +44,6 @@ public class CoreService {
                 Map.of("core", "id.unifi.service.core.services"),
                 Map.of(
                         SessionTokenStore.class, new InMemorySessionTokenStore(864000),
-                        Database.class, coreDb,
                         EmailSenderProvider.class, new LoggingEmailSender()));
         Dispatcher dispatcher = new Dispatcher(registry, SessionData.class);
         HttpServer server = new HttpServer(config.httpPort(), dispatcher);

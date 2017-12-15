@@ -5,6 +5,8 @@ import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.db.Database;
+import id.unifi.service.common.db.DatabaseProvider;
+import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.ExpiringToken;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
@@ -56,13 +58,13 @@ public class OperatorService {
 
     public OperatorService(@ApiConfigPrefix("operator") Config config,
                            @ApiConfigPrefix("operator.password.hashing") SecretHashing.ScryptConfig hashingConfig,
-                           Database db,
+                           DatabaseProvider dbProvider,
                            PasswordReset passwordReset,
                            OperatorEmailRenderer emailRenderer,
                            EmailSenderProvider emailSender,
                            SessionTokenStore sessionTokenStore) {
         this.config = config;
-        this.db = db;
+        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
         this.passwordReset = passwordReset;
         this.passwordHashing = new SecretHashing(hashingConfig);
         this.emailRenderer = emailRenderer;
