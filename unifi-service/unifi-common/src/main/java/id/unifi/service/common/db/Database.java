@@ -18,19 +18,16 @@ import java.sql.Connection;
 import java.util.function.Function;
 
 public class Database {
+    private static final Settings jooqSettings = new Settings();
 
-    private static final Settings jooqSettings = new Settings()
-            // don't include a default schema name in rendered SQL
-            .withRenderSchema(false);
-
-    private final String dbName;
+    private final String schemaName;
     private final DataSource dataSource;
     private final SQLDialect dialect;
     private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate txTemplate;
 
-    public Database(String dbName, DataSource dataSource, SQLDialect dialect) {
-        this.dbName = dbName;
+    Database(String schemaName, DataSource dataSource, SQLDialect dialect) {
+        this.schemaName = schemaName;
         this.dataSource = dataSource;
         this.dialect = dialect;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -60,10 +57,10 @@ public class Database {
     private Flyway getMigrator() {
         Flyway migrator = new Flyway();
         migrator.setDataSource(dataSource);
-        migrator.setSchemas("core");
+        migrator.setSchemas(schemaName);
 
         String dialectPathName = dialect.toString().toLowerCase();
-        migrator.setLocations("classpath:migrations/" + "core" + "/" + dialectPathName);
+        migrator.setLocations("classpath:migrations/" + schemaName + "/" + dialectPathName);
 
         return migrator;
     }
@@ -73,6 +70,6 @@ public class Database {
                 .set(dialect)
                 .set(jooqSettings)
                 .set(new DefaultConnectionProvider(connection))
-                .set(new DefaultExecuteListenerProvider(new ExceptionTranslator())));
+                .set(new DefaultExecuteListenerProvider(ExceptionTranslator.getInstance())));
     }
 }

@@ -7,8 +7,7 @@ import id.unifi.service.common.api.HttpServer;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
-import id.unifi.service.common.db.DatabaseConfig;
-import id.unifi.service.common.db.DatabaseUtils;
+import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
@@ -25,8 +24,6 @@ public class CoreService {
     private interface Config {
         @Default("8000")
         int httpPort();
-
-        DatabaseConfig core();
     }
 
     public static void main(String[] args) throws Exception {
@@ -40,7 +37,8 @@ public class CoreService {
         VersionInfo.log();
 
         Config config = Envy.configure(Config.class, UnifiConfigSource.get());
-        Database coreDb = DatabaseUtils.prepareSqlDatabase(DatabaseUtils.CORE_DB_NAME, config.core());
+        DatabaseProvider databaseProvider = new DatabaseProvider();
+        Database coreDb = databaseProvider.bySchemaName(DatabaseProvider.CORE_DB_NAME);
 
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.services"),
