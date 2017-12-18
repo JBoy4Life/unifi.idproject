@@ -1,0 +1,32 @@
+.site-plan-container {
+  h2 {
+    font-size: 48px;
+    
+  }
+}
+
+.site-plan {
+  display: flex;
+
+  .floor-indicator {
+    display: flex;
+    flex-flow: column-reverse;
+    justify-content: flex-end;
+    width: 100px;
+
+    div {
+      height: 148px;
+      position: relative;
+      bottom: -23px;
+
+      display: flex;
+      justify-content: center;  
+      align-content: flex-end;
+      align-items: flex-end;
+
+      font-weight: 500;
+      color: #E0E0E0;
+      font-size: 75px;
+    }
+  }
+}

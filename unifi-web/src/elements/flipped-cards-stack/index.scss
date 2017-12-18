@@ -3,12 +3,17 @@
   display: flex;
   // flex-flow: column-reverse;
   flex-flow: column;
+  padding: 0px 40px 90px 40px;
+  overflow: hidden;
+  margin: 0 50px;
+  width: 400px;
 }
 
 .flipped-card-container {
   perspective: 550px;
   height: 150px;
   display: flex;
+  // border: 1px solid red;
 }
 
 .flipped-card {

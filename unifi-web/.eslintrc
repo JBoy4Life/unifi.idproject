@@ -10,6 +10,7 @@
     "react/no-unused-prop-types": 0,
     "jsx-a11y/anchor-is-valid": 0,
     "class-methods-use-this": 0,
+    "no-param-reassign": 0,
     "react/jsx-filename-extension": [
       1,
       {

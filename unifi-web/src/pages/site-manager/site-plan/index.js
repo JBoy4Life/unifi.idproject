@@ -1,10 +1,8 @@
 import React, { Component } from 'react'
 
 import { FlippedCardsStack, FloorSection, EqualSpaceFloorLayout } from '../../../elements'
-import { EvacuationProgressBar } from '../../../components'
 
 import './index.scss'
-
 
 const mockData = [
   {
@@ -12,18 +10,12 @@ const mockData = [
       {
         label: 'SA1',
         stairsPosition: 'top-right',
-        capacityCount: 100,
-        currentCount: 105,
       },
       {
         label: 'SA2',
-        capacityCount: 100,
-        currentCount: 90,
       },
       {
         label: 'SA3',
-        capacityCount: 100,
-        currentCount: 40,
       },
     ],
   },
@@ -33,18 +25,12 @@ const mockData = [
       {
         label: 'SA1',
         stairsPosition: 'top-right',
-        capacityCount: 100,
-        currentCount: 40,
       },
       {
         label: 'SA2',
-        capacityCount: 100,
-        currentCount: 90,
       },
       {
         label: 'SA3',
-        capacityCount: 100,
-        currentCount: 60,
       },
     ],
   },
@@ -54,13 +40,9 @@ const mockData = [
       {
         label: 'SB1',
         stairsPosition: 'top-right',
-        capacityCount: 150,
-        currentCount: 30,
       },
       {
         label: 'SB2',
-        capacityCount: 150,
-        currentCount: 40,
       },
     ],
   },
@@ -70,13 +52,9 @@ const mockData = [
       {
         label: 'SC1',
         stairsPosition: 'top-right',
-        capacityCount: 150,
-        currentCount: 40,
       },
       {
         label: 'SC2',
-        capacityCount: 150,
-        currentCount: 40,
       },
     ],
   },
@@ -86,8 +64,6 @@ const mockData = [
       {
         label: 'SD1',
         stairsPosition: 'bottom-left',
-        capacityCount: 150,
-        currentCount: 60,
       },
     ],
   },
@@ -97,21 +73,15 @@ const mockData = [
       {
         label: 'SE1',
         stairsPosition: 'bottom-left',
-        capacityCount: 100,
-        currentCount: 90,
       },
 
       {
         label: 'SE2',
-        capacityCount: 100,
-        currentCount: 40,
       },
 
       {
         label: 'SE3',
         stairsPosition: 'bottom-left',
-        capacityCount: 100,
-        currentCount: 140,
       },
     ],
   },
@@ -120,30 +90,16 @@ const mockData = [
     subsections: [
       {
         label: 'SC1',
-        capacityCount: 100,
-        currentCount: 35,
       },
 
       {
         label: 'SC2',
-        capacityCount: 100,
-        currentCount: 70,
       },
     ],
   },
 ]
 
-const getTotalCapacity = floor => floor.subsections.reduce((acc, item) => {
-  acc += item.capacityCount
-  return acc
-}, 0)
-
-const getCurrentCount = floor => floor.subsections.reduce((acc, item) => {
-  acc += item.currentCount
-  return acc
-}, 0)
-
-export default class EvacuationFloor extends Component {
+export default class SitePlan extends Component {
   renderFloorNumber = (floor, idx) => <div>{(idx === 0 ? 'G' : idx.toString())}</div>
 
   renderFloorSection = section => <FloorSection {...section} />
@@ -152,14 +108,6 @@ export default class EvacuationFloor extends Component {
     <EqualSpaceFloorLayout>
       {floor.subsections.map(this.renderFloorSection)}
     </EqualSpaceFloorLayout>
-  )
-
-  renderCapaictyIndicator = floor => (
-    <div>
-      <EvacuationProgressBar percentage={
-        (getCurrentCount(floor) / getTotalCapacity(floor)) * 100}
-      />
-    </div>
   )
 
   render() {
@@ -173,9 +121,6 @@ export default class EvacuationFloor extends Component {
           <FlippedCardsStack>
             {mockData.map(this.renderFloor)}
           </FlippedCardsStack>
-          <div className="capacity-indicator">
-            {mockData.map(this.renderCapaictyIndicator)}
-          </div>
         </div>
       </div>
     )

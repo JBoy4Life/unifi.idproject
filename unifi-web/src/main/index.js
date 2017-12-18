@@ -53,7 +53,8 @@ export default class Main extends Component {
             <Route path={ROUTES.EVACUATION} component={Evacuation} />
             <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
 
-            <Route exact path={ROUTES.LIVE_VIEW} component={LiveView} />
+            <Route path={ROUTES.LIVE_VIEW} component={LiveView} />
+
             <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
 
             <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />

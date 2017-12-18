@@ -8,6 +8,7 @@ import { PageContainer, LinkedSideNavigation } from '../../smart-components'
 
 import NetworkDiscovery from './network-discovery'
 import ActiveSite from './active-site'
+import SitePlan from './site-plan'
 
 const menus = [{
   key: ROUTES.SITE_MANAGER,
@@ -16,6 +17,10 @@ const menus = [{
 {
   key: ROUTES.SITE_MANAGER_NETOWRK,
   label: 'Network',
+},
+{
+  key: ROUTES.SITE_PLAN,
+  label: 'Site plan',
 }]
 
 export default class ClientRegistryContainer extends Component {
@@ -37,6 +42,11 @@ export default class ClientRegistryContainer extends Component {
                 exact
                 path={ROUTES.SITE_MANAGER_NETOWRK}
                 component={NetworkDiscovery}
+              />
+              <Route
+                exact
+                path={ROUTES.SITE_PLAN}
+                component={SitePlan}
               />
             </Switch>
           </PageContent.Main>

@@ -24,7 +24,7 @@ const getIcon = (statusText) => {
 }
 
 const columns = [{
-  title: 'Ports',
+  title: 'Port',
   dataIndex: 'ports',
   key: 'ports',
 }, {

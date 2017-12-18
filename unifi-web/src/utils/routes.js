@@ -7,10 +7,13 @@ export const EVACUATION_DIRECTORY_VIEW = '/evacuation/directory'
 export const EVACUATION_FLOOR_VIEW = '/evacuation/floor'
 
 export const LIVE_VIEW = '/live-view'
+export const LIVE_VIEW_FLOOR_VIEW = '/live-view/floor-view'
+
 export const NAVIGATION = '/navigation'
 
 export const SITE_MANAGER = '/site-manager'
 export const SITE_MANAGER_NETOWRK = '/site-manager/network'
+export const SITE_PLAN = '/site-manager/plan'
 
 export const USERS = '/users'
 
