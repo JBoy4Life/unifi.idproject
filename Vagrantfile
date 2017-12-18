@@ -16,6 +16,13 @@ apt-get -y install oracle-java9-installer oracle-java9-set-default \
                    oracle-java9-unlimited-jce-policy postgresql redis-server \
                    git maven net-tools cfengine3 nginx
 
+# Sorry.
+apt-get -y install curl
+curl -sL https://deb.nodesource.com/setup_8.x | bash -
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+apt-get update && apt-get -y install yarn
+
 # Set up DB
 for hba_file in /etc/postgresql/*/main/pg_hba.conf; do
   echo "local all all trust\nhost all all 0.0.0.0/0 trust" > "$hba_file"
@@ -42,6 +49,6 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/stretch64"
   config.vm.hostname = "unifi-services.box"
   config.vm.provision :shell, :inline => $bootstrap_script
-  config.vm.network :forwarded_port, guest: 8000, host: 8000
+  config.vm.network "public_network"
   config.vm.post_up_message = $post_up_msg
 end

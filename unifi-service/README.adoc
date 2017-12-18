@@ -31,8 +31,10 @@ mvn exec:java -pl unifi-core
 
 Then connect to the server via the following URLs:
 
-* For MessagePack: ws://127.0.0.1:8000/service/msgpack
-* For JSON: ws://127.0.0.1:8000/service/json
+* For MessagePack: ws://<vm ip>:8000/service/msgpack
+* For JSON: ws://<vm ip>:8000/service/json
+
+You can find the VM IP by SSHing in, and running `ifconfig -a`.
 
 If the SQL schema has changed and migration fails you can recreate the database
 as follows: `dropdb unifi && createdb unifi`
