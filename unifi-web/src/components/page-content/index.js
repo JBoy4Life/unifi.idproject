@@ -14,6 +14,9 @@ export const Main = ({ children }) => (<Aux>{children}</Aux>)
 const PageContent = ({ children }) => (
   <Layout className="page-content-layout">
     {React.Children.map(children, (child) => {
+      if (!child) {
+        return child
+      }
       if (child.type === Sidebar) {
         return <Sider className="page-sidebar">{child}</Sider>
       }

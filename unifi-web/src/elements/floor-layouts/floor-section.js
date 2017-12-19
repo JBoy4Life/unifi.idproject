@@ -33,4 +33,10 @@ const FloorSection = props => (
   </div>
 )
 
+FloorSection.STATUS = {
+  GOOD: 'good',
+  WARNING: 'warning',
+  CRITICAL: 'critical',
+}
+
 export default FloorSection

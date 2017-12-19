@@ -14,6 +14,7 @@ export const NAVIGATION = '/navigation'
 export const SITE_MANAGER = '/site-manager'
 export const SITE_MANAGER_NETOWRK = '/site-manager/network'
 export const SITE_PLAN = '/site-manager/plan'
+export const SITE_CREATE = '/site-manager/create'
 
 export const USERS = '/users'
 

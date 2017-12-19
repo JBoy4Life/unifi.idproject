@@ -1,4 +1,4 @@
-.site-plan {
+.live-site-floor-plan {
   display: flex;
 
   .floor-indicator {
@@ -25,13 +25,41 @@
 
   .capacity-indicator {
     display: flex;
+    flex: 1;
     flex-flow: column-reverse;
     justify-content: flex-end;
     padding-top: 60px;
 
     > div {
-      width: 130px; 
+      min-width: 130px; 
+      max-width: 200px;
       height: 148px;
+      display: flex;
+      align-items: center
+    }
+  }
+
+  .progress-indicator-wrapper {
+    min-width: 110px;
+    width: 110px;
+    height: 110px;
+  }
+
+  .people-count-container {
+
+    flex: 1;
+    text-align: end;
+
+    .people-label {
+      font-size: 18px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .people-count-value {
+      font-size: 28px;
+      font-weight: 500;
+      text-transform: uppercase;
     }
   }
 }

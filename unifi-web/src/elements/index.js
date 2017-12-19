@@ -6,6 +6,7 @@ import Button from './button'
 import Icon from './icon'
 import Card from './card'
 import Table from './table'
+import Modal from './modal'
 
 import CircularProgressBar from './circular-progress-bar'
 
@@ -33,6 +34,7 @@ export {
 
   Menu,
   Table,
+  Modal,
 
   FormItem,
   Steps,

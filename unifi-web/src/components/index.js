@@ -12,6 +12,8 @@ import EvacuationProgressBar from './evacuation-progress-bar'
 
 import NetworkReaderDetailsCard from './network-reader-details-card'
 
+import LiveSiteFloorView from './live-site-floor-view'
+
 export {
   TopNavigation,
   SideNavigation,
@@ -25,6 +27,7 @@ export {
 
   EvacuationProgressBar,
   NetworkReaderDetailsCard,
+  LiveSiteFloorView,
 }
 
 export default null

@@ -1,12 +1,30 @@
 .evacuation-progress-bar {
   position: relative;
 
-  .CircularProgressbar .CircularProgressbar-path {
-    stroke: rgb(115,200,147)
+  
+  &.status-good {
+    .CircularProgressbar .CircularProgressbar-path {
+      stroke: rgb(31, 201, 145)
+    }
   }
 
+  &.status-warning {
+    .CircularProgressbar .CircularProgressbar-path {
+      stroke: rgb(237, 160, 58) 
+    }
+  }
+
+  &.status-critical {
+    .CircularProgressbar .CircularProgressbar-path {
+      stroke: rgb(204, 0, 0)
+    }
+  }
+
+
+
   .CircularProgressbar .CircularProgressbar-text {
-    fill: rgb(115,200,147)
+    stroke: #fff;
+    fill: #fff;
   }
 
   .CircularProgressbar .CircularProgressbar-trail {

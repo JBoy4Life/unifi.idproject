@@ -1,10 +1,6 @@
 import React, { Component } from 'react'
 
-import { FlippedCardsStack, FloorSection, EqualSpaceFloorLayout } from '../../../elements'
-import { EvacuationProgressBar } from '../../../components'
-
-import './index.scss'
-
+import { LiveSiteFloorView } from '../../../components'
 
 const mockData = [
   {
@@ -133,50 +129,12 @@ const mockData = [
   },
 ]
 
-const getTotalCapacity = floor => floor.subsections.reduce((acc, item) => {
-  acc += item.capacityCount
-  return acc
-}, 0)
-
-const getCurrentCount = floor => floor.subsections.reduce((acc, item) => {
-  acc += item.currentCount
-  return acc
-}, 0)
-
 export default class EvacuationFloor extends Component {
-  renderFloorNumber = (floor, idx) => <div>{(idx === 0 ? 'G' : idx.toString())}</div>
-
-  renderFloorSection = section => <FloorSection {...section} />
-
-  renderFloor = floor => (
-    <EqualSpaceFloorLayout>
-      {floor.subsections.map(this.renderFloorSection)}
-    </EqualSpaceFloorLayout>
-  )
-
-  renderCapaictyIndicator = floor => (
-    <div>
-      <EvacuationProgressBar percentage={
-        (getCurrentCount(floor) / getTotalCapacity(floor)) * 100}
-      />
-    </div>
-  )
-
   render() {
     return (
       <div className="site-plan-container">
         <h2>Site plan</h2>
-        <div className="site-plan">
-          <div className="floor-indicator">
-            {mockData.map(this.renderFloorNumber)}
-          </div>
-          <FlippedCardsStack>
-            {mockData.map(this.renderFloor)}
-          </FlippedCardsStack>
-          <div className="capacity-indicator">
-            {mockData.map(this.renderCapaictyIndicator)}
-          </div>
-        </div>
+        <LiveSiteFloorView floors={mockData} />
       </div>
     )
   }
