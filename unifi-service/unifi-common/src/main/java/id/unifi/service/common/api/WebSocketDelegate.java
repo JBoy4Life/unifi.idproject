@@ -1,6 +1,8 @@
 package id.unifi.service.common.api;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -17,7 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.Set;
 
 @WebSocket
 public class WebSocketDelegate {
@@ -33,18 +36,18 @@ public class WebSocketDelegate {
 
     public static class Creator implements WebSocketCreator {
         private final Dispatcher dispatcher;
-        private final String basePath;
+        private final Map<String, Protocol> protocolByPath;
 
-        Creator(Dispatcher dispatcher, String basePath) {
+        Creator(Dispatcher dispatcher, String basePath, Set<Protocol> protocols) {
             this.dispatcher = dispatcher;
-            this.basePath = basePath;
+            this.protocolByPath = protocols.stream().collect(toMap(p -> basePath + "/" + p, identity()));
         }
 
         public WebSocketDelegate createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse res) {
-            if ((basePath + "/json").equals(req.getHttpServletRequest().getPathInfo())) {
-                return new WebSocketDelegate(dispatcher, Protocol.JSON);
-            } else if ((basePath + "/msgpack").equals(req.getHttpServletRequest().getPathInfo())) {
-                return new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
+            String path = req.getHttpServletRequest().getPathInfo();
+            Protocol protocol = protocolByPath.get(path);
+            if (protocol != null) {
+                return new WebSocketDelegate(dispatcher, protocol);
             } else {
                 res.setStatusCode(HttpServletResponse.SC_NOT_FOUND);
                 return null;

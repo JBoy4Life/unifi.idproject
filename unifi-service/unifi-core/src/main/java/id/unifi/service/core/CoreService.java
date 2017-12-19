@@ -4,6 +4,7 @@ import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
+import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
@@ -11,10 +12,13 @@ import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
 import id.unifi.service.common.version.VersionInfo;
+import static java.net.InetSocketAddress.createUnresolved;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.Set;
 
 public class CoreService {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
@@ -44,8 +48,14 @@ public class CoreService {
                 Map.of(
                         SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                         EmailSenderProvider.class, new LoggingEmailSender()));
-        Dispatcher<?> dispatcher = new Dispatcher<>(registry, OperatorSessionData.class, OperatorSessionData::new);
-        HttpServer apiServer = new HttpServer(config.apiHttpPort(), dispatcher);
+        Dispatcher<?> dispatcher =
+                new Dispatcher<>(registry, OperatorSessionData.class, s -> new OperatorSessionData());
+        InetSocketAddress apiServerSocket = createUnresolved("0.0.0.0", config.apiHttpPort());
+        HttpServer apiServer = new HttpServer(
+                apiServerSocket,
+                "/service",
+                dispatcher,
+                Set.of(Protocol.JSON, Protocol.MSGPACK));
         apiServer.start();
 
         ServiceRegistry agentRegistry = new ServiceRegistry(
@@ -54,7 +64,12 @@ public class CoreService {
         Dispatcher<AgentSessionData> agentDispatcher =
                 new Dispatcher<>(agentRegistry, AgentSessionData.class, AgentSessionData::new);
 
-        HttpServer agentServer = new HttpServer(config.agentServiceHttpPort(), agentDispatcher);
+        InetSocketAddress agentServerSocket = createUnresolved("0.0.0.0", config.agentServiceHttpPort());
+        HttpServer agentServer = new HttpServer(
+                agentServerSocket,
+                "/agent-service",
+                agentDispatcher,
+                Set.of(Protocol.MSGPACK));
         agentServer.start();
     }
 }

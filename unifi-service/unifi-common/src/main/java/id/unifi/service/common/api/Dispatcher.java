@@ -16,9 +16,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 
 public class Dispatcher<S> {
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
@@ -29,15 +31,21 @@ public class Dispatcher<S> {
     private final ObjectMapper messagePackMapper;
     private final ServiceRegistry serviceRegistry;
     private final Class<S> sessionDataType;
-    private final Supplier<S> sessionDataSupplier;
+    private final Function<Session, S> sessionDataCreator;
     private final ConcurrentMap<Session, S> sessionData;
+    private final List<SessionListener> sessionListeners;
+
+    public interface SessionListener {
+        void onSessionCreated(Session session);
+        void onSessionDropped(Session session);
+    }
 
     public Dispatcher(ServiceRegistry serviceRegistry,
                       Class<S> sessionDataType,
-                      Supplier<S> sessionDataSupplier) {
+                      Function<Session, S> sessionDataCreator) {
         this.serviceRegistry = serviceRegistry;
         this.sessionDataType = sessionDataType;
-        this.sessionDataSupplier = sessionDataSupplier;
+        this.sessionDataCreator = sessionDataCreator;
         this.sessionData = new ConcurrentHashMap<>();
 
         jsonMapper = new ObjectMapper()
@@ -51,6 +59,7 @@ public class Dispatcher<S> {
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        sessionListeners = new CopyOnWriteArrayList<>();
     }
 
     public void dispatch(Session session, InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
@@ -91,11 +100,17 @@ public class Dispatcher<S> {
     }
     
     public void createSession(Session session) {
-        sessionData.put(session, sessionDataSupplier.get());
+        sessionData.put(session, sessionDataCreator.apply(session));
+        sessionListeners.forEach(l -> l.onSessionCreated(session));
     }
 
     public void dropSession(Session session) {
         sessionData.remove(session);
+        sessionListeners.forEach(l -> l.onSessionDropped(session));
+    }
+
+    public void addSessionListener(SessionListener listener) {
+        sessionListeners.add(listener);
     }
 
     private static Message parseMessage(InputStream stream, ObjectMapper om) throws IOException {
