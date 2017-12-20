@@ -1,6 +1,9 @@
 import TopNavigation from './top-navigation'
 import SideNavigation from './side-navigation'
+
 import PageContent from './page-content'
+import PageContentTitle from './page-content-title'
+import PageContentUnderTitle from './page-content-under-title'
 
 import TextField from './text-field'
 import CheckboxField from './checkbox-field'
@@ -18,6 +21,8 @@ export {
   TopNavigation,
   SideNavigation,
   PageContent,
+  PageContentTitle,
+  PageContentUnderTitle,
 
   TextField,
   CheckboxField,

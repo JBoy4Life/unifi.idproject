@@ -1,0 +1,22 @@
+.asset-grid {
+  display: flex;
+  flex-flow: row wrap;
+  margin: 0 -8px;
+
+  .asset-card {
+    width: 175px;
+    height: 226px;
+    margin: 8px;
+    font-size: 14px;
+
+    .asset-meta {
+      padding: 8px;
+    }
+
+    .asset-card-image {
+      width: 172px;
+      height: 172px;
+      background-color: #ddd;
+    }
+  }
+}

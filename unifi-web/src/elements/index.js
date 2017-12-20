@@ -7,6 +7,9 @@ import Icon from './icon'
 import Card from './card'
 import Table from './table'
 import Modal from './modal'
+import Radio from './radio'
+
+import Tabs from './tabs'
 
 import CircularProgressBar from './circular-progress-bar'
 
@@ -43,6 +46,7 @@ export {
   Checkbox,
   Switch,
   Select,
+  Radio,
 
   Button,
   Icon,
@@ -58,6 +62,7 @@ export {
 
   Card,
   SingleFilePicker,
+  Tabs,
 }
 
 export default null

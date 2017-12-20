@@ -424,6 +424,7 @@ html, body {
 
 .anticon-folderopen:before { content: "\e699"; }
 
+.anticon-search:before { content: "\e670"; }
 .anticon-search1:before { content: "\e670"; }
 
 .anticon-ellipsis1:before { content: "\e647"; }

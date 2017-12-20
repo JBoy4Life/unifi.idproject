@@ -8,6 +8,7 @@ export const EVACUATION_FLOOR_VIEW = '/evacuation/floor'
 
 export const LIVE_VIEW = '/live-view'
 export const LIVE_VIEW_FLOOR_VIEW = '/live-view/floor-view'
+export const LIVE_VIEW_DIRECTORY = '/live-view/directory'
 
 export const NAVIGATION = '/navigation'
 

@@ -8,11 +8,16 @@ import { PageContainer, LinkedSideNavigation } from '../../smart-components'
 
 import Dashboard from './dashboard'
 import FloorView from './floor-view'
+import DirectoryView from './directory'
 
 const menus = [
   {
     key: ROUTES.LIVE_VIEW,
     label: 'Dashboard',
+  },
+  {
+    key: ROUTES.LIVE_VIEW_DIRECTORY,
+    label: 'Directory',
   },
   {
     key: ROUTES.LIVE_VIEW_FLOOR_VIEW,
@@ -39,6 +44,11 @@ export default class LiveViewContainer extends Component {
                 exact
                 path={ROUTES.LIVE_VIEW_FLOOR_VIEW}
                 component={FloorView}
+              />
+              <Route
+                exact
+                path={ROUTES.LIVE_VIEW_DIRECTORY}
+                component={DirectoryView}
               />
             </Switch>
           </PageContent.Main>
