@@ -1,6 +1,7 @@
 package id.unifi.service.common.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -15,11 +16,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class Dispatcher<S> {
@@ -33,10 +37,15 @@ public class Dispatcher<S> {
     private final Class<S> sessionDataType;
     private final Function<Session, S> sessionDataCreator;
     private final ConcurrentMap<Session, S> sessionData;
-    private final List<SessionListener> sessionListeners;
+    private final Set<SessionListener<S>> sessionListeners;
+    private final Map<String, PayloadConsumer> messageListeners;
 
-    public interface SessionListener {
-        void onSessionCreated(Session session);
+    public interface PayloadConsumer {
+        void accept(ObjectMapper om, Session session, JsonNode node);
+    }
+
+    public interface SessionListener<S> {
+        void onSessionCreated(Session session, S sessionData);
         void onSessionDropped(Session session);
     }
 
@@ -59,49 +68,114 @@ public class Dispatcher<S> {
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        sessionListeners = new CopyOnWriteArrayList<>();
+        sessionListeners = new CopyOnWriteArraySet<>();
+        messageListeners = new ConcurrentHashMap<>();
     }
 
     public void dispatch(Session session, InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
         ObjectMapper om = protocol == Protocol.JSON ? jsonMapper : messagePackMapper;
         try {
-            Message request = parseMessage(stream, om);
+            Message message = parseMessage(stream, om);
 
-            ServiceRegistry.Operation operation = serviceRegistry.getOperation(request.messageType);
-            Object[] params = operation.params.entrySet().stream().map(entry -> {
-                if (entry.getValue() == sessionDataType) {
-                    return sessionData.get(session);
-                }
-                try {
-                    JsonNode paramNode = request.payload.get(entry.getKey());
-                    if (paramNode == null) {
-                        throw new RuntimeException(
-                                "Missing parameter: " + entry.getKey() + " of type " + entry.getValue());
-                    }
-                    return om.readValue(om.treeAsTokens(paramNode), om.constructType(entry.getValue()));
-                } catch (IOException e) {
-                    throw new RuntimeException("Error marshalling parameter for:" + entry.getKey(), e);
-                }
-            }).toArray();
-
-            Object result = serviceRegistry.invokeRpc(operation, params);
-
-            JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : om.valueToTree(result);
-            Message response = new Message(CURRENT_PROTOCOL_VERSION, request.releaseVersion, request.correlationId, operation.resultMessageType, payload);
-            log.trace("Response message: {}", response);
-            byte[] bytes = om.writeValueAsBytes(response);
-            if (log.isTraceEnabled()) {
-                log.trace("Sending marshalled response: " + BaseEncoding.base16().lowerCase().encode(bytes));
+            PayloadConsumer messageListener = messageListeners.get(message.messageType);
+            if (messageListener != null) {
+                messageListener.accept(om, session, message.payload);
+                return;
             }
-            returnChannel.send(ByteBuffer.wrap(bytes));
+
+            ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
+            processRequest(session, returnChannel, om, message, operation);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
+    private void processRequest(Session session,
+                                ReturnChannel returnChannel,
+                                ObjectMapper om,
+                                Message message,
+                                ServiceRegistry.Operation operation) throws JsonProcessingException {
+        Object[] params = operation.params.entrySet().stream().map(entry -> {
+            if (entry.getValue() == Session.class)
+                return session;
+            if (entry.getValue() == sessionDataType)
+                return sessionData.get(session);
+
+            String name = entry.getKey();
+            Type type = entry.getValue();
+            try {
+                JsonNode paramNode = message.payload.get(name);
+                if (paramNode == null) {
+                    throw new RuntimeException("Missing parameter: " + name + " of type " + type);
+                }
+                return om.readValue(om.treeAsTokens(paramNode), om.constructType(type));
+            } catch (IOException e) {
+                throw new RuntimeException("Error marshalling parameter for:" + name, e);
+            }
+        }).toArray();
+
+        switch (operation.invocationType) {
+            case RPC:
+                Object result = serviceRegistry.invokeRpc(operation, params);
+
+                JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : om.valueToTree(result);
+                Message rpcResponse = new Message(
+                        CURRENT_PROTOCOL_VERSION,
+                        message.releaseVersion,
+                        message.correlationId,
+                        operation.resultMessageType,
+                        payload);
+                log.trace("Response message: {}", rpcResponse);
+                byte[] bytes = om.writeValueAsBytes(rpcResponse);
+                if (log.isTraceEnabled()) {
+                    log.trace("Sending marshalled response: " + BaseEncoding.base16().lowerCase().encode(bytes));
+                }
+                returnChannel.send(ByteBuffer.wrap(bytes));
+                break;
+
+            case MULTI:
+                MessageListener<?> listenerParam = (MessageListener<Object>) (messageType, payloadObj) -> {
+                    JsonNode payloadNode = om.valueToTree(payloadObj);
+                    Message response = new Message(
+                            CURRENT_PROTOCOL_VERSION,
+                            message.releaseVersion,
+                            message.correlationId,
+                            messageType,
+                            payloadNode);
+                    log.trace("Multi-response message: {}", response);
+                    byte[] responseBytes = new byte[0];
+                    try {
+                        responseBytes = om.writeValueAsBytes(response);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (log.isTraceEnabled()) {
+                        log.trace("Sending marshalled response: " + BaseEncoding.base16().lowerCase().encode(responseBytes));
+                    }
+
+                    returnChannel.send(ByteBuffer.wrap(responseBytes));
+                };
+                serviceRegistry.invokeMulti(operation, params, listenerParam);
+                break;
+        }
+
+    }
+
+    public <T> void putMessageListener(String messageType, Type type, BiConsumer<Session, T> listener) {
+        messageListeners.put(messageType, (om, session, node) -> {
+            try {
+                T payload = om.readValue(om.treeAsTokens(node), om.constructType(type));
+                listener.accept(session, payload);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     public void createSession(Session session) {
-        sessionData.put(session, sessionDataCreator.apply(session));
-        sessionListeners.forEach(l -> l.onSessionCreated(session));
+        S sessionData = sessionDataCreator.apply(session);
+        this.sessionData.put(session, sessionData);
+        sessionListeners.forEach(l -> l.onSessionCreated(session, sessionData));
     }
 
     public void dropSession(Session session) {
@@ -109,7 +183,7 @@ public class Dispatcher<S> {
         sessionListeners.forEach(l -> l.onSessionDropped(session));
     }
 
-    public void addSessionListener(SessionListener listener) {
+    public void addSessionListener(SessionListener<S> listener) {
         sessionListeners.add(listener);
     }
 

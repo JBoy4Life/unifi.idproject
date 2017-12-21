@@ -28,6 +28,8 @@ public class AgentService {
         int rabbitMqPort();
 
         String clientId();
+
+        String siteId();
     }
 
     public static void main(String[] args) throws Exception {

@@ -11,11 +11,13 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ServiceRegistry {
     private static final Logger log = LoggerFactory.getLogger(ServiceRegistry.class);
@@ -41,7 +44,7 @@ public class ServiceRegistry {
                   Map<String, Type> params,
                   InvocationType invocationType,
                   Type resultType,
-                  String resultMessageType) {
+                  @Nullable String resultMessageType) {
             this.cls = cls;
             this.method = method;
             this.params = params;
@@ -73,6 +76,15 @@ public class ServiceRegistry {
     public Object invokeRpc(Operation operation, Object[] params) {
         try {
             return operation.method.invoke(serviceInstances.get(operation.cls), params);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void invokeMulti(Operation operation, Object[] params, MessageListener<?> listenerParam) {
+        Object[] allParams = Stream.concat(Arrays.stream(params), Stream.of(listenerParam)).toArray();
+        try {
+            operation.method.invoke(serviceInstances.get(operation.cls), allParams);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
@@ -159,27 +171,55 @@ public class ServiceRegistry {
                             ? LOWER_CAMEL.to(LOWER_HYPHEN, method.getName())
                             : operationAnnotation.name();
                     String messageType = operationNamespace + "." + operationName;
-                    String annotatedResultType = operationAnnotation.resultType();
-                    String resultTypeName = annotatedResultType.isEmpty()
-                            ? messageType + "-result"
-                            : annotatedResultType.startsWith(".") ? operationNamespace + annotatedResultType : annotatedResultType;
-
                     Type returnType = method.getGenericReturnType();
+                    Parameter[] methodParams = method.getParameters();
 
-                    Parameter[] methodParameters = method.getParameters();
-                    Map<String, Type> params = new LinkedHashMap<>(methodParameters.length);
-                    for (Parameter parameter : methodParameters) {
-                        if (!parameter.isNamePresent()) {
-                            throw new RuntimeException(
-                                    "Method parameter names not found. Java compiler must be called with -parameter.");
-                        }
-                        params.put(parameter.getName(), parameter.getParameterizedType());
+                    Type multiReturnType = getMultiResponseReturnType(returnType, methodParams);
+                    InvocationType invocationType =
+                            multiReturnType != null ? InvocationType.MULTI : InvocationType.RPC;
+                    Map<String, Type> params;
+                    switch (invocationType) {
+                        case MULTI:
+                            params = preloadParams(Arrays.copyOfRange(methodParams, 0, methodParams.length - 1));
+                            operations.put(messageType,
+                                    new Operation(cls, method, params, InvocationType.MULTI, multiReturnType, null));
+                            break;
+                        case RPC:
+                            String annotatedResultType = operationAnnotation.resultType();
+                            String resultTypeName = annotatedResultType.isEmpty()
+                                    ? messageType + "-result"
+                                    : annotatedResultType.startsWith(".") ? operationNamespace + annotatedResultType : annotatedResultType;
+
+                            params = preloadParams(methodParams);
+                            operations.put(messageType,
+                                    new Operation(cls, method, params, InvocationType.RPC, returnType, resultTypeName));
+                            break;
                     }
-                    operations.put(messageType,
-                            new Operation(cls, method, params, InvocationType.RPC, returnType, resultTypeName));
                 }
             }
         }
         return operations;
+    }
+
+    private static Map<String, Type> preloadParams(Parameter[] methodParameters) {
+        Map<String, Type> params = new LinkedHashMap<>(methodParameters.length);
+        for (Parameter parameter : methodParameters) {
+            if (!parameter.isNamePresent()) {
+                throw new RuntimeException(
+                        "Method parameter names not found. Java compiler must be called with -parameter.");
+            }
+            params.put(parameter.getName(), parameter.getParameterizedType());
+        }
+        return params;
+    }
+
+    private static Type getMultiResponseReturnType(Type methodReturnType, Parameter[] methodParameters) {
+        if (!methodReturnType.equals(Void.TYPE)) return null;
+
+        Type lastParamType = methodParameters[methodParameters.length - 1].getParameterizedType();
+        if (!(lastParamType instanceof ParameterizedType)) return null;
+        ParameterizedType type = (ParameterizedType) lastParamType;
+        if (type.getRawType() != MessageListener.class) return null;
+        return type.getActualTypeArguments()[0];
     }
 }

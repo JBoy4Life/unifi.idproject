@@ -8,5 +8,8 @@ CREATE TABLE core.antenna(
   PRIMARY KEY (client_id, site_id, reader_sn, port_number),
   CONSTRAINT fk_antenna_to_reader
     FOREIGN KEY (client_id, site_id, reader_sn)
-    REFERENCES core.reader
+    REFERENCES core.reader,
+  CONSTRAINT fk_antenna_to_zone
+    FOREIGN KEY (client_id, site_id, zone_id)
+    REFERENCES core.zone
 );
