@@ -1,20 +1,73 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { TextInput, Checkbox } from '../../../../../elements'
 
 import './index.scss'
 
-const FiltersHeader = props => (
-  <div className="directory-filters-header">
-    <TextInput.Search
-      className="search-bar"
-      placeholder="Search"
-      onSearch={props.onSearch}
-      enterButton
-    />
-    <Checkbox onChange={props.onChange}>Contact</Checkbox>
-    <Checkbox onChange={props.onChange}>Assets</Checkbox>
-    <Checkbox onChange={props.onChange}>Visitors</Checkbox>
-  </div>
-)
+export default class FiltersHeader extends Component {
+  state = {
+    searchValue: this.props.searchValue,
+  }
 
-export default FiltersHeader
+  componentWillReceiveProps(nextProps) {
+    if (this.props.searchValue !== nextProps.searchValue) {
+      this.setState({
+        searchValue: nextProps.searchValue,
+      })
+    }
+  }
+
+  onContactFilter = (ev) => {
+    this.props.onChange({ contacts: ev.target.checked })
+  }
+
+  onAssetFilter = (ev) => {
+    this.props.onChange({ assets: ev.target.checked })
+  }
+
+  onVisitorsFilter = (ev) => {
+    this.props.onChange({ visitors: ev.target.checked })
+  }
+
+  handleSearchChange = (ev) => {
+    this.setState({ searchValue: ev.target.value })
+  }
+
+  render() {
+    const { onSearch, filterValues } = this.props
+
+    return (
+      <div className="directory-filters-header">
+        <TextInput.Search
+          className="search-bar"
+          placeholder="Search"
+          onSearch={onSearch}
+          enterButton
+          onChange={this.handleSearchChange}
+          value={this.state.searchValue}
+        />
+
+        <Checkbox
+          checked={filterValues.indexOf('contacts') !== -1}
+          onChange={this.onContactFilter}
+        >
+          Contacts
+        </Checkbox>
+
+        <Checkbox
+          checked={filterValues.indexOf('assets') !== -1}
+          onChange={this.onAssetFilter}
+        >
+          Assets
+        </Checkbox>
+
+        <Checkbox
+          checked={filterValues.indexOf('visitors') !== -1}
+          onChange={this.onVisitorsFilter}
+        >
+          Visitors
+        </Checkbox>
+
+      </div>
+    )
+  }
+}

@@ -10,4 +10,14 @@ export const parseQueryString = string => string.replace('?', '').split('&').red
   return acc
 }, {})
 
+export const getQueryParams = (string) => {
+  const {
+    filter, view = 'list', grouping = 'all', search = '',
+  } = parseQueryString(string)
+  const filters = filter ? filter.split(',') : []
+  return {
+    filters, view, grouping, search,
+  }
+}
+
 export default null

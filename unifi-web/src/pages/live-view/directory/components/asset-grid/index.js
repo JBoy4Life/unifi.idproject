@@ -8,6 +8,8 @@ const renderAssetCard = item => (
     <div className="asset-meta">
       <div className="asset-card-name">{item.name}</div>
       <div className="asset-card-name">ID {item.id}</div>
+      <div className="asset-card-name">{item.last_seen}</div>
+      <div className="asset-card-name">{item.last_seen_location}</div>
     </div>
   </div>
 )

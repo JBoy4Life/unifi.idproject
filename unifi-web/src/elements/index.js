@@ -10,6 +10,7 @@ import Modal from './modal'
 import Radio from './radio'
 
 import Tabs from './tabs'
+import Collapse from './collapse'
 
 import CircularProgressBar from './circular-progress-bar'
 
@@ -63,6 +64,7 @@ export {
   Card,
   SingleFilePicker,
   Tabs,
+  Collapse,
 }
 
 export default null
