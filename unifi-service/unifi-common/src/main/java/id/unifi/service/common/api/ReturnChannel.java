@@ -4,4 +4,5 @@ import java.nio.ByteBuffer;
 
 public interface ReturnChannel {
     void send(ByteBuffer payload);
+    void send(String payload);
 }

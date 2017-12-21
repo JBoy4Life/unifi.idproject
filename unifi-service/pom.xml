@@ -29,7 +29,7 @@
         <jmdns.version>3.5.3</jmdns.version>
         <mina.version>2.0.16</mina.version>
         <velocity.version>1.7</velocity.version>            
-        <guava.version>23.5-jre</guava.version>
+        <guava.version>23.6-jre</guava.version>
         <amqp.client>5.0.0</amqp.client>
         <jooq.version>3.10.1</jooq.version>
         <jsr205.version>1.0</jsr205.version>
@@ -39,7 +39,6 @@
         <jersey.version>2.26</jersey.version>
         <spring.version>5.0.2.RELEASE</spring.version>
         <postgres.version>42.1.4</postgres.version>
-        <jedis.version>2.9.0</jedis.version>
         <flyway.version>5.0.2</flyway.version>
         <envy.version>1.7</envy.version>
         <slf4j.version>1.7.25</slf4j.version>

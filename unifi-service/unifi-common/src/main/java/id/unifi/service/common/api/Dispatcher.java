@@ -10,13 +10,13 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.google.common.io.BaseEncoding;
+import id.unifi.service.common.util.HexEncoded;
 import org.eclipse.jetty.websocket.api.Session;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -66,7 +66,7 @@ public class Dispatcher<S> {
         this.messageListeners = new ConcurrentHashMap<>();
     }
 
-    public void dispatch(Session session, InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
+    public void dispatch(Session session, MessageStream stream, Protocol protocol, ReturnChannel returnChannel) {
         ObjectMapper mapper = objectMappers.get(protocol);
         try {
             Message message = parseMessage(stream, mapper);
@@ -78,7 +78,7 @@ public class Dispatcher<S> {
             }
 
             ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
-            processRequest(session, returnChannel, mapper, message, operation);
+            processRequest(session, returnChannel, mapper, protocol, message, operation);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -86,9 +86,10 @@ public class Dispatcher<S> {
 
     private void processRequest(Session session,
                                 ReturnChannel returnChannel,
-                                ObjectMapper om,
+                                ObjectMapper mapper,
+                                Protocol protocol,
                                 Message message,
-                                ServiceRegistry.Operation operation) throws JsonProcessingException {
+                                ServiceRegistry.Operation operation) {
         Object[] params = operation.params.entrySet().stream().map(entry -> {
             if (entry.getValue() == Session.class)
                 return session;
@@ -102,7 +103,7 @@ public class Dispatcher<S> {
                 if (paramNode == null) {
                     throw new RuntimeException("Missing parameter: " + name + " of type " + type);
                 }
-                return om.readValue(om.treeAsTokens(paramNode), om.constructType(type));
+                return mapper.readValue(mapper.treeAsTokens(paramNode), mapper.constructType(type));
             } catch (IOException e) {
                 throw new RuntimeException("Error marshalling parameter for:" + name, e);
             }
@@ -112,7 +113,7 @@ public class Dispatcher<S> {
             case RPC:
                 Object result = serviceRegistry.invokeRpc(operation, params);
 
-                JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : om.valueToTree(result);
+                JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : mapper.valueToTree(result);
                 Message rpcResponse = new Message(
                         CURRENT_PROTOCOL_VERSION,
                         message.releaseVersion,
@@ -120,16 +121,13 @@ public class Dispatcher<S> {
                         operation.resultMessageType,
                         payload);
                 log.trace("Response message: {}", rpcResponse);
-                byte[] bytes = om.writeValueAsBytes(rpcResponse);
-                if (log.isTraceEnabled()) {
-                    log.trace("Sending marshalled response: " + BaseEncoding.base16().lowerCase().encode(bytes));
-                }
-                returnChannel.send(ByteBuffer.wrap(bytes));
+
+                sendPayload(returnChannel, mapper, protocol, rpcResponse);
                 break;
 
             case MULTI:
-                MessageListener<?> listenerParam = (MessageListener<Object>) (messageType, payloadObj) -> {
-                    JsonNode payloadNode = om.valueToTree(payloadObj);
+                MessageListener<Object> listenerParam = (messageType, payloadObj) -> {
+                    JsonNode payloadNode = mapper.valueToTree(payloadObj);
                     Message response = new Message(
                             CURRENT_PROTOCOL_VERSION,
                             message.releaseVersion,
@@ -137,28 +135,17 @@ public class Dispatcher<S> {
                             messageType,
                             payloadNode);
                     log.trace("Multi-response message: {}", response);
-                    byte[] responseBytes;
-                    try {
-                        responseBytes = om.writeValueAsBytes(response);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                    if (log.isTraceEnabled()) {
-                        log.trace("Sending marshalled response: " + BaseEncoding.base16().lowerCase().encode(responseBytes));
-                    }
-
-                    returnChannel.send(ByteBuffer.wrap(responseBytes));
+                    sendPayload(returnChannel, mapper, protocol, response);
                 };
                 serviceRegistry.invokeMulti(operation, params, listenerParam);
                 break;
         }
-
     }
 
     public <T> void putMessageListener(String messageType, Type type, BiConsumer<Session, T> listener) {
-        messageListeners.put(messageType, (om, session, node) -> {
+        messageListeners.put(messageType, (mapper, session, node) -> {
             try {
-                T payload = om.readValue(om.treeAsTokens(node), om.constructType(type));
+                T payload = mapper.readValue(mapper.treeAsTokens(node), mapper.constructType(type));
                 listener.accept(session, payload);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -181,19 +168,45 @@ public class Dispatcher<S> {
         sessionListeners.add(listener);
     }
 
-    private static ObjectMapper configureObjectMapper(ObjectMapper om) {
-        return om.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+    private static ObjectMapper configureObjectMapper(ObjectMapper mapper) {
+        return mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
-    private static Message parseMessage(InputStream stream, ObjectMapper om) throws IOException {
-        log.trace("Parsing request");
-        JsonNode requestMessage = om.readTree(stream);
-        log.trace("Request parsed: {}", requestMessage);
-        Message request = om.treeToValue(requestMessage, Message.class);
+    private static Message parseMessage(MessageStream stream, ObjectMapper mapper) throws IOException {
+        JsonNode message = stream.isBinary() ? mapper.readTree(stream.inputStream) : mapper.readTree(stream.reader);
+        log.trace("Request parsed: {}", message);
+        Message request = mapper.treeToValue(message, Message.class);
         log.trace("Request unmarshalled: {}", request);
         return request;
+    }
+
+    private static void sendPayload(ReturnChannel returnChannel,
+                                    ObjectMapper mapper,
+                                    Protocol protocol,
+                                    Message payload) {
+        if (protocol.isBinary()) {
+            byte[] binaryPayload;
+            try {
+                binaryPayload = mapper.writeValueAsBytes(payload);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            if (log.isTraceEnabled()) {
+                log.trace("Sending marshalled response: {}", new HexEncoded(binaryPayload));
+            }
+            returnChannel.send(ByteBuffer.wrap(binaryPayload));
+        } else {
+            String stringPayload;
+            try {
+                stringPayload = mapper.writeValueAsString(payload);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            log.trace("Sending marshalled response: {}", stringPayload);
+            returnChannel.send(stringPayload);
+        }
     }
 }
