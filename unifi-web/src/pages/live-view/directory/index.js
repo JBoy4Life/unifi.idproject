@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
 
-import { compose } from 'redux'
+import { compose, bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router-dom'
+
+import { actions as zonesActions } from '../../../reducers/zones'
 
 import * as ROUTES from '../../../utils/routes'
 
@@ -98,6 +100,16 @@ class DirectoryView extends Component {
     queryParams: getQueryParams(this.props.location.search),
   }
 
+  componentDidMount() {
+    const { listZones, listHolder } = this.props
+    // console.log(listenToSubscription)
+
+    listZones()
+    listHolder()
+    // console.log('should check if we have data for clients and zones', listZones, listHolder)
+    // console.log(listenToSubscription)
+  }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.location.search !== this.props.location.search) {
       this.setState({
@@ -173,12 +185,15 @@ class DirectoryView extends Component {
       return (
         <Collapse defaultActiveKey={keys.map((item, idx) => idx.toString())}>
           {
-          keys.map((key, index) => (
-            <Collapse.Panel key={index.toString()} header={this.renderZoneGroupTitle(key, itemGroups[key])}>
-              {this.renderContentList(itemGroups[key])}
-            </Collapse.Panel>
-          ))
-        }
+            keys.map((key, index) => (
+              <Collapse.Panel
+                key={index.toString()}
+                header={this.renderZoneGroupTitle(key, itemGroups[key])}
+              >
+                {this.renderContentList(itemGroups[key])}
+              </Collapse.Panel>
+            ))
+          }
         </Collapse>
       )
     }
@@ -208,7 +223,14 @@ class DirectoryView extends Component {
   }
 }
 
+export const mapStateToProps = (state) => {
+  console.log(state)
+  return state
+}
+
+export const mapDispatch = dispatch => (bindActionCreators(zonesActions, dispatch))
+
 export default compose(
   withRouter,
-  connect(),
+  connect(mapStateToProps, mapDispatch),
 )(DirectoryView)

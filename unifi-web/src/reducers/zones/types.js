@@ -1,0 +1,2 @@
+export const ZONE_LIST_FETCH = 'unifi.ZONE_LIST_FETCH'
+export const ZONE_LIST_HOLDERS_FETCH = 'unifi.ZONE_LIST_HOLDERS_FETCH'
