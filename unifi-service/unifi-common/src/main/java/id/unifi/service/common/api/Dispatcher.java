@@ -3,6 +3,7 @@ package id.unifi.service.common.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -31,12 +32,11 @@ public class Dispatcher<S> {
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
 
-    private final ObjectMapper jsonMapper;
-    private final ObjectMapper messagePackMapper;
+    private final Map<Protocol, ObjectMapper> objectMappers;
     private final ServiceRegistry serviceRegistry;
     private final Class<S> sessionDataType;
     private final Function<Session, S> sessionDataCreator;
-    private final ConcurrentMap<Session, S> sessionData;
+    private final ConcurrentMap<Session, S> sessionDataStore;
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, PayloadConsumer> messageListeners;
 
@@ -55,36 +55,30 @@ public class Dispatcher<S> {
         this.serviceRegistry = serviceRegistry;
         this.sessionDataType = sessionDataType;
         this.sessionDataCreator = sessionDataCreator;
-        this.sessionData = new ConcurrentHashMap<>();
+        this.sessionDataStore = new ConcurrentHashMap<>();
 
-        jsonMapper = new ObjectMapper()
-                .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMappers = Map.of(
+                Protocol.JSON, configureObjectMapper(new ObjectMapper(new MappingJsonFactory())),
+                Protocol.MSGPACK, configureObjectMapper(new ObjectMapper(new MessagePackFactory()))
+        );
 
-        messagePackMapper = new ObjectMapper(new MessagePackFactory())
-                .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        sessionListeners = new CopyOnWriteArraySet<>();
-        messageListeners = new ConcurrentHashMap<>();
+        this.sessionListeners = new CopyOnWriteArraySet<>();
+        this.messageListeners = new ConcurrentHashMap<>();
     }
 
     public void dispatch(Session session, InputStream stream, Protocol protocol, ReturnChannel returnChannel) {
-        ObjectMapper om = protocol == Protocol.JSON ? jsonMapper : messagePackMapper;
+        ObjectMapper mapper = objectMappers.get(protocol);
         try {
-            Message message = parseMessage(stream, om);
+            Message message = parseMessage(stream, mapper);
 
             PayloadConsumer messageListener = messageListeners.get(message.messageType);
             if (messageListener != null) {
-                messageListener.accept(om, session, message.payload);
+                messageListener.accept(mapper, session, message.payload);
                 return;
             }
 
             ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
-            processRequest(session, returnChannel, om, message, operation);
+            processRequest(session, returnChannel, mapper, message, operation);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -99,7 +93,7 @@ public class Dispatcher<S> {
             if (entry.getValue() == Session.class)
                 return session;
             if (entry.getValue() == sessionDataType)
-                return sessionData.get(session);
+                return sessionDataStore.get(session);
 
             String name = entry.getKey();
             Type type = entry.getValue();
@@ -143,7 +137,7 @@ public class Dispatcher<S> {
                             messageType,
                             payloadNode);
                     log.trace("Multi-response message: {}", response);
-                    byte[] responseBytes = new byte[0];
+                    byte[] responseBytes;
                     try {
                         responseBytes = om.writeValueAsBytes(response);
                     } catch (JsonProcessingException e) {
@@ -174,17 +168,24 @@ public class Dispatcher<S> {
 
     public void createSession(Session session) {
         S sessionData = sessionDataCreator.apply(session);
-        this.sessionData.put(session, sessionData);
+        sessionDataStore.put(session, sessionData);
         sessionListeners.forEach(l -> l.onSessionCreated(session, sessionData));
     }
 
     public void dropSession(Session session) {
-        sessionData.remove(session);
+        sessionDataStore.remove(session);
         sessionListeners.forEach(l -> l.onSessionDropped(session));
     }
 
     public void addSessionListener(SessionListener<S> listener) {
         sessionListeners.add(listener);
+    }
+
+    private static ObjectMapper configureObjectMapper(ObjectMapper om) {
+        return om.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
+                .registerModule(new Jdk8Module())
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     private static Message parseMessage(InputStream stream, ObjectMapper om) throws IOException {
