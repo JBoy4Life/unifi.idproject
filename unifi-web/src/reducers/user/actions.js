@@ -6,4 +6,9 @@ export const loginRequest = ({ username, password, remember }) => {
   }
 }
 
+export const testAction = ({ user }) => ({
+  user,
+  type: 'TEST_USER',
+})
+
 export default null

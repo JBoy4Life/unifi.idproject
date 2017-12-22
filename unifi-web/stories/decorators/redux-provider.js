@@ -3,7 +3,7 @@ import { Provider } from 'react-redux'
 import { configureStore } from '../../src/main/store'
 
 
-const store = configureStore()
+const { store } = configureStore()
 
 export default function reduxProvider(storyFn) {
   return (
