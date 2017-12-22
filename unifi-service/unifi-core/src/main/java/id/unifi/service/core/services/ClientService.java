@@ -2,6 +2,7 @@ package id.unifi.service.core.services;
 
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
@@ -9,6 +10,7 @@ import static id.unifi.service.core.db.Tables.CLIENT;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,8 +56,12 @@ public class ClientService {
     @ApiOperation
     public void registerClient(String clientId, String displayName, byte[] logo) {
         log.info("Registering client " + clientId);
-        db.execute(sql -> sql.insertInto(CLIENT, CLIENT.CLIENT_ID, CLIENT.DISPLAY_NAME, CLIENT.LOGO)
-                .values(clientId, displayName, logo)
-                .execute());
+        try {
+            db.execute(sql -> sql.insertInto(CLIENT, CLIENT.CLIENT_ID, CLIENT.DISPLAY_NAME, CLIENT.LOGO)
+                    .values(clientId, displayName, logo)
+                    .execute());
+        } catch (DuplicateKeyException e) {
+            throw new AlreadyExists("client");
+        }
     }
 }

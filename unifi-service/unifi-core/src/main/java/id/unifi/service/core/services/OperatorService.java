@@ -4,7 +4,9 @@ import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.api.errors.AuthenticationFailed;
+import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
@@ -25,6 +27,7 @@ import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import static java.util.stream.Collectors.toList;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -87,12 +90,17 @@ public class OperatorService {
                                  boolean invite) {
         OperatorPK onboarder = session.getOperator() != null ? session.getOperator() : new OperatorPK(clientId, "???");
         db.execute(sql -> {
-            sql.insertInto(OPERATOR)
-                    .set(OPERATOR.CLIENT_ID, clientId)
-                    .set(OPERATOR.USERNAME, username)
-                    .set(OPERATOR.EMAIL, email)
-                    .set(OPERATOR.ACTIVE, true)
-                    .execute();
+            try {
+                sql.insertInto(OPERATOR)
+                        .set(OPERATOR.CLIENT_ID, clientId)
+                        .set(OPERATOR.USERNAME, username)
+                        .set(OPERATOR.EMAIL, email)
+                        .set(OPERATOR.ACTIVE, true)
+                        .execute();
+            } catch (DuplicateKeyException e) {
+                throw new AlreadyExists("operator");
+            }
+
             if (invite) {
                 requestPasswordSet(sql, clientId, username, Optional.of(email), Optional.of(onboarder));
             }
@@ -131,8 +139,9 @@ public class OperatorService {
 
     @ApiOperation
     public void invalidateAuthToken(OperatorSessionData session) {
-        if (session.getSessionToken() != null) {
-            sessionTokenStore.remove(session.getSessionToken());
+        byte[] sessionToken = session.getSessionToken();
+        if (sessionToken != null) {
+            sessionTokenStore.remove(sessionToken);
             session.setAuth(null, null);
         }
     }
@@ -240,7 +249,7 @@ public class OperatorService {
 
         String actualEmailAddress = emailAddress.or(() ->
                 findEmail(sql, clientId, username))
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseThrow(() -> new NotFound("operator"));
 
         EmailSenderProvider.EmailMessage message;
         if (onboarder.isPresent()) {
@@ -261,11 +270,7 @@ public class OperatorService {
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData) {
-        OperatorPK operator = sessionData.getOperator();
-        if (operator == null) {
-            throw new Unauthorized();
-        }
-        return operator;
+        return Optional.ofNullable(sessionData.getOperator()).orElseThrow(Unauthorized::new);
     }
 
     private static Optional<byte[]> sqlPasswordHash(DSLContext sql, String clientId, String username) {

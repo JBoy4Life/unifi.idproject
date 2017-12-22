@@ -90,9 +90,9 @@ public class SiteService {
         public final String clientReference;
         public final String name;
         public final String holderType;
-        public final Boolean active;
+        public final boolean active;
 
-        public HolderInfo(String clientReference, String name, String holderType, Boolean active) {
+        public HolderInfo(String clientReference, String name, String holderType, boolean active) {
             this.clientReference = clientReference;
             this.name = name;
             this.holderType = holderType;
