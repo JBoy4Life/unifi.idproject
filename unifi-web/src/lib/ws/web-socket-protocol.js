@@ -88,10 +88,10 @@ export default class WebSocketProtocol {
     return resource
   }
 
-  subscribe(content, callback) {
+  subscribe(content, params, callback) {
     this.corelations[content.correlationId] = {
       callback, content,
     }
-    this.ws.send(content)
+    this.ws.send(content, params)
   }
 }

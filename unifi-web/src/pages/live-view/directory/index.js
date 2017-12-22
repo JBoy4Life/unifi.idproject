@@ -101,13 +101,10 @@ class DirectoryView extends Component {
   }
 
   componentDidMount() {
-    const { listZones, listHolder } = this.props
-    // console.log(listenToSubscription)
-
+    const { listZones, listHolder, listenToSubscriptions } = this.props
     listZones()
     listHolder()
-    // console.log('should check if we have data for clients and zones', listZones, listHolder)
-    // console.log(listenToSubscription)
+    listenToSubscriptions()
   }
 
   componentWillReceiveProps(nextProps) {

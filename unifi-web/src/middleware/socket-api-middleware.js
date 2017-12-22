@@ -7,18 +7,27 @@
  * @param {Object} socketClient - implementor of the socket client
  */
 const socketApiMiddleware = socketClient => store => next => (action) => {
-  if (!action.socketRequest) {
-    return next(action)
+  if (action.socketRequest) {
+    const promiseResource = socketClient.request(action.socketRequest, { json: true })
+
+    store.dispatch({
+      type: action.type,
+      payload: promiseResource,
+    })
+
+    return promiseResource
   }
 
-  const promiseResource = socketClient.request(action.socketRequest, { json: true })
+  if (action.socketSubscribe) {
+    socketClient.subscribe(action.socketSubscribe, { json: true }, (data) => {
+      store.dispatch({
+        type: `${action.type}_UPDATE`,
+        data,
+      })
+    })
+  }
 
-  store.dispatch({
-    type: action.type,
-    payload: promiseResource,
-  })
-
-  return promiseResource
+  return next(action)
 }
 
 export default socketApiMiddleware

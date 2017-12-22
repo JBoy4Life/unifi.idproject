@@ -32,13 +32,16 @@ export const listHolder = (clientId = 'deloitte', siteId = '1nss') => {
   }
 }
 
-export const listenToSubscription = (clientId = 'deloitte', siteId = '1nss') => {
-  console.log({
+export const listenToSubscriptions = (clientId = 'deloitte', siteId = '1nss') => {
+  const pack = new WSPackage({
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
-    correlationId: 'wd2PsI/ajHYybCVWlvNkUg==',
     messageType: 'core.site.subscribe-detections',
     payload: { clientId, siteId },
   })
-  return { type: 1 }
+
+  return {
+    socketSubscribe: pack.content,
+    type: ZONE_LIST_HOLDERS_FETCH,
+  }
 }
