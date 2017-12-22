@@ -8,7 +8,7 @@ Requires node and npm and yarn to be installed on the local machine.
 
 ## Run steps
 
-`yarn run` - runs the app on a localhost 3000 port
+`SOCKET_URI=<vagrant socket ip with port incluted> yarn run` - runs the app on a localhost 3000 port
 
 ## Dev Workflow 
 

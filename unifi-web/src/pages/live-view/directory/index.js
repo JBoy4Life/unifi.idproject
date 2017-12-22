@@ -179,7 +179,6 @@ class DirectoryView extends Component {
     } = this.props
 
     const filteredItems = filterItems(discoveredList, filters, search)
-
     return (
       <div className="directory-view-container">
 
