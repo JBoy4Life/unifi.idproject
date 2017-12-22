@@ -4,6 +4,8 @@ import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.AuthenticationFailed;
+import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
@@ -78,7 +80,11 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void registerOperator(OperatorSessionData session, String clientId, String username, String email, boolean invite) {
+    public void registerOperator(OperatorSessionData session,
+                                 String clientId,
+                                 String username,
+                                 String email,
+                                 boolean invite) {
         OperatorPK onboarder = session.getOperator() != null ? session.getOperator() : new OperatorPK(clientId, "???");
         db.execute(sql -> {
             sql.insertInto(OPERATOR)
@@ -107,7 +113,7 @@ public class OperatorService {
         } else {
             // TODO recordLoginAttempt(clientId, username, false);
             session.setAuth(null, null);
-            throw new RuntimeException("Auth failed");
+            throw new AuthenticationFailed();
         }
     }
 
@@ -118,7 +124,8 @@ public class OperatorService {
             session.setAuth(sessionToken, operator.get());
             return new ExpiringToken(sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
         } else {
-            throw new RuntimeException("Auth failed");
+            session.setAuth(null, null);
+            throw new AuthenticationFailed();
         }
     }
 
@@ -132,41 +139,32 @@ public class OperatorService {
 
     @ApiOperation
     public List<OperatorInfo> listOperators(OperatorSessionData session, String clientId) {
-        if (session.getOperator() != null) {
-            return db.execute(sql -> sql.selectFrom(OPERATOR)
-                    .where(OPERATOR.CLIENT_ID.eq(clientId))
-                    .stream()
-                    .map(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())))
-                    .collect(toList());
-        } else {
-            throw new RuntimeException("Unauthorized");
-        }
+        authorize(session);
+        return db.execute(sql -> sql.selectFrom(OPERATOR)
+                .where(OPERATOR.CLIENT_ID.eq(clientId))
+                .stream()
+                .map(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())))
+                .collect(toList());
     }
 
     @ApiOperation
     public OperatorInfo getOperator(OperatorSessionData session, String clientId, String username) {
-        if (session.getOperator() != null) {
-            return db.execute(sql -> sql.selectFrom(OPERATOR)
-                    .where(OPERATOR.CLIENT_ID.eq(clientId))
-                    .and(OPERATOR.USERNAME.eq(username))
-                    .fetchOptional()
-                    .map(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())))
-                    .orElse(null);
-        } else {
-            throw new RuntimeException("Unauthorized");
-        }
+        authorize(session);
+        return db.execute(sql -> sql.selectFrom(OPERATOR)
+                .where(OPERATOR.CLIENT_ID.eq(clientId))
+                .and(OPERATOR.USERNAME.eq(username))
+                .fetchOptional()
+                .map(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())))
+                .orElse(null);
     }
 
     @ApiOperation
     public void inviteOperator(OperatorSessionData session, String clientId, String username) {
-        if (session.getOperator() != null) {
-            db.execute(sql -> {
-                requestPasswordSet(sql, clientId, username, Optional.empty(), Optional.of(session.getOperator()));
-                return null;
-            });
-        } else {
-            throw new RuntimeException("Unauthorized");
-        }
+        OperatorPK operator = authorize(session);
+        db.execute(sql -> {
+            requestPasswordSet(sql, clientId, username, Optional.empty(), Optional.of(operator));
+            return null;
+        });
     }
 
     @ApiOperation
@@ -200,25 +198,21 @@ public class OperatorService {
                 setPassword(sql, clientId, username, password);
                 return null;
             } else {
-                throw new RuntimeException("Invalid token");
+                throw new AuthenticationFailed();
             }
         });
     }
 
     @ApiOperation
     public void changePassword(OperatorSessionData session, String currentPassword, String password) {
-        OperatorPK operator = session.getOperator();
-        if (operator != null) {
-            if (passwordMatches(operator.clientId, operator.username, currentPassword)) {
-                db.execute(sql -> {
-                    setPassword(sql, operator.clientId, operator.username, password);
-                    return null;
-                });
-            } else {
-                throw new RuntimeException("Password mismatch");
-            }
+        OperatorPK operator = authorize(session);
+        if (passwordMatches(operator.clientId, operator.username, currentPassword)) {
+            db.execute(sql -> {
+                setPassword(sql, operator.clientId, operator.username, password);
+                return null;
+            });
         } else {
-            throw new RuntimeException("Not logged in");
+            throw new AuthenticationFailed();
         }
     }
 
@@ -264,6 +258,14 @@ public class OperatorService {
                 .set(OPERATOR_LOGIN_ATTEMPT.USERNAME, username)
                 .set(OPERATOR_LOGIN_ATTEMPT.SUCCESSFUL, successful)
                 .execute());
+    }
+
+    private static OperatorPK authorize(OperatorSessionData sessionData) {
+        OperatorPK operator = sessionData.getOperator();
+        if (operator == null) {
+            throw new Unauthorized();
+        }
+        return operator;
     }
 
     private static Optional<byte[]> sqlPasswordHash(DSLContext sql, String clientId, String username) {

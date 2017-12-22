@@ -1,7 +1,9 @@
 package id.unifi.service.common.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,9 +11,13 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.google.common.io.BaseEncoding;
+import id.unifi.service.common.api.errors.InternalServerError;
+import id.unifi.service.common.api.errors.InvalidParameterFormat;
+import id.unifi.service.common.api.errors.MarshallableError;
+import id.unifi.service.common.api.errors.MissingParameter;
 import id.unifi.service.common.util.HexEncoded;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +74,9 @@ public class Dispatcher<S> {
 
     public void dispatch(Session session, MessageStream stream, Protocol protocol, ReturnChannel returnChannel) {
         ObjectMapper mapper = objectMappers.get(protocol);
+        Message message = null;
         try {
-            Message message = parseMessage(stream, mapper);
+            message = parseMessage(stream, mapper);
 
             PayloadConsumer messageListener = messageListeners.get(message.messageType);
             if (messageListener != null) {
@@ -81,64 +88,18 @@ public class Dispatcher<S> {
             processRequest(session, returnChannel, mapper, protocol, message, operation);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private void processRequest(Session session,
-                                ReturnChannel returnChannel,
-                                ObjectMapper mapper,
-                                Protocol protocol,
-                                Message message,
-                                ServiceRegistry.Operation operation) {
-        Object[] params = operation.params.entrySet().stream().map(entry -> {
-            if (entry.getValue() == Session.class)
-                return session;
-            if (entry.getValue() == sessionDataType)
-                return sessionDataStore.get(session);
-
-            String name = entry.getKey();
-            Type type = entry.getValue();
-            try {
-                JsonNode paramNode = message.payload.get(name);
-                if (paramNode == null) {
-                    throw new RuntimeException("Missing parameter: " + name + " of type " + type);
-                }
-                return mapper.readValue(mapper.treeAsTokens(paramNode), mapper.constructType(type));
-            } catch (IOException e) {
-                throw new RuntimeException("Error marshalling parameter for:" + name, e);
+        } catch (MarshallableError e) {
+            if (message != null) {
+                sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
+            } else {
+                session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
             }
-        }).toArray();
-
-        switch (operation.invocationType) {
-            case RPC:
-                Object result = serviceRegistry.invokeRpc(operation, params);
-
-                JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : mapper.valueToTree(result);
-                Message rpcResponse = new Message(
-                        CURRENT_PROTOCOL_VERSION,
-                        message.releaseVersion,
-                        message.correlationId,
-                        operation.resultMessageType,
-                        payload);
-                log.trace("Response message: {}", rpcResponse);
-
-                sendPayload(returnChannel, mapper, protocol, rpcResponse);
-                break;
-
-            case MULTI:
-                MessageListener<Object> listenerParam = (messageType, payloadObj) -> {
-                    JsonNode payloadNode = mapper.valueToTree(payloadObj);
-                    Message response = new Message(
-                            CURRENT_PROTOCOL_VERSION,
-                            message.releaseVersion,
-                            message.correlationId,
-                            messageType,
-                            payloadNode);
-                    log.trace("Multi-response message: {}", response);
-                    sendPayload(returnChannel, mapper, protocol, response);
-                };
-                serviceRegistry.invokeMulti(operation, params, listenerParam);
-                break;
+        } catch (RuntimeException e) {
+            if (message != null) {
+                sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, new InternalServerError()));
+            } else {
+                session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
+            }
         }
     }
 
@@ -166,6 +127,87 @@ public class Dispatcher<S> {
 
     public void addSessionListener(SessionListener<S> listener) {
         sessionListeners.add(listener);
+    }
+
+    private void processRequest(Session session,
+                                ReturnChannel returnChannel,
+                                ObjectMapper mapper,
+                                Protocol protocol,
+                                Message message,
+                                ServiceRegistry.Operation operation) {
+        Object[] params = operation.params.entrySet().stream().map(entry -> {
+            if (entry.getValue() == Session.class)
+                return session;
+            if (entry.getValue() == sessionDataType)
+                return sessionDataStore.get(session);
+
+            String name = entry.getKey();
+            Type type = entry.getValue();
+            try {
+                JsonNode paramNode = message.payload.get(name);
+                if (paramNode == null || paramNode.isNull()) {
+                    throw new MissingParameter(name, type.getTypeName());
+                }
+                JsonParser parser = mapper.treeAsTokens(paramNode);
+                JavaType valueType = mapper.constructType(type);
+                return mapper.readValue(parser, valueType);
+            } catch (JsonProcessingException e) {
+                throw new InvalidParameterFormat(name, e.getMessage());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).toArray();
+
+        switch (operation.invocationType) {
+            case RPC:
+                Message rpcResponse;
+                try {
+                    Object result = serviceRegistry.invokeRpc(operation, params);
+
+                    JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : mapper.valueToTree(result);
+                    rpcResponse = new Message(
+                            CURRENT_PROTOCOL_VERSION,
+                            message.releaseVersion,
+                            message.correlationId,
+                            operation.resultMessageType,
+                            payload);
+                    log.trace("Response message: {}", rpcResponse);
+                } catch (MarshallableError e) {
+                    rpcResponse = errorMessage(mapper, message, e);
+                }
+
+                sendPayload(returnChannel, mapper, protocol, rpcResponse);
+                break;
+
+            case MULTI:
+                MessageListener<Object> listenerParam = (messageType, payloadObj) -> {
+                    JsonNode payloadNode = mapper.valueToTree(payloadObj);
+                    Message response = new Message(
+                            CURRENT_PROTOCOL_VERSION,
+                            message.releaseVersion,
+                            message.correlationId,
+                            messageType,
+                            payloadNode);
+                    log.trace("Multi-response message: {}", response);
+                    sendPayload(returnChannel, mapper, protocol, response);
+                };
+
+                try {
+                    serviceRegistry.invokeMulti(operation, params, listenerParam);
+                } catch (MarshallableError e) {
+                    sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
+                }
+                break;
+        }
+    }
+
+    private static Message errorMessage(ObjectMapper mapper, Message message, MarshallableError e) {
+        return new Message(
+                CURRENT_PROTOCOL_VERSION,
+                message.releaseVersion,
+                message.correlationId,
+                e.getProtocolMessageType(),
+                mapper.valueToTree(e));
     }
 
     private static ObjectMapper configureObjectMapper(ObjectMapper mapper) {

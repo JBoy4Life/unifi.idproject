@@ -7,6 +7,7 @@ import com.statemachinesystems.envy.Envy;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.UnknownMessageType;
 import id.unifi.service.common.config.UnifiConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +77,12 @@ public class ServiceRegistry {
     public Object invokeRpc(Operation operation, Object[] params) {
         try {
             return operation.method.invoke(serviceInstances.get(operation.cls), params);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException() instanceof RuntimeException
+                    ? (RuntimeException) e.getCause()
+                    : new RuntimeException(e);
         }
     }
 
@@ -85,15 +90,19 @@ public class ServiceRegistry {
         Object[] allParams = Stream.concat(Arrays.stream(params), Stream.of(listenerParam)).toArray();
         try {
             operation.method.invoke(serviceInstances.get(operation.cls), allParams);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException() instanceof RuntimeException
+                    ? (RuntimeException) e.getCause()
+                    : new RuntimeException(e);
         }
     }
 
     public Operation getOperation(String messageType) {
         Operation operation = operations.get(messageType);
         if (operation == null) {
-            throw new RuntimeException("Operation not found: " + messageType);
+            throw new UnknownMessageType(messageType);
         }
         return operation;
     }
