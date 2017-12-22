@@ -1,6 +1,10 @@
 import { WSPackage } from '../../lib/ws'
 
-import { ZONE_LIST_FETCH, ZONE_LIST_HOLDERS_FETCH } from './types'
+import {
+  ZONE_LIST_FETCH,
+  ZONE_LIST_HOLDERS_FETCH,
+  ZONE_ENTITIES_SUBSCRIBE,
+} from './types'
 
 export const listZones = (clientId = 'deloitte', siteId = '1nss') => {
   const pack = new WSPackage({
@@ -42,6 +46,6 @@ export const listenToSubscriptions = (clientId = 'deloitte', siteId = '1nss') =>
 
   return {
     socketSubscribe: pack.content,
-    type: ZONE_LIST_HOLDERS_FETCH,
+    type: ZONE_ENTITIES_SUBSCRIBE,
   }
 }

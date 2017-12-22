@@ -37,7 +37,7 @@ export default class WebSocketLayer {
     let handler = callback
     if (parse) {
       handler = (event) => {
-        console.log('listen', event.data)
+        // console.log('listen', event.data)
         if (typeof event.data === 'string') {
           callback(event, JSON.parse(event.data))
         } else {
@@ -94,14 +94,14 @@ export default class WebSocketLayer {
     // console.log('buffer data view', encodedContent.buffer)
     // this.socket.send(encodedContent.buffer)
 
-    console.log(content, json)
+    // console.log(content, json)
     if (!this.isConnected) {
       await this.connected
     }
 
-    console.log('connected, sending')
+    // console.log('connected, sending')
     if (json) {
-      console.log('sending', JSON.stringify(content))
+      // console.log('sending', JSON.stringify(content))
       this.socket.send(JSON.stringify(content))
     } else {
       const encodedContent = this.encodeJSON(content)

@@ -1,17 +1,21 @@
 import React, { Component } from 'react'
+import moment from 'moment'
 
 import { compose, bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router-dom'
 
-import { actions as zonesActions } from '../../../reducers/zones'
+import {
+  actions as zonesActions,
+  selectors as zoneSelectors,
+} from '../../../reducers/zones'
 
 import * as ROUTES from '../../../utils/routes'
 
 import { PageContentTitle, PageContentUnderTitle } from '../../../components'
 import { Collapse } from '../../../elements'
 import { getQueryParams } from '../../../utils/helpers'
-import { groupItems } from './utils/helpers'
+import { groupItems, filterItems } from './utils/helpers'
 
 import FiltersHeader from './components/filters-header'
 import GroupingHeader from './components/grouping-header'
@@ -20,42 +24,6 @@ import AssetList from './components/asset-list'
 import AssetGrid from './components/asset-grid'
 
 import './index.scss'
-
-const dataSource = [{
-  key: '1',
-  name: 'Jhon Doe',
-  id: '56895',
-  type: 'contractor',
-  last_seen: new Date().getTime(),
-  last_seen_location: 'S1B',
-}, {
-  key: '2',
-  name: 'Jhon Doe',
-  id: 'ap12854',
-  type: 'visitor',
-  last_seen: new Date().getTime(),
-  last_seen_location: 'S1B',
-}, {
-  key: '3',
-  name: 'Jhon Doe',
-  id: '10231',
-  type: 'asset',
-  last_seen: new Date().getTime(),
-  last_seen_location: 'S1A',
-}, {
-  key: '4',
-  name: 'Jhon Doe',
-  id: '2341151',
-  type: 'asset',
-  last_seen: new Date().getTime(),
-  last_seen_location: 'S1A',
-}, {
-  key: '5',
-  name: 'Jhon Doe',
-  type: 'contractor',
-  last_seen: new Date().getTime(),
-  last_seen_location: 'S1A',
-}]
 
 const getQueryString = (params) => {
   const {
@@ -102,9 +70,12 @@ class DirectoryView extends Component {
 
   componentDidMount() {
     const { listZones, listHolder, listenToSubscriptions } = this.props
-    listZones()
-    listHolder()
-    listenToSubscriptions()
+    Promise.all([
+      listZones(),
+      listHolder(),
+    ])
+      .then(() => listenToSubscriptions())
+      .catch(err => console.error(err))
   }
 
   componentWillReceiveProps(nextProps) {
@@ -173,9 +144,9 @@ class DirectoryView extends Component {
     )
   }
 
-  renderContent() {
+  renderContent(filteredItems) {
     const { grouping } = this.state.queryParams
-    const itemGroups = groupItems(dataSource, grouping)
+    const itemGroups = groupItems(filteredItems, grouping)
     const keys = Object.keys(itemGroups)
 
     if (grouping === 'zones') {
@@ -202,27 +173,51 @@ class DirectoryView extends Component {
       filters, grouping, view, search,
     } = this.state.queryParams
 
+    const {
+      liveDiscoveryUpdate,
+      discoveredList,
+    } = this.props
+
+    const filteredItems = filterItems(discoveredList, filters, search)
+
     return (
       <div className="directory-view-container">
+
         <PageContentTitle>Directory View</PageContentTitle>
-        <PageContentUnderTitle>Last update 15 mins ago</PageContentUnderTitle>
+        <PageContentUnderTitle>
+          Last update {moment(liveDiscoveryUpdate).fromNow()}
+        </PageContentUnderTitle>
+
         <FiltersHeader
           onSearch={this.handleSearch}
           onChange={this.handleFilterChange}
           searchValue={search ? decodeURIComponent(search) : ''}
           filterValues={filters}
         />
-        <GroupingHeader onChange={this.handleGroupingChange} groupValue={grouping} />
-        <ViewModeHeader onChange={this.handleViewModeChange} viewValue={view} />
-        {this.renderContent()}
+
+        <GroupingHeader
+          onChange={this.handleGroupingChange}
+          groupValue={grouping}
+        />
+
+        <ViewModeHeader
+          onChange={this.handleViewModeChange}
+          viewValue={view}
+          resultCount={filteredItems.length}
+        />
+
+        {this.renderContent(filteredItems)}
       </div>
     )
   }
 }
 
 export const mapStateToProps = (state) => {
-  console.log(state)
-  return state
+  const discoveredList = zoneSelectors.getDiscoveredList(state)
+  return {
+    discoveredList,
+    liveDiscoveryUpdate: zoneSelectors.getReducer(state).liveDiscoveryUpdate,
+  }
 }
 
 export const mapDispatch = dispatch => (bindActionCreators(zonesActions, dispatch))

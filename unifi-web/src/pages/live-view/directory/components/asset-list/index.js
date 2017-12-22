@@ -1,26 +1,31 @@
 import React from 'react'
+import moment from 'moment'
 import { Table } from '../../../../../elements'
 
 const columns = [{
   title: 'Name',
-  dataIndex: 'name',
-  key: 'name',
+  dataIndex: 'client.name',
+  key: 'client.name',
 }, {
   title: 'ID',
-  dataIndex: 'id',
-  key: 'id',
+  dataIndex: 'clientReference',
+  key: 'clientReference',
 }, {
   title: 'Type',
-  dataIndex: 'type',
-  key: 'type',
+  dataIndex: 'client.holderType',
+  key: 'client.holderType',
 }, {
   title: 'Last seen',
-  dataIndex: 'last_seen_location',
-  key: 'last_seen_location',
+  dataIndex: 'zone.name',
+  key: 'zone.name',
 }, {
   title: 'Since',
-  dataIndex: 'last_seen',
-  key: 'last_seen',
+  dataIndex: 'timestamp',
+  key: 'timestamp',
+  render(value) {
+    const m = moment(value)
+    return `${m.format('HH:MM:ss')} ${m.fromNow()}`
+  },
 }]
 
 const AssetList = ({ items }) => (

@@ -17,15 +17,15 @@ export default class FiltersHeader extends Component {
   }
 
   onContactFilter = (ev) => {
-    this.props.onChange({ contacts: ev.target.checked })
+    this.props.onChange({ contact: ev.target.checked })
   }
 
   onAssetFilter = (ev) => {
-    this.props.onChange({ assets: ev.target.checked })
+    this.props.onChange({ asset: ev.target.checked })
   }
 
   onVisitorsFilter = (ev) => {
-    this.props.onChange({ visitors: ev.target.checked })
+    this.props.onChange({ visitor: ev.target.checked })
   }
 
   handleSearchChange = (ev) => {
@@ -47,21 +47,21 @@ export default class FiltersHeader extends Component {
         />
 
         <Checkbox
-          checked={filterValues.indexOf('contacts') !== -1}
+          checked={filterValues.indexOf('contact') !== -1}
           onChange={this.onContactFilter}
         >
           Contacts
         </Checkbox>
 
         <Checkbox
-          checked={filterValues.indexOf('assets') !== -1}
+          checked={filterValues.indexOf('asset') !== -1}
           onChange={this.onAssetFilter}
         >
           Assets
         </Checkbox>
 
         <Checkbox
-          checked={filterValues.indexOf('visitors') !== -1}
+          checked={filterValues.indexOf('visitor') !== -1}
           onChange={this.onVisitorsFilter}
         >
           Visitors
