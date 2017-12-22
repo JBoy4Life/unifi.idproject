@@ -1,5 +1,9 @@
 package id.unifi.service.core.services;
 
+import id.unifi.service.common.api.Validation;
+import static id.unifi.service.common.api.Validation.shortId;
+import static id.unifi.service.common.api.Validation.shortString;
+import static id.unifi.service.common.api.Validation.validateAll;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.AlreadyExists;
@@ -14,6 +18,7 @@ import org.springframework.dao.DuplicateKeyException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @ApiService("client")
 public class ClientService {
@@ -55,7 +60,10 @@ public class ClientService {
 
     @ApiOperation
     public void registerClient(String clientId, String displayName, byte[] logo) {
-        log.info("Registering client " + clientId);
+        validateAll(Map.of(
+                "clientId", shortId(clientId),
+                "displayName", shortString(displayName)));
+        log.info("Registering client {}", clientId);
         try {
             db.execute(sql -> sql.insertInto(CLIENT, CLIENT.CLIENT_ID, CLIENT.DISPLAY_NAME, CLIENT.LOGO)
                     .values(clientId, displayName, logo)

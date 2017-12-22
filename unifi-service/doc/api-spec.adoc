@@ -4,12 +4,12 @@ JSON or MessagePack (TBD) over a WebSocket.
 
 Most "short" identifier fields, e.g. username, email, clientReference, can be up to 64 characters long and are case-preserving unless specified otherwise. A character is a Unicode code point as per the PostgreSQL definition, and no (de)normalization takes place.
 
-clientId and username have to match `^[a-zA-Z0-9]{1,64}$`.
+clientId and username have to match `^[a-zA-Z0-9._-]{1,64}$`.
 
 JSON representation of non-native types:
 
 - Timestamp: "yyyy-mm-ddThh:mm:ssZ"
-- Byte sequence: Base-64 encoded string
+- Byte sequence: Base-64 encoded string (MIME or URL-safe variants accepted)
 
 Request format:
 

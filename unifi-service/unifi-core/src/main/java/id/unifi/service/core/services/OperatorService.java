@@ -1,6 +1,9 @@
 package id.unifi.service.core.services;
 
 import com.statemachinesystems.envy.Default;
+import static id.unifi.service.common.api.Validation.email;
+import static id.unifi.service.common.api.Validation.shortId;
+import static id.unifi.service.common.api.Validation.validateAll;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
@@ -23,6 +26,7 @@ import id.unifi.service.core.operator.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.SecretHashing;
 import id.unifi.service.core.operator.TimestampedToken;
+import static id.unifi.service.core.operator.TimestampedToken.TOKEN_LENGTH;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import static java.util.stream.Collectors.toList;
 import org.jooq.DSLContext;
@@ -33,6 +37,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @ApiService("operator")
@@ -88,6 +93,10 @@ public class OperatorService {
                                  String username,
                                  String email,
                                  boolean invite) {
+        validateAll(Map.of(
+                "username", shortId(username),
+                "email", email(email)
+        ));
         OperatorPK onboarder = session.getOperator() != null ? session.getOperator() : new OperatorPK(clientId, "???");
         db.execute(sql -> {
             try {
@@ -127,6 +136,8 @@ public class OperatorService {
 
     @ApiOperation
     public ExpiringToken authToken(OperatorSessionData session, byte[] sessionToken) {
+        if (sessionToken.length != TOKEN_LENGTH) throw new AuthenticationFailed();
+
         Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
