@@ -38,7 +38,7 @@ public class OperatorEmailRenderer {
         Mustache.Compiler htmlCompiler = Mustache.compiler().escapeHTML(true).defaultValue("???");
         this.htmlInvitationTemplate = compileTemplate(htmlCompiler, "invitation");
         this.htmlPasswordResetRequestedTemplate = compileTemplate(htmlCompiler, "password-reset-requested");
-        this.base64 = Base64.getEncoder();
+        this.base64 = Base64.getUrlEncoder();
     }
 
     public EmailSenderProvider.EmailMessage renderInvitation(String clientId,

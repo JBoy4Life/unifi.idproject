@@ -1,13 +1,16 @@
 package id.unifi.service.common.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.Base64Variants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.node.BinaryNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
@@ -148,9 +151,7 @@ public class Dispatcher<S> {
                 if (paramNode == null || paramNode.isNull()) {
                     throw new MissingParameter(name, type.getTypeName());
                 }
-                JsonParser parser = mapper.treeAsTokens(paramNode);
-                JavaType valueType = mapper.constructType(type);
-                return mapper.readValue(parser, valueType);
+                return readValue(mapper, type, paramNode);
             } catch (JsonProcessingException e) {
                 throw new InvalidParameterFormat(name, e.getMessage());
             } catch (IOException e) {
@@ -198,6 +199,21 @@ public class Dispatcher<S> {
                     sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
                 }
                 break;
+        }
+    }
+
+    private static Object readValue(ObjectMapper mapper, Type type, JsonNode paramNode) throws IOException {
+        JavaType javaType = mapper.constructType(type);
+        try {
+            return mapper.readValue(mapper.treeAsTokens(paramNode), javaType);
+        } catch (InvalidFormatException e) {
+            // For failed base-64 decoding try again with URL-safe Base64 variant
+            // This is a hack that won't work on nested structures
+            if (e.getTargetType() == byte[].class && paramNode.isTextual()) {
+                byte[] binValue = ((TextNode) paramNode).getBinaryValue(Base64Variants.MODIFIED_FOR_URL);
+                return mapper.readValue(mapper.treeAsTokens(new BinaryNode(binValue)), javaType);
+            }
+            throw e;
         }
     }
 
