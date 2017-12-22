@@ -1,3 +1,4 @@
+import IdentBar from './ident-bar'
 import TopNavigation from './top-navigation'
 import SideNavigation from './side-navigation'
 
@@ -18,6 +19,7 @@ import NetworkReaderDetailsCard from './network-reader-details-card'
 import LiveSiteFloorView from './live-site-floor-view'
 
 export {
+  IdentBar,
   TopNavigation,
   SideNavigation,
   PageContent,

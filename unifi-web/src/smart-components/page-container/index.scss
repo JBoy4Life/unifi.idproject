@@ -1,4 +1,5 @@
 .page-contianer {
+  
   .ant-layout-header {
     position: fixed;
     width: 100%;
@@ -7,7 +8,16 @@
 
   .main-content-container {
     padding: 0 50px;
-    margin-top: 88px;
+    margin-top: 128px;
     display: flex;
   }
+
+  .header-ident {
+    background-color: rgba(53, 62, 72, 1);
+  }
+
+  .header-nav {
+    margin-top: 40px;
+  }
+
 }
