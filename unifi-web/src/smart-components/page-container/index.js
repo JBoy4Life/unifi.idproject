@@ -20,9 +20,6 @@ const PageContainer = ({ className = '', children }) => (
     <Content className="main-content-container">
       {children}
     </Content>
-    <Footer style={{ textAlign: 'center' }}>
-      Copyright © Unifi.id, 2017
-    </Footer>
   </Layout>
 )
 

@@ -1,4 +1,13 @@
 .top-navigation {
-  line-height: 64px;
+
+  height: 41px;
+  line-height: 41px;
   background-color: rgba(64, 76, 88, 1);
+  border-bottom: 0;
+
+  .ant-menu-item-selected {
+    background-color: inherit !important;
+    border-bottom: 3px solid rgba(29, 201, 146, 1) !important;
+  }
+
 }
