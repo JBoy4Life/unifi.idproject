@@ -5,8 +5,11 @@ import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
+import id.unifi.service.common.security.SecretHashing;
+import id.unifi.service.common.security.TimestampedToken;
+import id.unifi.service.common.security.Token;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD_RESET;
-import static id.unifi.service.core.operator.SecretHashing.SCRYPT_FORMAT_NAME;
+import static id.unifi.service.common.security.SecretHashing.SCRYPT_FORMAT_NAME;
 import org.jooq.DSLContext;
 import org.jooq.DatePart;
 import org.jooq.Field;
@@ -64,9 +67,8 @@ public class PasswordReset {
     }
 
     public TimestampedToken generateResetToken(DSLContext sql, String clientId, String username) {
-        byte[] token = new byte[TimestampedToken.TOKEN_LENGTH];
-        random.nextBytes(token);
-        byte[] tokenHash = tokenHashing.hash(token);
+        Token token = new Token();
+        byte[] tokenHash = tokenHashing.hash(token.raw);
             sql.insertInto(OPERATOR_PASSWORD_RESET)
                     .set(OPERATOR_PASSWORD_RESET.CLIENT_ID, clientId)
                     .set(OPERATOR_PASSWORD_RESET.USERNAME, username)
@@ -110,7 +112,7 @@ public class PasswordReset {
                 .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))
                 .and(OPERATOR_PASSWORD_RESET.EXPIRY_DATE.gt(currentLocalDateTime()))
                 .fetchOptional()
-                .filter(p -> SecretHashing.check(token.token, p.value1()))
+                .filter(p -> SecretHashing.check(token.token.raw, p.value1()))
                 .map(p -> new TimestampedTokenHash(p.value1(), p.value2().toInstant(ZoneOffset.UTC)));
     }
 }

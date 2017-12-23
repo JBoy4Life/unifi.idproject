@@ -51,6 +51,10 @@
             <artifactId>websocket-server</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.lambdaworks</groupId>
+            <artifactId>scrypt</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.statemachinesystems</groupId>
             <artifactId>envy</artifactId>
         </dependency>

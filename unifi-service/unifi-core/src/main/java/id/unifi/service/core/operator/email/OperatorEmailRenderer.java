@@ -5,7 +5,7 @@ import com.samskivert.mustache.Template;
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.provider.EmailSenderProvider;
-import id.unifi.service.core.operator.TimestampedToken;
+import id.unifi.service.common.security.TimestampedToken;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;

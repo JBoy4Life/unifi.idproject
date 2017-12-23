@@ -1,42 +1,73 @@
 package id.unifi.service.common.api;
 
+import id.unifi.service.common.api.errors.MarshallableError;
 import id.unifi.service.common.api.errors.ValidationFailure;
 import id.unifi.service.common.api.errors.ValidationFailure.Issue;
 import id.unifi.service.common.api.errors.ValidationFailure.ValidationError;
-import static java.util.stream.Collectors.toList;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public class Validation {
     private static final int SHORT_STRING_MAX_LENGTH = 64;
     private static final Pattern shortIdPattern = Pattern.compile("^[a-zA-Z0-9._-]+$");
 
-    public static void validateAll(Map<String, Optional<Issue>> fieldIssues) {
-        List<ValidationError> errors = fieldIssues.entrySet().stream()
-                .flatMap(e -> e.getValue().map(issue -> new ValidationError(e.getKey(), issue)).stream())
-                .collect(toList());
-        if (!errors.isEmpty())
-            throw new ValidationFailure(errors);
+    public static void validateAll(ValidationDef... validationDefs) {
+        List<ValidationError> validationErrors = new ArrayList<>();
+        for (ValidationDef def : validationDefs) {
+            if (def.issue != null) {
+                if (def.immediateError != null) {
+                    throw def.immediateError.get();
+                } else {
+                    validationErrors.add(new ValidationError(def.field, def.issue));
+                }
+            }
+        }
+
+        if (!validationErrors.isEmpty())
+            throw new ValidationFailure(validationErrors);
     }
 
-    public static Optional<Issue> shortId(String value) {
-        if (value.isEmpty()) return Optional.of(Issue.TOO_SHORT);
-        if (value.length() > SHORT_STRING_MAX_LENGTH) return Optional.of(Issue.TOO_LONG);
-        if (!shortIdPattern.matcher(value).matches()) return Optional.of(Issue.BAD_FORMAT);
-        return Optional.empty();
+    public static ValidationDef v(String field, @Nullable Issue result) {
+        return new ValidationDef(field, result, null);
     }
 
-    public static Optional<Issue> shortString(String value) {
-        if (value.length() > SHORT_STRING_MAX_LENGTH) return Optional.of(Issue.TOO_LONG);
-        return Optional.empty();
+    public static ValidationDef v(@Nullable Issue result, Supplier<MarshallableError> immediateError) {
+        return new ValidationDef(null, result, immediateError);
     }
 
-    public static Optional<Issue> email(String value) {
-        if (value.length() > SHORT_STRING_MAX_LENGTH) return Optional.of(Issue.TOO_LONG);
-        if (!value.contains("@")) return Optional.of(Issue.BAD_FORMAT);
-        return Optional.empty();
+    public static @Nullable Issue shortId(String value) {
+        if (value.isEmpty()) return Issue.TOO_SHORT;
+        if (value.length() > SHORT_STRING_MAX_LENGTH) return Issue.TOO_LONG;
+        if (!shortIdPattern.matcher(value).matches()) return Issue.BAD_FORMAT;
+        return null;
+    }
+
+    public static @Nullable  Issue shortString(String value) {
+        if (value.length() > SHORT_STRING_MAX_LENGTH) return Issue.TOO_LONG;
+        return null;
+    }
+
+    public static @Nullable Issue email(String value) {
+        if (value.length() > SHORT_STRING_MAX_LENGTH) return Issue.TOO_LONG;
+        if (!value.contains("@")) return Issue.BAD_FORMAT;
+        return null;
+    }
+
+    public static class ValidationDef {
+        private final String field;
+        private final Issue issue;
+        private final Supplier<MarshallableError> immediateError;
+
+        private ValidationDef(@Nullable String field,
+                              Issue issue,
+                              @Nullable Supplier<MarshallableError> immediateError) {
+            this.field = field;
+            this.issue = issue;
+            this.immediateError = immediateError;
+        }
     }
 }

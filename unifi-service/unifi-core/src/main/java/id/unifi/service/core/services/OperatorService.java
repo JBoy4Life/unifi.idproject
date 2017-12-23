@@ -1,9 +1,7 @@
 package id.unifi.service.core.services;
 
 import com.statemachinesystems.envy.Default;
-import static id.unifi.service.common.api.Validation.email;
-import static id.unifi.service.common.api.Validation.shortId;
-import static id.unifi.service.common.api.Validation.validateAll;
+import static id.unifi.service.common.api.Validation.*;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
@@ -18,26 +16,23 @@ import id.unifi.service.common.operator.ExpiringToken;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
+import id.unifi.service.common.security.Token;
 import id.unifi.service.core.OperatorSessionData;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
 import id.unifi.service.core.operator.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
-import id.unifi.service.core.operator.SecretHashing;
-import id.unifi.service.core.operator.TimestampedToken;
-import static id.unifi.service.core.operator.TimestampedToken.TOKEN_LENGTH;
+import id.unifi.service.common.security.SecretHashing;
+import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import static java.util.stream.Collectors.toList;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.dao.DuplicateKeyException;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @ApiService("operator")
@@ -49,21 +44,10 @@ public class OperatorService {
     private final EmailSenderProvider emailSender;
     private final SessionTokenStore sessionTokenStore;
     private final Config config;
-    private final SecureRandom random;
 
     private interface Config {
         @Default("864000")
         int sessionTokenValiditySeconds();
-    }
-
-    public class PasswordResetInfo {
-        public final Instant expiryDate;
-        public final String email;
-
-        public PasswordResetInfo(Instant expiryDate, String email) {
-            this.expiryDate = expiryDate;
-            this.email = email;
-        }
     }
 
     public OperatorService(@ApiConfigPrefix("operator") Config config,
@@ -80,11 +64,6 @@ public class OperatorService {
         this.emailRenderer = emailRenderer;
         this.emailSender = emailSender;
         this.sessionTokenStore = sessionTokenStore;
-        try {
-            this.random = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @ApiOperation
@@ -93,10 +72,11 @@ public class OperatorService {
                                  String username,
                                  String email,
                                  boolean invite) {
-        validateAll(Map.of(
-                "username", shortId(username),
-                "email", email(email)
-        ));
+        validateAll(
+                v(shortId(clientId), Unauthorized::new),
+                v("username", shortId(username)),
+                v("email", email(email))
+        );
         OperatorPK onboarder = session.getOperator() != null ? session.getOperator() : new OperatorPK(clientId, "???");
         db.execute(sql -> {
             try {
@@ -119,10 +99,14 @@ public class OperatorService {
 
     @ApiOperation
     public ExpiringToken authPassword(OperatorSessionData session, String clientId, String username, String password) {
+        validateAll(
+                v(shortId(clientId), AuthenticationFailed::new),
+                v(shortId(username), AuthenticationFailed::new),
+                v(shortString(password), AuthenticationFailed::new)
+        );
         if (passwordMatches(clientId, username, password)) {
             OperatorPK operator = new OperatorPK(clientId, username);
-            byte[] sessionToken = new byte[18];
-            random.nextBytes(sessionToken);
+            Token sessionToken = new Token();
             sessionTokenStore.put(sessionToken, operator);
             session.setAuth(sessionToken, operator);
             recordAuthAttempt(clientId, username, true);
@@ -135,9 +119,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public ExpiringToken authToken(OperatorSessionData session, byte[] sessionToken) {
-        if (sessionToken.length != TOKEN_LENGTH) throw new AuthenticationFailed();
-
+    public ExpiringToken authToken(OperatorSessionData session, Token sessionToken) {
         Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
@@ -150,7 +132,7 @@ public class OperatorService {
 
     @ApiOperation
     public void invalidateAuthToken(OperatorSessionData session) {
-        byte[] sessionToken = session.getSessionToken();
+        Token sessionToken = session.getSessionToken();
         if (sessionToken != null) {
             sessionTokenStore.remove(sessionToken);
             session.setAuth(null, null);
@@ -207,7 +189,6 @@ public class OperatorService {
                 return null;
             }
         });
-
     }
 
     @ApiOperation
@@ -284,6 +265,12 @@ public class OperatorService {
         return Optional.ofNullable(sessionData.getOperator()).orElseThrow(Unauthorized::new);
     }
 
+    private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
+        return Optional.ofNullable(sessionData.getOperator())
+                .filter(op -> op.clientId.equals(clientId))
+                .orElseThrow(Unauthorized::new);
+    }
+
     private static Optional<byte[]> sqlPasswordHash(DSLContext sql, String clientId, String username) {
         return sql.select(OPERATOR_PASSWORD.PASSWORD_HASH)
                 .from(OPERATOR_PASSWORD)
@@ -303,5 +290,15 @@ public class OperatorService {
     private boolean passwordMatches(String clientId, String username, String password) {
         Optional<byte[]> encodedHash = db.execute(sql -> sqlPasswordHash(sql, clientId, username));
         return encodedHash.map(hash -> SecretHashing.check(password, hash)).orElse(false);
+    }
+
+    public class PasswordResetInfo {
+        public final Instant expiryDate;
+        public final String email;
+
+        public PasswordResetInfo(Instant expiryDate, String email) {
+            this.expiryDate = expiryDate;
+            this.email = email;
+        }
     }
 }

@@ -1,4 +1,4 @@
-package id.unifi.service.core.operator;
+package id.unifi.service.common.security;
 
 import com.lambdaworks.crypto.SCrypt;
 import com.statemachinesystems.envy.Default;

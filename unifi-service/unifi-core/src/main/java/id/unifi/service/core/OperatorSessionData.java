@@ -1,9 +1,10 @@
 package id.unifi.service.core;
 
 import id.unifi.service.common.operator.OperatorPK;
+import id.unifi.service.common.security.Token;
 
 public class OperatorSessionData {
-    private byte[] sessionToken;
+    private Token sessionToken;
     private OperatorPK operator;
 
     public OperatorSessionData() {}
@@ -12,11 +13,11 @@ public class OperatorSessionData {
         return operator;
     }
 
-    public synchronized byte[] getSessionToken() {
+    public synchronized Token getSessionToken() {
         return sessionToken;
     }
 
-    public synchronized void setAuth(byte[] sessionToken, OperatorPK operator) {
+    public synchronized void setAuth(Token sessionToken, OperatorPK operator) {
         this.sessionToken = sessionToken;
         this.operator = operator;
     }
