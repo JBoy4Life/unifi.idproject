@@ -60,13 +60,6 @@ public class SiteService {
     }
 
     @ApiOperation
-    public List<HolderInfo> listHolders(String clientId) {
-        return db.execute(sql -> sql.selectFrom(HOLDER)
-                .where(HOLDER.CLIENT_ID.eq(clientId))
-                .fetch(r -> new HolderInfo(r.getClientReference(), r.getName(), r.getHolderType(), r.getActive())));
-    }
-
-    @ApiOperation
     public void subscribeDetections(Session session,
                                     String clientId,
                                     String siteId,
@@ -74,7 +67,7 @@ public class SiteService {
         detectionProcessor.addListener(clientId, siteId, session, listener);
     }
 
-    public class ZoneInfo {
+    public static class ZoneInfo {
         public final String zoneId;
         public final String name;
         public final String description;
@@ -83,20 +76,6 @@ public class SiteService {
             this.zoneId = zoneId;
             this.name = name;
             this.description = description;
-        }
-    }
-
-    private class HolderInfo {
-        public final String clientReference;
-        public final String name;
-        public final String holderType;
-        public final boolean active;
-
-        public HolderInfo(String clientReference, String name, String holderType, boolean active) {
-            this.clientReference = clientReference;
-            this.name = name;
-            this.holderType = holderType;
-            this.active = active;
         }
     }
 }
