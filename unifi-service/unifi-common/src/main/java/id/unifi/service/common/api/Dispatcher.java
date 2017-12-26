@@ -28,7 +28,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -38,6 +41,15 @@ import java.util.function.Function;
 
 public class Dispatcher<S> {
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
+    private static final Random random;
+
+    static {
+        try {
+            random = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
 
@@ -75,7 +87,7 @@ public class Dispatcher<S> {
         this.messageListeners = new ConcurrentHashMap<>();
     }
 
-    public void dispatch(Session session, MessageStream stream, Protocol protocol, ReturnChannel returnChannel) {
+    public void dispatch(Session session, MessageStream stream, Protocol protocol, Channel returnChannel) {
         ObjectMapper mapper = objectMappers.get(protocol);
         Message message = null;
         try {
@@ -133,7 +145,7 @@ public class Dispatcher<S> {
     }
 
     private void processRequest(Session session,
-                                ReturnChannel returnChannel,
+                                Channel returnChannel,
                                 ObjectMapper mapper,
                                 Protocol protocol,
                                 Message message,
@@ -241,7 +253,7 @@ public class Dispatcher<S> {
         return request;
     }
 
-    private static void sendPayload(ReturnChannel returnChannel,
+    private static void sendPayload(Channel channel,
                                     ObjectMapper mapper,
                                     Protocol protocol,
                                     Message payload) {
@@ -255,7 +267,7 @@ public class Dispatcher<S> {
             if (log.isTraceEnabled()) {
                 log.trace("Sending marshalled response: {}", new HexEncoded(binaryPayload));
             }
-            returnChannel.send(ByteBuffer.wrap(binaryPayload));
+            channel.send(ByteBuffer.wrap(binaryPayload));
         } else {
             String stringPayload;
             try {
@@ -264,7 +276,13 @@ public class Dispatcher<S> {
                 throw new RuntimeException(e);
             }
             log.trace("Sending marshalled response: {}", stringPayload);
-            returnChannel.send(stringPayload);
+            channel.send(stringPayload);
         }
+    }
+
+    private static byte[] generateCorrelationId() {
+        byte[] id = new byte[16];
+        random.nextBytes(id);
+        return id;
     }
 }

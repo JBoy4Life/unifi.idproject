@@ -35,7 +35,7 @@ public class WebSocketDelegate {
     private final Dispatcher dispatcher;
     private final Protocol protocol;
 
-    private WebSocketDelegate(Dispatcher dispatcher, Protocol protocol) {
+    public WebSocketDelegate(Dispatcher dispatcher, Protocol protocol) {
         this.dispatcher = dispatcher;
         this.protocol = protocol;
     }
@@ -92,7 +92,7 @@ public class WebSocketDelegate {
     }
 
     private void dispatchMessage(Session session, MessageStream messageStream) {
-        ReturnChannel returnChannel = new ReturnChannel() {
+        Channel returnChannel = new Channel() {
             public void send(ByteBuffer payload) {
                 send(payload, null);
             }
