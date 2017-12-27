@@ -34,7 +34,7 @@ Then connect to the server via the following URLs:
 * For MessagePack: ws://<vm ip>:8000/service/msgpack
 * For JSON: ws://<vm ip>:8000/service/json
 
-You can find the VM IP by SSHing in, and running `ifconfig -a`.
+You can find the VM IP by SSHing in, and running `ip addr`.
 
 If the SQL schema has changed and migration fails you can recreate the database
 as follows: `dropdb unifi && createdb unifi`
