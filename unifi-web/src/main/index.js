@@ -2,7 +2,8 @@ import React, { Component } from 'react'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/es/integration/react'
 import createHistory from 'history/createBrowserHistory'
-import { Router, Route, Switch /* Redirect */ } from 'react-router'
+import { Router, Route, Switch, /* Redirect */
+  Redirect } from 'react-router'
 
 import { WSProtocol } from '../lib/ws'
 
@@ -83,6 +84,7 @@ export default class Main extends Component {
 
           <Route exact path={ROUTES.USERS} component={Users} />
 
+          <Redirect exact from={ROUTES.LOGIN} to={ROUTES.SITEMAP} />
           <Route component={NotFound} />
         </Switch>
 
