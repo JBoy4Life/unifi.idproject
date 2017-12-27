@@ -25,7 +25,7 @@ export const listHolder = (clientId = 'deloitte', siteId = '1nss') => {
   const pack = new WSPackage({
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
-    messageType: 'core.site.list-holders',
+    messageType: 'core.holder.list-holders',
     payload: { clientId, siteId },
   })
 

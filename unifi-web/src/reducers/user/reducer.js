@@ -1,5 +1,5 @@
 import { REHYDRATE } from 'redux-persist'
-import { USER_LOGOUT, USER_SET } from './types'
+import { USER_LOGOUT, USER_LOGIN } from './types'
 
 const initialState = {
   currentUser: null,
@@ -8,7 +8,8 @@ const initialState = {
 
 const reducer = (state = initialState, action = {}) => {
   switch (action.type) {
-    case USER_SET:
+    case `${USER_LOGIN}_FULFILLED`:
+      console.log(action)
       return {
         ...state,
         currentUser: action.currentUser,

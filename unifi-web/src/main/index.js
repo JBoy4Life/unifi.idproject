@@ -49,10 +49,6 @@ export default class Main extends Component {
           history: createHistory(),
         })
       })
-      .then(() => {
-        // console.log('TEST_USER')
-        // this.state.store.dispatch({ type: USER_SET, currentUser: 'vlad' })
-      })
       .catch((err) => {
         console.error(err)
       })
@@ -60,7 +56,7 @@ export default class Main extends Component {
 
   renderContent() {
     const { currentUser, initialising } = this.state
-    console.log(initialising)
+
     if (initialising) {
       return 'Loading'
     }

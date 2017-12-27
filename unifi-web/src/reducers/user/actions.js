@@ -1,10 +1,22 @@
-import { USER_LOGOUT, USER_SET } from './types'
+import { WSPackage } from '../../lib/ws'
 
-export const loginRequest = ({ username, password, remember }) => {
-  console.log('should request login via websocket', username, password, remember)
+import { USER_LOGOUT, USER_LOGIN } from './types'
+
+export const loginRequest = ({ username, password /* remember */ }) => {
+  // console.log('should request login via websocket', username, password, remember)
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion: '1.0.0',
+    messageType: 'core.operator.auth-password',
+    payload: { username, password, clientId: 'deloitte' },
+  })
+
+  console.log('USER_LOGIN', pack.content)
+
   return {
-    type: USER_SET,
-    currentUser: username,
+    socketRequest: pack.content,
+    type: USER_LOGIN,
   }
 }
 
