@@ -88,6 +88,7 @@ public class Dispatcher<S> {
     }
 
     public void dispatch(Session session, MessageStream stream, Protocol protocol, Channel returnChannel) {
+        log.debug("Dispatching {} request in {}", protocol, session);
         ObjectMapper mapper = objectMappers.get(protocol);
         Message message = null;
         try {
