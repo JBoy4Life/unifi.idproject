@@ -20,6 +20,11 @@
         </dependency>
         <dependency>
             <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-core-agent-schema</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
             <artifactId>unifi-provider-rfid</artifactId>
             <version>${project.version}</version>
         </dependency>
