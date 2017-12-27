@@ -16,12 +16,12 @@ import uuid4 from 'uuid/v4'
 
 export default class WebSocketPackage {
   constructor(props) {
-    // const uuid = uuid4()
-    // console.log(uuid, '->', str2ab(uuid), ab2str(str2ab(uuid)))
+    const uuid = uuid4()
+    const base64uuid = btoa(uuid)
 
     this.content = {
       ...props,
-      correlationId: btoa(uuid4()),
+      correlationId: base64uuid,
     }
   }
 }

@@ -9,6 +9,8 @@ import Table from './table'
 import Modal from './modal'
 import Radio from './radio'
 
+import Alert from './alert'
+
 import Tabs from './tabs'
 import Collapse from './collapse'
 
@@ -35,6 +37,7 @@ import SingleFilePicker from './single-file-picker'
 
 export {
   Aux,
+  Alert,
 
   Menu,
   Table,

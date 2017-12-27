@@ -8,11 +8,25 @@ const initialState = {
 
 const reducer = (state = initialState, action = {}) => {
   switch (action.type) {
-    case `${USER_LOGIN}_FULFILLED`:
-      console.log(action)
+    case `${USER_LOGIN}_PENDING`:
       return {
         ...state,
-        currentUser: action.currentUser,
+        currentUser: null,
+        error: null,
+      }
+
+    case `${USER_LOGIN}_FULFILLED`:
+      if (action.payload.payload.message) {
+        return {
+          ...state,
+          currentUser: null,
+          error: action.payload.payload.message,
+        }
+      }
+
+      return {
+        ...state,
+        currentUser: action.payload,
       }
 
     case USER_LOGOUT:

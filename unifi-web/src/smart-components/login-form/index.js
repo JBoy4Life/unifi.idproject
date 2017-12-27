@@ -13,7 +13,6 @@ class LoginForm extends Component {
 
   render() {
     const { handleSubmit, onSubmit } = this.props
-
     return (
       <form onSubmit={handleSubmit(onSubmit)}>
         <Field

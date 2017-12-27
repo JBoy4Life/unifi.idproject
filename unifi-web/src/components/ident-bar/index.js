@@ -11,7 +11,7 @@ export default class IdentBar extends Component {
         <img className="logo" src={logo} alt="logo" />
         {this.props.user && (
           <div className="indent-bar-user-content">
-            <span className="indent-bar-user-content-label">{this.props.user}</span>
+            {/* <span className="indent-bar-user-content-label">{this.props.user}</span> */}
             <Button onClick={this.props.onLogout}>Logout</Button>
           </div>
         )}

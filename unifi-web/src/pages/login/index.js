@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 
-import { PageContent } from '../../components'
+import { Alert } from '../../elements'
 
 import { PageContainer, LoginForm } from '../../smart-components'
 
@@ -32,6 +32,9 @@ class LoginContainer extends Component {
         <div className="login-form-wrapper">
           <h1>Login Required</h1>
           <div className="login-form-container">
+            {this.props.user.error && (
+            <Alert message={this.props.user.error} type="error" />
+            )}
             <LoginForm onSubmit={this.handleLoginFormSubmit} />
           </div>
         </div>
