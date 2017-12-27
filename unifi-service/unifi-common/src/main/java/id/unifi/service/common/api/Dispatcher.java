@@ -91,18 +91,20 @@ public class Dispatcher<S> {
         ObjectMapper mapper = objectMappers.get(protocol);
         Message message = null;
         try {
-            message = parseMessage(stream, mapper);
+            try {
+                message = parseMessage(stream, mapper);
 
-            PayloadConsumer messageListener = messageListeners.get(message.messageType);
-            if (messageListener != null) {
-                messageListener.accept(mapper, session, message.payload);
-                return;
+                PayloadConsumer messageListener = messageListeners.get(message.messageType);
+                if (messageListener != null) {
+                    messageListener.accept(mapper, session, message.payload);
+                    return;
+                }
+
+                ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
+                processRequest(session, returnChannel, mapper, protocol, message, operation);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
-            processRequest(session, returnChannel, mapper, protocol, message, operation);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         } catch (MarshallableError e) {
             if (message != null) {
                 sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
@@ -110,6 +112,7 @@ public class Dispatcher<S> {
                 session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
             }
         } catch (RuntimeException e) {
+            log.error("Error while dispatching request", e);
             if (message != null) {
                 sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, new InternalServerError()));
             } else {
