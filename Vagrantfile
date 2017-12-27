@@ -14,7 +14,7 @@ apt-get -y update
 apt-get -y upgrade
 apt-get -y install oracle-java9-installer oracle-java9-set-default \
                    oracle-java9-unlimited-jce-policy postgresql redis-server \
-                   git maven net-tools cfengine3 nginx
+                   git maven net-tools cfengine3 nginx rabbitmq-server
 
 # Sorry.
 apt-get -y install curl
