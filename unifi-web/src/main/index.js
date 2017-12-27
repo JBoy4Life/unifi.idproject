@@ -15,6 +15,14 @@ import {
   ClientRegistry,
 } from '../pages'
 
+import { selectors as userSelectors } from '../reducers/user'
+
+// // README. Avoid using actions like this. Normally, acitons
+// // should be called by invoking the aciton cretors (see acitons.js files)
+// // In case of login tests this will work better, but in general it is not
+// // a good idea to go this way.
+// import { USER_SET } from '../reducers/user/types'
+
 export default class Main extends Component {
   state = {
     loading: true,
@@ -27,19 +35,63 @@ export default class Main extends Component {
       .then(() => wsProtocol.start())
       .then(() => {
         const { store, persistor } = configureStore(wsProtocol)
+
+        store.subscribe(() => {
+          this.setState({
+            ...userSelectors.getReducer(store.getState()),
+          })
+        })
+
         this.setState({
           store,
           persistor,
           loading: false,
+          history: createHistory(),
         })
       })
       .then(() => {
         // console.log('TEST_USER')
-        this.state.store.dispatch({ type: 'TEST_USER', currentUser: 'vlad' })
+        // this.state.store.dispatch({ type: USER_SET, currentUser: 'vlad' })
       })
       .catch((err) => {
         console.error(err)
       })
+  }
+
+  renderContent() {
+    const { currentUser, initialising } = this.state
+    console.log(initialising)
+    if (initialising) {
+      return 'Loading'
+    }
+
+    if (!currentUser) {
+      return <Login />
+    }
+
+    return (
+      <Router history={this.state.history}>
+        <Switch>
+          <Route exact path={ROUTES.SITEMAP} component={Sitemap} />
+          <Route exact path={ROUTES.MY_ACCOUNT} component={MyAccount} />
+          <Route exact path={ROUTES.DIRECTORY} component={Discovery} />
+
+          <Route path={ROUTES.EVACUATION} component={Evacuation} />
+          <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
+
+          <Route path={ROUTES.LIVE_VIEW} component={LiveView} />
+
+          <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
+
+          <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
+
+          <Route exact path={ROUTES.USERS} component={Users} />
+
+          <Route component={NotFound} />
+        </Switch>
+
+      </Router>
+    )
   }
 
   render() {
@@ -52,29 +104,7 @@ export default class Main extends Component {
           loading="loading"
           persistor={persistor}
         >
-          <Router history={createHistory()}>
-
-            <Switch>
-              <Route exact path={ROUTES.SITEMAP} component={Sitemap} />
-              <Route exact path={ROUTES.LOGIN} component={Login} />
-              <Route exact path={ROUTES.MY_ACCOUNT} component={MyAccount} />
-              <Route exact path={ROUTES.DIRECTORY} component={Discovery} />
-
-              <Route path={ROUTES.EVACUATION} component={Evacuation} />
-              <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
-
-              <Route path={ROUTES.LIVE_VIEW} component={LiveView} />
-
-              <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
-
-              <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
-
-              <Route exact path={ROUTES.USERS} component={Users} />
-
-              <Route component={NotFound} />
-            </Switch>
-
-          </Router>
+          {this.renderContent()}
         </PersistGate>
       </Provider>
     )

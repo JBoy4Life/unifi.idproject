@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Field, reduxForm } from 'redux-form'
-import { TextField, CheckboxField } from '../../components'
+import { TextField /* CheckboxField */ } from '../../components'
 import { Button } from '../../elements'
 
 import validate from './validate'
@@ -29,12 +29,12 @@ class LoginForm extends Component {
           id="password"
           component={TextField}
         />
-        <Field
+        {/* <Field
           name="rememberme"
           label="Remember me"
           id="remember"
           component={CheckboxField}
-        />
+        /> */}
         <Button htmlType="submit" type="primary">Login</Button>
       </form>
     )

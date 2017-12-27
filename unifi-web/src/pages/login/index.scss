@@ -1,4 +1,14 @@
-.login-page .login-form-container {
-  max-width: 500px;
-  padding: 0 18px;
+.login-form-wrapper {
+  max-width: 420px;
+  padding: 24px;
+  margin: 0 auto;
+  min-width: 260px;
+  flex: 1;
+  background-color: #fff;
+  align-self: flex-start;
+  border-radius: 5px;
+
+  h1 {
+    margin-bottom: 16px;
+  }
 }

@@ -28,15 +28,13 @@ class LoginContainer extends Component {
 
   render() {
     return (
-      <PageContainer className="login-page">
-        <PageContent>
-          <PageContent.Main>
-            <h1>Login</h1>
-            <div className="login-form-container">
-              <LoginForm onSubmit={this.handleLoginFormSubmit} />
-            </div>
-          </PageContent.Main>
-        </PageContent>
+      <PageContainer noHeader className="login-page">
+        <div className="login-form-wrapper">
+          <h1>Login Required</h1>
+          <div className="login-form-container">
+            <LoginForm onSubmit={this.handleLoginFormSubmit} />
+          </div>
+        </div>
       </PageContainer>
     )
   }
