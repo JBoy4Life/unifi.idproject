@@ -1,6 +1,7 @@
 package id.unifi.service.common.security;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -18,8 +19,10 @@ public class Token {
             throw new RuntimeException(e);
         }
     }
-    
+
+    @JsonValue
     public final byte[] raw;
+
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public Token(byte[] raw) {
         if (raw.length != TOKEN_LENGTH)
