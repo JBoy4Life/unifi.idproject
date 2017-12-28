@@ -92,27 +92,27 @@ public class Dispatcher<S> {
         ObjectMapper mapper = objectMappers.get(protocol);
         Message message = null;
         try {
-            try {
-                message = parseMessage(stream, mapper);
+            message = parseMessage(stream, mapper);
 
-                PayloadConsumer messageListener = messageListeners.get(message.messageType);
-                if (messageListener != null) {
-                    messageListener.accept(mapper, session, message.payload);
-                    return;
-                }
-
-                ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
-                processRequest(session, returnChannel, mapper, protocol, message, operation);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            PayloadConsumer messageListener = messageListeners.get(message.messageType);
+            if (messageListener != null) {
+                messageListener.accept(mapper, session, message.payload);
+                return;
             }
+
+            ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
+            processRequest(session, returnChannel, mapper, protocol, message, operation);
         } catch (MarshallableError e) {
             if (message != null) {
                 sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
             } else {
                 session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
             }
-        } catch (RuntimeException e) {
+        } catch (JsonProcessingException e) {
+            String errMessage = "Couldn't process " + protocol + " payload";
+            log.debug(errMessage + " in {}", session);
+            session.close(StatusCode.BAD_PAYLOAD, errMessage);
+        } catch (RuntimeException | IOException e) {
             log.error("Error while dispatching request", e);
             if (message != null) {
                 sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, new InternalServerError()));
@@ -218,7 +218,7 @@ public class Dispatcher<S> {
         }
     }
 
-    private static Object readValue(ObjectMapper mapper, Type type, JsonNode paramNode) throws IOException {
+    private static <T> T readValue(ObjectMapper mapper, Type type, JsonNode paramNode) throws IOException {
         JavaType javaType = mapper.constructType(type);
         try {
             return mapper.readValue(mapper.treeAsTokens(paramNode), javaType);
