@@ -47,13 +47,10 @@ public class CoreService {
 
     private interface Config {
         @Default("0.0.0.0:8000")
-        default HostAndPort apiServiceListenEndpoint() {
-            return HostAndPort.fromParts("0.0.0.0", 8000);
-        }
+        HostAndPort apiServiceListenEndpoint();
 
-        default HostAndPort agentServiceListenEndpoint() {
-            return HostAndPort.fromParts("0.0.0.0", 8001);
-        }
+        @Default("0.0.0.0:8001")
+        HostAndPort agentServiceListenEndpoint();
     }
 
     public static void main(String[] args) throws Exception {
