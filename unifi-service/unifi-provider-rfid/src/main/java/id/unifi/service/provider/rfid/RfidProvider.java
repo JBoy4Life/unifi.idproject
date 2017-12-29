@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class RfidProvider {
             log.info("Report received {}: {} tags", reader.getAddress(), report.getTags().size());
             List<RfidDetection> detections = report.getTags().stream().map(tag ->
                     new RfidDetection(
-                            Long.parseLong(tag.getLastSeenTime().ToString()),
+                            instantFromTimestamp(tag.getLastSeenTime()),
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
                             tag.getPeakRssiInDbm()))
@@ -85,5 +86,12 @@ public class RfidProvider {
                 throw new RuntimeException("Failed to start reader", e);
             }
         }
+    }
+
+    private static Instant instantFromTimestamp(ImpinjTimestamp timestamp) {
+        // This is horrible but Octane "exposes" the full microsecond resolution only as a stringy long
+        long microsecondsSinceEpoch = Long.parseLong(timestamp.ToString());
+        long nanoAdjustment = (microsecondsSinceEpoch % 1_000_000) * 1000;
+        return Instant.ofEpochSecond(microsecondsSinceEpoch / 1_000_000, nanoAdjustment);
     }
 }

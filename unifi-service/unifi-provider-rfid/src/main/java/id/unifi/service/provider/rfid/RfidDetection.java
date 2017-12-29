@@ -1,19 +1,21 @@
 package id.unifi.service.provider.rfid;
 
+import java.time.Instant;
+
 public class RfidDetection {
-    private final long timestamp;
+    private final Instant timestamp;
     private final int portNumber;
     private final String epc;
     private final double rssi;
 
-    RfidDetection(long timestamp, int portNumber, String epc, double rssi) {
+    RfidDetection(Instant timestamp, int portNumber, String epc, double rssi) {
         this.timestamp = timestamp;
         this.portNumber = portNumber;
         this.epc = epc;
         this.rssi = rssi;
     }
 
-    public long getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
