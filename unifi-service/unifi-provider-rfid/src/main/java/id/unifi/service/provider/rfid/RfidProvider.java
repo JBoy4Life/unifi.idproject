@@ -3,6 +3,9 @@ package id.unifi.service.provider.rfid;
 import com.google.common.collect.Multimap;
 import com.google.common.net.HostAndPort;
 import com.impinj.octane.*;
+import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.common.detection.RawDetection;
+import id.unifi.service.common.detection.RawDetectionReport;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,17 +21,18 @@ public class RfidProvider {
 
     private final TagReportListener impinjTagReportListener;
 
-    public RfidProvider(Consumer<RfidDetectionReport> detectionConsumer) {
+    public RfidProvider(Consumer<RawDetectionReport> detectionConsumer) {
         this.impinjTagReportListener = (reader, report) -> {
             log.info("Report received {}: {} tags", reader.getAddress(), report.getTags().size());
-            List<RfidDetection> detections = report.getTags().stream().map(tag ->
-                    new RfidDetection(
+            List<RawDetection> detections = report.getTags().stream().map(tag ->
+                    new RawDetection(
                             instantFromTimestamp(tag.getLastSeenTime()),
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
+                            DetectableType.UHF_EPC,
                             tag.getPeakRssiInDbm()))
                     .collect(toList());
-            detectionConsumer.accept(new RfidDetectionReport(reader.getName(), detections));
+            detectionConsumer.accept(new RawDetectionReport(reader.getName(), detections));
         };
     }
 

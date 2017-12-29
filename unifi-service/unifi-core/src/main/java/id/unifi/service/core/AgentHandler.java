@@ -7,7 +7,7 @@ import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
-import id.unifi.service.common.rfid.RfidDetectionReport;
+import id.unifi.service.common.detection.RawDetectionReport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class AgentHandler implements Dispatcher.SessionListener<AgentSessionData
         this.agentSessions = Maps.synchronizedBiMap(HashBiMap.create());
 
         this.dispatcher = agentDispatcher;
-        agentDispatcher.<RfidDetectionReport>putMessageListener("core.agent.detections", RfidDetectionReport.class,
+        agentDispatcher.<RawDetectionReport>putMessageListener("core.agent.detections", RawDetectionReport.class,
                 (session, report) -> {
             String[] ids = agentSessions.inverse().get(session).split(":", 2);
             String clientId = ids[0];

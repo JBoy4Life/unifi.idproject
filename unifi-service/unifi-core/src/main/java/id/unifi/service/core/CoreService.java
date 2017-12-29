@@ -14,12 +14,13 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
+import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.common.detection.RawDetection;
+import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
-import id.unifi.service.common.rfid.RfidDetection;
-import id.unifi.service.common.rfid.RfidDetectionReport;
 import id.unifi.service.common.version.VersionInfo;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
@@ -139,15 +140,15 @@ public class CoreService {
             for (int i = 0; i < 100; i++) {
                 String readerSn = Iterables.get(readerAntennae.keySet(), random.nextInt(readerCount));
                 List<AntennaRecord> portNumbers = readerAntennae.get(readerSn);
-                List<RfidDetection> rawDetections = IntStream.range(0, random.nextInt(2) + 1)
+                List<RawDetection> rawDetections = IntStream.range(0, random.nextInt(2) + 1)
                         .mapToObj(j -> {
                             int portNumber = portNumbers.get(random.nextInt(portNumbers.size())).getPortNumber();
                             String detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
                             Instant timestamp = Instant.now().minusMillis(random.nextInt(200));
-                            return new RfidDetection(timestamp, portNumber, detectableId, 0d);
+                            return new RawDetection(timestamp, portNumber, detectableId, DetectableType.UHF_EPC, 0d);
                         }).collect(toList());
                 log.trace("Processing mock raw detections: {}", rawDetections);
-                detectionProcessor.process(clientId, siteId, new RfidDetectionReport(readerSn, rawDetections));
+                detectionProcessor.process(clientId, siteId, new RawDetectionReport(readerSn, rawDetections));
                 sleepUninterruptibly((long) (300 * Math.abs(random.nextGaussian())), TimeUnit.MILLISECONDS);
             }
         }

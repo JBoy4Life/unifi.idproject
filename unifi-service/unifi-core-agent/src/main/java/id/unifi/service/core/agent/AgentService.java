@@ -4,9 +4,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.net.HostAndPort;
 import com.statemachinesystems.envy.Default;
+import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.provider.rfid.LlrpReaderDiscovery;
-import id.unifi.service.provider.rfid.RfidDetectionReport;
 import id.unifi.service.provider.rfid.RfidProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class AgentService {
     }
 
     public static void main(String[] args) throws Exception {
-        BlockingQueue<RfidDetectionReport> detectionQueue = new ArrayBlockingQueue<>(1000);
+        BlockingQueue<RawDetectionReport> detectionQueue = new ArrayBlockingQueue<>(1000);
         RfidProvider rfidProvider = new RfidProvider(detectionQueue::add);
 
         List<RfidReader> readers = LlrpReaderDiscovery.discoverReaders();
@@ -51,8 +51,8 @@ public class AgentService {
 
         log.info("Listening for detections");
         while (true) {
-            RfidDetectionReport report = detectionQueue.poll(10, TimeUnit.SECONDS);
-            log.info(report.getDetections().toString());
+            RawDetectionReport report = detectionQueue.poll(10, TimeUnit.SECONDS);
+            log.info(report.detections.toString());
         }
     }
 }
