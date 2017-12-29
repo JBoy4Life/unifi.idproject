@@ -44,6 +44,7 @@ public class HttpServer {
         WebSocketHandler webSocketHandler = new WebSocketHandler() {
             public void configure(WebSocketServletFactory factory) {
                 factory.getPolicy().setIdleTimeout(webSocketIdleTimeoutMillis);
+                factory.getExtensionFactory().unregister("permessage-deflate");
                 factory.setCreator(new WebSocketDelegate.Creator(dispatcher, basePath, protocols));
             }
         };
