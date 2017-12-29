@@ -29,6 +29,8 @@ import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import static java.util.stream.Collectors.toList;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.time.Instant;
@@ -37,6 +39,8 @@ import java.util.Optional;
 
 @ApiService("operator")
 public class OperatorService {
+    private static final Logger log = LoggerFactory.getLogger(OperatorService.class);
+
     private final Database db;
     private final PasswordReset passwordReset;
     private final SecretHashing passwordHashing;
