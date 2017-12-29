@@ -10,15 +10,7 @@ import java.util.Random;
 
 public class Token {
     public final static int TOKEN_LENGTH = 18;
-    private final static Random random;
-
-    static {
-        try {
-            random = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private final static Random random = new SecureRandom();
 
     @JsonValue
     public final byte[] raw;

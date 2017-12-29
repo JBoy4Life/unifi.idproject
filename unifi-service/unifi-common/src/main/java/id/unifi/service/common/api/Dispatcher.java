@@ -41,15 +41,7 @@ import java.util.function.Function;
 
 public class Dispatcher<S> {
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
-    private static final Random random;
-
-    static {
-        try {
-            random = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private static final Random random = new SecureRandom();
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
 

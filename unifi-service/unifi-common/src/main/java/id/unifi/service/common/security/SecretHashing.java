@@ -17,19 +17,11 @@ import java.util.Optional;
 
 public class SecretHashing {
     private static final Logger log = LoggerFactory.getLogger(SecretHashing.class);
-    private static final SecureRandom random;
+    private static final SecureRandom random = new SecureRandom();
 
     public static final String SCRYPT_FORMAT_NAME = "scrypt";
     private static final byte[] SCRYPT_FORMAT_HEADER = {'s', 'c', 'r'};
     private static final int DERIVED_KEY_LENGTH = 32;
-
-    static {
-        try {
-            random = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private final byte scryptLogN;
     private final int scryptN;
