@@ -1,6 +1,7 @@
 package id.unifi.service.core;
 
 import com.google.common.collect.Iterables;
+import com.google.common.net.HostAndPort;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
@@ -8,6 +9,7 @@ import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
 import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
+import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
@@ -43,11 +45,14 @@ public class CoreService {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
 
     private interface Config {
-        @Default("8000")
-        int apiServiceHttpPort();
+        @Default("0.0.0.0:8000")
+        default HostAndPort apiServiceListenEndpoint() {
+            return HostAndPort.fromParts("0.0.0.0", 8000);
+        }
 
-        @Default("8001")
-        int agentServiceHttpPort();
+        default HostAndPort agentServiceListenEndpoint() {
+            return HostAndPort.fromParts("0.0.0.0", 8001);
+        }
     }
 
     public static void main(String[] args) throws Exception {
@@ -60,14 +65,14 @@ public class CoreService {
         log.info("Starting unifi.id Core");
         VersionInfo.log();
 
-        Config config = Envy.configure(Config.class, UnifiConfigSource.get());
+        Config config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
 
-        startApiService(config.apiServiceHttpPort());
-        //startAgentService(config.agentServiceHttpPort());
+        startApiService(config.apiServiceListenEndpoint());
+        //startAgentService(config.agentServiceListenEndpoint());
 
     }
 
-    private static void startAgentService(int agentServiceHttpPort) throws Exception {
+    private static void startAgentService(HostAndPort agentEndpoint) throws Exception {
         ServiceRegistry agentRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agentservices"),
                 Map.of());
@@ -77,16 +82,16 @@ public class CoreService {
         //AgentHandler agentHandler = new AgentHandler(dbProvider, agentDispatcher, detectionProcessor);
         //agentDispatcher.addSessionListener(agentHandler);
 
-        InetSocketAddress agentServerSocket = createUnresolved("0.0.0.0", agentServiceHttpPort);
+        InetSocketAddress agentServerSocket = createUnresolved(agentEndpoint.getHost(), agentEndpoint.getPort());
         HttpServer agentServer = new HttpServer(
                 agentServerSocket,
-                "/agent-service",
+                "/agents",
                 agentDispatcher,
                 Set.of(Protocol.MSGPACK));
         agentServer.start();
     }
 
-    private static void startApiService(int apiServiceHttpPort) throws Exception {
+    private static void startApiService(HostAndPort apiEndpoint) throws Exception {
         DatabaseProvider dbProvider = new DatabaseProvider();
         DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
         ServiceRegistry registry = new ServiceRegistry(
@@ -97,7 +102,7 @@ public class CoreService {
                         EmailSenderProvider.class, new LoggingEmailSender()));
         Dispatcher<?> dispatcher =
                 new Dispatcher<>(registry, OperatorSessionData.class, s -> new OperatorSessionData());
-        InetSocketAddress apiServerSocket = createUnresolved("0.0.0.0", apiServiceHttpPort);
+        InetSocketAddress apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
         HttpServer apiServer = new HttpServer(
                 apiServerSocket,
                 "/service",

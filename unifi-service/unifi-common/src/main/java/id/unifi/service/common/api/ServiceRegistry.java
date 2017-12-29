@@ -8,6 +8,7 @@ import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.UnknownMessageType;
+import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,7 +156,8 @@ public class ServiceRegistry {
                 ApiConfigPrefix prefixAnnotation = parameter.getDeclaredAnnotation(ApiConfigPrefix.class);
                 String prefix = prefixAnnotation == null ? null : prefixAnnotation.value();
                 log.info("Getting configuration for {} with prefix {}", type, prefix);
-                instance = Envy.configure(type, UnifiConfigSource.getForPrefix(prefix));
+                instance =
+                        Envy.configure(type, UnifiConfigSource.getForPrefix(prefix), HostAndPortValueParser.instance);
             } else {
                 instance = createInstance(components, type);
             }
