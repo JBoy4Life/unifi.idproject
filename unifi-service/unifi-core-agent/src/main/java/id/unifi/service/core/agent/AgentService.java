@@ -43,10 +43,10 @@ public class AgentService {
         }
 
         RfidReader reader1 = readers.get(0);
-        Map<String, HostAndPort> endpoints = Map.of(reader1.getSerialNumber(), reader1.getStatus().getEndpoint());
+        Map<String, HostAndPort> endpoints = Map.of(reader1.getSn(), reader1.getStatus().getEndpoint());
 
         Multimap<String, Integer> enabledAntennaPorts = HashMultimap.create();
-        enabledAntennaPorts.put(reader1.getSerialNumber(), 1);
+        enabledAntennaPorts.put(reader1.getSn(), 1);
         rfidProvider.startDetecting(enabledAntennaPorts, endpoints);
 
         log.info("Listening for detections");

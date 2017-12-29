@@ -1,18 +1,18 @@
 package id.unifi.service.common.rfid;
 
 public class RfidReader {
-    private final String serialNumber;
+    private final String sn;
     private final String modelName;
     private final RfidReaderStatus status;
 
-    public RfidReader(String serialNumber, String modelName, RfidReaderStatus status) {
-        this.serialNumber = serialNumber;
+    public RfidReader(String sn, String modelName, RfidReaderStatus status) {
+        this.sn = sn;
         this.modelName = modelName;
         this.status = status;
     }
 
-    public String getSerialNumber() {
-        return serialNumber;
+    public String getSn() {
+        return sn;
     }
 
     public String getModelName() {
@@ -25,7 +25,7 @@ public class RfidReader {
 
     public String toString() {
         return "RfidReader{" +
-                "serialNumber='" + serialNumber + '\'' +
+                "sn='" + sn + '\'' +
                 ", modelName='" + modelName + '\'' +
                 ", status=" + status +
                 '}';
