@@ -41,7 +41,7 @@ unifi.id services development VM
 
 Now run `vagrant ssh` to get into the VM, then:
 
-    cd unifi.id/unifi-services
+    cd unifi.id/unifi-service
     mvn clean install
 MSG
 
