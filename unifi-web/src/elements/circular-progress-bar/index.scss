@@ -11,8 +11,8 @@
    *
    * If you're not using "display: flex", you can remove this style.
    */
+  font-weight: 200;
   width: 100%;
-  font-family: 'Lato';
 }
 
 .CircularProgressbar .CircularProgressbar-path {
@@ -27,7 +27,7 @@
 
 .CircularProgressbar .CircularProgressbar-text {
   fill: #3e98c7;
-  font-size: 20px;
+  font-size: 24px;
   dominant-baseline: middle;
   text-anchor: middle;
 }
