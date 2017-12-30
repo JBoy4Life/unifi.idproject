@@ -1,10 +1,3 @@
---
--- PostgreSQL database dump
---
-
--- Dumped from database version 10.1
--- Dumped by pg_dump version 10.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -19,21 +12,27 @@ SET search_path = core, pg_catalog;
 
 COPY client (client_id, display_name, logo, register_date) FROM stdin;
 deloitte	Deloitte	\\x	2017-12-21 01:07:26.142889
+ucl-mgmt	UCL School of Management	\\x	2017-12-30 14:22:26.142889
 \.
 
 
 
 COPY site (client_id, site_id, description, address) FROM stdin;
 deloitte	1nss	1 New Square Street	London
+ucl-mgmt	level38	Level 38	Level 38, One Canada Square, Canary Wharf, London, E14 5AA
 \.
 
 
 COPY reader (client_id, site_id, reader_sn, endpoint) FROM stdin;
-deloitte	1nss	37017090611	192.168.42.161
-deloitte	1nss	37017090612	192.168.42.162
-deloitte	1nss	37017090613	192.168.42.163
-deloitte	1nss	37017090614	192.168.42.164
-deloitte	1nss	37017090615	192.168.42.165
+deloitte	1nss	37017090611	192.168.42.161:5084
+deloitte	1nss	37017090612	192.168.42.162:5084
+deloitte	1nss	37017090613	192.168.42.163:5084
+deloitte	1nss	37017090614	192.168.42.164:5084
+deloitte	1nss	37017090615	192.168.42.165:5084
+ucl-mgmt	level38	37016400949	192.168.1.101:5084
+ucl-mgmt	level38	37011330048	192.168.1.102:5084
+ucl-mgmt	level38	37017110229	192.168.1.103:5084
+ucl-mgmt	level38	37016440780	192.168.1.104:5084
 \.
 
 
@@ -45,6 +44,9 @@ deloitte	1nss	2B	Floor 2/B
 deloitte	1nss	3A	Floor 3/A	
 deloitte	1nss	3B	Floor 3/B	
 deloitte	1nss	3C	Floor 3/C	
+ucl-mgmt	level38	north-east	North East Lecture Theatre	
+ucl-mgmt	level38	seminar-suite	Seminar Suite	
+ucl-mgmt	level38	south-east	South East Lecture Theatre	
 \.
 
 
@@ -65,6 +67,18 @@ deloitte	1nss	37017090615	1	3B
 deloitte	1nss	37017090615	2	2B
 deloitte	1nss	37017090615	3	3C
 deloitte	1nss	37017090615	4	3C
+ucl-mgmt	level38	37016400949	1	north-east
+ucl-mgmt	level38	37016400949	2	north-east
+ucl-mgmt	level38	37016400949	3	north-east
+ucl-mgmt	level38	37016400949	4	north-east
+ucl-mgmt	level38	37011330048	1	seminar-suite
+ucl-mgmt	level38	37011330048	2	seminar-suite
+ucl-mgmt	level38	37017110229	1	seminar-suite
+ucl-mgmt	level38	37017110229	2	seminar-suite
+ucl-mgmt	level38	37016440780	1	south-east
+ucl-mgmt	level38	37016440780	2	south-east
+ucl-mgmt	level38	37016440780	3	south-east
+ucl-mgmt	level38	37016440780	4	south-east
 \.
 
 
@@ -101,6 +115,13 @@ deloitte	10010	contact	Cheryl Hubbard	t
 deloitte	10011	contact	Diane McKenzie	t
 deloitte	10012	contact	Kenneth Lin	t
 deloitte	10013	contact	George Stewart	t
+ucl-mgmt	WDAL17	contact	Waylon Dalton	t
+ucl-mgmt	TCOB17	contact	Thalia Cobb	t
+ucl-mgmt	JHEN17	contact	Justine Henderson	t
+ucl-mgmt	AWAL17	contact	Angela Walker	t
+ucl-mgmt	HHAR17	contact	Hadassah Hartman	t
+ucl-mgmt	LSHE17	contact	Lia Shelton	t
+ucl-mgmt	ERAN17	contact	Eddie Randolph	t
 \.
 
 
@@ -137,6 +158,13 @@ deloitte	10010	contact
 deloitte	10011	contact
 deloitte	10012	contact
 deloitte	10013	contact
+ucl-mgmt	WDAL17	contact
+ucl-mgmt	TCOB17	contact
+ucl-mgmt	JHEN17	contact
+ucl-mgmt	AWAL17	contact
+ucl-mgmt	HHAR17	contact
+ucl-mgmt	LSHE17	contact
+ucl-mgmt	ERAN17	contact
 \.
 
 
@@ -160,16 +188,17 @@ deloitte	6895	card	6895	uhf-epc
 
 COPY operator (client_id, username, email, active, since) FROM stdin;
 deloitte	test	test@example.com	t	2017-12-27 13:49:25.159918
+ucl-mgmt	test	test@example.com	t	2017-12-31 13:49:25.159918
 \.
 
 
 COPY operator_login_attempt (client_id, username, successful, attempt_time) FROM stdin;
-deloitte	test	t	2017-12-27 13:50:36.305671
 \.
 
 
 COPY operator_password (client_id, username, password_hash, algorithm, since) FROM stdin;
 deloitte	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt	2017-12-27 13:50:16.505975
+ucl-mgmt	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt	2017-12-30 13:50:16.505975
 \.
 
 
@@ -179,4 +208,3 @@ COPY operator_password_reset (client_id, username, token_hash, algorithm, expiry
 
 COPY operator_password_reset_history (client_id, username, token_hash, algorithm, expiry_date, deletion_reason, since) FROM stdin;
 \.
-
