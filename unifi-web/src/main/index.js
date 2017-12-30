@@ -13,7 +13,7 @@ import * as ROUTES from '../utils/routes'
 import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
   Discovery, LiveView, SiteManager, Users, Navigation,
-  ClientRegistry,
+  ClientRegistry, Attendance
 } from '../pages'
 
 import { selectors as userSelectors } from '../reducers/user'
@@ -74,6 +74,8 @@ export default class Main extends Component {
           <Route exact path={ROUTES.DIRECTORY} component={Discovery} />
 
           <Route path={ROUTES.EVACUATION} component={Evacuation} />
+          <Route path={ROUTES.ATTENDANCE} component={Attendance} />
+
           <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
 
           <Route path={ROUTES.LIVE_VIEW} component={LiveView} />

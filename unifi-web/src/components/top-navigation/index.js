@@ -16,12 +16,9 @@ export default class TopNavigation extends Component {
         <Menu.Item key="/">
           Sitemap
         </Menu.Item>
+
         <Menu.Item key="/directory">
           Directory
-        </Menu.Item>
-
-        <Menu.Item key="/evacuation">
-          Evacuation
         </Menu.Item>
 
         <Menu.Item key="/live-view">
@@ -38,6 +35,14 @@ export default class TopNavigation extends Component {
 
         <Menu.Item key="/users">
           Users
+        </Menu.Item>
+
+        <Menu.Item key="/evacuation">
+          Evacuation
+        </Menu.Item>
+
+        <Menu.Item key="/attendance">
+          Attendance
         </Menu.Item>
 
       </Menu>

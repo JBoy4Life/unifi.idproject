@@ -4,6 +4,7 @@ import MyAccount from './my-account'
 import Login from './login'
 import Discovery from './discovery'
 
+import Attendance from './attendance'
 import Evacuation from './evacuation'
 
 import LiveView from './live-view'
@@ -20,6 +21,7 @@ export {
   Login,
   Discovery,
 
+  Attendance,
   Evacuation,
 
   LiveView,
