@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 
 import { FlippedCardsStack, FloorSection, EqualSpaceFloorLayout } from '../../elements'
-import { EvacuationProgressBar } from '../'
 
 import './index.scss'
+import EvacuationProgressBar from "../evacuation-progress-bar";
 
 const getTotalCapacity = floor => floor.subsections.reduce((acc, item) => {
   acc += item.capacityCount
@@ -49,7 +49,7 @@ export default class EvacuationFloor extends Component {
     return (
       <div>
         <div className="progress-indicator-wrapper">
-          <EvacuationProgressBar percentage={valueBasedPercentage} />
+          <EvacuationProgressBar percentage={valueBasedPercentage} warningThreshold={100} criticalThreshold={50} />
         </div>
         <div className="people-count-container">
           <div className="people-label">

@@ -1,27 +1,29 @@
-import React from 'react'
+import React, {Component} from 'react'
 
 import { CircularProgressBar } from '../../elements'
 
 import './index.scss'
 
-const getStatusClass = (percentage) => {
-  if (percentage < 50) {
-    return 'status-good'
+function getStatusClass(percentage, warningThreshold, criticalThreshold) {
+  if (percentage < criticalThreshold) {
+    return 'status-critical';
+  } else if (percentage < warningThreshold) {
+    return 'status-warning';
+  } else {
+    return 'status-good';
   }
-  if (percentage <= 100) {
-    return 'status-warning'
-  }
-
-  return 'status-critical'
 }
 
-const EvacuationProgressBar = ({ percentage = 0 }) => (
-  <div className={`evacuation-progress-bar ${getStatusClass(percentage)}`}>
-    <div className="evacuation-progress-bar-circle">
-      <CircularProgressBar strokeWidth={10} percentage={Math.round(percentage * 100) / 100} />
-    </div>
-    <div className="evacuation-progress-background" />
-  </div>
-)
-
-export default EvacuationProgressBar
+export default class EvacuationProgressBar extends Component {
+  render() {
+    return (
+      <div className={`evacuation-progress-bar ${getStatusClass(this.props.percentage, this.props.warningThreshold, this.props.criticalThreshold)}`}>
+        <div className="evacuation-progress-bar-circle">
+          <CircularProgressBar strokeWidth={10}
+                               percentage={Math.round(this.props.percentage * 100) / 100}/>
+        </div>
+        <div className="evacuation-progress-background"/>
+      </div>
+    );
+  }
+}
