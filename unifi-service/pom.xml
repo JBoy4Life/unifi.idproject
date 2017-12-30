@@ -16,6 +16,8 @@
         <module>unifi-core-agent</module>
         <module>unifi-core-agent-schema</module>
         <module>unifi-provider-rfid</module>
+        <module>unifi-attendance</module>
+        <module>unifi-attendance-schema</module>
         <module>octane-sdk</module>
     </modules>
 
