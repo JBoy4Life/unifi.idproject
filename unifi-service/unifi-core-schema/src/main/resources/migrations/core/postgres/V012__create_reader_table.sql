@@ -4,7 +4,8 @@ CREATE TABLE core.reader(
   reader_sn   VARCHAR(64) NOT NULL,
   endpoint    VARCHAR(64) NOT NULL,
 
-  PRIMARY KEY (client_id, site_id, reader_sn),
+  PRIMARY KEY (client_id, reader_sn),
+  UNIQUE (client_id, site_id, reader_sn),
   CONSTRAINT fk_reader_to_site
     FOREIGN KEY (client_id, site_id)
     REFERENCES core.site
