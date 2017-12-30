@@ -20,8 +20,6 @@ import static org.jooq.impl.DSL.timestampAdd;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -33,7 +31,6 @@ public class PasswordReset {
     private final Database db;
     private final SecretHashing tokenHashing;
     private final Field<LocalDateTime> sqlExpiryDate;
-    private final SecureRandom random;
 
     public interface Config {
         @Default("864000")
@@ -48,12 +45,6 @@ public class PasswordReset {
         this.tokenHashing = new SecretHashing(config.hashing());
         this.sqlExpiryDate = timestampAdd(currentTimestamp(), config.validitySeconds(), DatePart.SECOND)
                 .cast(LocalDateTime.class);
-
-        try {
-            this.random = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static class TimestampedTokenHash {

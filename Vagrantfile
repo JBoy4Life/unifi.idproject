@@ -46,7 +46,8 @@ Now run `vagrant ssh` to get into the VM, then:
 MSG
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "debian/stretch64"
+  config.vm.box = "debian/contrib-stretch64" # contrib includes vbox guest additions
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
   config.vm.hostname = "unifi-services.box"
   config.vm.provision :shell, :inline => $bootstrap_script
   config.vm.network "public_network"

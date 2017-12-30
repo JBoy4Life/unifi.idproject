@@ -1,5 +1,6 @@
 package id.unifi.service.common.api;
 
+import org.eclipse.jetty.websocket.api.extensions.ExtensionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.server.Server;
@@ -44,7 +45,10 @@ public class HttpServer {
         WebSocketHandler webSocketHandler = new WebSocketHandler() {
             public void configure(WebSocketServletFactory factory) {
                 factory.getPolicy().setIdleTimeout(webSocketIdleTimeoutMillis);
-                factory.getExtensionFactory().unregister("permessage-deflate");
+                ExtensionFactory extensionFactory = factory.getExtensionFactory();
+                extensionFactory.unregister("permessage-deflate");
+                extensionFactory.unregister("x-webkit-deflate-frame");
+                extensionFactory.unregister("deflate-frame");
                 factory.setCreator(new WebSocketDelegate.Creator(dispatcher, basePath, protocols));
             }
         };
