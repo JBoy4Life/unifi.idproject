@@ -6,7 +6,7 @@ CREATE TABLE attendance.assignment(
   PRIMARY KEY (client_id, client_reference, schedule_id),
   CONSTRAINT fk_assignment_to_contact
     FOREIGN KEY (client_id, client_reference)
-    REFERENCES core.contact (client_id, client_reference),
+    REFERENCES core.contact,
   CONSTRAINT fk_assignment_to_schedule
     FOREIGN KEY (client_id, schedule_id)
     REFERENCES attendance.schedule
