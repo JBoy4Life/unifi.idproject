@@ -1,8 +1,14 @@
 package id.unifi.service.core;
 
-import com.google.common.collect.Iterables;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
-import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import id.unifi.service.common.api.Dispatcher;
@@ -11,39 +17,32 @@ import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
-import id.unifi.service.common.detection.DetectableType;
-import id.unifi.service.common.detection.RawDetection;
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.RawSiteDetectionReport;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
 import id.unifi.service.common.version.VersionInfo;
-import static id.unifi.service.core.db.Tables.ANTENNA;
-import static id.unifi.service.core.db.Tables.DETECTABLE;
-import id.unifi.service.core.db.tables.records.AntennaRecord;
-import id.unifi.service.core.db.tables.records.DetectableRecord;
 import static java.net.InetSocketAddress.createUnresolved;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
+import java.util.concurrent.TimeoutException;
 
 public class CoreService {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
+
+    public static final String PENDING_RAW_DETECTIONS_QUEUE_NAME = "core.detection.pending-raw-detections";
+
+    public interface MqConfig {
+        @Default("127.0.0.1:5672")
+        HostAndPort endpoint();
+    }
 
     private interface Config {
         @Default("0.0.0.0:8000")
@@ -51,6 +50,8 @@ public class CoreService {
 
         @Default("0.0.0.0:8001")
         HostAndPort agentServiceListenEndpoint();
+
+        MqConfig mq();
     }
 
     public static void main(String[] args) throws Exception {
@@ -65,14 +66,53 @@ public class CoreService {
 
         Config config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
 
-        startApiService(config.apiServiceListenEndpoint());
-        //startAgentService(config.agentServiceListenEndpoint());
+        DatabaseProvider dbProvider = new DatabaseProvider();
+        DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
 
+        startApiService(config.apiServiceListenEndpoint(), config.mq(), detectionProcessor);
+        ObjectMapper mapper = startAgentService(config.agentServiceListenEndpoint());
+        startRawDetectionConsumer(detectionProcessor, mapper, config.mq());
     }
 
-    private static void startAgentService(HostAndPort agentEndpoint) throws Exception {
+    private static void startRawDetectionConsumer(DetectionProcessor detectionProcessor,
+                                                  ObjectMapper mapper,
+                                                  MqConfig mqConfig) {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(mqConfig.endpoint().getHost());
+        factory.setPort(mqConfig.endpoint().getPort());
+        Connection connection;
+        Channel channel;
+        try {
+            connection = factory.newConnection();
+            channel = connection.createChannel();
+            channel.basicQos(1);
+        } catch (IOException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+
+        Consumer consumer = new DefaultConsumer(channel) {
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body) throws IOException {
+                try {
+                    RawSiteDetectionReport report = mapper.readValue(body, RawSiteDetectionReport.class);
+                    detectionProcessor.process(report.clientId, report.siteId, report.report);
+                } finally {
+                    channel.basicAck(envelope.getDeliveryTag(), false);
+                }
+            }
+        };
+        try {
+            channel.basicConsume(PENDING_RAW_DETECTIONS_QUEUE_NAME, false, consumer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static ObjectMapper startAgentService(HostAndPort agentEndpoint) throws Exception {
         ServiceRegistry agentRegistry = new ServiceRegistry(
-                Map.of("core", "id.unifi.service.core.agentservices"),
+                Map.of("core", "id.unifi.service.core.agents"),
                 Map.of());
         Dispatcher<AgentSessionData> agentDispatcher =
                 new Dispatcher<>(agentRegistry, AgentSessionData.class, AgentSessionData::new);
@@ -87,14 +127,15 @@ public class CoreService {
                 agentDispatcher,
                 Set.of(Protocol.MSGPACK));
         agentServer.start();
+        return agentDispatcher.getObjectMapper(Protocol.MSGPACK);
     }
 
-    private static void startApiService(HostAndPort apiEndpoint) throws Exception {
+    private static void startApiService(HostAndPort apiEndpoint, MqConfig mqConfig, Object detectionProcessor) throws Exception {
         DatabaseProvider dbProvider = new DatabaseProvider();
-        DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.services"),
                 Map.of(
+                        MqConfig.class, mqConfig,
                         DetectionProcessor.class, detectionProcessor,
                         SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                         EmailSenderProvider.class, new LoggingEmailSender()));
@@ -107,47 +148,5 @@ public class CoreService {
                 dispatcher,
                 Set.of(Protocol.JSON, Protocol.MSGPACK));
         apiServer.start();
-
-        mockDetections(dbProvider, detectionProcessor);
-
-    }
-
-    private static void mockDetections(DatabaseProvider dbProvider,
-                                       DetectionProcessor detectionProcessor) throws Exception {
-        Database db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
-        AntennaRecord[] antennae;
-        DetectableRecord[] foundDetectables;
-        do {
-            Thread.sleep(5000);
-            log.info("Looking for antennae and detectables...");
-            antennae = db.execute(sql -> sql.selectFrom(ANTENNA).fetchArray());
-            foundDetectables = db.execute(sql -> sql.selectFrom(DETECTABLE).fetchArray());
-        } while (antennae.length == 0 || foundDetectables.length == 0);
-        log.info("Found antennae and detectables");
-        final DetectableRecord[] detectables = foundDetectables;
-        Map<String, List<AntennaRecord>> readerAntennae =
-                Arrays.stream(antennae).collect(groupingBy(AntennaRecord::getReaderSn));
-        String clientId = antennae[0].getClientId();
-        String siteId = antennae[0].getSiteId();
-        log.info("clientId: {}, siteId: {}", clientId, siteId);
-        Random random = new Random();
-        int readerCount = readerAntennae.keySet().size();
-
-        while (true) {
-            for (int i = 0; i < 100; i++) {
-                String readerSn = Iterables.get(readerAntennae.keySet(), random.nextInt(readerCount));
-                List<AntennaRecord> portNumbers = readerAntennae.get(readerSn);
-                List<RawDetection> rawDetections = IntStream.range(0, random.nextInt(2) + 1)
-                        .mapToObj(j -> {
-                            int portNumber = portNumbers.get(random.nextInt(portNumbers.size())).getPortNumber();
-                            String detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
-                            Instant timestamp = Instant.now().minusMillis(random.nextInt(200));
-                            return new RawDetection(timestamp, portNumber, detectableId, DetectableType.UHF_EPC, 0d);
-                        }).collect(toList());
-                log.trace("Processing mock raw detections: {}", rawDetections);
-                detectionProcessor.process(clientId, siteId, new RawDetectionReport(readerSn, rawDetections));
-                sleepUninterruptibly((long) (300 * Math.abs(random.nextGaussian())), TimeUnit.MILLISECONDS);
-            }
-        }
     }
 }

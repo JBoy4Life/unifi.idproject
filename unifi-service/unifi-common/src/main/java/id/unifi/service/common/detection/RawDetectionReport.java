@@ -12,4 +12,11 @@ public class RawDetectionReport {
         this.readerSn = readerSn;
         this.detections = unmodifiableList(detections);
     }
+
+    public String toString() {
+        return "RawDetectionReport{" +
+                "readerSn='" + readerSn + '\'' +
+                ", detections=" + detections +
+                '}';
+    }
 }

@@ -20,4 +20,14 @@ public class RawDetection {
         this.detectableType = detectableType;
         this.rssi = rssi;
     }
+
+    public String toString() {
+        return "RawDetection{" +
+                "timestamp=" + timestamp +
+                ", portNumber=" + portNumber +
+                ", detectableId='" + detectableId + '\'' +
+                ", detectableType=" + detectableType +
+                ", rssi=" + rssi +
+                '}';
+    }
 }
