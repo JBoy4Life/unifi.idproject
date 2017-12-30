@@ -35,7 +35,7 @@ public class WebSocketDelegate {
     private final Dispatcher dispatcher;
     private final Protocol protocol;
 
-    public WebSocketDelegate(Dispatcher dispatcher, Protocol protocol) {
+    public WebSocketDelegate(Dispatcher<?> dispatcher, Protocol protocol) {
         this.dispatcher = dispatcher;
         this.protocol = protocol;
     }
@@ -44,7 +44,7 @@ public class WebSocketDelegate {
         private final Dispatcher dispatcher;
         private final Map<String, Protocol> protocolByPath;
 
-        Creator(Dispatcher dispatcher, String basePath, Set<Protocol> protocols) {
+        Creator(Dispatcher<?> dispatcher, String basePath, Set<Protocol> protocols) {
             this.dispatcher = dispatcher;
             this.protocolByPath = protocols.stream().collect(toMap(p -> basePath + "/" + p, identity()));
         }
@@ -86,8 +86,8 @@ public class WebSocketDelegate {
     @OnWebSocketMessage
     public void onBinaryMessage(Session session, InputStream stream) {
         MessageStream messageStream = protocol.isBinary()
-                ? new MessageStream(new BufferedReader(new InputStreamReader(stream, UTF_8)))
-                : new MessageStream(stream);
+                ? new MessageStream(stream)
+                : new MessageStream(new BufferedReader(new InputStreamReader(stream, UTF_8)));
         dispatchMessage(session, messageStream);
     }
 

@@ -10,7 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DatabaseProvider {
     public static final String CORE_SCHEMA_NAME = "core";
-    
+    public static final String CORE_AGENT_SCHEMA_NAME = "core_agent";
+
     private final Map<String, Database> databases;
 
     public DatabaseProvider() {

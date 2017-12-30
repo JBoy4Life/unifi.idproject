@@ -3,10 +3,14 @@ package id.unifi.service.provider.rfid;
 import com.google.common.collect.Multimap;
 import com.google.common.net.HostAndPort;
 import com.impinj.octane.*;
+import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.common.detection.RawDetection;
+import id.unifi.service.common.detection.RawDetectionReport;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,17 +21,18 @@ public class RfidProvider {
 
     private final TagReportListener impinjTagReportListener;
 
-    public RfidProvider(Consumer<RfidDetectionReport> detectionConsumer) {
+    public RfidProvider(Consumer<RawDetectionReport> detectionConsumer) {
         this.impinjTagReportListener = (reader, report) -> {
             log.info("Report received {}: {} tags", reader.getAddress(), report.getTags().size());
-            List<RfidDetection> detections = report.getTags().stream().map(tag ->
-                    new RfidDetection(
-                            Long.parseLong(tag.getLastSeenTime().ToString()),
+            List<RawDetection> detections = report.getTags().stream().map(tag ->
+                    new RawDetection(
+                            instantFromTimestamp(tag.getLastSeenTime()),
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
+                            DetectableType.UHF_EPC,
                             tag.getPeakRssiInDbm()))
                     .collect(toList());
-            detectionConsumer.accept(new RfidDetectionReport(reader.getName(), detections));
+            detectionConsumer.accept(new RawDetectionReport(reader.getName(), detections));
         };
     }
 
@@ -85,5 +90,12 @@ public class RfidProvider {
                 throw new RuntimeException("Failed to start reader", e);
             }
         }
+    }
+
+    private static Instant instantFromTimestamp(ImpinjTimestamp timestamp) {
+        // This is horrible but Octane "exposes" the full microsecond resolution only as a stringy long
+        long microsecondsSinceEpoch = Long.parseLong(timestamp.ToString());
+        long nanoAdjustment = (microsecondsSinceEpoch % 1_000_000) * 1000;
+        return Instant.ofEpochSecond(microsecondsSinceEpoch / 1_000_000, nanoAdjustment);
     }
 }

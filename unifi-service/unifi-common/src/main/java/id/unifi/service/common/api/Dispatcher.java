@@ -2,22 +2,28 @@ package id.unifi.service.common.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.Base64Variants;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.BinaryNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.google.common.net.HostAndPort;
 import id.unifi.service.common.api.errors.InternalServerError;
 import id.unifi.service.common.api.errors.InvalidParameterFormat;
 import id.unifi.service.common.api.errors.MarshallableError;
 import id.unifi.service.common.api.errors.MissingParameter;
+import id.unifi.service.common.security.Token;
 import id.unifi.service.common.util.HexEncoded;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -28,11 +34,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -44,6 +50,16 @@ public class Dispatcher<S> {
     private static final Random random = new SecureRandom();
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
+    private static final SimpleModule customSerializationModule;
+
+    static {
+        customSerializationModule = new SimpleModule();
+        customSerializationModule.addSerializer(HostAndPort.class, new JsonSerializer<>() {
+            public void serialize(HostAndPort value, JsonGenerator gen, SerializerProvider ss) throws IOException {
+                gen.writeString(value.toString());
+            }
+        });
+    }
 
     private final Map<Protocol, ObjectMapper> objectMappers;
     private final ServiceRegistry serviceRegistry;
@@ -52,6 +68,7 @@ public class Dispatcher<S> {
     private final ConcurrentMap<Session, S> sessionDataStore;
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, PayloadConsumer> messageListeners;
+    private BlockingQueue<MessageStream> sendQueue;
 
     public interface PayloadConsumer {
         void accept(ObjectMapper om, Session session, JsonNode node);
@@ -80,7 +97,7 @@ public class Dispatcher<S> {
     }
 
     public void dispatch(Session session, MessageStream stream, Protocol protocol, Channel returnChannel) {
-        log.debug("Dispatching {} request in {}", protocol, session);
+        log.trace("Dispatching {} request in {}", protocol, session);
         ObjectMapper mapper = objectMappers.get(protocol);
         Message message = null;
         try {
@@ -102,7 +119,7 @@ public class Dispatcher<S> {
             }
         } catch (JsonProcessingException e) {
             String errMessage = "Couldn't process " + protocol + " payload";
-            log.debug(errMessage + " in {}", session);
+            log.debug(errMessage + " in {}", session, e);
             session.close(StatusCode.BAD_PAYLOAD, errMessage);
         } catch (RuntimeException | IOException e) {
             log.error("Error while dispatching request", e);
@@ -111,6 +128,29 @@ public class Dispatcher<S> {
             } else {
                 session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
             }
+        }
+    }
+
+    public void request(Session session,
+                        Protocol protocol,
+                        String messageType,
+                        Map<String, Object> params) {
+        log.debug("Requesting using {} in {}", protocol, session);
+        ObjectMapper mapper = objectMappers.get(protocol);
+
+        JsonNode payload = mapper.valueToTree(params);
+        Message message = new Message(
+                CURRENT_PROTOCOL_VERSION,
+                CURRENT_PROTOCOL_VERSION,
+                new Token().raw,
+                messageType,
+                payload);
+        byte[] byteMessage;
+        try {
+            byteMessage = mapper.writeValueAsBytes(message);
+            session.getRemote().sendBytes(ByteBuffer.wrap(byteMessage));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -140,6 +180,9 @@ public class Dispatcher<S> {
         sessionListeners.add(listener);
     }
 
+    public ObjectMapper getObjectMapper(Protocol protocol) {
+        return objectMappers.get(protocol); // TODO: factor out mappers
+    }
     private void processRequest(Session session,
                                 Channel returnChannel,
                                 ObjectMapper mapper,
@@ -149,6 +192,8 @@ public class Dispatcher<S> {
         Object[] params = operation.params.entrySet().stream().map(entry -> {
             if (entry.getValue() == Session.class)
                 return session;
+            if (entry.getValue() == ObjectMapper.class)
+                return mapper;
             if (entry.getValue() == sessionDataType)
                 return sessionDataStore.get(session);
 
@@ -173,7 +218,7 @@ public class Dispatcher<S> {
                 try {
                     Object result = serviceRegistry.invokeRpc(operation, params);
 
-                    JsonNode payload = operation.resultType.equals(Void.TYPE) ? null : mapper.valueToTree(result);
+                    JsonNode payload = mapper.valueToTree(result);
                     rpcResponse = new Message(
                             CURRENT_PROTOCOL_VERSION,
                             message.releaseVersion,
@@ -238,6 +283,7 @@ public class Dispatcher<S> {
         return mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
+                .registerModule(customSerializationModule)
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
@@ -261,7 +307,7 @@ public class Dispatcher<S> {
                 throw new RuntimeException(e);
             }
             if (log.isTraceEnabled()) {
-                log.trace("Sending marshalled response: {}", new HexEncoded(binaryPayload));
+                log.trace("Sending marshalled message: {}", new HexEncoded(binaryPayload));
             }
             channel.send(ByteBuffer.wrap(binaryPayload));
         } else {
@@ -271,7 +317,7 @@ public class Dispatcher<S> {
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
-            log.trace("Sending marshalled response: {}", stringPayload);
+            log.trace("Sending marshalled message: {}", stringPayload);
             channel.send(stringPayload);
         }
     }

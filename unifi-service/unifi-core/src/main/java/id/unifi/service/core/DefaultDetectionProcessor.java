@@ -7,7 +7,7 @@ import id.unifi.service.common.api.MessageListener;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
-import id.unifi.service.common.rfid.RfidDetectionReport;
+import id.unifi.service.common.detection.RawDetectionReport;
 import static id.unifi.service.core.db.Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_CARRIER;
 import static id.unifi.service.core.db.Keys.DETECTABLE__FK_DETECTABLE_TO_CARRIER;
 import static id.unifi.service.core.db.Tables.ANTENNA;
@@ -45,9 +45,9 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
                 .build(CacheLoader.from((String k) -> newSetFromMap(new WeakHashMap<ListenerWithSession, Boolean>())));
     }
 
-    public void process(String clientId, String siteId, RfidDetectionReport report) {
+    public void process(String clientId, String siteId, RawDetectionReport report) {
         String scopedSiteId = clientId + ":" + siteId;
-        Set<String> epcCodes = report.detections.stream().map(d -> d.epc).collect(toSet());
+        Set<String> epcCodes = report.detections.stream().map(d -> d.detectableId).collect(toSet());
         List<ResolvedDetection> resolvedDetections = db.execute(sql -> {
             Map<Integer, String> zoneMap = sql.selectFrom(ANTENNA)
                     .where(ANTENNA.CLIENT_ID.eq(clientId))
@@ -64,7 +64,7 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
 
             return report.detections.stream()
                     .flatMap(d -> {
-                        String clientReference = assignments.get(d.epc);
+                        String clientReference = assignments.get(d.detectableId);
                         String zoneId = zoneMap.get(d.portNumber);
                         return clientReference != null && zoneId != null
                                 ? Stream.of(new ResolvedDetection(d.timestamp, clientReference, zoneId))
