@@ -28,12 +28,12 @@ deloitte	1nss	1 New Square Street	London
 \.
 
 
-COPY reader (client_id, site_id, reader_sn, host_name) FROM stdin;
-deloitte	1nss	370-17-09-0611	192.168.42.161
-deloitte	1nss	370-17-09-0612	192.168.42.162
-deloitte	1nss	370-17-09-0613	192.168.42.163
-deloitte	1nss	370-17-09-0614	192.168.42.164
-deloitte	1nss	370-17-09-0615	192.168.42.165
+COPY reader (client_id, site_id, reader_sn, endpoint) FROM stdin;
+deloitte	1nss	37017090611	192.168.42.161
+deloitte	1nss	37017090612	192.168.42.162
+deloitte	1nss	37017090613	192.168.42.163
+deloitte	1nss	37017090614	192.168.42.164
+deloitte	1nss	37017090615	192.168.42.165
 \.
 
 
@@ -49,22 +49,22 @@ deloitte	1nss	3C	Floor 3/C
 
 
 COPY antenna (client_id, site_id, reader_sn, port_number, zone_id) FROM stdin;
-deloitte	1nss	370-17-09-0611	1	1A
-deloitte	1nss	370-17-09-0611	2	1A
-deloitte	1nss	370-17-09-0611	3	1B
-deloitte	1nss	370-17-09-0611	4	2A
-deloitte	1nss	370-17-09-0612	1	2A
-deloitte	1nss	370-17-09-0612	2	2B
-deloitte	1nss	370-17-09-0612	3	2B
-deloitte	1nss	370-17-09-0613	1	2B
-deloitte	1nss	370-17-09-0613	2	3A
-deloitte	1nss	370-17-09-0613	4	3A
-deloitte	1nss	370-17-09-0614	1	3A
-deloitte	1nss	370-17-09-0614	2	3B
-deloitte	1nss	370-17-09-0615	1	3B
-deloitte	1nss	370-17-09-0615	2	2B
-deloitte	1nss	370-17-09-0615	3	3C
-deloitte	1nss	370-17-09-0615	4	3C
+deloitte	1nss	37017090611	1	1A
+deloitte	1nss	37017090611	2	1A
+deloitte	1nss	37017090611	3	1B
+deloitte	1nss	37017090611	4	2A
+deloitte	1nss	37017090612	1	2A
+deloitte	1nss	37017090612	2	2B
+deloitte	1nss	37017090612	3	2B
+deloitte	1nss	37017090613	1	2B
+deloitte	1nss	37017090613	2	3A
+deloitte	1nss	37017090613	4	3A
+deloitte	1nss	37017090614	1	3A
+deloitte	1nss	37017090614	2	3B
+deloitte	1nss	37017090615	1	3B
+deloitte	1nss	37017090615	2	2B
+deloitte	1nss	37017090615	3	3C
+deloitte	1nss	37017090615	4	3C
 \.
 
 
