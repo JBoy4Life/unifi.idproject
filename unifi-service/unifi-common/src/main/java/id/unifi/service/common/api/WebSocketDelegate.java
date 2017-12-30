@@ -86,8 +86,8 @@ public class WebSocketDelegate {
     @OnWebSocketMessage
     public void onBinaryMessage(Session session, InputStream stream) {
         MessageStream messageStream = protocol.isBinary()
-                ? new MessageStream(new BufferedReader(new InputStreamReader(stream, UTF_8)))
-                : new MessageStream(stream);
+                ? new MessageStream(stream)
+                : new MessageStream(new BufferedReader(new InputStreamReader(stream, UTF_8)));
         dispatchMessage(session, messageStream);
     }
 
