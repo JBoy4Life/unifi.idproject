@@ -101,6 +101,13 @@ public class ScheduleService {
         });
     }
 
+    @ApiOperation
+    public void overrideAttendanceRecord(OperatorSessionData session,
+                                         String clientId,
+                                         String scheduleId,
+                                         String blockId) {
+        authorize(session, clientId);
+    }
     private static BigDecimal randomAttendance() {
         return BigDecimal.valueOf(new Random().nextInt(1001), 1);
     }
