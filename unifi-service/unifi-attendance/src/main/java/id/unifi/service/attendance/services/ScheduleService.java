@@ -12,14 +12,21 @@ import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Record2;
+import org.jooq.Record4;
+import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.count;
+import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.min;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 @ApiService("schedule")
 public class ScheduleService {
@@ -60,12 +67,15 @@ public class ScheduleService {
         Instant startTime = Instant.parse("2017-10-08T12:00:00Z");
         Instant endTime = Instant.parse("2018-06-21T12:00:00Z");
         return db.execute(sql -> {
-            Map<String, Integer> blockCount = sql.select(SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID))
-                    .from(SCHEDULE).leftJoin(BLOCK).onKey()
+            Map<String, Record4<String, Integer, LocalDateTime, LocalDateTime>> blockSummary = sql.select(
+                    SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID), min(BLOCK_TIME.START_TIME), max(BLOCK_TIME.END_TIME))
+                    .from(SCHEDULE)
+                    .leftJoin(BLOCK).onKey(Keys.BLOCK__FK_BLOCK_TO_SCHEDULE)
+                    .leftJoin(BLOCK_TIME).onKey(Keys.BLOCK_TIME__FK_BLOCK_TIME_TO_BLOCK)
                     .where(SCHEDULE.CLIENT_ID.eq(clientId))
                     .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
                     .stream()
-                    .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), Record2::value2));
+                    .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), identity()));
             Map<String, Integer> scheduleAttendance =
                     sql.select(ASSIGNMENT.SCHEDULE_ID, count(ATTENDANCE_.CLIENT_REFERENCE))
                             .from(ASSIGNMENT)
@@ -79,14 +89,18 @@ public class ScheduleService {
                     .leftJoin(ASSIGNMENT).onKey(Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_SCHEDULE)
                     .where(SCHEDULE.CLIENT_ID.eq(clientId))
                     .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
-                    .fetch(r -> new ScheduleStat(
-                            r.get(SCHEDULE.SCHEDULE_ID),
-                            startTime,
-                            endTime,
-                            r.value2(),
-                            blockCount.get(r.get(ASSIGNMENT.SCHEDULE_ID)),
-                            Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
-                    ));
+                    .fetch(r -> {
+                        String scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
+                        Record4<String, Integer, LocalDateTime, LocalDateTime> stats = blockSummary.get(scheduleId);
+                        return new ScheduleStat(
+                                scheduleId,
+                                instantFromUtcLocal(stats.value3()),
+                                instantFromUtcLocal(stats.value4()),
+                                r.value2(),
+                                stats.value2(),
+                                Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
+                        );
+                    });
         });
     }
 
