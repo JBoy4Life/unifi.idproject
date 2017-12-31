@@ -83,3 +83,150 @@ $unifi-top-header-2: #404c58;
   }
 
 }
+
+.attendanceModuleDetail {
+
+  h1 {
+    font-size: 40px;
+    font-weight: 400;
+    margin-bottom: 0;
+  }
+
+  .stats {
+
+    min-height: 180px;
+    padding: 30px 15px;
+
+    .evacuation-progress-bar {
+      float: left;
+      max-width: 110px;
+      margin-right: 20px;
+    }
+
+    .label {
+      float: left;
+      font-size: 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 20px;
+      margin-right: 90px;
+      width: 130px;
+    }
+
+    .dates {
+      margin-top: 20px;
+      margin-bottom: 16px;
+      span {
+        font-weight: 600;
+      }
+    }
+
+    .studentCount {
+      float: left;
+      clear: right;
+
+      margin-right: 50px;
+
+      span {
+        font-weight: 600;
+      }
+    }
+
+    .lectureCount {
+      span {
+        font-weight: 600;
+      }
+    }
+
+  }
+
+  .tabs {
+    a {
+      border-bottom: 4px transparent solid;
+      color: inherit;
+      display: inline-block;
+      font-weight: 500;
+      line-height: 50px;
+      height: 50px;
+      width: 120px;
+      text-decoration: none;
+      text-transform: uppercase;
+      &.current {
+        border-bottom: 4px #2dc893 solid;
+      }
+    }
+  }
+
+  .module {
+
+    .controls {
+      margin-top: 24px;
+      margin-bottom: 16px;
+      h2 {
+        display: inline-block;
+        font-size: 28px;
+        line-height: 36px;
+        font-weight: 500;
+        margin-right: 30px;
+        text-transform: uppercase;
+      }
+      button.arrow {
+        position: relative;
+        top: -5px;
+        border: 1px $unifi-line-color solid;
+        color: $unifi-line-color;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        line-height: 20px;
+        font-weight: 500;
+        border-radius: 4px;
+        margin-right: 3px;
+      }
+      button.addLecture {
+        border: 0;
+        color: $unifi-link-color;
+        float: right;
+        cursor: pointer;
+        padding: 4px;
+        font-weight: 500;
+        font-size: 18px;
+      }
+    }
+
+    .timetable {
+      width: 100%;
+      thead {
+        margin-bottom: 16px;
+        tr {
+          border-bottom: 1px $unifi-type-color solid;
+          th {
+            padding-bottom: 8px;
+          }
+        }
+
+      }
+      tbody td {
+        vertical-align: top;
+        width: 14%;
+        word-wrap: break-word;
+        hyphens: auto;
+        -webkit-hyphens: auto;
+      }
+      p.numeral {
+        font-size: 28px;
+        font-weight: 500;
+        margin-top: 12px;
+      }
+      p.block {
+        font-size: 12px;
+        margin-bottom: 24px;
+        span.time {
+          font-weight: 500;
+        }
+      }
+    }
+
+  }
+
+}

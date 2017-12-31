@@ -6,7 +6,7 @@ import * as ROUTES from '../../utils/routes';
 import { PageContent } from '../../components';
 import { PageContainer, LinkedSideNavigation } from '../../smart-components';
 
-import AttendanceModules from './attendance-modules';
+import AttendanceModules, { AttendanceModuleDetail } from './attendance-modules';
 import AttendanceReports from './attendance-reports';
 import AttendanceCustomReports from './attendance-custom-reports';
 
@@ -37,6 +37,11 @@ export default class SitemapContainer extends Component {
                 exact
                 path={ROUTES.ATTENDANCE_MODULES}
                 component={AttendanceModules}
+              />
+              <Route
+                exact
+                path={ROUTES.ATTENDANCE_MODULES_DETAIL}
+                component={AttendanceModuleDetail}
               />
               <Route
                 exact

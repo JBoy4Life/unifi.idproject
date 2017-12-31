@@ -24,6 +24,7 @@ export const CLIENT_REGISTRY_ADD = '/clients/add'
 
 export const ATTENDANCE = '/attendance';
 export const ATTENDANCE_MODULES = '/attendance/modules';
+export const ATTENDANCE_MODULES_DETAIL = '/attendance/modules/:scheduleId';
 export const ATTENDANCE_REPORTS = '/attendance/reports';
 export const ATTENDANCE_CUSTOM_REPORTS = '/attendance/custom-reports';
 
