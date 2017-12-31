@@ -2,11 +2,7 @@ package id.unifi.service.attendance.services;
 
 import id.unifi.service.attendance.db.Keys;
 import id.unifi.service.attendance.db.Tables;
-import static id.unifi.service.attendance.db.Tables.ASSIGNMENT;
-import static id.unifi.service.attendance.db.Tables.BLOCK;
-import static id.unifi.service.attendance.db.Tables.BLOCK_TIME;
-import static id.unifi.service.attendance.db.Tables.BLOCK_ZONE;
-import static id.unifi.service.attendance.db.Tables.SCHEDULE;
+import static id.unifi.service.attendance.db.Tables.*;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
@@ -16,7 +12,6 @@ import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
-import static id.unifi.service.core.db.Tables.CONTACT;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Record2;
 import static org.jooq.impl.DSL.count;
@@ -87,6 +82,25 @@ public class ScheduleService {
         });
     }
 
+    @ApiOperation
+    public ContactAttendanceInfo getContactAttendanceForSchedule(OperatorSessionData session,
+                                                                 String clientId,
+                                                                 String scheduleId) {
+        authorize(session, clientId);
+        return db.execute(sql -> {
+            int blockCount = sql.fetchCount(BLOCK, BLOCK.CLIENT_ID.eq(clientId).and(BLOCK.SCHEDULE_ID.eq(scheduleId)));
+
+            List<ContactAttendance> attendance =
+                    sql.select(ASSIGNMENT.CLIENT_REFERENCE, count(ATTENDANCE_.CLIENT_REFERENCE))
+                            .from(ASSIGNMENT.leftJoin(ATTENDANCE_).onKey())
+                            .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                            .and(ASSIGNMENT.SCHEDULE_ID.eq(scheduleId))
+                            .groupBy(Keys.ASSIGNMENT_PKEY.getFieldsArray())
+                            .fetch(r -> new ContactAttendance(r.value1(), r.value2()));
+            return new ContactAttendanceInfo(blockCount, attendance);
+        });
+    }
+
     private static BigDecimal randomAttendance() {
         return BigDecimal.valueOf(new Random().nextInt(1001), 1);
     }
@@ -130,7 +144,7 @@ public class ScheduleService {
         }
     }
 
-    private class BlockInfo {
+    public class BlockInfo {
         public final String blockId;
         public final String name;
         public final Instant startTime;
@@ -150,6 +164,26 @@ public class ScheduleService {
             this.endTime = endTime;
             this.siteId = siteId;
             this.zoneId = zoneId;
+        }
+    }
+
+    public class ContactAttendance {
+        public final String clientReference;
+        public final int attendedCount;
+
+        public ContactAttendance(String clientReference, int attendedCount) {
+            this.clientReference = clientReference;
+            this.attendedCount = attendedCount;
+        }
+    }
+
+    public class ContactAttendanceInfo {
+        public final int blockCount;
+        public final List<ContactAttendance> attendance;
+
+        public ContactAttendanceInfo(int blockCount, List<ContactAttendance> attendance) {
+            this.blockCount = blockCount;
+            this.attendance = attendance;
         }
     }
 }
