@@ -12,16 +12,19 @@ import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Record2;
+import org.jooq.Record4;
 import static org.jooq.impl.DSL.count;
+import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.min;
 
-import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 
 @ApiService("schedule")
 public class ScheduleService {
@@ -59,26 +62,41 @@ public class ScheduleService {
     @ApiOperation
     public List<ScheduleStat> listScheduleStats(OperatorSessionData session, String clientId) {
         authorize(session, clientId);
-        Instant runsFrom = Instant.parse("2017-10-08T12:00:00Z");
-        Instant runsTo = Instant.parse("2018-06-21T12:00:00Z");
         return db.execute(sql -> {
-            Map<String, Integer> blockCount = sql.select(SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID))
-                    .from(SCHEDULE).leftJoin(BLOCK).onKey()
+            Map<String, Record4<String, Integer, LocalDateTime, LocalDateTime>> blockSummary = sql.select(
+                    SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID), min(BLOCK_TIME.START_TIME), max(BLOCK_TIME.END_TIME))
+                    .from(SCHEDULE)
+                    .leftJoin(BLOCK).onKey(Keys.BLOCK__FK_BLOCK_TO_SCHEDULE)
+                    .leftJoin(BLOCK_TIME).onKey(Keys.BLOCK_TIME__FK_BLOCK_TIME_TO_BLOCK)
                     .where(SCHEDULE.CLIENT_ID.eq(clientId))
                     .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
                     .stream()
-                    .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), Record2::value2));
+                    .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), identity()));
+            Map<String, Integer> scheduleAttendance =
+                    sql.select(ASSIGNMENT.SCHEDULE_ID, count(ATTENDANCE_.CLIENT_REFERENCE))
+                            .from(ASSIGNMENT)
+                            .leftJoin(ATTENDANCE_).onKey()
+                            .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                            .groupBy(ASSIGNMENT.SCHEDULE_ID)
+                            .stream()
+                            .collect(toMap(r -> r.get(ASSIGNMENT.SCHEDULE_ID), Record2::value2));
             return sql.select(SCHEDULE.SCHEDULE_ID, count(ASSIGNMENT.CLIENT_REFERENCE))
-                    .from(SCHEDULE).leftJoin(ASSIGNMENT).onKey()
+                    .from(SCHEDULE)
+                    .leftJoin(ASSIGNMENT).onKey(Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_SCHEDULE)
                     .where(SCHEDULE.CLIENT_ID.eq(clientId))
                     .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
-                    .fetch(r -> new ScheduleStat(
-                            r.get(SCHEDULE.SCHEDULE_ID),
-                            runsFrom,
-                            runsTo,
-                            r.value2(),
-                            blockCount.get(r.get(ASSIGNMENT.SCHEDULE_ID)),
-                            randomAttendance()));
+                    .fetch(r -> {
+                        String scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
+                        Record4<String, Integer, LocalDateTime, LocalDateTime> stats = blockSummary.get(scheduleId);
+                        return new ScheduleStat(
+                                scheduleId,
+                                instantFromUtcLocal(stats.value3()),
+                                instantFromUtcLocal(stats.value4()),
+                                r.value2(),
+                                stats.value2(),
+                                Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
+                        );
+                    });
         });
     }
 
@@ -101,10 +119,13 @@ public class ScheduleService {
         });
     }
 
-    private static BigDecimal randomAttendance() {
-        return BigDecimal.valueOf(new Random().nextInt(1001), 1);
+    @ApiOperation
+    public void overrideAttendanceRecord(OperatorSessionData session,
+                                         String clientId,
+                                         String scheduleId,
+                                         String blockId) {
+        authorize(session, clientId);
     }
-
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
         return Optional.ofNullable(sessionData.getOperator())
                 .filter(op -> op.clientId.equals(clientId))
@@ -123,21 +144,21 @@ public class ScheduleService {
 
     public static class ScheduleStat {
         public final String scheduleId;
-        public final Instant runsFrom;
-        public final Instant runsTo;
+        public final Instant startTime;
+        public final Instant endTime;
         public final int attendeeCount;
         public final int blockCount;
-        public final BigDecimal overallAttendance;
+        public final int overallAttendance;
 
-        public <T> ScheduleStat(String scheduleId,
-                                Instant runsFrom,
-                                Instant runsTo,
-                                int attendeeCount,
-                                int blockCount,
-                                BigDecimal overallAttendance) {
+        public ScheduleStat(String scheduleId,
+                            Instant startTime,
+                            Instant endTime,
+                            int attendeeCount,
+                            int blockCount,
+                            int overallAttendance) {
             this.scheduleId = scheduleId;
-            this.runsFrom = runsFrom;
-            this.runsTo = runsTo;
+            this.startTime = startTime;
+            this.endTime = endTime;
             this.attendeeCount = attendeeCount;
             this.blockCount = blockCount;
             this.overallAttendance = overallAttendance;
