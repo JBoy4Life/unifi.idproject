@@ -41,7 +41,7 @@ export default class TopNavigation extends Component {
           Evacuation
         </Menu.Item>
 
-        <Menu.Item key="/attendance">
+        <Menu.Item key="/attendance/modules">
           Attendance
         </Menu.Item>
 

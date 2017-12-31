@@ -1,15 +1,31 @@
-$attendance-module-border-color: #c5cfd2;
+$unifi-primary-color: #1dc992;
+$unifi-primary-hover-color: #1ba278;
+$unifi-secondary-color: #e0;
+$unifi-secondary-hover-color: #ccc;
+$unifi-type-color: #343e47;
+$unifi-line-color: #b1bfc4;
+$unifi-link-color: #00a7c0;
+$unifi-table-header-color: #f5f7fa;
+$unifi-warning: #eda03a;
+$unifi-error: #cc00000;
+$unifi-top-header-1: #353e48;
+$unifi-top-header-2: #404c58;
 
 .attendanceModule {
 
-  border: 1px $attendance-module-border-color solid;
+  border: 1px $unifi-line-color solid;
   border-radius: 6px;
   margin-bottom: 15px;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
   .title {
 
     padding: 15px;
-    border-bottom: 1px $attendance-module-border-color solid;
+    border-bottom: 1px $unifi-line-color solid;
 
     h2 {
       font-size: 20px;
