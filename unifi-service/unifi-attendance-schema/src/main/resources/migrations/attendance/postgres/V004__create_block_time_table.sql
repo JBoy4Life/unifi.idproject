@@ -9,5 +9,6 @@ CREATE TABLE attendance.block_time(
   PRIMARY KEY (client_id, schedule_id, block_id),
   CONSTRAINT fk_block_time_to_block
     FOREIGN KEY (client_id, schedule_id, block_id)
-    REFERENCES attendance.block
+    REFERENCES attendance.block,
+  CHECK (end_time > start_time)
 );
