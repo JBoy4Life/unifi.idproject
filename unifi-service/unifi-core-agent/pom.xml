@@ -88,10 +88,10 @@
                                 <property><key>core.jooq.dialect</key><value>POSTGRES</value></property>
 
                                 <!-- Core agent database config -->
-                                <property><key>core.jdbc.url</key><value>jdbc:postgresql:unifi?currentSchema=core_agent</value></property>
-                                <property><key>core.jdbc.user</key><value>${postgres.user}</value></property>
-                                <property><key>core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
-                                <property><key>core.jooq.dialect</key><value>POSTGRES</value></property>
+                                <property><key>core.agent.jdbc.url</key><value>jdbc:postgresql:unifi?currentSchema=core_agent</value></property>
+                                <property><key>core.agent.jdbc.user</key><value>${postgres.user}</value></property>
+                                <property><key>core.agent.jdbc.driver</key><value>org.postgresql.Driver</value></property>
+                                <property><key>core.agent.jooq.dialect</key><value>POSTGRES</value></property>
                             </systemProperties>
                         </configuration>
                     </execution>

@@ -20,6 +20,11 @@
         </dependency>
         <dependency>
             <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-attendance</artifactId><!-- Yuk! -->
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
             <artifactId>unifi-common</artifactId>
             <version>${project.version}</version>
         </dependency>

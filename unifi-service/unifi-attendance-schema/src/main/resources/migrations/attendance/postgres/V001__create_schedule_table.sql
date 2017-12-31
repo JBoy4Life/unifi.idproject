@@ -1,4 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS citext;
 CREATE TABLE attendance.schedule(
   client_id   CITEXT NOT NULL,
   schedule_id CITEXT NOT NULL,
