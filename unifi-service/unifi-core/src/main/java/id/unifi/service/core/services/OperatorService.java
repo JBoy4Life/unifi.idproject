@@ -17,7 +17,7 @@ import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.Token;
-import id.unifi.service.core.OperatorSessionData;
+import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;

@@ -20,6 +20,7 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.RawSiteDetectionReport;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
+import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
@@ -131,9 +132,10 @@ public class CoreService {
     }
 
     private static void startApiService(HostAndPort apiEndpoint, MqConfig mqConfig, Object detectionProcessor) throws Exception {
-        DatabaseProvider dbProvider = new DatabaseProvider();
         ServiceRegistry registry = new ServiceRegistry(
-                Map.of("core", "id.unifi.service.core.services"),
+                Map.of(
+                        "core", "id.unifi.service.core.services",
+                        "attendance", "id.unifi.service.attendance.services"),
                 Map.of(
                         MqConfig.class, mqConfig,
                         DetectionProcessor.class, detectionProcessor,

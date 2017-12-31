@@ -5,7 +5,7 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
-import id.unifi.service.core.OperatorSessionData;
+import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.core.db.Tables.HOLDER;
 
 import java.util.List;
