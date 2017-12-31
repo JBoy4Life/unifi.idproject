@@ -16,7 +16,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Record2;
 import org.jooq.Record4;
-import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.max;
 import static org.jooq.impl.DSL.min;
@@ -26,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 @ApiService("schedule")
 public class ScheduleService {
@@ -64,8 +62,6 @@ public class ScheduleService {
     @ApiOperation
     public List<ScheduleStat> listScheduleStats(OperatorSessionData session, String clientId) {
         authorize(session, clientId);
-        Instant startTime = Instant.parse("2017-10-08T12:00:00Z");
-        Instant endTime = Instant.parse("2018-06-21T12:00:00Z");
         return db.execute(sql -> {
             Map<String, Record4<String, Integer, LocalDateTime, LocalDateTime>> blockSummary = sql.select(
                     SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID), min(BLOCK_TIME.START_TIME), max(BLOCK_TIME.END_TIME))
