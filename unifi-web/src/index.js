@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import './index.css'
-import './unifi.css'
+import './unifi.scss'
 
 import Main from './main'
 import registerServiceWorker from './registerServiceWorker'
