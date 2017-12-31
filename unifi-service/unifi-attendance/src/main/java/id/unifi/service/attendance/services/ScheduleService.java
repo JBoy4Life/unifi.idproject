@@ -1,8 +1,11 @@
 package id.unifi.service.attendance.services;
 
 import id.unifi.service.attendance.db.Keys;
+import id.unifi.service.attendance.db.Tables;
 import static id.unifi.service.attendance.db.Tables.ASSIGNMENT;
 import static id.unifi.service.attendance.db.Tables.BLOCK;
+import static id.unifi.service.attendance.db.Tables.BLOCK_TIME;
+import static id.unifi.service.attendance.db.Tables.BLOCK_ZONE;
 import static id.unifi.service.attendance.db.Tables.SCHEDULE;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
@@ -12,6 +15,7 @@ import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
+import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.core.db.Tables.CONTACT;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Record2;
@@ -38,6 +42,23 @@ public class ScheduleService {
         return db.execute(sql -> sql.selectFrom(SCHEDULE)
                 .where(SCHEDULE.CLIENT_ID.eq(clientId))
                 .fetch(r -> new ScheduleInfo(r.getScheduleId(), r.getName())));
+    }
+
+    @ApiOperation
+    public List<BlockInfo> listBlocks(OperatorSessionData session, String clientId, String scheduleId) {
+        authorize(session, clientId);
+        return db.execute(sql -> sql.selectFrom(BLOCK
+                .leftJoin(Tables.BLOCK_TIME).onKey(Keys.BLOCK_TIME__FK_BLOCK_TIME_TO_BLOCK)
+                .leftJoin(Tables.BLOCK_ZONE).onKey(Keys.BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
+                .where(BLOCK.CLIENT_ID.eq(clientId))
+                .and(BLOCK.SCHEDULE_ID.eq(scheduleId))
+                .fetch(r -> new BlockInfo(
+                        r.get(BLOCK.BLOCK_ID),
+                        r.get(BLOCK.NAME),
+                        instantFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
+                        instantFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                        r.get(BLOCK_ZONE.SITE_ID),
+                        r.get(BLOCK_ZONE.ZONE_ID))));
     }
 
     @ApiOperation
@@ -106,6 +127,29 @@ public class ScheduleService {
             this.attendeeCount = attendeeCount;
             this.blockCount = blockCount;
             this.overallAttendance = overallAttendance;
+        }
+    }
+
+    private class BlockInfo {
+        public final String blockId;
+        public final String name;
+        public final Instant startTime;
+        public final Instant endTime;
+        public final String siteId;
+        public final String zoneId;
+
+        public BlockInfo(String blockId,
+                         String name,
+                         Instant startTime,
+                         Instant endTime,
+                         String siteId,
+                         String zoneId) {
+            this.blockId = blockId;
+            this.name = name;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.siteId = siteId;
+            this.zoneId = zoneId;
         }
     }
 }

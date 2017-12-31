@@ -5,9 +5,9 @@ CREATE TABLE attendance.attendance(
   block_id         CITEXT NOT NULL,
 
   PRIMARY KEY (client_id, client_reference, schedule_id, block_id),
-  CONSTRAINT fk_attendance_to_contact
-    FOREIGN KEY (client_id, client_reference)
-    REFERENCES core.contact (client_id, client_reference),
+  CONSTRAINT fk_attendance_to_assignment
+    FOREIGN KEY (client_id, client_reference, schedule_id)
+    REFERENCES attendance.assignment,
   CONSTRAINT fk_attendance_to_block
     FOREIGN KEY (client_id, schedule_id, block_id)
     REFERENCES attendance.block
