@@ -11,7 +11,7 @@ export default class WebSocketLayer {
     console.log('websocketlayer', wsConnectionURL)
     this.wsConnectionURL = wsConnectionURL
     this.socket = null
-    this.corelations = {}
+    this.correlations = {}
   }
 
   connect() {

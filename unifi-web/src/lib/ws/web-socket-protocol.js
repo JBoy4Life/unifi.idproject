@@ -9,7 +9,7 @@ export default class WebSocketProtocol {
     reconnectionDelay = 1000,
   }) {
     console.log('WebSocketProtocol', url)
-    this.corelations = []
+    this.correlations = []
     this.ws = new WebSocketLayerClass(url)
     this.reconnectionAttempts = reconnectionAttempts
     this.reconnectionDelay = reconnectionDelay
@@ -59,37 +59,37 @@ export default class WebSocketProtocol {
 
   handleMessage = (event, content) => {
     const { correlationId } = content
-    const corelation = this.corelations[correlationId]
-    if (corelation) {
-      if (corelation.callback) {
-        corelation.callback(content)
+    const correlation = this.correlations[correlationId]
+    if (correlation) {
+      if (correlation.callback) {
+        correlation.callback(content)
       } else {
-        corelation.resolve(content)
-        this.corelations[correlationId].handled = true
+        correlation.resolve(content)
+        this.correlations[correlationId].handled = true
       }
     }
   }
 
   request(content, params) {
     // console.log('request data', content)
-    if (this.corelations[content.correlationId]) {
-      return this.corelations[content.correlationId].resource
+    if (this.correlations[content.correlationId]) {
+      return this.correlations[content.correlationId].resource
     }
 
     const resource = new Promise((resolve, reject) => {
-      this.corelations[content.correlationId] = {
+      this.correlations[content.correlationId] = {
         resolve, reject, content,
       }
       // console.log('sending content', content)
       this.ws.send(content, params)
     })
 
-    this.corelations[content.correlationId].resource = resource
+    this.correlations[content.correlationId].resource = resource
     return resource
   }
 
   subscribe(content, params, callback) {
-    this.corelations[content.correlationId] = {
+    this.correlations[content.correlationId] = {
       callback, content,
     }
     this.ws.send(content, params)
