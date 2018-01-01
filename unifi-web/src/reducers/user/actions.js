@@ -9,7 +9,7 @@ export const loginRequest = ({ username, password /* remember */ }) => {
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
     messageType: 'core.operator.auth-password',
-    payload: { username, password, clientId: 'deloitte' },
+    payload: { username, password, clientId: 'ucl-mgmt' },
   })
 
   console.log('USER_LOGIN', pack.content)

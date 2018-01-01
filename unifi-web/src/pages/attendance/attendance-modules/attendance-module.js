@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
-import './attendance-module.scss';
-
 import EvacuationProgressBar from "../../../components/evacuation-progress-bar";
 import moment from "moment";
+
+import './attendance-module.scss';
 
 export default class AttendanceModule extends Component {
   render() {

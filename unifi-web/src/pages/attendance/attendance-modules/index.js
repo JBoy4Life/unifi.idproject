@@ -1,75 +1,28 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+
 import EvacuationProgressBar from "../../../components/evacuation-progress-bar";
-import BigCalendar from 'react-big-calendar';
 
 import AttendanceModule from "./attendance-module";
+import * as attendanceActions from "../../../reducers/attendance/actions";
 
-export default class AttendanceModules extends Component {
-  constructor() {
-    super();
-    this.state = {
-      modules: [
-        {
-          "scheduleId": "MSING007",
-          "runsFrom": "2017-10-08T12:00:00Z",
-          "runsTo": "2018-06-21T12:00:00Z",
-          "attendeeCount": 5,
-          "blockCount": 0,
-          "overallAttendance": 64.5
-        },
-        {
-          "scheduleId": "MSING022",
-          "runsFrom": "2017-10-08T12:00:00Z",
-          "runsTo": "2018-06-21T12:00:00Z",
-          "attendeeCount": 4,
-          "blockCount": 0,
-          "overallAttendance": 5.4
-        },
-        {
-          "scheduleId": "MSING025",
-          "runsFrom": "2017-10-08T12:00:00Z",
-          "runsTo": "2018-06-21T12:00:00Z",
-          "attendeeCount": 4,
-          "blockCount": 0,
-          "overallAttendance": 63.4
-        },
-        {
-          "scheduleId": "MSING028-B1",
-          "runsFrom": "2017-10-08T12:00:00Z",
-          "runsTo": "2018-06-21T12:00:00Z",
-          "attendeeCount": 2,
-          "blockCount": 0,
-          "overallAttendance": 97.8
-        },
-        {
-          "scheduleId": "MSING028-B2",
-          "runsFrom": "2017-10-08T12:00:00Z",
-          "runsTo": "2018-06-21T12:00:00Z",
-          "attendeeCount": 2,
-          "blockCount": 0,
-          "overallAttendance": 10.3
-        },
-        {
-          "scheduleId": "MSING052",
-          "runsFrom": "2017-10-08T12:00:00Z",
-          "runsTo": "2018-06-21T12:00:00Z",
-          "attendeeCount": 3,
-          "blockCount": 0,
-          "overallAttendance": 1
-        }
-      ]
-    };
+export class AttendanceModules extends Component {
+  componentDidMount() {
+    this.props.listScheduleStatsRequest();
   }
   render() {
     return (
       <div>
         <h1>Modules</h1>
-        {this.state.modules.map((module) => {
+        {this.props.modules.map((module) => {
+          let attendance = (module.overallAttendance / module.attendeeCount + module.blockCount);
+          console.log(attendance);
           return <AttendanceModule key={module.scheduleId}
                                    scheduleId={module.scheduleId}
                                    title={module.scheduleId + " NEED TITLE"}
-                                   attendance={module.overallAttendance}
+                                   attendance={attendance}
                                    startDate={module.runsFrom}
                                    endDate={module.runsTo}
                                    studentCount={module.attendeeCount}
@@ -79,6 +32,18 @@ export default class AttendanceModules extends Component {
     )
   }
 }
+
+export function mapStateToProps(state) {
+  return {
+    modules: state.attendance.scheduleStats || []
+  };
+}
+
+export const mapDispatch = dispatch => (bindActionCreators({
+  listScheduleStatsRequest: attendanceActions.listScheduleStats,
+}, dispatch));
+
+export default connect(mapStateToProps, mapDispatch)(AttendanceModules);
 
 export class AttendanceModuleDetail extends Component {
   render() {

@@ -13,7 +13,7 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
     store.dispatch({
       type: action.type,
       payload: promiseResource,
-    })
+    });
 
     return promiseResource
   }
@@ -28,6 +28,6 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
   }
 
   return next(action)
-}
+};
 
 export default socketApiMiddleware
