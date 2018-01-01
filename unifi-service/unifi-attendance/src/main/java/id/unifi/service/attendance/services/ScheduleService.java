@@ -19,7 +19,6 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
 import org.jooq.Record4;
-import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.*;
 
 import javax.annotation.Nullable;
@@ -188,7 +187,7 @@ public class ScheduleService {
         public final String name;
         public final Instant startTime;
         public final Instant endTime;
-        public final int attendeeCount;
+        public final int committerCount;
         public final int blockCount;
         public final int overallAttendance;
 
@@ -196,14 +195,14 @@ public class ScheduleService {
                             String name,
                             Instant startTime,
                             Instant endTime,
-                            int attendeeCount,
+                            int committerCount,
                             int blockCount,
                             int overallAttendance) {
             this.scheduleId = scheduleId;
             this.name = name;
             this.startTime = startTime;
             this.endTime = endTime;
-            this.attendeeCount = attendeeCount;
+            this.committerCount = committerCount;
             this.blockCount = blockCount;
             this.overallAttendance = overallAttendance;
         }

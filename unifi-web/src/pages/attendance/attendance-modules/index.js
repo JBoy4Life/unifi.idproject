@@ -17,7 +17,7 @@ export class AttendanceModules extends Component {
       <div>
         <h1>Modules</h1>
         {this.props.modules.map((module) => {
-          let attendance = module.overallAttendance / (module.attendeeCount * module.blockCount) * 100;
+          let attendance = module.overallAttendance / (module.committerCount * module.blockCount) * 100;
           console.log(attendance);
           return <AttendanceModule key={module.scheduleId}
                                    scheduleId={module.scheduleId}
