@@ -15,10 +15,14 @@ import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import org.jooq.Condition;
+import org.jooq.DSLContext;
 import org.jooq.Record2;
 import org.jooq.Record4;
+import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.*;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,48 +65,15 @@ public class ScheduleService {
     @ApiOperation
     public List<ScheduleStat> listScheduleStats(OperatorSessionData session, String clientId) {
         authorize(session, clientId);
-        return db.execute(sql -> {
-            Map<String, Record4<String, Integer, LocalDateTime, LocalDateTime>> blockSummary = sql.select(
-                    SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID), min(BLOCK_TIME.START_TIME), max(BLOCK_TIME.END_TIME))
-                    .from(SCHEDULE)
-                    .leftJoin(BLOCK).onKey(Keys.BLOCK__FK_BLOCK_TO_SCHEDULE)
-                    .leftJoin(BLOCK_TIME).onKey(Keys.BLOCK_TIME__FK_BLOCK_TIME_TO_BLOCK)
-                    .where(SCHEDULE.CLIENT_ID.eq(clientId))
-                    .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
-                    .stream()
-                    .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), identity()));
-            Map<String, Integer> scheduleAttendance =
-                    sql.select(field(name("schedule_id"), String.class), count())
-                            .from(select(field(ATTENDANCE_.SCHEDULE_ID.getUnqualifiedName()), ATTENDANCE_OVERRIDE.STATUS)
-                                    .distinctOn(field(name("client_reference")), field(name("client_reference")), field(name("schedule_id")), field(name("block_id")))
-                                    .from(ATTENDANCE_)
-                                    .fullJoin(ATTENDANCE_OVERRIDE)
-                                    .using(ATTENDANCE_.CLIENT_ID, ATTENDANCE_.CLIENT_REFERENCE, ATTENDANCE_.SCHEDULE_ID, ATTENDANCE_.BLOCK_ID)
-                                    .where(field(name("client_id")).eq(clientId))
-                                    .orderBy(field(name("client_reference")), field(name("schedule_id")), field(name("block_id")), ATTENDANCE_OVERRIDE.OVERRIDE_TIME.desc())
-                                    .asTable("full_attendance"))
-                            .where(field(name("status")).isDistinctFrom(OverriddenStatus.ABSENT.toString()))
-                            .groupBy(field(name("schedule_id")))
-                            .stream()
-                            .collect(toMap(r -> r.get(ASSIGNMENT.SCHEDULE_ID), Record2::value2));
-            return sql.select(SCHEDULE.SCHEDULE_ID, count(ASSIGNMENT.CLIENT_REFERENCE))
-                    .from(SCHEDULE)
-                    .leftJoin(ASSIGNMENT).onKey(Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_SCHEDULE)
-                    .where(SCHEDULE.CLIENT_ID.eq(clientId))
-                    .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
-                    .fetch(r -> {
-                        String scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
-                        Record4<String, Integer, LocalDateTime, LocalDateTime> stats = blockSummary.get(scheduleId);
-                        return new ScheduleStat(
-                                scheduleId,
-                                instantFromUtcLocal(stats.value3()),
-                                instantFromUtcLocal(stats.value4()),
-                                r.value2(),
-                                stats.value2(),
-                                Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
-                        );
-                    });
-        });
+        return db.execute(sql -> fetchScheduleStats(sql, clientId, trueCondition(), trueCondition()));
+    }
+
+    @ApiOperation
+    public @Nullable ScheduleStat getSchedule(OperatorSessionData session, String clientId, String scheduleId) {
+        authorize(session, clientId);
+        List<ScheduleStat> stats = db.execute(sql -> fetchScheduleStats(
+                sql, clientId, SCHEDULE.SCHEDULE_ID.eq(scheduleId), field(name("schedule_id")).eq(scheduleId)));
+        return stats.stream().findFirst().orElse(null);
     }
 
     @ApiOperation
@@ -144,7 +115,56 @@ public class ScheduleService {
             return null;
         });
     }
-    
+
+    private static List<ScheduleStat> fetchScheduleStats(DSLContext sql,
+                                                         String clientId,
+                                                         Condition scheduleCondition,
+                                                         Condition condition) {
+        Map<String, Record4<String, Integer, LocalDateTime, LocalDateTime>> blockSummary = sql.select(
+                SCHEDULE.SCHEDULE_ID, count(BLOCK.BLOCK_ID), min(BLOCK_TIME.START_TIME), max(BLOCK_TIME.END_TIME))
+                .from(SCHEDULE)
+                .leftJoin(BLOCK).onKey(Keys.BLOCK__FK_BLOCK_TO_SCHEDULE)
+                .leftJoin(BLOCK_TIME).onKey(Keys.BLOCK_TIME__FK_BLOCK_TIME_TO_BLOCK)
+                .where(SCHEDULE.CLIENT_ID.eq(clientId))
+                .and(scheduleCondition)
+                .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
+                .stream()
+                .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), identity()));
+        Map<String, Integer> scheduleAttendance =
+                sql.select(field(name("schedule_id"), String.class), count())
+                        .from(select(field(ATTENDANCE_.SCHEDULE_ID.getUnqualifiedName()), ATTENDANCE_OVERRIDE.STATUS)
+                                .distinctOn(field(name("client_reference")), field(name("client_reference")), field(name("schedule_id")), field(name("block_id")))
+                                .from(ATTENDANCE_)
+                                .fullJoin(ATTENDANCE_OVERRIDE)
+                                .using(ATTENDANCE_.CLIENT_ID, ATTENDANCE_.CLIENT_REFERENCE, ATTENDANCE_.SCHEDULE_ID, ATTENDANCE_.BLOCK_ID)
+                                .where(field(name("client_id")).eq(clientId))
+                                .and(condition)
+                                .orderBy(field(name("client_reference")), field(name("schedule_id")), field(name("block_id")), ATTENDANCE_OVERRIDE.OVERRIDE_TIME.desc())
+                                .asTable("full_attendance"))
+                        .where(field(name("status")).isDistinctFrom(OverriddenStatus.ABSENT.toString()))
+                        .groupBy(field(name("schedule_id")))
+                        .stream()
+                        .collect(toMap(r -> r.get(ASSIGNMENT.SCHEDULE_ID), Record2::value2));
+        return sql.select(SCHEDULE.SCHEDULE_ID, count(ASSIGNMENT.CLIENT_REFERENCE))
+                .from(SCHEDULE)
+                .leftJoin(ASSIGNMENT).onKey(Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_SCHEDULE)
+                .where(SCHEDULE.CLIENT_ID.eq(clientId))
+                .and(scheduleCondition)
+                .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
+                .fetch(r -> {
+                    String scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
+                    Record4<String, Integer, LocalDateTime, LocalDateTime> stats = blockSummary.get(scheduleId);
+                    return new ScheduleStat(
+                            scheduleId,
+                            instantFromUtcLocal(stats.value3()),
+                            instantFromUtcLocal(stats.value4()),
+                            r.value2(),
+                            stats.value2(),
+                            Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
+                    );
+                });
+    }
+
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
         return Optional.ofNullable(sessionData.getOperator())
                 .filter(op -> op.clientId.equals(clientId))
