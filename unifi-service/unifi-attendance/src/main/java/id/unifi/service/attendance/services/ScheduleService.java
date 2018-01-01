@@ -145,7 +145,7 @@ public class ScheduleService {
                         .groupBy(field(name("schedule_id")))
                         .stream()
                         .collect(toMap(r -> r.get(ASSIGNMENT.SCHEDULE_ID), Record2::value2));
-        return sql.select(SCHEDULE.SCHEDULE_ID, count(ASSIGNMENT.CLIENT_REFERENCE))
+        return sql.select(SCHEDULE.SCHEDULE_ID, SCHEDULE.NAME, count(ASSIGNMENT.CLIENT_REFERENCE))
                 .from(SCHEDULE)
                 .leftJoin(ASSIGNMENT).onKey(Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_SCHEDULE)
                 .where(SCHEDULE.CLIENT_ID.eq(clientId))
@@ -153,12 +153,14 @@ public class ScheduleService {
                 .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
                 .fetch(r -> {
                     String scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
+                    String scheduleName = r.get(SCHEDULE.NAME);
                     Record4<String, Integer, LocalDateTime, LocalDateTime> stats = blockSummary.get(scheduleId);
                     return new ScheduleStat(
                             scheduleId,
+                            scheduleName,
                             instantFromUtcLocal(stats.value3()),
                             instantFromUtcLocal(stats.value4()),
-                            r.value2(),
+                            r.value3(),
                             stats.value2(),
                             Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
                     );
@@ -183,6 +185,7 @@ public class ScheduleService {
 
     public static class ScheduleStat {
         public final String scheduleId;
+        public final String name;
         public final Instant startTime;
         public final Instant endTime;
         public final int attendeeCount;
@@ -190,12 +193,14 @@ public class ScheduleService {
         public final int overallAttendance;
 
         public ScheduleStat(String scheduleId,
+                            String name,
                             Instant startTime,
                             Instant endTime,
                             int attendeeCount,
                             int blockCount,
                             int overallAttendance) {
             this.scheduleId = scheduleId;
+            this.name = name;
             this.startTime = startTime;
             this.endTime = endTime;
             this.attendeeCount = attendeeCount;
