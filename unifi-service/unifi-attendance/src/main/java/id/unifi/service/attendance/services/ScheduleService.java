@@ -1,5 +1,6 @@
 package id.unifi.service.attendance.services;
 
+import id.unifi.service.attendance.OverriddenStatus;
 import id.unifi.service.attendance.db.Keys;
 import id.unifi.service.attendance.db.Tables;
 import static id.unifi.service.attendance.db.Tables.*;
@@ -16,9 +17,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Record2;
 import org.jooq.Record4;
-import static org.jooq.impl.DSL.count;
-import static org.jooq.impl.DSL.max;
-import static org.jooq.impl.DSL.min;
+import static org.jooq.impl.DSL.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -73,11 +72,17 @@ public class ScheduleService {
                     .stream()
                     .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), identity()));
             Map<String, Integer> scheduleAttendance =
-                    sql.select(ASSIGNMENT.SCHEDULE_ID, count(ATTENDANCE_.CLIENT_REFERENCE))
-                            .from(ASSIGNMENT)
-                            .leftJoin(ATTENDANCE_).onKey()
-                            .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
-                            .groupBy(ASSIGNMENT.SCHEDULE_ID)
+                    sql.select(field(name("schedule_id"), String.class), count())
+                            .from(select(field(ATTENDANCE_.SCHEDULE_ID.getUnqualifiedName()), ATTENDANCE_OVERRIDE.STATUS)
+                                    .distinctOn(field(name("client_reference")), field(name("client_reference")), field(name("schedule_id")), field(name("block_id")))
+                                    .from(ATTENDANCE_)
+                                    .fullJoin(ATTENDANCE_OVERRIDE)
+                                    .using(ATTENDANCE_.CLIENT_ID, ATTENDANCE_.CLIENT_REFERENCE, ATTENDANCE_.SCHEDULE_ID, ATTENDANCE_.BLOCK_ID)
+                                    .where(field(name("client_id")).eq(clientId))
+                                    .orderBy(field(name("client_reference")), field(name("schedule_id")), field(name("block_id")), ATTENDANCE_OVERRIDE.OVERRIDE_TIME.desc())
+                                    .asTable("full_attendance"))
+                            .where(field(name("status")).isDistinctFrom(OverriddenStatus.ABSENT.toString()))
+                            .groupBy(field(name("schedule_id")))
                             .stream()
                             .collect(toMap(r -> r.get(ASSIGNMENT.SCHEDULE_ID), Record2::value2));
             return sql.select(SCHEDULE.SCHEDULE_ID, count(ASSIGNMENT.CLIENT_REFERENCE))
@@ -120,12 +125,26 @@ public class ScheduleService {
     }
 
     @ApiOperation
-    public void overrideAttendanceRecord(OperatorSessionData session,
-                                         String clientId,
-                                         String scheduleId,
-                                         String blockId) {
-        authorize(session, clientId);
+    public void overrideAttendance(OperatorSessionData session,
+                                   String clientId,
+                                   String clientReference,
+                                   String scheduleId,
+                                   String blockId,
+                                   OverriddenStatus status) {
+        OperatorPK operator = authorize(session, clientId);
+        db.execute(sql -> {
+            sql.insertInto(ATTENDANCE_OVERRIDE)
+                    .set(ATTENDANCE_OVERRIDE.CLIENT_ID, operator.clientId)
+                    .set(ATTENDANCE_OVERRIDE.CLIENT_REFERENCE, clientReference)
+                    .set(ATTENDANCE_OVERRIDE.SCHEDULE_ID, scheduleId)
+                    .set(ATTENDANCE_OVERRIDE.BLOCK_ID, blockId)
+                    .set(ATTENDANCE_OVERRIDE.STATUS, status.toString())
+                    .set(ATTENDANCE_OVERRIDE.OPERATOR, operator.username)
+                    .execute();
+            return null;
+        });
     }
+    
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
         return Optional.ofNullable(sessionData.getOperator())
                 .filter(op -> op.clientId.equals(clientId))
