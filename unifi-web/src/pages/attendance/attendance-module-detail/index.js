@@ -13,8 +13,16 @@ export class AttendanceModuleDetail extends Component {
     super(props);
     let now = moment();
     this.state = {
-      selectedMonth: now.add(1, "month"),
-      calendar: new Array(now.daysInMonth()).fill([])
+      selectedMonth: now,
+      calendar: new Array(now.daysInMonth()).fill([]),
+      module: {
+        name: "",
+        attendance: 0,
+        startDate: moment(),
+        endDate: moment(),
+        studentCount: 0,
+        lectureCount: 0,
+      }
     };
   }
   componentWillMount() {
@@ -23,6 +31,26 @@ export class AttendanceModuleDetail extends Component {
     this.props.listBlocksRequest(scheduleId);
   }
   componentWillReceiveProps(nextProps) {
+
+    // Module information.
+    if (nextProps.scheduleStats.length > 0) {
+      let scheduleId = nextProps.match.params.scheduleId;
+      let module = nextProps.scheduleStats.filter((module) => module.scheduleId === scheduleId)[0];
+      let attendance = (module.overallAttendance / module.attendeeCount + module.blockCount);
+
+      console.log(module);
+
+      this.setState({
+        module: {
+          name: module.name,
+          attendance,
+          startDate: moment(module.startDate),
+          endDate:   moment(module.endDate),
+          studentCount: module.attendeeCount,
+          lectureCount: module.blockCount
+        }
+      });
+    }
 
     // Get number of days in month.
     let daysInMonth = this.state.selectedMonth.daysInMonth();
@@ -39,7 +67,7 @@ export class AttendanceModuleDetail extends Component {
     }).forEach((block) => {
       // Insert into calendar.
       let i = moment(block.startTime).date();
-      calendar[i-1] = calendar[i-1].concat(block);
+      calendar[i - 1] = calendar[i - 1].concat(block);
     });
 
     this.setState({ calendar });
@@ -59,12 +87,12 @@ export class AttendanceModuleDetail extends Component {
 
     // Populate the grid. Yes, it’s mutation, so what?
     for (let g = offset, i = 0; i < this.state.calendar.length; i++, g++) {
-      grid[g] = <td>
+      grid[g] = <td key={i}>
         <p className="numeral">{i + 1}</p>
         {this.state.calendar[i].map((block) => {
           let st = moment(block.startTime).format("HH:mm");
           let et = moment(block.endTime).format("HH:mm");
-          return <p className="block"><span className="time">{st}–{et}</span><br />{block.name}</p>
+          return <p key={block.blockId} className="block"><span className="time">{st}–{et}</span><br />{block.name}</p>
         })}
         <p className="block">&nbsp;</p>
       </td>;
@@ -74,7 +102,7 @@ export class AttendanceModuleDetail extends Component {
     let calendar = Array.from(Array(rows).keys()).map((row) => {
       let s = row * 7;
       let e = s + 7;
-      return <tr>
+      return <tr key={row}>
         {grid.slice(s, e)}
       </tr>
     });
@@ -85,19 +113,22 @@ export class AttendanceModuleDetail extends Component {
   }
 
   render() {
+    let scheduleId = this.props.match.params.scheduleId;
+    let startDate = this.state.module.startDate.format("DD/MM/Y");
+    let endDate = this.state.module.endDate.format("DD/MM/Y");
     return (
       <div className="attendanceModuleDetail">
-        <h1>{this.props.match.params.scheduleId}</h1>
+        <h1>{scheduleId} {this.state.module.name}</h1>
         <div className="stats">
-          <EvacuationProgressBar percentage={94.2} warningThreshold={80} criticalThreshold={50} />
+          <EvacuationProgressBar percentage={this.state.module.attendance} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance to Date</p>
-          <p className="dates"><span>Dates:</span>&nbsp;08/10/2018 – 21/06/2019</p>
-          <p className="studentCount"><span>Students:</span>&nbsp;15</p>
-          <p className="lectureCount"><span>Lectures:</span>&nbsp;141</p>
+          <p className="dates"><span>Dates:</span>&nbsp;{startDate}&nbsp;–&nbsp;{endDate}</p>
+          <p className="studentCount"><span>Students:</span>&nbsp;{this.state.module.studentCount}</p>
+          <p className="lectureCount"><span>Lectures:</span>&nbsp;{this.state.module.lectureCount}</p>
         </div>
         <div className="tabs">
-          <Link className="current" to={`/attendance/modules/${this.props.scheduleId}`}>Module</Link>
-          <Link to={`/attendance/modules/${this.props.scheduleId}/students`}>Students</Link>
+          <Link className="current" to={`/attendance/modules/${scheduleId}`}>Module</Link>
+          <Link to={`/attendance/modules/${scheduleId}/students`}>Students</Link>
         </div>
         <div className="module">
           <div className="controls">
@@ -130,7 +161,7 @@ export class AttendanceModuleDetail extends Component {
 
 export function mapStateToProps(state) {
   return {
-    module: state.attendance.scheduleStats || [],
+    scheduleStats: state.attendance.scheduleStats || [],
     blocks: state.attendance.blocks || []
   };
 }
