@@ -18,10 +18,9 @@ export class AttendanceModules extends Component {
         <h1>Modules</h1>
         {this.props.modules.map((module) => {
           let attendance = (module.overallAttendance / module.attendeeCount + module.blockCount);
-          console.log(attendance);
           return <AttendanceModule key={module.scheduleId}
                                    scheduleId={module.scheduleId}
-                                   title={module.scheduleId + " NEED TITLE"}
+                                   title={`${module.scheduleId} ${module.name}`}
                                    attendance={attendance}
                                    startDate={module.runsFrom}
                                    endDate={module.runsTo}
