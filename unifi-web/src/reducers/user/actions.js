@@ -12,8 +12,6 @@ export const loginRequest = ({ username, password /* remember */ }) => {
     payload: { username, password, clientId: 'ucl-mgmt' },
   })
 
-  console.log('USER_LOGIN', pack.content)
-
   return {
     socketRequest: pack.content,
     type: USER_LOGIN,

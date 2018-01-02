@@ -8,7 +8,6 @@ const binarryCodec = msgpack.createCodec({ binarraybuffer: true, preset: true })
 
 export default class WebSocketLayer {
   constructor(wsConnectionURL) {
-    console.log('websocketlayer', wsConnectionURL)
     this.wsConnectionURL = wsConnectionURL
     this.socket = null
     this.correlations = {}
