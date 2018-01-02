@@ -13,6 +13,8 @@ import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
+import static id.unifi.service.core.db.Tables.CONTACT;
+import static id.unifi.service.core.db.Tables.HOLDER;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
@@ -83,13 +85,22 @@ public class ScheduleService {
         return db.execute(sql -> {
             int blockCount = sql.fetchCount(BLOCK, BLOCK.CLIENT_ID.eq(clientId).and(BLOCK.SCHEDULE_ID.eq(scheduleId)));
 
+            Map<String, String> names = sql.select(ASSIGNMENT.CLIENT_REFERENCE, HOLDER.NAME)
+                    .from(ASSIGNMENT)
+                    .leftJoin(HOLDER)
+                    .on(ASSIGNMENT.CLIENT_ID.eq(HOLDER.CLIENT_ID), ASSIGNMENT.CLIENT_REFERENCE.eq(HOLDER.CLIENT_REFERENCE))
+                    .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                    .and(ASSIGNMENT.SCHEDULE_ID.eq(scheduleId))
+                    .stream()
+                    .collect(toMap(Record2::value1, Record2::value2));
+
             List<ContactAttendance> attendance =
                     sql.select(ASSIGNMENT.CLIENT_REFERENCE, count(ATTENDANCE_.CLIENT_REFERENCE))
                             .from(ASSIGNMENT.leftJoin(ATTENDANCE_).onKey())
                             .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
                             .and(ASSIGNMENT.SCHEDULE_ID.eq(scheduleId))
                             .groupBy(Keys.ASSIGNMENT_PKEY.getFieldsArray())
-                            .fetch(r -> new ContactAttendance(r.value1(), r.value2()));
+                            .fetch(r -> new ContactAttendance(r.value1(), names.get(r.value1()), r.value2()));
             return new ContactAttendanceInfo(blockCount, attendance);
         });
     }
@@ -233,10 +244,12 @@ public class ScheduleService {
 
     public class ContactAttendance {
         public final String clientReference;
+        public final String name;
         public final int attendedCount;
 
-        public ContactAttendance(String clientReference, int attendedCount) {
+        public ContactAttendance(String clientReference, String name, int attendedCount) {
             this.clientReference = clientReference;
+            this.name = name;
             this.attendedCount = attendedCount;
         }
     }
