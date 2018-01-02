@@ -6,7 +6,8 @@ import * as ROUTES from '../../utils/routes';
 import { PageContent } from '../../components';
 import { PageContainer, LinkedSideNavigation } from '../../smart-components';
 
-import AttendanceModules, { AttendanceModuleDetail } from './attendance-modules';
+import AttendanceModules from './attendance-modules';
+import AttendanceModuleDetail from './attendance-module-detail';
 import AttendanceReports from './attendance-reports';
 import AttendanceCustomReports from './attendance-custom-reports';
 
