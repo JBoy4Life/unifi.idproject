@@ -36,17 +36,18 @@ export class AttendanceModuleDetail extends Component {
     if (nextProps.scheduleStats.length > 0) {
       let scheduleId = nextProps.match.params.scheduleId;
       let module = nextProps.scheduleStats.filter((module) => module.scheduleId === scheduleId)[0];
-      let attendance = (module.overallAttendance / module.attendeeCount + module.blockCount);
+      let percentage = (module.blockCount === 0 || module.committerCount === 0) ? 0 :
+        (module.overallAttendance / (module.committerCount * module.blockCount)) * 100;
 
       console.log(module);
 
       this.setState({
         module: {
           name: module.name,
-          attendance,
+          attendance: percentage,
           startDate: moment(module.startDate),
           endDate:   moment(module.endDate),
-          studentCount: module.attendeeCount,
+          studentCount: module.committerCount,
           lectureCount: module.blockCount
         }
       });
@@ -118,11 +119,15 @@ export class AttendanceModuleDetail extends Component {
     let endDate = this.state.module.endDate.format("DD/MM/Y");
     return (
       <div className="attendanceModuleDetail">
-        <h1>{scheduleId} {this.state.module.name}</h1>
+        <h1>{this.state.module.name}</h1>
         <div className="stats">
           <EvacuationProgressBar percentage={this.state.module.attendance} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance to Date</p>
-          <p className="dates"><span>Dates:</span>&nbsp;{startDate}&nbsp;–&nbsp;{endDate}</p>
+          {(this.state.module.startDate === null) ?
+            <p className="dates"><span>Dates:</span>&nbsp;Unscheduled</p>
+            :
+            <p className="dates"><span>Dates:</span>&nbsp;{startDate} – {endDate}</p>
+          }
           <p className="studentCount"><span>Students:</span>&nbsp;{this.state.module.studentCount}</p>
           <p className="lectureCount"><span>Lectures:</span>&nbsp;{this.state.module.lectureCount}</p>
         </div>

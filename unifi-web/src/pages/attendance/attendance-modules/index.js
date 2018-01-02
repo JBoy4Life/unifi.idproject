@@ -14,14 +14,13 @@ export class AttendanceModules extends Component {
       <div>
         <h1>Modules</h1>
         {this.props.modules.map((module) => {
-          let attendance = module.overallAttendance / (module.committerCount * module.blockCount) * 100;
           return <AttendanceModule key={module.scheduleId}
                                    scheduleId={module.scheduleId}
-                                   title={`${module.scheduleId} ${module.name}`}
-                                   attendance={attendance}
+                                   title={module.name}
+                                   attendance={module.overallAttendance}
                                    startDate={module.startTime}
                                    endDate={module.endTime}
-                                   studentCount={module.attendeeCount}
+                                   studentCount={module.committerCount}
                                    lectureCount={module.blockCount} />
         })}
       </div>
