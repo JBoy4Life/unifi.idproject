@@ -233,3 +233,14 @@ ucl-mgmt	ERAN17	MSING024B	09
 ucl-mgmt	ERAN17	MSING024B	10
 ucl-mgmt	ERAN17	MSING024B	11
 \.
+
+COPY attendance_override (client_id, client_reference, schedule_id, block_id, status, operator, override_time) FROM stdin;
+ucl-mgmt	WDAL17	MSING062	08	present	test	2018-04-01 12:00:00
+ucl-mgmt	WDAL17	MSING062	05	auth-absent	test	2018-04-01 12:00:00
+ucl-mgmt	LSHE17	MSING062	04	absent	test	2018-04-01 12:00:00
+ucl-mgmt	HHAR17	MSING062	08	absent	test	2018-04-01 12:00:00
+ucl-mgmt	TCOB17	MSING062	04	absent	test	2018-04-01 12:00:00
+ucl-mgmt	TCOB17	MSING062	04	present	test	2018-04-02 12:00:00
+ucl-mgmt	TCOB17	MSING062	11	auth-absent	test	2018-04-01 12:00:00
+ucl-mgmt	TCOB17	MSING062	11	absent	test	2018-04-02 12:00:00
+\.
