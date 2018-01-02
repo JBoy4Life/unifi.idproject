@@ -51,6 +51,13 @@ export class AttendanceModuleDetail extends Component {
       });
     }
 
+    this.setState({
+      calendar: this.generateCalendar(nextProps)
+    });
+
+  }
+
+  generateCalendar(props) {
     // Get number of days in month.
     let daysInMonth = this.state.selectedMonth.daysInMonth();
 
@@ -58,7 +65,7 @@ export class AttendanceModuleDetail extends Component {
     let calendar = new Array(daysInMonth).fill([]);
 
     // Populate the calendar.
-    nextProps.blocks.filter((block) => {
+    props.blocks.filter((block) => {
       // Selected month blocks only.
       let d = moment(block.startTime);
       return d.year() === this.state.selectedMonth.year() &&
@@ -69,10 +76,10 @@ export class AttendanceModuleDetail extends Component {
       calendar[i - 1] = calendar[i - 1].concat(block);
     });
 
-    this.setState({ calendar });
-
+    return calendar;
   }
-  generateWeekRows() {
+
+  generateWeekRows(calendar) {
 
     // Generate a “flat grid” by figuring out how many week rows we’ll have.
     // Use ISO week numbers — dividing by 7 won’t work
@@ -85,10 +92,10 @@ export class AttendanceModuleDetail extends Component {
     let offset = this.state.selectedMonth.startOf("month").day() - 1;
 
     // Populate the grid. Yes, it’s mutation, so what?
-    for (let g = offset, i = 0; i < this.state.calendar.length; i++, g++) {
+    for (let g = offset, i = 0; i < calendar.length; i++, g++) {
       grid[g] = <td key={i}>
         <p className="numeral">{i + 1}</p>
-        {this.state.calendar[i].map((block) => {
+        {calendar[i].map((block) => {
           let st = moment(block.startTime).format("HH:mm");
           let et = moment(block.endTime).format("HH:mm");
           return <p key={block.blockId} className="block"><span className="time">{st}–{et}</span><br />{block.name}</p>
@@ -98,7 +105,7 @@ export class AttendanceModuleDetail extends Component {
     }
 
     // Now chunk it up into week rows.
-    let calendar = Array.from(Array(rows).keys()).map((row) => {
+    let chunked = Array.from(Array(rows).keys()).map((row) => {
       let s = row * 7;
       let e = s + 7;
       return <tr key={row}>
@@ -107,11 +114,21 @@ export class AttendanceModuleDetail extends Component {
     });
 
     // I think we’re done.
-    return calendar;
+    return chunked;
 
   }
-
+  prevMonthClick() {
+    this.setState({
+      selectedMonth: this.state.selectedMonth.subtract(1, "month")
+    });
+  }
+  nextMonthClick() {
+    this.setState({
+      selectedMonth: this.state.selectedMonth.add(1, "month")
+    });
+  }
   render() {
+    let calendar = this.generateCalendar(this.props);
     let scheduleId = this.props.match.params.scheduleId;
     let startDate = moment(this.state.module.startDate).format("DD/MM/Y");
     let endDate   = moment(this.state.module.endDate).format("DD/MM/Y");
@@ -136,8 +153,8 @@ export class AttendanceModuleDetail extends Component {
         <div className="module">
           <div className="controls">
             <h2>{this.state.selectedMonth.format("MMM Y")}</h2>
-            <button className="arrow">&lt;</button>
-            <button className="arrow">&gt;</button>
+            <button className="arrow" onClick={() => this.prevMonthClick()}>&lt;</button>
+            <button className="arrow" onClick={() => this.nextMonthClick()}>&gt;</button>
             <button className="addLecture">⊕ Add a lecture</button>
           </div>
           <table className="timetable">
@@ -153,7 +170,7 @@ export class AttendanceModuleDetail extends Component {
               </tr>
             </thead>
             <tbody>
-              {this.generateWeekRows()}
+              {this.generateWeekRows(calendar)}
             </tbody>
           </table>
         </div>
