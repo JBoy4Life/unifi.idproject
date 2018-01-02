@@ -18,8 +18,8 @@ export class AttendanceModuleDetail extends Component {
       module: {
         name: "",
         attendance: 0,
-        startDate: moment(),
-        endDate: moment(),
+        startDate: null,
+        endDate: null,
         studentCount: 0,
         lectureCount: 0,
       }
@@ -39,14 +39,12 @@ export class AttendanceModuleDetail extends Component {
       let percentage = (module.blockCount === 0 || module.committerCount === 0) ? 0 :
         (module.overallAttendance / (module.committerCount * module.blockCount)) * 100;
 
-      console.log(module);
-
       this.setState({
         module: {
           name: module.name,
           attendance: percentage,
-          startDate: moment(module.startDate),
-          endDate:   moment(module.endDate),
+          startDate: module.startTime,
+          endDate:   module.endTime,
           studentCount: module.committerCount,
           lectureCount: module.blockCount
         }
@@ -115,8 +113,8 @@ export class AttendanceModuleDetail extends Component {
 
   render() {
     let scheduleId = this.props.match.params.scheduleId;
-    let startDate = this.state.module.startDate.format("DD/MM/Y");
-    let endDate = this.state.module.endDate.format("DD/MM/Y");
+    let startDate = moment(this.state.module.startDate).format("DD/MM/Y");
+    let endDate   = moment(this.state.module.endDate).format("DD/MM/Y");
     return (
       <div className="attendanceModuleDetail">
         <h1>{this.state.module.name}</h1>

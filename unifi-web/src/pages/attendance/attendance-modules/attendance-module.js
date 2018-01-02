@@ -10,8 +10,8 @@ export default class AttendanceModule extends Component {
   render() {
     let percentage = (this.props.lectureCount === 0 || this.props.studentCount === 0) ? 0 :
       (this.props.attendance / (this.props.studentCount * this.props.lectureCount)) * 100;
-    let startDate = moment(this.props.startDate).format('L');
-    let endDate   = moment(this.props.endDate).format('L');
+    let startDate = moment(this.props.startDate).format('DD/MM/Y');
+    let endDate   = moment(this.props.endDate).format('DD/MM/Y');
     return (
         <div className="attendanceModule">
           <Link to={`/attendance/modules/${this.props.scheduleId}`}>
