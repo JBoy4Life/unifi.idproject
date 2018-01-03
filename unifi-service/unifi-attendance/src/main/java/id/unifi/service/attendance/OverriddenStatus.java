@@ -1,6 +1,7 @@
 package id.unifi.service.attendance;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import com.google.common.base.Converter;
@@ -20,6 +21,7 @@ public enum OverriddenStatus {
         return valueOf(inputConverter.convert(status));
     }
 
+    @JsonValue
     public String toString() {
         return stringName;
     }
