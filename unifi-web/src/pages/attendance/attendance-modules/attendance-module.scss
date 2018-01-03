@@ -11,6 +11,45 @@ $unifi-error: #cc00000;
 $unifi-top-header-1: #353e48;
 $unifi-top-header-2: #404c58;
 
+div.module-stats-summary {
+
+  padding: 15px;
+
+  .evacuation-progress-bar {
+    display: inline-block;
+    max-width: 110px;
+    margin-right: 20px;
+    vertical-align: middle;
+  }
+
+  .label {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-right: 90px;
+    vertical-align: middle;
+    width: 130px;
+  }
+
+  .stats {
+    display: inline-block;
+    vertical-align: middle;
+    .stat {
+      display: inline-block;
+      margin-right: 50px;
+      &:first-child {
+        display: block;
+      }
+    }
+    span {
+      font-weight: 500;
+    }
+  }
+
+
+}
+
 .attendanceModule {
 
   border: 1px $unifi-line-color solid;
@@ -34,50 +73,7 @@ $unifi-top-header-2: #404c58;
 
   }
 
-  .body {
-
-    min-height: 140px;
-    padding: 15px;
-
-    .evacuation-progress-bar {
-      float: left;
-      max-width: 110px;
-      margin-right: 20px;
-    }
-
-    .label {
-      float: left;
-      font-size: 16px;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-top: 20px;
-      margin-right: 90px;
-      width: 130px;
-    }
-
-    .dates {
-      margin-top: 20px;
-      margin-bottom: 16px;
-      span {
-        font-weight: 600;
-      }
-    }
-
-    .studentCount {
-      float: left;
-      clear: right;
-
-      margin-right: 50px;
-
-      span {
-        font-weight: 600;
-      }
-    }
-
-    .lectureCount {
-      span {
-        font-weight: 600;
-      }
+      font-weight: 500;
     }
 
   }
@@ -90,54 +86,6 @@ $unifi-top-header-2: #404c58;
     font-size: 40px;
     font-weight: 400;
     margin-bottom: 0;
-  }
-
-  .stats {
-
-    min-height: 180px;
-    padding: 30px 15px;
-
-    .evacuation-progress-bar {
-      float: left;
-      max-width: 110px;
-      margin-right: 20px;
-    }
-
-    .label {
-      float: left;
-      font-size: 16px;
-      font-weight: 500;
-      text-transform: uppercase;
-      margin-top: 20px;
-      margin-right: 90px;
-      width: 130px;
-    }
-
-    .dates {
-      margin-top: 20px;
-      margin-bottom: 16px;
-      span {
-        font-weight: 500;
-      }
-    }
-
-    .studentCount {
-      float: left;
-      clear: right;
-
-      margin-right: 50px;
-
-      span {
-        font-weight: 500;
-      }
-    }
-
-    .lectureCount {
-      span {
-        font-weight: 500;
-      }
-    }
-
   }
 
   .tabs {

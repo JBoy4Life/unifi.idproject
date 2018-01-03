@@ -148,16 +148,19 @@ export class AttendanceModuleDetail extends Component {
     return (
       <div className="attendanceModuleDetail">
         <h1>{this.state.module.name}</h1>
-        <div className="stats">
+        <div className="module-stats-summary">
           <EvacuationProgressBar percentage={this.state.module.attendance.toPrecision(2)} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance to Date</p>
-          {(this.state.module.startDate === null) ?
-            <p className="dates"><span>Dates:</span>&nbsp;Unscheduled</p>
-            :
-            <p className="dates"><span>Dates:</span>&nbsp;{startDate} – {endDate}</p>
-          }
-          <p className="studentCount"><span>Students:</span>&nbsp;{this.state.module.studentCount}</p>
-          <p className="lectureCount"><span>Lectures:</span>&nbsp;{this.state.module.lectureCount}</p>
+          <p className="stats">
+            {(this.state.module.startDate === null) ?
+              <p className="stat"><span>Dates:</span>&nbsp;Unscheduled</p>
+              :
+              <p className="stat"><span>Dates:</span>&nbsp;{startDate} – {endDate}</p>
+            }
+            <br />
+            <p className="stat"><span>Students:</span>&nbsp;{this.state.module.studentCount}</p>
+            <p className="stat"><span>Lectures:</span>&nbsp;{this.state.module.lectureCount}</p>
+          </p>
         </div>
         <div className="tabs">
           <Link className={this.state.mode === "module"   ? "current" : ""} onClick={() => this.switchMode("module")} to={`/attendance/modules/${scheduleId}`}>Module</Link>
