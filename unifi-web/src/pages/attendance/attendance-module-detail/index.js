@@ -13,6 +13,7 @@ export class AttendanceModuleDetail extends Component {
     super(props);
     let now = moment();
     this.state = {
+      mode: "module",
       selectedMonth: now,
       calendar: new Array(now.daysInMonth()).fill([]),
       module: {
@@ -22,13 +23,15 @@ export class AttendanceModuleDetail extends Component {
         endDate: null,
         studentCount: 0,
         lectureCount: 0,
-      }
+      },
+      search: ""
     };
   }
   componentWillMount() {
     let scheduleId = this.props.match.params.scheduleId;
     this.props.listScheduleStatsRequest(scheduleId);
     this.props.listBlocksRequest(scheduleId);
+    this.props.getContactAttendanceForSchedule(scheduleId);
   }
   componentWillReceiveProps(nextProps) {
 
@@ -127,6 +130,16 @@ export class AttendanceModuleDetail extends Component {
       selectedMonth: this.state.selectedMonth.add(1, "month")
     });
   }
+  switchMode(newMode) {
+    this.setState({
+      mode: newMode
+    });
+  }
+  searchChange(event) {
+    this.setState({
+      search: event.target.value
+    });
+  }
   render() {
     let calendar = this.generateCalendar(this.props);
     let scheduleId = this.props.match.params.scheduleId;
@@ -136,7 +149,7 @@ export class AttendanceModuleDetail extends Component {
       <div className="attendanceModuleDetail">
         <h1>{this.state.module.name}</h1>
         <div className="stats">
-          <EvacuationProgressBar percentage={this.state.module.attendance} warningThreshold={80} criticalThreshold={50} />
+          <EvacuationProgressBar percentage={this.state.module.attendance.toPrecision(2)} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance to Date</p>
           {(this.state.module.startDate === null) ?
             <p className="dates"><span>Dates:</span>&nbsp;Unscheduled</p>
@@ -147,18 +160,19 @@ export class AttendanceModuleDetail extends Component {
           <p className="lectureCount"><span>Lectures:</span>&nbsp;{this.state.module.lectureCount}</p>
         </div>
         <div className="tabs">
-          <Link className="current" to={`/attendance/modules/${scheduleId}`}>Module</Link>
-          <Link to={`/attendance/modules/${scheduleId}/students`}>Students</Link>
+          <Link className={this.state.mode === "module"   ? "current" : ""} onClick={() => this.switchMode("module")} to={`/attendance/modules/${scheduleId}`}>Module</Link>
+          <Link className={this.state.mode === "students" ? "current" : ""} onClick={() => this.switchMode("students")} to={`/attendance/modules/${scheduleId}`}>Students</Link>
         </div>
-        <div className="module">
-          <div className="controls">
-            <h2>{this.state.selectedMonth.format("MMM Y")}</h2>
-            <button className="arrow" onClick={() => this.prevMonthClick()}>&lt;</button>
-            <button className="arrow" onClick={() => this.nextMonthClick()}>&gt;</button>
-            <button className="addLecture">⊕ Add a lecture</button>
-          </div>
-          <table className="timetable">
-            <thead>
+        {this.state.mode === "module" ?
+          <div className="module">
+            <div className="controls">
+              <h2>{this.state.selectedMonth.format("MMM Y")}</h2>
+              <button className="arrow" onClick={() => this.prevMonthClick()}>&lt;</button>
+              <button className="arrow" onClick={() => this.nextMonthClick()}>&gt;</button>
+              <button className="addLecture">⊕ Add a lecture</button>
+            </div>
+            <table className="timetable">
+              <thead>
               <tr>
                 <th>M</th>
                 <th>T</th>
@@ -168,12 +182,50 @@ export class AttendanceModuleDetail extends Component {
                 <th>S</th>
                 <th>S</th>
               </tr>
-            </thead>
-            <tbody>
+              </thead>
+              <tbody>
               {this.generateWeekRows(calendar)}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          :
+          <div className="students">
+            <div className="controls">
+              <input type="text" placeholder="Search" value={this.state.search} onChange={this.searchChange} />
+              <button className="search" onClick={() => this.search()}>🔍</button>
+              <button className="addStudent">⊕ Add a student</button>
+            </div>
+            <div className="views">
+              <p>Showing {this.props.contactAttendance.attendance.length} students</p>
+              <div className="buttons">
+                <button className="table-view"></button>
+                <button className="tile-view"></button>
+                <button className="grid-view"></button>
+              </div>
+            </div>
+            <table className="committers">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>UPI</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>Attendance</th>
+                </tr>
+              </thead>
+              <tbody>
+              {this.props.contactAttendance.attendance.map((committer) => {
+                return <tr key={committer.clientReference}>
+                  <td>{committer.name}</td>
+                  <td>{committer.clientReference}</td>
+                  <td>{committer.attendedCount}</td>
+                  <td>{this.props.contactAttendance.blockCount - committer.attendedCount}</td>
+                  <td>{((committer.attendedCount/this.props.contactAttendance.blockCount)*100).toPrecision(3)}%</td>
+                </tr>})}
+              </tbody>
+            </table>
+          </div>}
+
       </div>
     );
   }
@@ -182,13 +234,15 @@ export class AttendanceModuleDetail extends Component {
 export function mapStateToProps(state) {
   return {
     scheduleStats: state.attendance.scheduleStats || [],
-    blocks: state.attendance.blocks || []
+    blocks: state.attendance.blocks || [],
+    contactAttendance: state.attendance.contactAttendance || {}
   };
 }
 
 export const mapDispatch = dispatch => (bindActionCreators({
   listScheduleStatsRequest: attendanceActions.listScheduleStats,
   listBlocksRequest: attendanceActions.listBlocks,
+  getContactAttendanceForSchedule: attendanceActions.getContactAttendanceForSchedule
 }, dispatch));
 
 export default connect(mapStateToProps, mapDispatch)(AttendanceModuleDetail);

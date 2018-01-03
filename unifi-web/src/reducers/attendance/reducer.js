@@ -1,11 +1,12 @@
 import {
   LIST_SCHEDULE_STATS,
-  LIST_BLOCKS
+  LIST_BLOCKS,
+  GET_CONTACT_ATTENDANCE_FOR_SCHEDULE
 } from './types'
 
 const initialState = {
   clients: [],
-}
+};
 
 const reducer = (state = initialState, action = {}) => {
   if (action.payload &&
@@ -24,6 +25,11 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         blocks: action.payload.payload
+      };
+    case `${GET_CONTACT_ATTENDANCE_FOR_SCHEDULE}_FULFILLED`:
+      return {
+        ...state,
+        contactAttendance: action.payload.payload
       };
     default:
       return state;
