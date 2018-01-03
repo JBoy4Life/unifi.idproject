@@ -90,3 +90,41 @@ p.header {
 button {
   font-size: 18px;
 }
+
+input.unifi-input {
+  border: 1px $unifi-line-color solid;
+  height: 6px;
+  padding: 20px;
+  line-height: 6px;
+  font-size: 16px;
+}
+
+table.unifi-table {
+
+  width: 100%;
+  font-size: 15px;
+
+  thead {
+    height: 16px;
+    line-height: 16px;
+    background-color: $unifi-table-header-color;
+    th {
+      font-weight: 500;
+    }
+  }
+
+  tbody tr {
+    height: 8px;
+    line-height: 8px;
+  }
+
+  td, th {
+    border: 1px $unifi-line-color solid;
+    padding: 16px 20px;
+  }
+
+  a:visited {
+    color: $unifi-link-color;
+  }
+
+}

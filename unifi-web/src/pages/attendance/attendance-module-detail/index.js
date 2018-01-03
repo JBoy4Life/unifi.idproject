@@ -194,7 +194,7 @@ export class AttendanceModuleDetail extends Component {
           :
           <div className="students">
             <div className="controls">
-              <input type="text" placeholder="Search" value={this.state.search} onChange={this.searchChange} />
+              <input className="unifi-input" type="text" placeholder="Search" value={this.state.search} onChange={this.searchChange} />
               <button className="search" onClick={() => this.search()}>🔍</button>
               <button className="addStudent">⊕ Add a student</button>
             </div>
@@ -206,7 +206,7 @@ export class AttendanceModuleDetail extends Component {
                 <button className="grid-view"></button>
               </div>
             </div>
-            <table className="committers">
+            <table className="unifi-table">
               <thead>
                 <tr>
                   <th>Student</th>
