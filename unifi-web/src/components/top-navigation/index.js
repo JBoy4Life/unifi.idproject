@@ -13,33 +13,33 @@ export default class TopNavigation extends Component {
         mode="horizontal"
         theme="dark"
       >
-        <Menu.Item key="/">
-          Sitemap
-        </Menu.Item>
+        {/*<Menu.Item key="/">*/}
+          {/*Sitemap*/}
+        {/*</Menu.Item>*/}
 
-        <Menu.Item key="/directory">
-          Directory
-        </Menu.Item>
+        {/*<Menu.Item key="/directory">*/}
+          {/*Directory*/}
+        {/*</Menu.Item>*/}
 
-        <Menu.Item key="/live-view">
-          Live View
-        </Menu.Item>
+        {/*<Menu.Item key="/live-view">*/}
+          {/*Live View*/}
+        {/*</Menu.Item>*/}
 
-        <Menu.Item key="/navigation">
-          Navigation
-        </Menu.Item>
+        {/*<Menu.Item key="/navigation">*/}
+          {/*Navigation*/}
+        {/*</Menu.Item>*/}
 
-        <Menu.Item key="/site-manager">
-          Site manager
-        </Menu.Item>
+        {/*<Menu.Item key="/site-manager">*/}
+          {/*Site manager*/}
+        {/*</Menu.Item>*/}
 
-        <Menu.Item key="/users">
-          Users
-        </Menu.Item>
+        {/*<Menu.Item key="/users">*/}
+          {/*Users*/}
+        {/*</Menu.Item>*/}
 
-        <Menu.Item key="/evacuation">
-          Evacuation
-        </Menu.Item>
+        {/*<Menu.Item key="/evacuation">*/}
+          {/*Evacuation*/}
+        {/*</Menu.Item>*/}
 
         <Menu.Item key="/attendance/modules">
           Attendance
