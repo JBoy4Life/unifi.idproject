@@ -118,17 +118,12 @@ table.unifi-table {
     }
   }
 
-  tbody tr {
-    height: 8px;
-    line-height: 8px;
-  }
-
   td, th {
     border: 1px $unifi-line-color solid;
     padding: 16px 20px;
   }
 
-  a:visited {
+  a, a:visited {
     color: $unifi-link-color;
   }
 

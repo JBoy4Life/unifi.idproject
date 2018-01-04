@@ -50,6 +50,25 @@ div.module-stats-summary {
 
 }
 
+div.tabs {
+  border-bottom: 1px $unifi-line-color solid;
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: uppercase;
+  a {
+    border-bottom: 4px transparent solid;
+    color: inherit;
+    display: inline-block;
+    line-height: 36px;
+    height: 36px;
+    margin-right: 60px;
+    text-decoration: none;
+    &.current {
+      border-bottom: 4px #2dc893 solid;
+    }
+  }
+}
+
 .attendanceModule {
 
   border: 1px $unifi-line-color solid;
@@ -81,25 +100,6 @@ div.module-stats-summary {
     font-size: 40px;
     font-weight: 400;
     margin-bottom: 0;
-  }
-
-  .tabs {
-    border-bottom: 1px $unifi-line-color solid;
-    font-size: 16px;
-    font-weight: 500;
-    text-transform: uppercase;
-    a {
-      border-bottom: 4px transparent solid;
-      color: inherit;
-      display: inline-block;
-      line-height: 36px;
-      height: 36px;
-      margin-right: 60px;
-      text-decoration: none;
-      &.current {
-        border-bottom: 4px #2dc893 solid;
-      }
-    }
   }
 
   .module {
@@ -284,6 +284,33 @@ div.module-stats-summary {
   table.unifi-table {
     .status {
       text-transform: capitalize;
+    }
+  }
+}
+
+.attendanceReports {
+  .views {
+    margin-top: 24px;
+    p {
+      font-size: 15px;
+      float: left;
+      margin-bottom: 12px;
+    }
+    .buttons {
+      display: inline-block;
+      float: right;
+    }
+    button {
+      width: 24px;
+      height: 24px;
+      margin-left: 4px;
+      border: 0;
+      background-color: $unifi-line-color;
+    }
+  }
+  table {
+    .summary {
+      font-weight: 500;
     }
   }
 }
