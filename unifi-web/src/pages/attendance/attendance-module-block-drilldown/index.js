@@ -40,9 +40,8 @@ export class AttendanceModuleBlockDrilldown extends Component {
         }
       });
     }
-    if (nextProps.contactAttendance.attendance !== undefined) {
+    if (nextProps.contactAttendance.attendance) {
       let contact = nextProps.contactAttendance.attendance.find((r) => r.clientReference === this.props.match.params.clientReference);
-      console.log(contact);
       this.setState({
         committer: {
           name: contact.name
