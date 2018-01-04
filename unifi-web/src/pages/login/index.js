@@ -11,6 +11,8 @@ import { PageContainer, LoginForm } from '../../smart-components'
 import { noop } from '../../utils/helpers'
 
 import './index.scss'
+import unifilogo from '../../assets/images/unifi-logo.png'
+import logo from '../../assets/images/ucl-logo-2.png'
 
 
 import { actions as userActions } from '../../reducers/user'
@@ -30,7 +32,7 @@ class LoginContainer extends Component {
     return (
       <PageContainer noHeader className="login-page">
         <div className="login-form-wrapper">
-          <h1>Login Required</h1>
+          <img className="logo" src={logo} alt="logo" />
           <div className="login-form-container">
             {this.props.user.error && (
             <Alert message={this.props.user.error} type="error" />
