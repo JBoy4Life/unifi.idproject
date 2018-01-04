@@ -21,16 +21,16 @@ export default class AttendanceModule extends Component {
             <div className="module-stats-summary">
               <EvacuationProgressBar percentage={percentage.toPrecision(2)} warningThreshold={80} criticalThreshold={50} />
               <p className="label">Overall Attendance to Date</p>
-              <p className="stats">
+              <div className="stats">
                 {(this.props.startDate === null) ?
-                  <div className="stat"><span>Dates:</span>&nbsp;Unscheduled</div>
+                  <p className="stat"><span>Dates:</span>&nbsp;Unscheduled</p>
                   :
-                  <div className="stat"><span>Dates:</span>&nbsp;{startDate} – {endDate}</div>
+                  <p className="stat"><span>Dates:</span>&nbsp;{startDate} – {endDate}</p>
                 }
                 <br />
-                <div className="stat"><span>Students:</span>&nbsp;{this.props.studentCount}</div>
-                <div className="stat"><span>Lectures:</span>&nbsp;{this.props.lectureCount}</div>
-              </p>
+                <p className="stat"><span>Students:</span>&nbsp;{this.props.studentCount}</p>
+                <p className="stat"><span>Lectures:</span>&nbsp;{this.props.lectureCount}</p>
+              </div>
             </div>
           </Link>
         </div>
