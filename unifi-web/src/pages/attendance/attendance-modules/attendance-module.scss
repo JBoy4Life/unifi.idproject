@@ -130,6 +130,7 @@ div.tabs {
         margin-right: 3px;
       }
       button.addLecture {
+        visibility: hidden;
         border: 0;
         color: $unifi-link-color;
         float: right;
@@ -204,6 +205,7 @@ div.tabs {
         border-bottom-right-radius: 4px;
       }
       button.addStudent {
+        visibility: hidden;
         border: 0;
         color: $unifi-link-color;
         float: right;

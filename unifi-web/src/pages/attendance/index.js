@@ -55,11 +55,11 @@ export default class SitemapContainer extends Component {
                 path={ROUTES.ATTENDANCE_REPORTS}
                 component={AttendanceReports}
               />
-              <Route
-                exact
-                path={ROUTES.ATTENDANCE_CUSTOM_REPORTS}
-                component={AttendanceCustomReports}
-              />
+              {/*<Route*/}
+                {/*exact*/}
+                {/*path={ROUTES.ATTENDANCE_CUSTOM_REPORTS}*/}
+                {/*component={AttendanceCustomReports}*/}
+              {/*/>*/}
             </Switch>
           </PageContent.Main>
         </PageContent>
