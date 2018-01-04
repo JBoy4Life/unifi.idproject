@@ -26,6 +26,7 @@ export class AttendanceModuleDetail extends Component {
       },
       search: ""
     };
+    this.searchChange = this.searchChange.bind(this);
   }
   componentWillMount() {
     let scheduleId = this.props.match.params.scheduleId;
@@ -137,7 +138,7 @@ export class AttendanceModuleDetail extends Component {
   }
   searchChange(event) {
     this.setState({
-      search: event.target.value
+      search: event.target.value.toLowerCase()
     });
   }
   render() {
@@ -194,12 +195,12 @@ export class AttendanceModuleDetail extends Component {
           :
           <div className="students">
             <div className="controls">
-              <input className="unifi-input" type="text" placeholder="Search" value={this.state.search} onChange={this.searchChange} />
-              <button className="search" onClick={() => this.search()}>🔍</button>
+              <input className="unifi-input" type="text" placeholder="Search" onChange={this.searchChange} />
+              {/*<button className="search" onClick={() => this.searchChange(this.state.search)}>🔍</button>*/}
               <button className="addStudent">⊕ Add a student</button>
             </div>
             <div className="views">
-              <p>Showing {this.props.contactAttendance.attendance.length} students</p>
+              <p>Showing {this.props.contactAttendance.attendance.filter((c) => c.name.toLowerCase().indexOf(this.state.search) > -1).length} students</p>
               <div className="buttons">
                 <button className="table-view"></button>
                 <button className="tile-view"></button>
@@ -217,7 +218,7 @@ export class AttendanceModuleDetail extends Component {
                 </tr>
               </thead>
               <tbody>
-              {this.props.contactAttendance.attendance.map((committer) => {
+              {this.props.contactAttendance.attendance.filter((c) => c.name.toLowerCase().indexOf(this.state.search) > -1).map((committer) => {
                 return <tr key={committer.clientReference}>
                   <td><Link to={`/attendance/modules/${scheduleId}/${committer.clientReference}`}>{committer.name}</Link></td>
                   <td>{committer.clientReference}</td>
