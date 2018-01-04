@@ -10,9 +10,9 @@ SET row_security = off;
 SET search_path = core, pg_catalog;
 
 
-COPY client (client_id, display_name, logo, register_date) FROM stdin;
-deloitte	Deloitte	\\x	2017-12-21 01:07:26.142889
-ucl-mgmt	UCL School of Management	\\x	2017-12-30 14:22:26.142889
+COPY client (client_id, display_name, register_time) FROM stdin;
+deloitte	Deloitte	2017-12-21 01:07:26.142889
+ucl-mgmt	UCL School of Management	2017-12-30 14:22:26.142889
 \.
 
 
