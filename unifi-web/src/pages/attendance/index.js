@@ -8,6 +8,7 @@ import { PageContainer, LinkedSideNavigation } from '../../smart-components';
 
 import AttendanceModules from './attendance-modules';
 import AttendanceModuleDetail from './attendance-module-detail';
+import AttendanceModuleBlockDrilldown from './attendance-module-block-drilldown';
 import AttendanceReports from './attendance-reports';
 import AttendanceCustomReports from './attendance-custom-reports';
 
@@ -43,6 +44,11 @@ export default class SitemapContainer extends Component {
                 exact
                 path={ROUTES.ATTENDANCE_MODULES_DETAIL}
                 component={AttendanceModuleDetail}
+              />
+              <Route
+                exact
+                path={ROUTES.ATTENDANCE_MODULES_BLOCK_DRILLDOWN}
+                component={AttendanceModuleBlockDrilldown}
               />
               <Route
                 exact

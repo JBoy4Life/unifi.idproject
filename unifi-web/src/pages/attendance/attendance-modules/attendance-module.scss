@@ -260,3 +260,29 @@ div.module-stats-summary {
   }
 
 }
+
+.attendanceModuleBlockDrilldown {
+  .views {
+    p {
+      font-size: 15px;
+      float: left;
+      margin-bottom: 12px;
+    }
+    .buttons {
+      display: inline-block;
+      float: right;
+    }
+    button {
+      width: 24px;
+      height: 24px;
+      margin-left: 4px;
+      border: 0;
+      background-color: $unifi-line-color;
+    }
+  }
+  table.unifi-table {
+    .status {
+      text-transform: capitalize;
+    }
+  }
+}

@@ -83,6 +83,11 @@ h1 {
   margin-bottom: 24px;
 }
 
+h1 + h2 {
+  font-size: 20px;
+  margin-top: -24px;
+}
+
 p.header {
   margin-bottom: 82px;
 }

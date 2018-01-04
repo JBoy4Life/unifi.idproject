@@ -219,7 +219,7 @@ export class AttendanceModuleDetail extends Component {
               <tbody>
               {this.props.contactAttendance.attendance.map((committer) => {
                 return <tr key={committer.clientReference}>
-                  <td>{committer.name}</td>
+                  <td><Link to={`/attendance/modules/${scheduleId}/${committer.clientReference}`}>{committer.name}</Link></td>
                   <td>{committer.clientReference}</td>
                   <td>{committer.attendedCount}</td>
                   <td>{this.props.contactAttendance.blockCount - committer.attendedCount}</td>
