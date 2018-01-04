@@ -158,9 +158,11 @@ public class ScheduleService {
         authorize(session, clientId);
 
         return db.execute(sql -> {
-            List<ScheduleInfo> schedules = sql.selectFrom(SCHEDULE)
+            List<ScheduleInfoWithBlockCount> schedules = sql.select(SCHEDULE.SCHEDULE_ID, SCHEDULE.NAME, count())
+                    .from(SCHEDULE.leftJoin(BLOCK).onKey())
                     .where(SCHEDULE.CLIENT_ID.eq(clientId))
-                    .fetch(r -> new ScheduleInfo(r.getScheduleId(), r.getName()));
+                    .groupBy(SCHEDULE.SCHEDULE_ID, SCHEDULE.NAME)
+                    .fetch(r -> new ScheduleInfoWithBlockCount(r.get(SCHEDULE.SCHEDULE_ID), r.get(SCHEDULE.NAME), r.value3()));
 
             Map<String, String> contactNames = sql.selectFrom(HOLDER)
                     .where(HOLDER.CLIENT_ID.eq(clientId))
@@ -455,12 +457,24 @@ public class ScheduleService {
     }
 
     public static class ContactScheduleAttendanceInfo {
-        public final List<ScheduleInfo> schedules;
+        public final List<ScheduleInfoWithBlockCount> schedules;
         public final List<ContactScheduleAttendance> attendance;
 
-        public ContactScheduleAttendanceInfo(List<ScheduleInfo> schedules, List<ContactScheduleAttendance> attendance) {
+        public ContactScheduleAttendanceInfo(List<ScheduleInfoWithBlockCount> schedules, List<ContactScheduleAttendance> attendance) {
             this.schedules = schedules;
             this.attendance = attendance;
+        }
+    }
+
+    public static class ScheduleInfoWithBlockCount {
+        public final String scheduleId;
+        public final String name;
+        public final int blockCount;
+
+        public ScheduleInfoWithBlockCount(String scheduleId, String name, int blockCount) {
+            this.scheduleId = scheduleId;
+            this.name = name;
+            this.blockCount = blockCount;
         }
     }
 }
