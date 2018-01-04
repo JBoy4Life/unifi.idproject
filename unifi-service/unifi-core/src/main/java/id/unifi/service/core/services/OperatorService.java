@@ -76,12 +76,12 @@ public class OperatorService {
                                  String username,
                                  String email,
                                  boolean invite) {
+        authorize(session, clientId);
         validateAll(
-                v(shortId(clientId), Unauthorized::new),
                 v("username", shortId(username)),
                 v("email", email(email))
         );
-        OperatorPK onboarder = session.getOperator() != null ? session.getOperator() : new OperatorPK(clientId, "???");
+        OperatorPK onboarder = session.getOperator();
         db.execute(sql -> {
             try {
                 sql.insertInto(OPERATOR)
