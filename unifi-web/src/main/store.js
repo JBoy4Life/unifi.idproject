@@ -40,16 +40,18 @@ export const configureStore = (wsClient) => {
   const persistor = persistStore(store);
 
   // Reauthenticate if we have a session.
-  if (currentUser.payload.token) {
+  if (currentUser.payload && currentUser.payload.token) {
     const action = userActions.reauthenticateRequest(currentUser.payload.token);
     store.dispatch(action);
   }
 
   store.subscribe(() => {
     // Ensure that user sessions go to local storage.
-    const currentUser = store.getState().currentUser;
-    if (currentUser) {
-      localStorage.setItem('unifi-current-user', JSON.stringify(currentUser));
+    const newUser = store.getState().user.currentUser;
+    if (newUser) {
+      localStorage.setItem('unifi-current-user', JSON.stringify(newUser));
+    } else if (newUser === null) {
+      localStorage.removeItem('unifi-current-user');
     }
   });
 
