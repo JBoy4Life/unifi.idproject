@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 
 import './index.scss'
-import logo from '../../assets/images/unifi-logo.png'
+import logo from '../../assets/images/ucl-logo.png'
 import { Button } from '../../elements/index'
 
 export default class IdentBar extends Component {
