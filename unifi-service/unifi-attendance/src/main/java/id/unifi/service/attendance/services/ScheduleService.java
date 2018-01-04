@@ -16,6 +16,9 @@ import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -23,7 +26,6 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Record2;
 import org.jooq.Record4;
-import org.jooq.Record6;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
@@ -147,6 +149,32 @@ public class ScheduleService {
                             instantFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
                             getAttendanceStatus(r.value5(), r.value6())))
         );
+    }
+
+    @ApiOperation
+    public List<ContactScheduleAttendance> reportContactScheduleAttendance(OperatorSessionData session, String clientId) {
+        authorize(session, clientId);
+
+        return db.execute(sql -> sql.select(ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID, count())
+                .from(BLOCK.leftJoin(BLOCK_TIME).onKey())
+                .join(ASSIGNMENT).on(BLOCK.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID), BLOCK.SCHEDULE_ID.eq(ASSIGNMENT.SCHEDULE_ID))
+                .leftJoin(FULL_ATTENDANCE)
+                .on(
+                        ASSIGNMENT.CLIENT_ID.eq(field(name("full_attendance", "client_id"), String.class)),
+                        ASSIGNMENT.CLIENT_REFERENCE.eq(field(name("full_attendance", "client_reference"), String.class)),
+                        ASSIGNMENT.SCHEDULE_ID.eq(field(name("full_attendance", "schedule_id"), String.class)),
+                        BLOCK.BLOCK_ID.eq(field(name("full_attendance", "block_id"), String.class)))
+                .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                .and(
+                        (FULL_ATTENDANCE_OVERRIDDEN_STATUS.isNotNull().and(FULL_ATTENDANCE_OVERRIDDEN_STATUS.isDistinctFrom(OverriddenStatus.ABSENT.toString())))
+                                .or(condition(FULL_ATTENDANCE_PRESENT).and(FULL_ATTENDANCE_OVERRIDDEN_STATUS.isNull())))
+                .groupBy(ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
+                .stream()
+                .collect(groupingBy(r -> r.get(ASSIGNMENT.CLIENT_REFERENCE),
+                        mapping(r -> new ScheduleAttendance(r.value2(), r.value3()), toList())))
+                .entrySet().stream()
+                .map(e -> new ContactScheduleAttendance(e.getKey(), e.getValue()))
+                .collect(toList()));
     }
 
     @ApiOperation
@@ -385,6 +413,26 @@ public class ScheduleService {
             this.startTime = startTime;
             this.endTime = endTime;
             this.status = status;
+        }
+    }
+
+    public static class ScheduleAttendance {
+        public final String scheduleId;
+        public final int count;
+
+        public ScheduleAttendance(String scheduleId, int count) {
+            this.scheduleId = scheduleId;
+            this.count = count;
+        }
+    }
+
+    public static class ContactScheduleAttendance {
+        public final String clientReference;
+        public final List<ScheduleAttendance> attendance;
+
+        public ContactScheduleAttendance(String clientReference, List<ScheduleAttendance> attendance) {
+            this.clientReference = clientReference;
+            this.attendance = attendance;
         }
     }
 }
