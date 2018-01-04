@@ -62,7 +62,7 @@ export class AttendanceModuleBlockDrilldown extends Component {
         <h1>{this.state.committer.name}</h1>
         <h2>{this.state.module.name}</h2>
         <div className="module-stats-summary">
-          <EvacuationProgressBar percentage={this.state.module.attendance.toPrecision(2)} warningThreshold={80} criticalThreshold={50} />
+          <EvacuationProgressBar percentage={this.state.module.attendance.toFixed(0)} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance</p>
           <div className="stats">
             <p className="stat"><span>Lectures:</span>&nbsp;{this.props.blockReport.length}</p>
