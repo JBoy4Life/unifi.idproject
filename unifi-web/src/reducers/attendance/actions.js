@@ -4,7 +4,8 @@ import {
   LIST_SCHEDULE_STATS,
   LIST_BLOCKS,
   GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
-  REPORT_BLOCK_ATTENDANCE
+  REPORT_BLOCK_ATTENDANCE,
+  REPORT_CONTACT_SCHEDULE_ATTENDANCE
 } from './types'
 
 export function listScheduleStats() {
@@ -76,6 +77,24 @@ export function reportBlockAttendance(scheduleId, clientReference) {
 
   return {
     type: REPORT_BLOCK_ATTENDANCE,
+    socketRequest: pack.content
+  };
+
+}
+
+export function reportContactScheduleAttendance() {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion:  '1.0.0',
+    messageType:     'attendance.schedule.report-contact-schedule-attendance',
+    payload:         {
+      clientId:   'ucl-mgmt'
+    }
+  });
+
+  return {
+    type: REPORT_CONTACT_SCHEDULE_ATTENDANCE,
     socketRequest: pack.content
   };
 

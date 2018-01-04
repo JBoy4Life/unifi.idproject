@@ -2,7 +2,8 @@ import {
   LIST_SCHEDULE_STATS,
   LIST_BLOCKS,
   GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
-  REPORT_BLOCK_ATTENDANCE
+  REPORT_BLOCK_ATTENDANCE,
+  REPORT_CONTACT_SCHEDULE_ATTENDANCE
 } from './types'
 
 const initialState = {
@@ -36,6 +37,11 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         blockReport: action.payload.payload
+      };
+    case `${REPORT_CONTACT_SCHEDULE_ATTENDANCE}_FULFILLED`:
+      return {
+        ...state,
+        contactScheduleReport: action.payload.payload
       };
     default:
       return state;
