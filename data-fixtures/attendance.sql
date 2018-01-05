@@ -75,28 +75,28 @@ ucl-som	MSING024B	11	2018-03-22 09:00:00	2018-03-22 12:00:00	2017-12-31 18:00:00
 
 
 COPY block_zone (client_id, schedule_id, block_id, site_id, zone_id, since) FROM stdin;
-ucl-som	MSING062	01	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	02	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	03	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	04	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	05	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	06	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	07	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	08	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	09	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	10	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING062	11	level38	north-east	2017-12-31 18:00:00
-ucl-som	MSING024B	01	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	02	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	03	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	04	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	05	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	06	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	07	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	08	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	09	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	10	level38	south-east	2017-12-31 18:00:00
-ucl-som	MSING024B	11	level38	south-east	2017-12-31 18:00:00
+ucl-som	MSING062	01	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	02	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	03	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	04	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	05	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	06	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	07	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	08	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	09	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	10	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING062	11	level38	north-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	01	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	02	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	03	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	04	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	05	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	06	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	07	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	08	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	09	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	10	level38	south-east-lt	2017-12-31 18:00:00
+ucl-som	MSING024B	11	level38	south-east-lt	2017-12-31 18:00:00
 \.
 
 

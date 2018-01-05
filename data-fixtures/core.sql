@@ -83,6 +83,7 @@ deloitte	0010	card	t	2017-12-21 01:55:40.576122
 deloitte	0011	card	t	2017-12-21 01:55:40.576122
 deloitte	0012	card	t	2017-12-21 01:55:40.576122
 deloitte	0013	card	t	2017-12-21 01:55:40.576122
+ucl-som	1111	card	t	2018-01-05 02:06:37.573028
 \.
 
 
@@ -126,6 +127,7 @@ deloitte	0010	card	10010	2017-12-21 02:06:37.573028
 deloitte	0011	card	10011	2017-12-21 02:06:37.573028
 deloitte	0012	card	10012	2017-12-21 02:06:37.573028
 deloitte	0013	card	10013	2017-12-21 02:06:37.573028
+ucl-som	1111	card	ERAN17	2018-01-05 02:06:37.573028
 \.
 
 
@@ -169,6 +171,7 @@ deloitte	0011	card	0011	uhf-epc
 deloitte	0012	card	0012	uhf-epc
 deloitte	0013	card	0013	uhf-epc
 deloitte	6895	card	6895	uhf-epc
+ucl-som	1111	card	111100000000000000000000	uhf-epc
 \.
 
 

@@ -25,7 +25,7 @@ public class CoreClient {
     private final BlockingQueue<RawDetectionReport> pendingReports;
     private final Thread sendThread;
 
-    CoreClient(URI serviceUri, String clientId, String siteId) throws Exception {
+    CoreClient(URI serviceUri, String clientId, String siteId, ReaderManager readerManager) throws Exception {
         WebSocketClient client = new WebSocketClient();
         client.start();
         ClientUpgradeRequest request = new ClientUpgradeRequest();
@@ -33,7 +33,7 @@ public class CoreClient {
         request.setHeader("x-site-id", siteId);
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agent.services"),
-                Map.of());
+                Map.of(ReaderManager.class, readerManager));
         dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
         dispatcher.putMessageListener("core.detection.process-raw-detections-result", Void.class,
                 (s, o) -> log.debug("Confirmed detection"));
