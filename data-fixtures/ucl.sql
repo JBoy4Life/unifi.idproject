@@ -135,14 +135,14 @@ ucl-som	MSING056	MSING056 Predictive Analytics
 ucl-som	MSING034.MSINM034-B1.1	MSING034.MSINM034-B1.1 International Capital Markets Group B1,1
 ucl-som	MSING027	MSING027 Corporate Finance
 ucl-som	MSING035-B2	MSING035-B2 Mergers and IPOs Group B2
-ucl-som	MSING020-A	MSING020-A MSING020 Markets and Customers Group A
-ucl-som	MSINGT99.MSINGT99	MSINGT99.MSINGT99 MSINGT99 Dissertation
+ucl-som	MSING020-A	MSING020-A Markets and Customers Group A
+ucl-som	MSINGT99.MSINGT99	MSINGT99.MSINGT99 Dissertation
 ucl-som	MSING068	MSING068 Adv Derivatives Modelling and Portfolio Theory
 ucl-som	MSING020-B2	MSING020-B2 Markets and Customers Group B2
 ucl-som	MSING028	MSING028 Investment Management Group
 ucl-som	MSING028.MSINM028	MSING028.MSINM028 Investment Management Group
 ucl-som	MSING015	MSING015 Business Strategy 
-ucl-som	MSING020-B1	MSING020-B1 MSING020 Markets and Customers Group B1
+ucl-som	MSING020-B1	MSING020-B1 Markets and Customers Group B1
 \.
 
 
