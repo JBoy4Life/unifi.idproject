@@ -22,6 +22,10 @@ ucl-som	level38	Level 38	Level 38, One Canada Square, Canary Wharf, London, E14 
 
 
 COPY reader (client_id, site_id, reader_sn, endpoint) FROM stdin;
+ucl-som	level38	37016400949	192.168.1.101:5084
+ucl-som	level38	37011330048	192.168.1.102:5084
+ucl-som	level38	37017110229	192.168.1.103:5084
+ucl-som	level38	37016440780	192.168.1.104:5084
 \.
 
 
@@ -33,6 +37,18 @@ ucl-som	level38	south-east-lt	South East Lecture Theatre
 
 
 COPY antenna (client_id, site_id, reader_sn, port_number, zone_id) FROM stdin;
+ucl-som	level38	37016400949	1	north-east
+ucl-som	level38	37016400949	2	north-east
+ucl-som	level38	37016400949	3	north-east
+ucl-som	level38	37016400949	4	north-east
+ucl-som	level38	37011330048	1	seminar-suite
+ucl-som	level38	37011330048	2	seminar-suite
+ucl-som	level38	37017110229	1	seminar-suite
+ucl-som	level38	37017110229	2	seminar-suite
+ucl-som	level38	37016440780	1	south-east
+ucl-som	level38	37016440780	2	south-east
+ucl-som	level38	37016440780	3	south-east
+ucl-som	level38	37016440780	4	south-east
 \.
 
 
