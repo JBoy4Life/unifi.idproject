@@ -48,11 +48,10 @@ public class CoreClient {
         sessionRef = new AtomicReference<>();
 
         connectThread = new Thread(this::maintainConnection);
-        connectThread.setDaemon(true);
         connectThread.start();
 
         sendThread = new Thread(this::takeAndSend);
-        connectThread.setDaemon(true);
+        sendThread.setDaemon(true);
         sendThread.start();
     }
 
