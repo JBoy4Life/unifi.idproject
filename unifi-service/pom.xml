@@ -27,13 +27,13 @@
         <java.target.version>9</java.target.version>
         <postgres.user>${user.name}</postgres.user>
 
-        <octane.version>1.28.0.1</octane.version>
-        <ltk.version>10.28.0.0</ltk.version>
+        <octane.version>1.30.0.0</octane.version>
+        <ltk.version>10.30.0.0</ltk.version>
         <jmdns.version>3.5.3</jmdns.version>
         <mina.version>2.0.16</mina.version>
         <velocity.version>1.7</velocity.version>            
         <guava.version>23.6-jre</guava.version>
-        <amqp.client>5.0.0</amqp.client>
+        <amqp.client>5.1.1</amqp.client>
         <jooq.version>3.10.1</jooq.version>
         <jsr205.version>1.0</jsr205.version>
         <jetty.version>9.4.8.v20171121</jetty.version>
