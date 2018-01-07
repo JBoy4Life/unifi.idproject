@@ -132,7 +132,7 @@ public class Dispatcher<S> {
     public void request(Session session,
                         Protocol protocol,
                         String messageType,
-                        Map<String, Object> params) {
+                        Map<String, Object> params) throws IOException {
         log.debug("Requesting using {} in {}", protocol, session);
         ObjectMapper mapper = objectMappers.get(protocol);
 
@@ -146,10 +146,11 @@ public class Dispatcher<S> {
         byte[] byteMessage;
         try {
             byteMessage = mapper.writeValueAsBytes(message);
-            session.getRemote().sendBytes(ByteBuffer.wrap(byteMessage));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        session.getRemote().sendBytes(ByteBuffer.wrap(byteMessage));
     }
 
     public <T> void putMessageListener(String messageType, Type type, BiConsumer<Session, T> listener) {

@@ -25,23 +25,25 @@ public class ComponentHolder {
 
     @SuppressWarnings("unchecked")
     public synchronized <T> T get(Class<T> cls) {
-        return (T) components.computeIfAbsent(cls, ignored -> {
-            Constructor<?>[] constructors = cls.getConstructors();
-            if (constructors.length != 1) {
-                throw new RuntimeException("Expected one constructor, got " + constructors.length + " for " + cls);
-            }
-            Constructor<?> constructor = constructors[0];
-            Object[] componentObjects = Arrays.stream(constructor.getParameters())
-                    .map(this::getFromParameter)
-                    .toArray();
-            try {
-                Object instance = constructor.newInstance(componentObjects);
-                components.put(cls, instance);
-                return (T) instance;
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        if (components.containsKey(cls)) return (T) components.get(cls);
+
+        Constructor<?>[] constructors = cls.getConstructors();
+        if (constructors.length != 1) {
+            throw new RuntimeException("Expected one constructor, got " + constructors.length + " for " + cls);
+        }
+
+        Constructor<?> constructor = constructors[0];
+        Object[] componentObjects = Arrays.stream(constructor.getParameters())
+                .map(this::getFromParameter)
+                .toArray();
+
+        try {
+            T instance = (T) constructor.newInstance(componentObjects);
+            components.put(cls, instance);
+            return instance;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Object getFromParameter(Parameter parameter) {

@@ -185,11 +185,15 @@ public class CoreService {
                                     antennae.get(r.getReaderSn()).stream().mapToInt(AntennaRecord::getPortNumber).toArray()))
                             .collect(toList());
                 });
-                agentDispatcher.request(
-                        session,
-                        Protocol.MSGPACK,
-                        "core.config.set-reader-config",
-                        Map.of("readers", readerConfigs));
+                try {
+                    agentDispatcher.request(
+                            session,
+                            Protocol.MSGPACK,
+                            "core.config.set-reader-config",
+                            Map.of("readers", readerConfigs));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             public void onSessionDropped(Session session) {
