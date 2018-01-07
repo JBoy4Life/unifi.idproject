@@ -62,6 +62,7 @@
         <commit.id.plugin.version>2.2.3</commit.id.plugin.version>
         <unleash.maven.plugin.version>2.7.2</unleash.maven.plugin.version>
         <unleash.scm.provider.version>2.1.0</unleash.scm.provider.version>
+        <install.plugin.version>2.5.2</install.plugin.version>
         <release.plugin.version>2.5.3</release.plugin.version>
     </properties>
 
@@ -85,6 +86,16 @@
                 <version>${jetty.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.impinj</groupId>
+                <artifactId>octane-java</artifactId>
+                <version>${octane.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.impinj</groupId>
+                <artifactId>ltk-java</artifactId>
+                <version>${ltk.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.msgpack</groupId>
@@ -191,6 +202,11 @@
                     <configuration>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                     </configuration>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${install.plugin.version}</version>
                 </plugin>
 
                 <plugin>
