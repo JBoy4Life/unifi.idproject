@@ -76,6 +76,7 @@ public class ImpinjReaderController {
                 Settings settings = reader.queryDefaultSettings();
 
                 settings.getLowDutyCycle().setIsEnabled(false);
+                settings.setHoldReportsOnDisconnect(true);
 
                 ReportConfig reportConfig = settings.getReport();
                 reportConfig.setIncludeAntennaPortNumber(true);
@@ -88,6 +89,7 @@ public class ImpinjReaderController {
 
                 reader.applySettings(settings);
                 reader.setTagReportListener(impinjTagReportListener);
+                log.info("Starting detection on {}", config);
                 reader.start();
                 break;
             } catch (Exception e) {

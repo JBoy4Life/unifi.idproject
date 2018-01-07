@@ -11,6 +11,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
+import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
 import id.unifi.service.common.api.Protocol;
@@ -84,13 +85,17 @@ public class CoreService {
         DatabaseProvider dbProvider = new DatabaseProvider();
         DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
 
-        startApiService(config.apiServiceListenEndpoint(), config.mq(), detectionProcessor);
-        ObjectMapper mapper = startAgentService(config.agentServiceListenEndpoint());
-        startRawDetectionConsumer(dbProvider.bySchemaName(CORE_SCHEMA_NAME), detectionProcessor, mapper, config.mq());
+        ComponentHolder componentHolder = new ComponentHolder(Map.of(
+                MqConfig.class, config.mq(),
+                DetectionProcessor.class, detectionProcessor,
+                SessionTokenStore.class, new InMemorySessionTokenStore(864000),
+                EmailSenderProvider.class, new LoggingEmailSender()));
+        startApiService(config.apiServiceListenEndpoint(), config.mq(), detectionProcessor, componentHolder);
+        ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
+        startRawDetectionConsumer(dbProvider.bySchemaName(CORE_SCHEMA_NAME), mapper, config.mq());
     }
 
     private static void startRawDetectionConsumer(Database db,
-                                                  DetectionProcessor detectionProcessor,
                                                   ObjectMapper mapper,
                                                   MqConfig mqConfig) {
         ConnectionFactory factory = new ConnectionFactory();
@@ -154,11 +159,11 @@ public class CoreService {
         });
     }
 
-    private static ObjectMapper startAgentService(HostAndPort agentEndpoint) throws Exception {
-        Database db = new DatabaseProvider().bySchemaName(CORE_SCHEMA_NAME);
+    private static ObjectMapper startAgentService(ComponentHolder componentHolder,
+                                                  HostAndPort agentEndpoint) throws Exception {
+        Database db = componentHolder.get(DatabaseProvider.class).bySchemaName(CORE_SCHEMA_NAME);
         ServiceRegistry agentRegistry = new ServiceRegistry(
-                Map.of("core", "id.unifi.service.core.agents"),
-                Map.of());
+                Map.of("core", "id.unifi.service.core.agents"), componentHolder);
         Dispatcher<AgentSessionData> agentDispatcher =
                 new Dispatcher<>(agentRegistry, AgentSessionData.class, AgentSessionData::new);
         agentDispatcher.addSessionListener(new Dispatcher.SessionListener<>() {
@@ -205,16 +210,15 @@ public class CoreService {
         return agentDispatcher.getObjectMapper(Protocol.MSGPACK);
     }
 
-    private static void startApiService(HostAndPort apiEndpoint, MqConfig mqConfig, Object detectionProcessor) throws Exception {
+    private static void startApiService(HostAndPort apiEndpoint,
+                                        MqConfig mqConfig,
+                                        Object detectionProcessor,
+                                        ComponentHolder componentHolder) throws Exception {
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of(
                         "core", "id.unifi.service.core.services",
                         "attendance", "id.unifi.service.attendance.services"),
-                Map.of(
-                        MqConfig.class, mqConfig,
-                        DetectionProcessor.class, detectionProcessor,
-                        SessionTokenStore.class, new InMemorySessionTokenStore(864000),
-                        EmailSenderProvider.class, new LoggingEmailSender()));
+                componentHolder);
         Dispatcher<?> dispatcher =
                 new Dispatcher<>(registry, OperatorSessionData.class, s -> new OperatorSessionData());
         InetSocketAddress apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
