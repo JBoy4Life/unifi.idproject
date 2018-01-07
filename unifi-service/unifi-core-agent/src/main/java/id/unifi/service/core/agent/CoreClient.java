@@ -32,7 +32,7 @@ public class CoreClient {
     private final AtomicReference<Session> sessionRef;
     private final Thread connectThread;
 
-    CoreClient(URI serviceUri, String clientId, String siteId, ComponentHolder componentHolder) throws Exception {
+    CoreClient(URI serviceUri, String clientId, String siteId, ComponentHolder componentHolder) {
         this.serviceUri = serviceUri;
         this.clientId = clientId;
         this.siteId = siteId;
@@ -48,9 +48,11 @@ public class CoreClient {
         sessionRef = new AtomicReference<>();
 
         connectThread = new Thread(this::maintainConnection);
+        connectThread.setDaemon(true);
         connectThread.start();
 
         sendThread = new Thread(this::takeAndSend);
+        connectThread.setDaemon(true);
         sendThread.start();
     }
 
@@ -78,7 +80,7 @@ public class CoreClient {
                     try {
                         Thread.sleep(10_000);
                     } catch (InterruptedException e1) {
-                        Thread.currentThread().interrupt();
+                        return;
                     }
                 }
             }
