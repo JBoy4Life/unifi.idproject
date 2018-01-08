@@ -45,6 +45,8 @@ public class HttpServer {
         WebSocketHandler webSocketHandler = new WebSocketHandler() {
             public void configure(WebSocketServletFactory factory) {
                 factory.getPolicy().setIdleTimeout(webSocketIdleTimeoutMillis);
+                factory.getPolicy().setMaxBinaryMessageSize(10_000_000);
+                factory.getPolicy().setMaxTextMessageSize(10_000_000);
                 ExtensionFactory extensionFactory = factory.getExtensionFactory();
                 extensionFactory.unregister("permessage-deflate");
                 extensionFactory.unregister("x-webkit-deflate-frame");

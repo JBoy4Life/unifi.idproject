@@ -1,21 +1,23 @@
 package id.unifi.service.common.detection;
 
-public class RawSiteDetectionReport {
+import java.util.List;
+
+public class RawSiteDetectionReports {
     public final String clientId;
     public final String siteId;
-    public final RawDetectionReport report;
+    public final List<RawDetectionReport> reports;
 
-    public RawSiteDetectionReport(String clientId, String siteId, RawDetectionReport report) {
+    public RawSiteDetectionReports(String clientId, String siteId, List<RawDetectionReport> reports) {
         this.clientId = clientId;
         this.siteId = siteId;
-        this.report = report;
+        this.reports = reports;
     }
 
     public String toString() {
         return "RawSiteDetectionReport{" +
                 "clientId='" + clientId + '\'' +
                 ", siteId='" + siteId + '\'' +
-                ", report=" + report +
+                ", reports=" + reports +
                 '}';
     }
 }

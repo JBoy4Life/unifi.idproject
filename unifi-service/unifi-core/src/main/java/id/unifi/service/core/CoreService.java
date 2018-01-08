@@ -21,8 +21,9 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
-import id.unifi.service.common.detection.RawDetection;
-import id.unifi.service.common.detection.RawSiteDetectionReport;
+import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.RawSiteDetectionReports;
 import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
@@ -32,28 +33,48 @@ import id.unifi.service.common.provider.LoggingEmailSender;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import id.unifi.service.common.version.VersionInfo;
 import static id.unifi.service.core.db.Tables.ANTENNA;
+import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.READER;
 import static id.unifi.service.core.db.Tables.UHF_DETECTION;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
+import id.unifi.service.core.db.tables.records.UhfDetectionRecord;
 import static java.net.InetSocketAddress.createUnresolved;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import org.eclipse.jetty.websocket.api.Session;
+import org.jooq.BatchBindStep;
+import org.jooq.Field;
+import org.jooq.InsertReturningStep;
+import org.jooq.Record1;
+import org.jooq.Row1;
+import org.jooq.Row2;
+import org.jooq.impl.DSL;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.insertInto;
+import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeoutException;
+import java.util.function.IntFunction;
 
 public class CoreService {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
 
     public static final String PENDING_RAW_DETECTIONS_QUEUE_NAME = "core.detection.pending-raw-detections";
+
+    private static final BlockingQueue<TaggedDetectionReport> detectionQueue = new ArrayBlockingQueue<>(10_000);
 
     public interface MqConfig {
         @Default("127.0.0.1:5672")
@@ -86,18 +107,100 @@ public class CoreService {
         DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
 
         ComponentHolder componentHolder = new ComponentHolder(Map.of(
+                DatabaseProvider.class, dbProvider,
                 MqConfig.class, config.mq(),
                 DetectionProcessor.class, detectionProcessor,
                 SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                 EmailSenderProvider.class, new LoggingEmailSender()));
-        startApiService(config.apiServiceListenEndpoint(), config.mq(), detectionProcessor, componentHolder);
+
+
+        startApiService(config.apiServiceListenEndpoint(), componentHolder);
         ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
-        startRawDetectionConsumer(dbProvider.bySchemaName(CORE_SCHEMA_NAME), mapper, config.mq());
+        Channel channel = startRawDetectionConsumer(mapper, config.mq());
+        processQueue(channel, dbProvider.bySchemaName(CORE_SCHEMA_NAME));
     }
 
-    private static void startRawDetectionConsumer(Database db,
-                                                  ObjectMapper mapper,
-                                                  MqConfig mqConfig) {
+    private static void processQueue(Channel channel, Database db) {
+        Thread thread = new Thread(() -> {
+            InsertReturningStep<UhfDetectionRecord> insertQuery = insertInto(UHF_DETECTION,
+                    UHF_DETECTION.CLIENT_ID,
+                    UHF_DETECTION.DETECTABLE_ID,
+                    UHF_DETECTION.DETECTABLE_TYPE,
+                    UHF_DETECTION.READER_SN,
+                    UHF_DETECTION.PORT_NUMBER,
+                    UHF_DETECTION.DETECTION_TIME)
+                    .values(null, null, null, null, (Integer) null, null)
+                    .onConflictDoNothing();
+
+            while (true) {
+                if (detectionQueue.size() < 20) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {}
+                    if (detectionQueue.isEmpty()) continue;
+                }
+
+                ArrayList<TaggedDetectionReport> allTagged = new ArrayList<>(100);
+                detectionQueue.drainTo(allTagged, 100);
+
+                log.debug("Processing {} detection reports", allTagged.stream().mapToInt(t -> t.reports.size()).sum());
+
+                List<Detection> detections = allTagged.stream()
+                        .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
+                                new Detection(t.clientId, d.detectableId, d.detectableType, r.readerSn, d.portNumber, d.timestamp))))
+                        .collect(toList());
+
+                Row2<String, String>[] detectableIdRows = detections.stream()
+                        .map(d -> new ClientDetectable(d.clientId, d.detectableId))
+                        .distinct()
+                        .map(cd -> DSL.row(cd.clientId, cd.detectableId))
+                        .toArray((IntFunction<Row2<String, String>[]>) Row2[]::new);
+
+                db.execute(sql -> {
+                    Field<String> vDetectableId = field(name("v", "detectable_id"), String.class);
+                    Field<String> vClientId = field(name("v", "client_id"), String.class);
+                    List<String> unknownDetectableIds = sql
+                            .select(vDetectableId)
+                            .from(values(detectableIdRows).asTable("v", "client_id", "detectable_id").leftJoin(DETECTABLE).using(vClientId, vDetectableId))
+                            .where(DETECTABLE.DETECTABLE_ID.isNull())
+                            .fetch(Record1::value1);
+
+                    log.trace("Unknown: {}", unknownDetectableIds);
+
+                    BatchBindStep batch = sql.batch(insertQuery);
+                    detections.forEach(detection -> {
+                        if (!unknownDetectableIds.contains(detection.detectableId)) {
+                            batch.bind(
+                                    detection.clientId,
+                                    detection.detectableId,
+                                    detection.detectableType.toString(),
+                                    detection.readerSn,
+                                    detection.portNumber,
+                                    utcLocalFromInstant(detection.timestamp));
+                        }
+                    });
+                    int batchSize = batch.size();
+                    if (batchSize > 0) {
+                        log.debug("Inserting {} detections", batchSize);
+                        batch.execute();
+                    }
+                    return null;
+                });
+
+                if (!allTagged.isEmpty()) {
+                    long deliveryTag = allTagged.get(allTagged.size() - 1).deliveryTag;
+                    try {
+                        channel.basicAck(deliveryTag, true);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        });
+        thread.start();
+    }
+
+    private static Channel startRawDetectionConsumer(ObjectMapper mapper, MqConfig mqConfig) {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(mqConfig.endpoint().getHost());
         factory.setPort(mqConfig.endpoint().getPort());
@@ -106,7 +209,7 @@ public class CoreService {
         try {
             connection = factory.newConnection();
             channel = connection.createChannel();
-            channel.basicQos(1);
+            channel.basicQos(0);
         } catch (IOException | TimeoutException e) {
             throw new RuntimeException(e);
         }
@@ -116,13 +219,13 @@ public class CoreService {
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
+                RawSiteDetectionReports report = mapper.readValue(body, RawSiteDetectionReports.class);
                 try {
-                    RawSiteDetectionReport report = mapper.readValue(body, RawSiteDetectionReport.class);
-                    storeDetections(db, report);
-                    // TODO fix and re-enable for live view: detectionProcessor.process(report.clientId, report.siteId, report.report);
-                } finally {
-                    channel.basicAck(envelope.getDeliveryTag(), false);
+                    detectionQueue.put(new TaggedDetectionReport(report.clientId, report.reports, envelope.getDeliveryTag()));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
+                // TODO fix and re-enable for live view: detectionProcessor.process(report.clientId, report.siteId, report.report);
             }
         };
         try {
@@ -130,33 +233,8 @@ public class CoreService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
 
-    private static void storeDetections(Database db, RawSiteDetectionReport report) {
-        db.execute(sql -> {
-            for (RawDetection detection : report.report.detections) {
-                try {
-                    sql.insertInto(UHF_DETECTION,
-                            UHF_DETECTION.CLIENT_ID,
-                            UHF_DETECTION.DETECTABLE_ID,
-                            UHF_DETECTION.DETECTABLE_TYPE,
-                            UHF_DETECTION.READER_SN,
-                            UHF_DETECTION.PORT_NUMBER,
-                            UHF_DETECTION.DETECTION_TIME)
-                            .values(
-                                    report.clientId,
-                                    detection.detectableId,
-                                    detection.detectableType.toString(),
-                                    report.report.readerSn,
-                                    detection.portNumber,
-                                    utcLocalFromInstant(detection.timestamp))
-                            .execute();
-                } catch (DataIntegrityViolationException e) {
-                    log.trace("Ignoring unknown detectable {}", detection, e);
-                }
-            }
-            return null;
-        });
+        return channel;
     }
 
     private static ObjectMapper startAgentService(ComponentHolder componentHolder,
@@ -214,10 +292,7 @@ public class CoreService {
         return agentDispatcher.getObjectMapper(Protocol.MSGPACK);
     }
 
-    private static void startApiService(HostAndPort apiEndpoint,
-                                        MqConfig mqConfig,
-                                        Object detectionProcessor,
-                                        ComponentHolder componentHolder) throws Exception {
+    private static void startApiService(HostAndPort apiEndpoint, ComponentHolder componentHolder) throws Exception {
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of(
                         "core", "id.unifi.service.core.services",
@@ -232,5 +307,62 @@ public class CoreService {
                 dispatcher,
                 Set.of(Protocol.JSON, Protocol.MSGPACK));
         apiServer.start();
+    }
+
+    private static class TaggedDetectionReport {
+        final String clientId;
+        final List<RawDetectionReport> reports;
+        final long deliveryTag;
+
+        TaggedDetectionReport(String clientId, List<RawDetectionReport> reports, long deliveryTag) {
+            this.clientId = clientId;
+            this.reports = reports;
+            this.deliveryTag = deliveryTag;
+        }
+    }
+
+    private static class Detection {
+        final String clientId;
+        final String detectableId;
+        final DetectableType detectableType;
+        final String readerSn;
+        final int portNumber;
+        final Instant timestamp;
+
+        Detection(String clientId,
+                  String detectableId,
+                  DetectableType detectableType,
+                  String readerSn,
+                  int portNumber,
+                  Instant timestamp) {
+            this.clientId = clientId;
+            this.detectableId = detectableId;
+            this.detectableType = detectableType;
+            this.readerSn = readerSn;
+            this.portNumber = portNumber;
+            this.timestamp = timestamp;
+        }
+    }
+
+    private static class ClientDetectable {
+        final String clientId;
+        final String detectableId;
+
+        ClientDetectable(String clientId, String detectableId) {
+            this.clientId = clientId;
+            this.detectableId = detectableId;
+        }
+
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ClientDetectable that = (ClientDetectable) o;
+            return Objects.equals(clientId, that.clientId) &&
+                    Objects.equals(detectableId, that.detectableId);
+        }
+
+        public int hashCode() {
+            return Objects.hash(clientId, detectableId);
+        }
     }
 }
