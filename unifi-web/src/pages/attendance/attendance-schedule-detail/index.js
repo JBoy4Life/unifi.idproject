@@ -21,7 +21,7 @@ export class AttendanceScheduleDetail extends Component {
         attendance: 0,
         startDate: null,
         endDate: null,
-        studentCount: 0,
+        committerCount: 0,
         lectureCount: 0,
       },
       search: ""
@@ -49,7 +49,7 @@ export class AttendanceScheduleDetail extends Component {
           attendance: percentage,
           startDate: schedule.startTime,
           endDate:   schedule.endTime,
-          studentCount: schedule.committerCount,
+          committerCount: schedule.committerCount,
           lectureCount: schedule.blockCount
         }
       });
@@ -159,13 +159,13 @@ export class AttendanceScheduleDetail extends Component {
               <p className="stat"><span>Dates:</span>&nbsp;{startDate} – {endDate}</p>
             }
             <br />
-            <p className="stat"><span>Students:</span>&nbsp;{this.state.schedule.studentCount}</p>
+            <p className="stat"><span>Students:</span>&nbsp;{this.state.schedule.committerCount}</p>
             <p className="stat"><span>Lectures:</span>&nbsp;{this.state.schedule.lectureCount}</p>
           </div>
         </div>
         <div className="tabs">
-          <Link className={this.state.mode === "schedule" ? "current" : ""} onClick={() => this.switchMode("schedule")} to={`/attendance/schedules/${scheduleId}`}>Module</Link>
-          <Link className={this.state.mode === "students" ? "current" : ""} onClick={() => this.switchMode("students")} to={`/attendance/schedules/${scheduleId}`}>Students</Link>
+          <Link className={this.state.mode === "schedule"   ? "current" : ""} onClick={() => this.switchMode("schedule")}   to={`/attendance/schedules/${scheduleId}`}>Module</Link>
+          <Link className={this.state.mode === "committers" ? "current" : ""} onClick={() => this.switchMode("committers")} to={`/attendance/schedules/${scheduleId}`}>Students</Link>
         </div>
         {this.state.mode === "schedule" ?
           <div className="schedule">
@@ -193,11 +193,11 @@ export class AttendanceScheduleDetail extends Component {
             </table>
           </div>
           :
-          <div className="students">
+          <div className="committers">
             <div className="controls">
               <input className="unifi-input" type="text" placeholder="Search" onChange={this.searchChange} />
               {/*<button className="search" onClick={() => this.searchChange(this.state.search)}>🔍</button>*/}
-              <button className="addStudent">⊕ Add a student</button>
+              <button className="addCommitter">⊕ Add a student</button>
             </div>
             <div className="views">
               <p>Showing {this.props.contactAttendance.attendance.filter((c) => c.name.toLowerCase().indexOf(this.state.search) > -1).length} students</p>

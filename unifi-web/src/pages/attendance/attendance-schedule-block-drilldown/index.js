@@ -17,7 +17,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
         attendance: 0,
         startDate: null,
         endDate: null,
-        studentCount: 0,
+        committerCount: 0,
         lectureCount: 0,
       }
     }
@@ -35,7 +35,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
           attendance: percentage,
           startDate: schedule.startTime,
           endDate:   schedule.endTime,
-          studentCount: schedule.committerCount,
+          committerCount: schedule.committerCount,
           lectureCount: schedule.blockCount
         }
       });

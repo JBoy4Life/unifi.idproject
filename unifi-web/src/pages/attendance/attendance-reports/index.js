@@ -21,15 +21,15 @@ export class AttendanceReports extends Component {
     });
   }
   render() {
-    const totalStudents = this.props.scheduleStats.reduce((acc, v) => acc + v.committerCount, 0);
-    const totalLectures = this.props.scheduleStats.reduce((acc, v) => acc + v.blockCount, 0);
-    const totalPresent  = this.props.scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0);
+    const totalCommitters = this.props.scheduleStats.reduce((acc, v) => acc + v.committerCount, 0);
+    const totalLectures   = this.props.scheduleStats.reduce((acc, v) => acc + v.blockCount, 0);
+    const totalPresent    = this.props.scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0);
     return (
       <div className="attendanceReports">
         <h1>Reports</h1>
         <div className="tabs">
           <Link className={this.state.mode === "schedules"  ? "current" : ""} onClick={() => this.switchMode("schedules")}  to={`/attendance/reports`}>All Modules</Link>
-          <Link className={this.state.mode === "students" ? "current" : ""} onClick={() => this.switchMode("students")} to={`/attendance/reports`}>All Students</Link>
+          <Link className={this.state.mode === "committers" ? "current" : ""} onClick={() => this.switchMode("committers")} to={`/attendance/reports`}>All Students</Link>
         </div>
         <div className="downloads">
         </div>
@@ -51,10 +51,10 @@ export class AttendanceReports extends Component {
             <tbody>
               <tr className="summary">
                 <td>Total</td>
-                <td>{totalStudents}</td>
+                <td>{totalCommitters}</td>
                 <td>{totalLectures}</td>
                 <td>{totalPresent}</td>
-                <td>{(totalStudents * totalLectures) - totalPresent}</td>
+                <td>{(totalCommitters * totalLectures) - totalPresent}</td>
                 <td>—</td>
               </tr>
               {this.props.scheduleStats.map((schedule) => {
