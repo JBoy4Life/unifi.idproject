@@ -11,7 +11,7 @@ $unifi-error: #cc00000;
 $unifi-top-header-1: #353e48;
 $unifi-top-header-2: #404c58;
 
-div.module-stats-summary {
+div.schedule-stats-summary {
 
   padding: 15px;
   font-size: 16px;
@@ -69,7 +69,7 @@ div.tabs {
   }
 }
 
-.attendanceModule {
+.attendanceSchedule {
 
   border: 1px $unifi-line-color solid;
   border-radius: 6px;
@@ -94,7 +94,7 @@ div.tabs {
 
 }
 
-.attendanceModuleDetail {
+.attendanceScheduleDetail {
 
   h1 {
     font-size: 40px;
@@ -102,7 +102,7 @@ div.tabs {
     margin-bottom: 0;
   }
 
-  .module {
+  .schedule {
 
     .controls {
       margin-top: 40px;
@@ -263,7 +263,7 @@ div.tabs {
 
 }
 
-.attendanceModuleBlockDrilldown {
+.attendanceScheduleBlockDrilldown {
   .views {
     margin-top: 24px;
     p {

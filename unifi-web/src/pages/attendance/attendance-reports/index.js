@@ -8,7 +8,7 @@ export class AttendanceReports extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      mode: "modules"
+      mode: "schedules"
     };
   }
   componentWillMount() {
@@ -28,7 +28,7 @@ export class AttendanceReports extends Component {
       <div className="attendanceReports">
         <h1>Reports</h1>
         <div className="tabs">
-          <Link className={this.state.mode === "modules"  ? "current" : ""} onClick={() => this.switchMode("modules")}  to={`/attendance/reports`}>All Modules</Link>
+          <Link className={this.state.mode === "schedules"  ? "current" : ""} onClick={() => this.switchMode("schedules")}  to={`/attendance/reports`}>All Modules</Link>
           <Link className={this.state.mode === "students" ? "current" : ""} onClick={() => this.switchMode("students")} to={`/attendance/reports`}>All Students</Link>
         </div>
         <div className="downloads">
@@ -36,7 +36,7 @@ export class AttendanceReports extends Component {
         <div className="views">
           <p>Showing {this.props.scheduleStats.length} results</p>
         </div>
-        {this.state.mode === "modules" ?
+        {this.state.mode === "schedules" ?
           <table className="unifi-table">
             <thead>
               <tr>
@@ -57,15 +57,15 @@ export class AttendanceReports extends Component {
                 <td>{(totalStudents * totalLectures) - totalPresent}</td>
                 <td>—</td>
               </tr>
-              {this.props.scheduleStats.map((module) => {
-                const percentage = (module.blockCount === 0 || module.committerCount === 0) ? 0 :
-                  (module.overallAttendance / (module.committerCount * module.blockCount)) * 100;
-                return <tr key={module.scheduleId}>
-                  <td><Link className="unifi-link" to={`/attendance/modules/${module.scheduleId}`}>{module.name}</Link></td>
-                  <td>{module.committerCount}</td>
-                  <td>{module.blockCount}</td>
-                  <td>{module.overallAttendance}</td>
-                  <td>{(module.committerCount * module.blockCount) - module.overallAttendance}</td>
+              {this.props.scheduleStats.map((schedule) => {
+                const percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
+                  (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
+                return <tr key={schedule.scheduleId}>
+                  <td><Link className="unifi-link" to={`/attendance/schedules/${schedule.scheduleId}`}>{schedule.name}</Link></td>
+                  <td>{schedule.committerCount}</td>
+                  <td>{schedule.blockCount}</td>
+                  <td>{schedule.overallAttendance}</td>
+                  <td>{(schedule.committerCount * schedule.blockCount) - schedule.overallAttendance}</td>
                   <td>{percentage.toFixed(0)}%</td>
                 </tr>;
               })}
@@ -97,7 +97,7 @@ export class AttendanceReports extends Component {
                   const schedule = this.props.contactScheduleReport.schedules.find((s) => s.scheduleId === a.scheduleId);
                   return <tr key={`${c.clientReference}-${a.scheduleId}`}>
                     <td>{c.name}</td>
-                    <td><Link to={`/attendance/modules/${a.scheduleId}/${c.clientReference}`}>{a.scheduleId}</Link></td>
+                    <td><Link to={`/attendance/schedules/${a.scheduleId}/${c.clientReference}`}>{a.scheduleId}</Link></td>
                     <td>{schedule.blockCount}</td>
                     <td>{a.count}</td>
                     <td>{schedule.blockCount-a.count}</td>

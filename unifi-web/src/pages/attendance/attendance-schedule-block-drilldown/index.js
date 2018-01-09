@@ -5,14 +5,14 @@ import * as attendanceActions from "../../../reducers/attendance/actions";
 import {connect} from "react-redux";
 import moment from "moment";
 
-export class AttendanceModuleBlockDrilldown extends Component {
+export class AttendanceScheduleBlockDrilldown extends Component {
   constructor(props) {
     super(props);
     this.state = {
       committer: {
         name: ""
       },
-      module: {
+      schedule: {
         name: "",
         attendance: 0,
         startDate: null,
@@ -25,18 +25,18 @@ export class AttendanceModuleBlockDrilldown extends Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.scheduleStats.length > 0) {
       let scheduleId = nextProps.match.params.scheduleId;
-      let module = nextProps.scheduleStats.filter((module) => module.scheduleId === scheduleId)[0];
-      let percentage = (module.blockCount === 0 || module.committerCount === 0) ? 0 :
-        (module.overallAttendance / (module.committerCount * module.blockCount)) * 100;
+      let schedule = nextProps.scheduleStats.filter((schedule) => schedule.scheduleId === scheduleId)[0];
+      let percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
+        (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
 
       this.setState({
-        module: {
-          name: module.name,
+        schedule: {
+          name: schedule.name,
           attendance: percentage,
-          startDate: module.startTime,
-          endDate:   module.endTime,
-          studentCount: module.committerCount,
-          lectureCount: module.blockCount
+          startDate: schedule.startTime,
+          endDate:   schedule.endTime,
+          studentCount: schedule.committerCount,
+          lectureCount: schedule.blockCount
         }
       });
     }
@@ -58,11 +58,11 @@ export class AttendanceModuleBlockDrilldown extends Component {
   }
   render() {
     return (
-      <div className="attendanceModuleBlockDrilldown">
+      <div className="attendanceScheduleBlockDrilldown">
         <h1>{this.state.committer.name}</h1>
-        <h2>{this.state.module.name}</h2>
-        <div className="module-stats-summary">
-          <EvacuationProgressBar percentage={this.state.module.attendance.toFixed(0)} warningThreshold={80} criticalThreshold={50} />
+        <h2>{this.state.schedule.name}</h2>
+        <div className="schedule-stats-summary">
+          <EvacuationProgressBar percentage={this.state.schedule.attendance.toFixed(0)} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance</p>
           <div className="stats">
             <p className="stat"><span>Lectures:</span>&nbsp;{this.props.blockReport.length}</p>
@@ -115,4 +115,4 @@ export const mapDispatch = dispatch => (bindActionCreators({
   getContactAttendanceForSchedule: attendanceActions.getContactAttendanceForSchedule
 }, dispatch));
 
-export default connect(mapStateToProps, mapDispatch)(AttendanceModuleBlockDrilldown);
+export default connect(mapStateToProps, mapDispatch)(AttendanceScheduleBlockDrilldown);

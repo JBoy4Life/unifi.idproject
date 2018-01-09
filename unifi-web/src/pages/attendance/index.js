@@ -6,14 +6,14 @@ import * as ROUTES from '../../utils/routes';
 import { PageContent } from '../../components';
 import { PageContainer, LinkedSideNavigation } from '../../smart-components';
 
-import AttendanceModules from './attendance-modules';
-import AttendanceModuleDetail from './attendance-module-detail';
-import AttendanceModuleBlockDrilldown from './attendance-module-block-drilldown';
+import AttendanceSchedules from './attendance-schedules';
+import AttendanceScheduleDetail from './attendance-schedule-detail';
+import AttendanceScheduleBlockDrilldown from './attendance-schedule-block-drilldown';
 import AttendanceReports from './attendance-reports';
 import AttendanceCustomReports from './attendance-custom-reports';
 
 const menus = [{
-  key: '/attendance/modules',
+  key: '/attendance/schedules',
   label: 'Modules',
 },
 {
@@ -37,18 +37,18 @@ export default class SitemapContainer extends Component {
             <Switch>
               <Route
                 exact
-                path={ROUTES.ATTENDANCE_MODULES}
-                component={AttendanceModules}
+                path={ROUTES.ATTENDANCE_SCHEDULES}
+                component={AttendanceSchedules}
               />
               <Route
                 exact
-                path={ROUTES.ATTENDANCE_MODULES_DETAIL}
-                component={AttendanceModuleDetail}
+                path={ROUTES.ATTENDANCE_SCHEDULES_DETAIL}
+                component={AttendanceScheduleDetail}
               />
               <Route
                 exact
-                path={ROUTES.ATTENDANCE_MODULES_BLOCK_DRILLDOWN}
-                component={AttendanceModuleBlockDrilldown}
+                path={ROUTES.ATTENDANCE_SCHEDULES_BLOCK_DRILLDOWN}
+                component={AttendanceScheduleBlockDrilldown}
               />
               <Route
                 exact
