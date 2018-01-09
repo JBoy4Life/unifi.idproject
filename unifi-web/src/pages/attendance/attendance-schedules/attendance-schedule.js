@@ -19,7 +19,7 @@ export default class AttendanceSchedule extends Component {
               <h2>{this.props.title}</h2>
             </div>
             <div className="schedule-stats-summary">
-              <EvacuationProgressBar percentage={percentage.toFixed(0)} warningThreshold={80} criticalThreshold={50} />
+              <EvacuationProgressBar percentage={Math.floor(percentage)} warningThreshold={80} criticalThreshold={50} />
               <p className="label">Overall Attendance to Date</p>
               <div className="stats">
                 {(this.props.startDate === null) ?

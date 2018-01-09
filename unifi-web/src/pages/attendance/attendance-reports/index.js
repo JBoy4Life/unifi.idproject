@@ -66,7 +66,7 @@ export class AttendanceReports extends Component {
                   <td>{schedule.blockCount}</td>
                   <td>{schedule.overallAttendance}</td>
                   <td>{(schedule.committerCount * schedule.blockCount) - schedule.overallAttendance}</td>
-                  <td>{percentage.toFixed(0)}%</td>
+                  <td>{Math.floor(percentage)}%</td>
                 </tr>;
               })}
             </tbody>
@@ -101,7 +101,7 @@ export class AttendanceReports extends Component {
                     <td>{schedule.blockCount}</td>
                     <td>{a.count}</td>
                     <td>{schedule.blockCount-a.count}</td>
-                    <td>{((a.count/schedule.blockCount)*100).toFixed(0)}%</td>
+                    <td>{Math.floor((a.count/schedule.blockCount)*100)}%</td>
                   </tr>
                 });
               }))}

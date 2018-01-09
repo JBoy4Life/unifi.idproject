@@ -150,7 +150,7 @@ export class AttendanceScheduleDetail extends Component {
       <div className="attendanceScheduleDetail">
         <h1>{this.state.schedule.name}</h1>
         <div className="schedule-stats-summary">
-          <EvacuationProgressBar percentage={this.state.schedule.attendance.toFixed(0)} warningThreshold={80} criticalThreshold={50} />
+          <EvacuationProgressBar percentage={Math.floor(this.state.schedule.attendance.toFixed(0))} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance to Date</p>
           <div className="stats">
             {(this.state.schedule.startDate === null) ?
@@ -224,7 +224,7 @@ export class AttendanceScheduleDetail extends Component {
                   <td>{committer.clientReference}</td>
                   <td>{committer.attendedCount}</td>
                   <td>{this.props.contactAttendance.blockCount - committer.attendedCount}</td>
-                  <td>{((committer.attendedCount/this.props.contactAttendance.blockCount)*100).toFixed(0)}%</td>
+                  <td>{Math.floor((committer.attendedCount/this.props.contactAttendance.blockCount)*100)}%</td>
                 </tr>})}
               </tbody>
             </table>

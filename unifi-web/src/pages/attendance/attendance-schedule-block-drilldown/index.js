@@ -62,7 +62,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
         <h1>{this.state.committer.name}</h1>
         <h2>{this.state.schedule.name}</h2>
         <div className="schedule-stats-summary">
-          <EvacuationProgressBar percentage={this.state.schedule.attendance.toFixed(0)} warningThreshold={80} criticalThreshold={50} />
+          <EvacuationProgressBar percentage={Math.floor(this.state.schedule.attendance)} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance</p>
           <div className="stats">
             <p className="stat"><span>Lectures:</span>&nbsp;{this.props.blockReport.length}</p>
