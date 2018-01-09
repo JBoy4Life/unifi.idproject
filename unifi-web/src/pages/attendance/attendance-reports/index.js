@@ -22,7 +22,7 @@ export class AttendanceReports extends Component {
   }
   render() {
     const totalCommitters = this.props.scheduleStats.reduce((acc, v) => acc + v.committerCount, 0);
-    const totalLectures   = this.props.scheduleStats.reduce((acc, v) => acc + v.blockCount, 0);
+    const totalBlocks     = this.props.scheduleStats.reduce((acc, v) => acc + v.blockCount, 0);
     const totalPresent    = this.props.scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0);
     return (
       <div className="attendanceReports">
@@ -52,9 +52,9 @@ export class AttendanceReports extends Component {
               <tr className="summary">
                 <td>Total</td>
                 <td>{totalCommitters}</td>
-                <td>{totalLectures}</td>
+                <td>{totalBlocks}</td>
                 <td>{totalPresent}</td>
-                <td>{(totalCommitters * totalLectures) - totalPresent}</td>
+                <td>{(totalCommitters * totalBlocks) - totalPresent}</td>
                 <td>—</td>
               </tr>
               {this.props.scheduleStats.map((schedule) => {

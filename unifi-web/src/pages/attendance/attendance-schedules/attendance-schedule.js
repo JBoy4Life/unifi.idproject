@@ -8,8 +8,8 @@ import './attendance-schedule.scss';
 
 export default class AttendanceSchedule extends Component {
   render() {
-    let percentage = (this.props.lectureCount === 0 || this.props.committerCount === 0) ? 0 :
-      (this.props.attendance / (this.props.committerCount * this.props.lectureCount)) * 100;
+    let percentage = (this.props.blockCount === 0 || this.props.committerCount === 0) ? 0 :
+      (this.props.attendance / (this.props.committerCount * this.props.blockCount)) * 100;
     let startDate = moment(this.props.startDate).format('DD/MM/Y');
     let endDate   = moment(this.props.endDate).format('DD/MM/Y');
     return (
@@ -29,7 +29,7 @@ export default class AttendanceSchedule extends Component {
                 }
                 <br />
                 <p className="stat"><span>Students:</span>&nbsp;{this.props.committerCount}</p>
-                <p className="stat"><span>Lectures:</span>&nbsp;{this.props.lectureCount}</p>
+                <p className="stat"><span>Lectures:</span>&nbsp;{this.props.blockCount}</p>
               </div>
             </div>
           </Link>

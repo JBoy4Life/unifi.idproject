@@ -22,7 +22,7 @@ export class AttendanceScheduleDetail extends Component {
         startDate: null,
         endDate: null,
         committerCount: 0,
-        lectureCount: 0,
+        blockCount: 0,
       },
       search: ""
     };
@@ -50,7 +50,7 @@ export class AttendanceScheduleDetail extends Component {
           startDate: schedule.startTime,
           endDate:   schedule.endTime,
           committerCount: schedule.committerCount,
-          lectureCount: schedule.blockCount
+          blockCount: schedule.blockCount
         }
       });
     }
@@ -160,7 +160,7 @@ export class AttendanceScheduleDetail extends Component {
             }
             <br />
             <p className="stat"><span>Students:</span>&nbsp;{this.state.schedule.committerCount}</p>
-            <p className="stat"><span>Lectures:</span>&nbsp;{this.state.schedule.lectureCount}</p>
+            <p className="stat"><span>Lectures:</span>&nbsp;{this.state.schedule.blockCount}</p>
           </div>
         </div>
         <div className="tabs">
@@ -173,7 +173,7 @@ export class AttendanceScheduleDetail extends Component {
               <h2>{this.state.selectedMonth.format("MMM Y")}</h2>
               <button className="arrow" onClick={() => this.prevMonthClick()}>&lt;</button>
               <button className="arrow" onClick={() => this.nextMonthClick()}>&gt;</button>
-              <button className="addLecture">⊕ Add a lecture</button>
+              <button className="addBlock">⊕ Add a lecture</button>
             </div>
             <table className="timetable">
               <thead>

@@ -21,7 +21,7 @@ export class AttendanceSchedules extends Component {
                                      startDate={schedule.startTime}
                                      endDate={schedule.endTime}
                                      committerCount={schedule.committerCount}
-                                     lectureCount={schedule.blockCount} />
+                                     blockCount={schedule.blockCount} />
         })}
       </div>
     )
