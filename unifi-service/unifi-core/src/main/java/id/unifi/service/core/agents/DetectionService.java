@@ -9,7 +9,7 @@ import com.rabbitmq.client.MessageProperties;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.common.detection.RawSiteDetectionReport;
+import id.unifi.service.common.detection.RawSiteDetectionReports;
 import id.unifi.service.core.AgentSessionData;
 import id.unifi.service.core.CoreService;
 import static id.unifi.service.core.CoreService.PENDING_RAW_DETECTIONS_QUEUE_NAME;
@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 @ApiService("detection")
@@ -42,10 +44,10 @@ public class DetectionService {
     }
 
     @ApiOperation
-    public void processRawDetections(AgentSessionData session, ObjectMapper mapper, RawDetectionReport report) {
-        log.trace("Got report: {}", report);
-        RawSiteDetectionReport siteReport =
-                new RawSiteDetectionReport(session.getClientId(), session.getSiteId(), report);
+    public void processRawDetections(AgentSessionData session, ObjectMapper mapper, List<RawDetectionReport> reports) {
+        log.trace("Got reports: {}", reports);
+        RawSiteDetectionReports siteReport =
+                new RawSiteDetectionReports(session.getClientId(), session.getSiteId(), reports);
 
         byte[] marshalledReport;
         try {

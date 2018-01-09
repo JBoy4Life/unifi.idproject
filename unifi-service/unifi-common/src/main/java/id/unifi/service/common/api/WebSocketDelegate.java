@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 @WebSocket
 public class WebSocketDelegate {
@@ -34,10 +35,13 @@ public class WebSocketDelegate {
 
     private final Dispatcher dispatcher;
     private final Protocol protocol;
+    private final CountDownLatch closeLatch;
+    private volatile int closeCode;
 
     public WebSocketDelegate(Dispatcher<?> dispatcher, Protocol protocol) {
         this.dispatcher = dispatcher;
         this.protocol = protocol;
+        closeLatch = new CountDownLatch(1);
     }
 
     public static class Creator implements WebSocketCreator {
@@ -61,6 +65,11 @@ public class WebSocketDelegate {
         }
     }
 
+    public int awaitClose() throws InterruptedException {
+        closeLatch.await();
+        return closeCode;
+    }
+
     @OnWebSocketConnect
     public void onConnect(Session session) {
         log.trace("Connected: {}", session);
@@ -68,9 +77,11 @@ public class WebSocketDelegate {
     }
 
     @OnWebSocketClose
-    public void onClose(Session session, int closeCode, String closeReason) {
-        log.trace("Closed ({} {}): {}", closeCode, closeReason, session);
+    public void onClose(Session session, int code, String reason) {
+        log.trace("Closed ({} {}): {}", code, reason, session);
         dispatcher.dropSession(session);
+        closeCode = code;
+        closeLatch.countDown();
     }
 
     @OnWebSocketMessage

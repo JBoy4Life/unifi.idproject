@@ -5,6 +5,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Prefix;
+import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
@@ -55,7 +56,8 @@ public class CoreAgentService {
         AtomicReference<CoreClient> client = new AtomicReference<>();
         Consumer<RawDetectionReport> detectionConsumer = report -> client.get().sendRawDetections(report);
         ReaderManager readerManager = new ReaderManager(new DatabaseProvider(), new RfidProvider(detectionConsumer));
-        client.set(new CoreClient(config.serviceUri(), config.clientId(), config.siteId(), readerManager));
+        ComponentHolder componentHolder = new ComponentHolder(Map.of(ReaderManager.class, readerManager));
+        client.set(new CoreClient(config.serviceUri(), config.clientId(), config.siteId(), componentHolder));
     }
 
     private static void mockDetections(DatabaseProvider dbProvider,

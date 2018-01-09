@@ -20,17 +20,15 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 public class ImpinjReaderController {
     private static final Logger log = LoggerFactory.getLogger(ImpinjReaderController.class);
     private final TagReportListener impinjTagReportListener;
     private final ReaderConfig config;
-    private final ExecutorService configExecutor;
-    private volatile ImpinjReader reader;
+    private final Thread connectionThread;
+    private final CountDownLatch connectionCloseLatch;
     private volatile boolean closing;
 
     ImpinjReaderController(ReaderConfig config, Consumer<RawDetectionReport> detectionConsumer) {
@@ -48,23 +46,26 @@ public class ImpinjReaderController {
             detectionConsumer.accept(new RawDetectionReport(reader.getName(), detections));
         };
 
-        this.configExecutor = Executors.newSingleThreadExecutor();
-        configExecutor.submit(this::configureFromScratch);
+        this.connectionCloseLatch = new CountDownLatch(1);
+
+        connectionThread = new Thread(this::configureFromScratch, "reader-" + config.readerSn + "-connection");
+        connectionThread.start();
     }
 
     private synchronized void configureFromScratch() {
-        log.info("Configuring reader {}", config);
         HostAndPort endpoint = config.endpoint;
 
-        this.reader = new ImpinjReader();
-        reader.setConnectionLostListener(r -> onConnectionLost());
-        reader.setConnectionCloseListener((r, e) -> onConnectionLost());
-        
-        FeatureSet featureSet;
-        while (true) {
+        while (!closing) {
+            ImpinjReader reader = new ImpinjReader();
+            CountDownLatch lostLatch = new CountDownLatch(1);
             try {
+                log.info("Configuring reader {}", config);
+                reader.setConnectionLostListener(r -> lostLatch.countDown());
+                reader.setConnectionCloseListener((r, e) -> log.info("Connection closed {} {}", config));
                 reader.connect(endpoint.getHost(), endpoint.getPort());
-                featureSet = reader.queryFeatureSet();
+                if (Thread.interrupted()) throw new InterruptedException();
+
+                FeatureSet featureSet = reader.queryFeatureSet();
                 String actualSn = featureSet.getSerialNumber().replaceAll("-", "");
                 if (!config.readerSn.equals(actualSn)) {
                     throw new RuntimeException("Reader serial number mismatch for " + endpoint
@@ -76,6 +77,9 @@ public class ImpinjReaderController {
                 Settings settings = reader.queryDefaultSettings();
 
                 settings.getLowDutyCycle().setIsEnabled(false);
+                settings.setHoldReportsOnDisconnect(true);
+                settings.getKeepalives().setEnabled(true);
+                settings.getKeepalives().setPeriodInMs(10_000);
 
                 ReportConfig reportConfig = settings.getReport();
                 reportConfig.setIncludeAntennaPortNumber(true);
@@ -88,10 +92,31 @@ public class ImpinjReaderController {
 
                 reader.applySettings(settings);
                 reader.setTagReportListener(impinjTagReportListener);
+                log.info("Starting detection on {}", config);
                 reader.start();
-                break;
+                lostLatch.await();
+                log.info("Lost connection to reader {}", config);
+                reader.disconnect();
+                log.info("Disconnected from reader {}", config);
+            } catch (InterruptedException e) {
+                log.info("Stopping reader {}", config);
+                try {
+                    reader.stop();
+                } catch (OctaneSdkException e1) {
+                    log.error("Error while stopping reader {}", reader, e);
+                }
+                reader.disconnect();
+                log.info("Reader disconnected {}", config);
+                connectionCloseLatch.countDown();
+                return;
             } catch (Exception e) {
-                log.error("Error configuring reader. Retrying shortly.", e);
+                if (closing) {
+                    log.error("Error while disconnecting from reader {}", reader, e);
+                    connectionCloseLatch.countDown();
+                    return;
+                }
+
+                log.error("Reader error. Retrying shortly.", e);
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ie) {
@@ -103,26 +128,11 @@ public class ImpinjReaderController {
 
     public void close() {
         closing = true;
-        configExecutor.shutdownNow();
+        log.info("Disconnecting from reader {}", config);
+        connectionThread.interrupt();
         try {
-            configExecutor.awaitTermination(30, TimeUnit.SECONDS);
+            connectionCloseLatch.await();
         } catch (InterruptedException ignored) {}
-
-        try {
-            if (reader != null) {
-                log.info("Stopping reader {}", config);
-                reader.stop();
-                reader.disconnect();
-                reader = null;
-            }
-        } catch (OctaneSdkException ignored) {}
-    }
-
-    private void onConnectionLost() {
-        if (!closing) {
-            log.info("Connection to reader {} lost, reconnecting", config);
-            configExecutor.submit(this::configureFromScratch);
-        }
     }
 
     private static Instant instantFromTimestamp(ImpinjTimestamp timestamp) {

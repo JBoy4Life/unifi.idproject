@@ -3,19 +3,14 @@ package id.unifi.service.common.api;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import com.google.common.reflect.ClassPath;
-import com.statemachinesystems.envy.Envy;
-import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.UnknownMessageType;
-import id.unifi.service.common.config.HostAndPortValueParser;
-import id.unifi.service.common.config.UnifiConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -32,6 +27,7 @@ import java.util.stream.Stream;
 
 public class ServiceRegistry {
     private static final Logger log = LoggerFactory.getLogger(ServiceRegistry.class);
+    private final ComponentHolder componentProvider;
 
     static class Operation {
         final Class<?> cls;
@@ -59,7 +55,7 @@ public class ServiceRegistry {
     private final Map<Class<?>, Object> serviceInstances;
     private final Map<String, Operation> operations;
 
-    public ServiceRegistry(Map<String, String> packageNamesByModule, Map<Class<?>, Object> components) {
+    public ServiceRegistry(Map<String, String> packageNamesByModule, ComponentHolder componentHolder) {
         ClassPath classPath;
         try {
             classPath = ClassPath.from(ServiceRegistry.class.getClassLoader());
@@ -70,8 +66,8 @@ public class ServiceRegistry {
         Map<String, Map<Class<?>, ApiService>> services = packageNamesByModule.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> discoverServices(classPath, e.getValue())));
 
-        this.serviceInstances =
-                createServiceInstances(new HashMap<>(components), services.values());
+        this.componentProvider = componentHolder;
+        this.serviceInstances = createServiceInstances(services.values());
         this.operations = preloadOperations(services);
     }
 
@@ -120,49 +116,13 @@ public class ServiceRegistry {
         return classes;
     }
 
-    private static Map<Class<?>, Object> createServiceInstances(Map<Class<?>, Object> components,
-                                                                Collection<Map<Class<?>, ApiService>> services) {
+    private Map<Class<?>, Object> createServiceInstances(Collection<Map<Class<?>, ApiService>> services) {
         return services.stream()
                 .flatMap(map -> map.keySet().stream())
                 .collect(Collectors.toMap(Function.identity(), cls -> {
                     log.debug("Creating service instance for {}", cls);
-                    return createInstance(components, cls);
+                    return componentProvider.get(cls);
                 }));
-    }
-
-    private static Object createInstance(Map<Class<?>, Object> components, Class<?> cls) {
-        Constructor<?>[] constructors = cls.getConstructors();
-        if (constructors.length != 1) {
-            throw new RuntimeException("Expected one constructor, got " + constructors.length + " for " + cls);
-        }
-        Constructor<?> constructor = constructors[0];
-        Object[] componentObjects = Arrays.stream(constructor.getParameters())
-                .map(p -> getDependency(components, p))
-                .toArray();
-        try {
-            Object instance = constructor.newInstance(componentObjects);
-            components.put(cls, instance);
-            return instance;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static Object getDependency(Map<Class<?>, Object> components, Parameter parameter) {
-        Class<?> type = parameter.getType();
-        Object instance = components.get(type);
-        if (instance == null) {
-            if (type.isInterface()) {
-                ApiConfigPrefix prefixAnnotation = parameter.getDeclaredAnnotation(ApiConfigPrefix.class);
-                String prefix = prefixAnnotation == null ? null : prefixAnnotation.value();
-                log.info("Getting configuration for {} with prefix {}", type, prefix);
-                instance =
-                        Envy.configure(type, UnifiConfigSource.getForPrefix(prefix), HostAndPortValueParser.instance);
-            } else {
-                instance = createInstance(components, type);
-            }
-        }
-        return instance;
     }
 
     private static Map<String, Operation> preloadOperations(Map<String, Map<Class<?>, ApiService>> services) {

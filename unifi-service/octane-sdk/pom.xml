@@ -13,20 +13,21 @@
     <name>Impinj Octane SDK</name>
     <description>Octane SDK repackaged with managed dependencies</description>
 
+    <repositories>
+        <repository>
+            <id>project</id>
+            <url>file://${basedir}/m2-repo</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>octane</groupId>
-            <artifactId>octane</artifactId>
-            <version>${octane.version}</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/OctaneSDKJava-${octane.version}.jar</systemPath>
+            <groupId>com.impinj</groupId>
+            <artifactId>octane-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>ltk</groupId>
-            <artifactId>ltk</artifactId>
-            <version>${ltk.version}</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/libltkjava-${ltk.version}.jar</systemPath>
+            <groupId>com.impinj</groupId>
+            <artifactId>ltk-java</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.mina</groupId>
