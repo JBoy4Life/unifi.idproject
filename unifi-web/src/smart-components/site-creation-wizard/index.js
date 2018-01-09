@@ -2,24 +2,24 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
 import { Steps } from '../../elements'
-import { SiteWizzardDetailsForm } from '../'
-import SiteWizzardIntro from './components/site-wizzard-intro'
-import SiteWizzardFloorPlan from './components/site-wizzard-floor-plan'
-import SiteWizzardUpload from './components/site-wizzard-upload'
-import SiteWizzardReview from './components/site-wizzard-review'
+import { SiteWizardDetailsForm } from '../'
+import SiteWizardIntro from './components/site-wizard-intro'
+import SiteWizardFloorPlan from './components/site-wizard-floor-plan'
+import SiteWizardUpload from './components/site-wizard-upload'
+import SiteWizardReview from './components/site-wizard-review'
 
 import { noop } from '../../utils/helpers'
 
 const { Step } = Steps
 
-export default class SiteCreationWizzard extends Component {
+export default class SiteCreationWizard extends Component {
   static propTypes = {
-    onWizzardDone: PropTypes.func,
+    onWizardDone: PropTypes.func,
     onStepChange: PropTypes.func,
   }
 
   static defaultProps = {
-    onWizzardDone: noop,
+    onWizardDone: noop,
     onStepChange: noop,
   }
 
@@ -34,7 +34,7 @@ export default class SiteCreationWizzard extends Component {
   }
 
   handleDone = () => {
-    this.props.onWizzardDone()
+    this.props.onWizardDone()
   }
 
   renderStepsHeader() {
@@ -53,22 +53,22 @@ export default class SiteCreationWizzard extends Component {
     const { currentTab } = this.state
     switch (currentTab) {
       case 4:
-        return <SiteWizzardReview onSubmit={this.handleDone} />
+        return <SiteWizardReview onSubmit={this.handleDone} />
       case 3:
-        return <SiteWizzardUpload onSubmit={this.handleNextStep} />
+        return <SiteWizardUpload onSubmit={this.handleNextStep} />
       case 2:
-        return <SiteWizzardFloorPlan onSubmit={this.handleNextStep} />
+        return <SiteWizardFloorPlan onSubmit={this.handleNextStep} />
       case 1:
-        return <SiteWizzardDetailsForm onSubmit={this.handleNextStep} />
+        return <SiteWizardDetailsForm onSubmit={this.handleNextStep} />
       case 0:
       default:
-        return <SiteWizzardIntro onSubmit={this.handleNextStep} />
+        return <SiteWizardIntro onSubmit={this.handleNextStep} />
     }
   }
 
   render() {
     return (
-      <div className="site-creation-wizzard">
+      <div className="site-creation-wizard">
         {this.renderStepsHeader()}
         {this.renderTabContent()}
       </div>

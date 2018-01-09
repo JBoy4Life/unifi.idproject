@@ -6,7 +6,7 @@ import { Button } from '../../elements'
 
 import validate from './validate'
 
-class SiteWizzardDetailsForm extends Component {
+class SiteWizardDetailsForm extends Component {
   static propTypes = {
     onSubmit: PropTypes.func,
   }
@@ -53,4 +53,4 @@ class SiteWizzardDetailsForm extends Component {
 export default reduxForm({
   form: 'site',
   validate,
-})(SiteWizzardDetailsForm)
+})(SiteWizardDetailsForm)

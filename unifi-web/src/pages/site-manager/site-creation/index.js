@@ -1,10 +1,10 @@
 import React from 'react'
-import { SiteCreationWizzard } from '../../../smart-components/index'
+import { SiteCreationWizard } from '../../../smart-components/index'
 
 export default function () {
   return (
     <div>
-      <SiteCreationWizzard />
+      <SiteCreationWizard />
     </div>
   )
 }

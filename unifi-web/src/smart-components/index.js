@@ -7,8 +7,8 @@ import LinkedSideNavigation from './linked-side-navigation'
 import PageContainer from './page-container'
 
 import EvacuationTable from './evacuation-status-table'
-import SiteCreationWizzard from './site-creation-wizzard'
-import SiteWizzardDetailsForm from './site-wizzard-details-form'
+import SiteCreationWizard from './site-creation-wizard'
+import SiteWizardDetailsForm from './site-wizard-details-form'
 
 
 export {
@@ -21,8 +21,8 @@ export {
   LinkedSideNavigation,
   EvacuationTable,
 
-  SiteCreationWizzard,
-  SiteWizzardDetailsForm,
+  SiteCreationWizard,
+  SiteWizardDetailsForm,
 }
 
 export default null

@@ -2,11 +2,11 @@ import React from 'react'
 
 import { Button } from '../../../elements'
 
-const SiteWizzardIntro = props => (
+const SiteWizardUpload = props => (
   <div>
-    <h2>Introduction</h2>
+    <h2>Upload plan TBD</h2>
     <Button onClick={props.onSubmit} type="primary">Proceed</Button>
   </div>
 )
 
-export default SiteWizzardIntro
+export default SiteWizardUpload
