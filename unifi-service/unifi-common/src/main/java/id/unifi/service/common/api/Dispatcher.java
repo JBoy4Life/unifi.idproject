@@ -38,7 +38,6 @@ import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -68,7 +67,6 @@ public class Dispatcher<S> {
     private final ConcurrentMap<Session, S> sessionDataStore;
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, PayloadConsumer> messageListeners;
-    private BlockingQueue<MessageStream> sendQueue;
 
     public interface PayloadConsumer {
         void accept(ObjectMapper om, Session session, JsonNode node);

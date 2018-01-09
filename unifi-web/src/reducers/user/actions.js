@@ -12,7 +12,7 @@ export const loginRequest = ({ username, password /* remember */ }) => {
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
     messageType: 'core.operator.auth-password',
-    payload: { username, password, clientId: 'ucl-mgmt' },
+    payload: { username, password, clientId: 'ucl-som' },
   });
 
   return {
@@ -28,7 +28,7 @@ export const reauthenticateRequest = (sessionToken) => {
     releaseVersion:  '1.0.0',
     messageType: 'core.operator.auth-token',
     payload: {
-      clientId: 'ucl-mgmt',
+      clientId: 'ucl-som',
       sessionToken
     }
   });

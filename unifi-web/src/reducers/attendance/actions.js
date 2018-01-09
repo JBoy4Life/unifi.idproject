@@ -14,7 +14,7 @@ export function listScheduleStats() {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.list-schedule-stats',
-    payload:         { clientId: 'ucl-mgmt' }
+    payload:         { clientId: 'ucl-som' }
   });
 
   return {
@@ -31,7 +31,7 @@ export function listBlocks(scheduleId) {
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.list-blocks',
     payload:         {
-      clientId:   'ucl-mgmt',
+      clientId:   'ucl-som',
       scheduleId
     }
   });
@@ -50,7 +50,7 @@ export function getContactAttendanceForSchedule(scheduleId) {
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.get-contact-attendance-for-schedule',
     payload:         {
-      clientId:   'ucl-mgmt',
+      clientId:   'ucl-som',
       scheduleId
     }
   });
@@ -69,7 +69,7 @@ export function reportBlockAttendance(scheduleId, clientReference) {
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.report-block-attendance',
     payload:         {
-      clientId:   'ucl-mgmt',
+      clientId:   'ucl-som',
       scheduleId,
       clientReference
     }
@@ -89,7 +89,7 @@ export function reportContactScheduleAttendance() {
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.report-contact-schedule-attendance',
     payload:         {
-      clientId:   'ucl-mgmt'
+      clientId:   'ucl-som'
     }
   });
 

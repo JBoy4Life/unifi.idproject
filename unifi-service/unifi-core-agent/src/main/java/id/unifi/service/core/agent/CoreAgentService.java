@@ -17,6 +17,7 @@ import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
 import id.unifi.service.core.db.tables.records.DetectableRecord;
+import id.unifi.service.provider.rfid.RfidProvider;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 public class CoreAgentService {
@@ -36,10 +39,10 @@ public class CoreAgentService {
 
     @Prefix("unifi")
     interface Config {
-        @Default("deloitte")
+        @Default("ucl-som")
         String clientId();
 
-        @Default("1nss")
+        @Default("level38")
         String siteId();
 
         @Default("ws://127.0.0.1:8001/agents/msgpack")
@@ -49,8 +52,10 @@ public class CoreAgentService {
     public static void main(String[] args) throws Exception {
         Config config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
 
-        CoreClient client = new CoreClient(config.serviceUri(), config.clientId(), config.siteId());
-        mockDetections(new DatabaseProvider(), client::sendRawDetections);
+        AtomicReference<CoreClient> client = new AtomicReference<>();
+        Consumer<RawDetectionReport> detectionConsumer = report -> client.get().sendRawDetections(report);
+        ReaderManager readerManager = new ReaderManager(new DatabaseProvider(), new RfidProvider(detectionConsumer));
+        client.set(new CoreClient(config.serviceUri(), config.clientId(), config.siteId(), readerManager));
     }
 
     private static void mockDetections(DatabaseProvider dbProvider,

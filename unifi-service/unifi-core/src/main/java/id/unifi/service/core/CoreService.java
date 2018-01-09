@@ -17,20 +17,34 @@ import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
+import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
+import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
+import id.unifi.service.common.detection.RawDetection;
 import id.unifi.service.common.detection.RawSiteDetectionReport;
+import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
+import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import id.unifi.service.common.version.VersionInfo;
+import static id.unifi.service.core.db.Tables.ANTENNA;
+import static id.unifi.service.core.db.Tables.READER;
+import static id.unifi.service.core.db.Tables.UHF_DETECTION;
+import id.unifi.service.core.db.tables.records.AntennaRecord;
 import static java.net.InetSocketAddress.createUnresolved;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -72,10 +86,11 @@ public class CoreService {
 
         startApiService(config.apiServiceListenEndpoint(), config.mq(), detectionProcessor);
         ObjectMapper mapper = startAgentService(config.agentServiceListenEndpoint());
-        startRawDetectionConsumer(detectionProcessor, mapper, config.mq());
+        startRawDetectionConsumer(dbProvider.bySchemaName(CORE_SCHEMA_NAME), detectionProcessor, mapper, config.mq());
     }
 
-    private static void startRawDetectionConsumer(DetectionProcessor detectionProcessor,
+    private static void startRawDetectionConsumer(Database db,
+                                                  DetectionProcessor detectionProcessor,
                                                   ObjectMapper mapper,
                                                   MqConfig mqConfig) {
         ConnectionFactory factory = new ConnectionFactory();
@@ -98,7 +113,8 @@ public class CoreService {
                                        byte[] body) throws IOException {
                 try {
                     RawSiteDetectionReport report = mapper.readValue(body, RawSiteDetectionReport.class);
-                    detectionProcessor.process(report.clientId, report.siteId, report.report);
+                    storeDetections(db, report);
+                    // TODO fix and re-enable for live view: detectionProcessor.process(report.clientId, report.siteId, report.report);
                 } finally {
                     channel.basicAck(envelope.getDeliveryTag(), false);
                 }
@@ -111,12 +127,70 @@ public class CoreService {
         }
     }
 
+    private static void storeDetections(Database db, RawSiteDetectionReport report) {
+        db.execute(sql -> {
+            for (RawDetection detection : report.report.detections) {
+                try {
+                    sql.insertInto(UHF_DETECTION,
+                            UHF_DETECTION.CLIENT_ID,
+                            UHF_DETECTION.DETECTABLE_ID,
+                            UHF_DETECTION.DETECTABLE_TYPE,
+                            UHF_DETECTION.READER_SN,
+                            UHF_DETECTION.PORT_NUMBER,
+                            UHF_DETECTION.DETECTION_TIME)
+                            .values(
+                                    report.clientId,
+                                    detection.detectableId,
+                                    detection.detectableType.toString(),
+                                    report.report.readerSn,
+                                    detection.portNumber,
+                                    utcLocalFromInstant(detection.timestamp))
+                            .execute();
+                } catch (DataIntegrityViolationException e) {
+                    log.trace("Ignoring unknown detectable {}", detection, e);
+                }
+            }
+            return null;
+        });
+    }
+
     private static ObjectMapper startAgentService(HostAndPort agentEndpoint) throws Exception {
+        Database db = new DatabaseProvider().bySchemaName(CORE_SCHEMA_NAME);
         ServiceRegistry agentRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agents"),
                 Map.of());
         Dispatcher<AgentSessionData> agentDispatcher =
                 new Dispatcher<>(agentRegistry, AgentSessionData.class, AgentSessionData::new);
+        agentDispatcher.addSessionListener(new Dispatcher.SessionListener<>() {
+            public void onSessionCreated(Session session, AgentSessionData sessionData) {
+                log.info("Agent session created for {}:{}", sessionData.getClientId(), sessionData.getSiteId());
+                List<ReaderConfig> readerConfigs = db.execute(sql -> {
+                    Map<String, List<AntennaRecord>> antennae = sql.selectFrom(ANTENNA)
+                            .where(ANTENNA.CLIENT_ID.eq(sessionData.getClientId()))
+                            .and(ANTENNA.SITE_ID.eq(sessionData.getSiteId()))
+                            .stream()
+                            .collect(groupingBy(AntennaRecord::getReaderSn));
+                    return sql.selectFrom(READER)
+                            .where(READER.CLIENT_ID.eq(sessionData.getClientId()))
+                            .and(READER.SITE_ID.eq(sessionData.getSiteId()))
+                            .stream()
+                            .map(r -> new ReaderConfig(
+                                    r.getReaderSn(),
+                                    HostAndPort.fromString(r.getEndpoint()),
+                                    antennae.get(r.getReaderSn()).stream().mapToInt(AntennaRecord::getPortNumber).toArray()))
+                            .collect(toList());
+                });
+                agentDispatcher.request(
+                        session,
+                        Protocol.MSGPACK,
+                        "core.config.set-reader-config",
+                        Map.of("readers", readerConfigs));
+            }
+
+            public void onSessionDropped(Session session) {
+                log.info("Session dropped: {}", session);
+            }
+        });
 
         //AgentHandler agentHandler = new AgentHandler(dbProvider, agentDispatcher, detectionProcessor);
         //agentDispatcher.addSessionListener(agentHandler);

@@ -14,7 +14,6 @@ import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
-import static id.unifi.service.core.db.Tables.CONTACT;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import id.unifi.service.core.db.tables.records.HolderRecord;
 import static java.util.function.Function.identity;

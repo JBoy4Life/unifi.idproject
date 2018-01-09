@@ -12,14 +12,14 @@ SET search_path = core, pg_catalog;
 
 COPY client (client_id, display_name, register_time) FROM stdin;
 deloitte	Deloitte	2017-12-21 01:07:26.142889
-ucl-mgmt	UCL School of Management	2017-12-30 14:22:26.142889
+ucl-som	UCL School of Management	2017-12-30 14:22:26.142889
 \.
 
 
 
 COPY site (client_id, site_id, description, address) FROM stdin;
 deloitte	1nss	1 New Square Street	London
-ucl-mgmt	level38	Level 38	Level 38, One Canada Square, Canary Wharf, London, E14 5AA
+ucl-som	level38	Level 38	Level 38, One Canada Square, Canary Wharf, London, E14 5AA
 \.
 
 
@@ -29,10 +29,7 @@ deloitte	1nss	37017090612	192.168.42.162:5084
 deloitte	1nss	37017090613	192.168.42.163:5084
 deloitte	1nss	37017090614	192.168.42.164:5084
 deloitte	1nss	37017090615	192.168.42.165:5084
-ucl-mgmt	level38	37016400949	192.168.1.101:5084
-ucl-mgmt	level38	37011330048	192.168.1.102:5084
-ucl-mgmt	level38	37017110229	192.168.1.103:5084
-ucl-mgmt	level38	37016440780	192.168.1.104:5084
+ucl-som	level38	37017090614	192.168.42.167:5084
 \.
 
 
@@ -44,9 +41,9 @@ deloitte	1nss	2B	Floor 2/B
 deloitte	1nss	3A	Floor 3/A	
 deloitte	1nss	3B	Floor 3/B	
 deloitte	1nss	3C	Floor 3/C	
-ucl-mgmt	level38	north-east	North East Lecture Theatre	
-ucl-mgmt	level38	seminar-suite	Seminar Suite	
-ucl-mgmt	level38	south-east	South East Lecture Theatre	
+ucl-som	level38	north-east-lt	North East Lecture Theatre	
+ucl-som	level38	seminar-room-s10	Seminar Room S10	
+ucl-som	level38	south-east-lt	South East Lecture Theatre	
 \.
 
 
@@ -67,18 +64,7 @@ deloitte	1nss	37017090615	1	3B
 deloitte	1nss	37017090615	2	2B
 deloitte	1nss	37017090615	3	3C
 deloitte	1nss	37017090615	4	3C
-ucl-mgmt	level38	37016400949	1	north-east
-ucl-mgmt	level38	37016400949	2	north-east
-ucl-mgmt	level38	37016400949	3	north-east
-ucl-mgmt	level38	37016400949	4	north-east
-ucl-mgmt	level38	37011330048	1	seminar-suite
-ucl-mgmt	level38	37011330048	2	seminar-suite
-ucl-mgmt	level38	37017110229	1	seminar-suite
-ucl-mgmt	level38	37017110229	2	seminar-suite
-ucl-mgmt	level38	37016440780	1	south-east
-ucl-mgmt	level38	37016440780	2	south-east
-ucl-mgmt	level38	37016440780	3	south-east
-ucl-mgmt	level38	37016440780	4	south-east
+ucl-som	level38	37017090614	1	north-east-lt
 \.
 
 
@@ -97,6 +83,7 @@ deloitte	0010	card	t	2017-12-21 01:55:40.576122
 deloitte	0011	card	t	2017-12-21 01:55:40.576122
 deloitte	0012	card	t	2017-12-21 01:55:40.576122
 deloitte	0013	card	t	2017-12-21 01:55:40.576122
+ucl-som	1111	card	t	2018-01-05 02:06:37.573028
 \.
 
 
@@ -115,13 +102,13 @@ deloitte	10010	contact	Cheryl Hubbard	t
 deloitte	10011	contact	Diane McKenzie	t
 deloitte	10012	contact	Kenneth Lin	t
 deloitte	10013	contact	George Stewart	t
-ucl-mgmt	WDAL17	contact	Waylon Dalton	t
-ucl-mgmt	TCOB17	contact	Thalia Cobb	t
-ucl-mgmt	JHEN17	contact	Justine Henderson	t
-ucl-mgmt	AWAL17	contact	Angela Walker	t
-ucl-mgmt	HHAR17	contact	Hadassah Hartman	t
-ucl-mgmt	LSHE17	contact	Lia Shelton	t
-ucl-mgmt	ERAN17	contact	Eddie Randolph	t
+ucl-som	WDAL17	contact	Waylon Dalton	t
+ucl-som	TCOB17	contact	Thalia Cobb	t
+ucl-som	JHEN17	contact	Justine Henderson	t
+ucl-som	AWAL17	contact	Angela Walker	t
+ucl-som	HHAR17	contact	Hadassah Hartman	t
+ucl-som	LSHE17	contact	Lia Shelton	t
+ucl-som	ERAN17	contact	Eddie Randolph	t
 \.
 
 
@@ -140,6 +127,7 @@ deloitte	0010	card	10010	2017-12-21 02:06:37.573028
 deloitte	0011	card	10011	2017-12-21 02:06:37.573028
 deloitte	0012	card	10012	2017-12-21 02:06:37.573028
 deloitte	0013	card	10013	2017-12-21 02:06:37.573028
+ucl-som	1111	card	ERAN17	2018-01-05 02:06:37.573028
 \.
 
 
@@ -158,13 +146,13 @@ deloitte	10010	contact
 deloitte	10011	contact
 deloitte	10012	contact
 deloitte	10013	contact
-ucl-mgmt	WDAL17	contact
-ucl-mgmt	TCOB17	contact
-ucl-mgmt	JHEN17	contact
-ucl-mgmt	AWAL17	contact
-ucl-mgmt	HHAR17	contact
-ucl-mgmt	LSHE17	contact
-ucl-mgmt	ERAN17	contact
+ucl-som	WDAL17	contact
+ucl-som	TCOB17	contact
+ucl-som	JHEN17	contact
+ucl-som	AWAL17	contact
+ucl-som	HHAR17	contact
+ucl-som	LSHE17	contact
+ucl-som	ERAN17	contact
 \.
 
 
@@ -183,12 +171,13 @@ deloitte	0011	card	0011	uhf-epc
 deloitte	0012	card	0012	uhf-epc
 deloitte	0013	card	0013	uhf-epc
 deloitte	6895	card	6895	uhf-epc
+ucl-som	1111	card	111100000000000000000000	uhf-epc
 \.
 
 
 COPY operator (client_id, username, email, active, since) FROM stdin;
 deloitte	test	test@example.com	t	2017-12-27 13:49:25.159918
-ucl-mgmt	test	test@example.com	t	2017-12-31 13:49:25.159918
+ucl-som	test	test@example.com	t	2017-12-31 13:49:25.159918
 \.
 
 
@@ -198,7 +187,7 @@ COPY operator_login_attempt (client_id, username, successful, attempt_time) FROM
 
 COPY operator_password (client_id, username, password_hash, algorithm, since) FROM stdin;
 deloitte	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt	2017-12-27 13:50:16.505975
-ucl-mgmt	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt	2017-12-30 13:50:16.505975
+ucl-som	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt	2017-12-30 13:50:16.505975
 \.
 
 
