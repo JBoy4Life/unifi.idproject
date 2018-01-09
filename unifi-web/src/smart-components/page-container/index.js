@@ -31,7 +31,7 @@ const renderHeader = props => (
 const PageContainer = (props) => {
   const { className = '', children } = props
   return (
-    <Layout className={`${className} page-contianer`}>
+    <Layout className={`${className} page-container`}>
       {props.noHeader ? '' : renderHeader(props)}
       <Content className="main-content-container">
         {children}
