@@ -24,10 +24,6 @@ export const configureStore = (wsClient) => {
     socketApiMiddleware(wsClient),
   ];
 
-  const currentUser = localStorage.getItem('unifi-current-user') ?
-    JSON.parse(localStorage.getItem('unifi-current-user')) :
-    {};
-
   // Add the reducer to your store on the `router` key
   // Also apply our middleware for navigating
   const store = createStore(
@@ -38,12 +34,6 @@ export const configureStore = (wsClient) => {
   );
 
   const persistor = persistStore(store);
-
-  // Reauthenticate if we have a session.
-  if (currentUser.payload && currentUser.payload.token) {
-    const action = userActions.reauthenticateRequest(currentUser.payload.token);
-    store.dispatch(action);
-  }
 
   store.subscribe(() => {
     // Ensure that user sessions go to local storage.

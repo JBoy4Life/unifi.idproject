@@ -5,7 +5,7 @@ import createHistory from 'history/createBrowserHistory'
 import { Router, Route, Switch, /* Redirect */
   Redirect } from 'react-router'
 
-import { WSProtocol } from '../lib/ws'
+import {WSPackage, WSProtocol} from '../lib/ws'
 
 import { configureStore } from './store'
 import * as ROUTES from '../utils/routes'
@@ -17,6 +17,7 @@ import {
 } from '../pages'
 
 import { selectors as userSelectors } from '../reducers/user'
+import * as userActions from "../reducers/user/actions";
 
 // // README. Avoid using actions like this. Normally, acitons
 // // should be called by invoking the aciton cretors (see acitons.js files)
@@ -27,21 +28,21 @@ import { selectors as userSelectors } from '../reducers/user'
 export default class Main extends Component {
   state = {
     loading: true,
-  }
+  };
 
   componentDidMount() {
-    const wsProtocol = new WSProtocol({ url: `ws:/${process.env.SOCKET_URI}/service/json` })
+    const wsProtocol = new WSProtocol({ url: `ws:/${process.env.SOCKET_URI}/service/json` });
     wsProtocol
       .connect()
       .then(() => wsProtocol.start())
       .then(() => {
-        const { store, persistor } = configureStore(wsProtocol)
+        const { store, persistor } = configureStore(wsProtocol);
 
         store.subscribe(() => {
           this.setState({
             ...userSelectors.getReducer(store.getState()),
           })
-        })
+        });
 
         this.setState({
           store,
@@ -50,13 +51,24 @@ export default class Main extends Component {
           history: createHistory(),
         })
       })
+      .then(() => {
+        // Reauthenticate if we have a session.
+        const currentUser = localStorage.getItem('unifi-current-user') ?
+          JSON.parse(localStorage.getItem('unifi-current-user')) :
+          {};
+
+        if (currentUser.payload && currentUser.payload.token) {
+          const action = userActions.reauthenticateRequest(currentUser.payload.token);
+          return wsProtocol.request(action.socketRequest, { json: true });
+        }
+      })
       .catch((err) => {
         console.error(err)
       })
   }
 
   renderContent() {
-    const { currentUser, initialising } = this.state
+    const { currentUser, initialising } = this.state;
 
     if (initialising) {
       return 'Loading'
