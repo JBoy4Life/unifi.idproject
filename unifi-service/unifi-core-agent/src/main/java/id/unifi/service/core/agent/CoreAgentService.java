@@ -10,6 +10,7 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
+import static id.unifi.service.common.db.DatabaseProvider.CORE_AGENT_SCHEMA_NAME;
 import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetection;
@@ -46,7 +47,7 @@ public class CoreAgentService {
         @Default("level38")
         String siteId();
 
-        @Default("ws://127.0.0.1:8001/agents/msgpack")
+        @Default("ws://ucl-som.app.unifi.id:8001/agents/msgpack")
         URI serviceUri();
     }
 
