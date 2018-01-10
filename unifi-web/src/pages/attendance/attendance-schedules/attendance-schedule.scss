@@ -227,6 +227,7 @@ div.tabs {
       .buttons {
         display: inline-block;
         float: right;
+        visibility: hidden;
       }
       button {
         width: 24px;
@@ -274,6 +275,7 @@ div.tabs {
     .buttons {
       display: inline-block;
       float: right;
+      visibility: hidden;
     }
     button {
       width: 24px;
