@@ -22,10 +22,10 @@ ucl-som	level38	Level 38	Level 38, One Canada Square, Canary Wharf, London, E14 
 
 
 COPY reader (client_id, site_id, reader_sn, endpoint) FROM stdin;
-ucl-som	level38	37016400949	192.168.1.101:5084
-ucl-som	level38	37011330048	192.168.1.102:5084
-ucl-som	level38	37017110229	192.168.1.103:5084
-ucl-som	level38	37016440780	192.168.1.104:5084
+ucl-som	level38	37016400949	128.16.22.241:5084
+ucl-som	level38	37011330048	128.16.22.239:5084
+ucl-som	level38	37017110229	128.16.22.21:5084
+ucl-som	level38	37016440780	128.16.22.19:5084
 \.
 
 
@@ -37,18 +37,22 @@ ucl-som	level38	south-east-lt	South East Lecture Theatre
 
 
 COPY antenna (client_id, site_id, reader_sn, port_number, zone_id) FROM stdin;
-ucl-som	level38	37016400949	1	north-east
-ucl-som	level38	37016400949	2	north-east
-ucl-som	level38	37016400949	3	north-east
-ucl-som	level38	37016400949	4	north-east
-ucl-som	level38	37011330048	1	seminar-suite
-ucl-som	level38	37011330048	2	seminar-suite
-ucl-som	level38	37017110229	1	seminar-suite
-ucl-som	level38	37017110229	2	seminar-suite
-ucl-som	level38	37016440780	1	south-east
-ucl-som	level38	37016440780	2	south-east
-ucl-som	level38	37016440780	3	south-east
-ucl-som	level38	37016440780	4	south-east
+ucl-som	level38	37016400949	1	north-east-lt
+ucl-som	level38	37016400949	2	north-east-lt
+ucl-som	level38	37016400949	3	north-east-lt
+ucl-som	level38	37016400949	4	north-east-lt
+ucl-som	level38	37011330048	1	seminar-room-s10
+ucl-som	level38	37011330048	2	seminar-room-s10
+ucl-som	level38	37011330048	3	seminar-room-s10
+ucl-som	level38	37011330048	4	seminar-room-s10
+ucl-som	level38	37017110229	1	seminar-room-s10
+ucl-som	level38	37017110229	2	seminar-room-s10
+ucl-som	level38	37017110229	3	seminar-room-s10
+ucl-som	level38	37017110229	4	seminar-room-s10
+ucl-som	level38	37016440780	1	south-east-lt
+ucl-som	level38	37016440780	2	south-east-lt
+ucl-som	level38	37016440780	3	south-east-lt
+ucl-som	level38	37016440780	4	south-east-lt
 \.
 
 
@@ -131,16 +135,15 @@ ucl-som	MSING043	MSING043 Fintech Entrepreneurship
 ucl-som	MSING715	MSING715 Operations and Technology Management
 ucl-som	MSING101B	MSING101B Strategic Project Management
 ucl-som	MSING062	MSING062 Financial Decision Making
-ucl-som	MSINM053.MSING053	MSINM053.MSING053 Operations Analytics
+ucl-som	MSING053	MSING053 Operations Analytics
 ucl-som	MSING071	MSING071 Big Data Analytics
-ucl-som	MSING034.MSINM034-B2.2	MSING034.MSINM034-B2.2 International Capital Markets Group B2,2
+ucl-som	MSING034-B2.2	MSING034-B2.2 International Capital Markets Group B2,2
 ucl-som	MSING025	MSING025 Corporate Strategy
 ucl-som	MSING064	MSING064 Corporate Finance
 ucl-som	MSING063	MSING063 Asset Pricing
 ucl-som	MSING035-B1	MSING035-B1 Mergers and IPOs Group B1
 ucl-som	MSING044	MSING044 Healthcare Entrepreneurship
 ucl-som	MSING057	MSING057 Technology Entrepreneurship
-ucl-som	MSING055.MSINM055	MSING055.MSINM055 Programming for Business Analytics
 ucl-som	MSING073	MSING073 Behavioural Finance
 ucl-som	MSING067	MSING067 Adv Quantitative Methods for Finance
 ucl-som	MSING045	MSING045 Retail and Consumer Entrepreneurship
@@ -148,7 +151,7 @@ ucl-som	MSING072	MSING072 Mergers, Divestments and IPO Analysis
 ucl-som	MSING024B	MSING024B Influence and Negotiations
 ucl-som	MSING066	MSING066 Financial Econometrics
 ucl-som	MSING056	MSING056 Predictive Analytics
-ucl-som	MSING034.MSINM034-B1.1	MSING034.MSINM034-B1.1 International Capital Markets Group B1,1
+ucl-som	MSING034-B1.1	MSING034-B1.1 International Capital Markets Group B1,1
 ucl-som	MSING027	MSING027 Corporate Finance
 ucl-som	MSING035-B2	MSING035-B2 Mergers and IPOs Group B2
 ucl-som	MSING020-A	MSING020-A Markets and Customers Group A
@@ -156,7 +159,6 @@ ucl-som	MSINGT99.MSINGT99	MSINGT99.MSINGT99 Dissertation
 ucl-som	MSING068	MSING068 Adv Derivatives Modelling and Portfolio Theory
 ucl-som	MSING020-B2	MSING020-B2 Markets and Customers Group B2
 ucl-som	MSING028	MSING028 Investment Management Group
-ucl-som	MSING028.MSINM028	MSING028.MSINM028 Investment Management Group
 ucl-som	MSING015	MSING015 Business Strategy 
 ucl-som	MSING020-B1	MSING020-B1 Markets and Customers Group B1
 \.
@@ -263,16 +265,16 @@ ucl-som	MSING062	9	Lecture 9
 ucl-som	MSING062	10	Lecture 10
 ucl-som	MSING042	2	Lecture 2
 ucl-som	MSING042	3	Lecture 3
-ucl-som	MSINM053.MSING053	1	Lecture 1
-ucl-som	MSINM053.MSING053	2	Lecture 2
-ucl-som	MSINM053.MSING053	3	Lecture 3
-ucl-som	MSINM053.MSING053	4	Lecture 4
-ucl-som	MSINM053.MSING053	5	Lecture 5
-ucl-som	MSINM053.MSING053	6	Lecture 6
-ucl-som	MSINM053.MSING053	7	Lecture 7
-ucl-som	MSINM053.MSING053	8	Lecture 8
-ucl-som	MSINM053.MSING053	9	Lecture 9
-ucl-som	MSINM053.MSING053	10	Lecture 10
+ucl-som	MSING053	1	Lecture 1
+ucl-som	MSING053	2	Lecture 2
+ucl-som	MSING053	3	Lecture 3
+ucl-som	MSING053	4	Lecture 4
+ucl-som	MSING053	5	Lecture 5
+ucl-som	MSING053	6	Lecture 6
+ucl-som	MSING053	7	Lecture 7
+ucl-som	MSING053	8	Lecture 8
+ucl-som	MSING053	9	Lecture 9
+ucl-som	MSING053	10	Lecture 10
 ucl-som	MSING022B	3	Lecture 3
 ucl-som	MSING031	4	Lecture 4
 ucl-som	MSING071	1	Lecture 1
@@ -280,16 +282,16 @@ ucl-som	MSING071	2	Lecture 2
 ucl-som	MSING071	3	Lecture 3
 ucl-som	MSING071	4	Lecture 4
 ucl-som	MSING071	5	Lecture 5
-ucl-som	MSING034.MSINM034-B2.2	1	Lecture 1
-ucl-som	MSING034.MSINM034-B2.2	2	Lecture 2
-ucl-som	MSING034.MSINM034-B2.2	3	Lecture 3
-ucl-som	MSING034.MSINM034-B2.2	4	Lecture 4
-ucl-som	MSING034.MSINM034-B2.2	5	Lecture 5
-ucl-som	MSING034.MSINM034-B2.2	6	Lecture 6
-ucl-som	MSING034.MSINM034-B2.2	7	Lecture 7
-ucl-som	MSING034.MSINM034-B2.2	8	Lecture 8
-ucl-som	MSING034.MSINM034-B2.2	9	Lecture 9
-ucl-som	MSING034.MSINM034-B2.2	10	Lecture 10
+ucl-som	MSING034-B2.2	1	Lecture 1
+ucl-som	MSING034-B2.2	2	Lecture 2
+ucl-som	MSING034-B2.2	3	Lecture 3
+ucl-som	MSING034-B2.2	4	Lecture 4
+ucl-som	MSING034-B2.2	5	Lecture 5
+ucl-som	MSING034-B2.2	6	Lecture 6
+ucl-som	MSING034-B2.2	7	Lecture 7
+ucl-som	MSING034-B2.2	8	Lecture 8
+ucl-som	MSING034-B2.2	9	Lecture 9
+ucl-som	MSING034-B2.2	10	Lecture 10
 ucl-som	MSING026	2	Lecture 2
 ucl-som	MSING025	1	Lecture 1
 ucl-som	MSING025	2	Lecture 2
@@ -311,7 +313,6 @@ ucl-som	MSING022B	4	Lecture 4
 ucl-som	MSING031	5	Lecture 5
 ucl-som	MSING044	1	Lecture 1
 ucl-som	MSING057	1	Lecture 1
-ucl-som	MSING055.MSINM055	1	Lecture 1
 ucl-som	MSING101B	2	Lecture 2
 ucl-som	MSING063	2	Lecture 2
 ucl-som	MSING073	1	Lecture 1
@@ -392,16 +393,16 @@ ucl-som	MSING022B	7	Lecture 7
 ucl-som	MSING031	8	Lecture 8
 ucl-som	MSINGF99	3	Lecture 3
 ucl-som	MSINGF99	4	Lecture 4
-ucl-som	MSING034.MSINM034-B1.1	1	Lecture 1
-ucl-som	MSING034.MSINM034-B1.1	2	Lecture 2
-ucl-som	MSING034.MSINM034-B1.1	3	Lecture 3
-ucl-som	MSING034.MSINM034-B1.1	4	Lecture 4
-ucl-som	MSING034.MSINM034-B1.1	5	Lecture 5
-ucl-som	MSING034.MSINM034-B1.1	6	Lecture 6
-ucl-som	MSING034.MSINM034-B1.1	7	Lecture 7
-ucl-som	MSING034.MSINM034-B1.1	8	Lecture 8
-ucl-som	MSING034.MSINM034-B1.1	9	Lecture 9
-ucl-som	MSING034.MSINM034-B1.1	10	Lecture 10
+ucl-som	MSING034-B1.1	1	Lecture 1
+ucl-som	MSING034-B1.1	2	Lecture 2
+ucl-som	MSING034-B1.1	3	Lecture 3
+ucl-som	MSING034-B1.1	4	Lecture 4
+ucl-som	MSING034-B1.1	5	Lecture 5
+ucl-som	MSING034-B1.1	6	Lecture 6
+ucl-som	MSING034-B1.1	7	Lecture 7
+ucl-som	MSING034-B1.1	8	Lecture 8
+ucl-som	MSING034-B1.1	9	Lecture 9
+ucl-som	MSING034-B1.1	10	Lecture 10
 ucl-som	MSING026	6	Lecture 6
 ucl-som	MSING027	1	Lecture 1
 ucl-som	MSING027	2	Lecture 2
@@ -498,8 +499,7 @@ ucl-som	MSING044	9	Lecture 9
 ucl-som	MSING044	10	Lecture 10
 ucl-som	MSING026	8	Lecture 8
 ucl-som	MSING028	1	Lecture 1
-ucl-som	MSING028.MSINM028	1	Lecture 1
-ucl-som	MSING028.MSINM028	2	Lecture 2
+ucl-som	MSING028	2	Lecture 2
 ucl-som	MSING015	1	Lecture 1
 ucl-som	MSING015	2	Lecture 2
 ucl-som	MSING015	3	Lecture 3
@@ -628,16 +628,16 @@ ucl-som	MSING062	9	2018-03-13T09:00:00Z	2018-03-13T12:00:00Z
 ucl-som	MSING062	10	2018-03-20T09:00:00Z	2018-03-20T12:00:00Z
 ucl-som	MSING042	2	2018-05-01T08:00:00Z	2018-05-01T11:15:00Z
 ucl-som	MSING042	3	2018-05-08T08:00:00Z	2018-05-08T11:30:00Z
-ucl-som	MSINM053.MSING053	1	2018-01-09T12:00:00Z	2018-01-09T15:00:00Z
-ucl-som	MSINM053.MSING053	2	2018-01-16T12:00:00Z	2018-01-16T15:00:00Z
-ucl-som	MSINM053.MSING053	3	2018-01-23T12:00:00Z	2018-01-23T15:00:00Z
-ucl-som	MSINM053.MSING053	4	2018-01-30T12:00:00Z	2018-01-30T15:00:00Z
-ucl-som	MSINM053.MSING053	5	2018-02-06T12:00:00Z	2018-02-06T15:00:00Z
-ucl-som	MSINM053.MSING053	6	2018-02-20T12:00:00Z	2018-02-20T15:00:00Z
-ucl-som	MSINM053.MSING053	7	2018-02-27T12:00:00Z	2018-02-27T15:00:00Z
-ucl-som	MSINM053.MSING053	8	2018-03-06T12:00:00Z	2018-03-06T15:00:00Z
-ucl-som	MSINM053.MSING053	9	2018-03-13T12:00:00Z	2018-03-13T15:00:00Z
-ucl-som	MSINM053.MSING053	10	2018-03-20T12:00:00Z	2018-03-20T15:00:00Z
+ucl-som	MSING053	1	2018-01-09T12:00:00Z	2018-01-09T15:00:00Z
+ucl-som	MSING053	2	2018-01-16T12:00:00Z	2018-01-16T15:00:00Z
+ucl-som	MSING053	3	2018-01-23T12:00:00Z	2018-01-23T15:00:00Z
+ucl-som	MSING053	4	2018-01-30T12:00:00Z	2018-01-30T15:00:00Z
+ucl-som	MSING053	5	2018-02-06T12:00:00Z	2018-02-06T15:00:00Z
+ucl-som	MSING053	6	2018-02-20T12:00:00Z	2018-02-20T15:00:00Z
+ucl-som	MSING053	7	2018-02-27T12:00:00Z	2018-02-27T15:00:00Z
+ucl-som	MSING053	8	2018-03-06T12:00:00Z	2018-03-06T15:00:00Z
+ucl-som	MSING053	9	2018-03-13T12:00:00Z	2018-03-13T15:00:00Z
+ucl-som	MSING053	10	2018-03-20T12:00:00Z	2018-03-20T15:00:00Z
 ucl-som	MSING022B	3	2018-05-01T11:30:00Z	2018-05-01T14:30:00Z
 ucl-som	MSING031	4	2018-05-01T11:30:00Z	2018-05-01T14:30:00Z
 ucl-som	MSING071	1	2018-05-08T11:30:00Z	2018-05-08T14:30:00Z
@@ -645,16 +645,16 @@ ucl-som	MSING071	2	2018-05-15T11:30:00Z	2018-05-15T14:30:00Z
 ucl-som	MSING071	3	2018-05-22T11:30:00Z	2018-05-22T14:30:00Z
 ucl-som	MSING071	4	2018-05-29T11:30:00Z	2018-05-29T14:30:00Z
 ucl-som	MSING071	5	2018-06-05T11:30:00Z	2018-06-05T14:30:00Z
-ucl-som	MSING034.MSINM034-B2.2	1	2018-01-09T13:00:00Z	2018-01-09T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	2	2018-01-16T13:00:00Z	2018-01-16T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	3	2018-01-23T13:00:00Z	2018-01-23T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	4	2018-01-30T13:00:00Z	2018-01-30T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	5	2018-02-06T13:00:00Z	2018-02-06T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	6	2018-02-20T13:00:00Z	2018-02-20T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	7	2018-02-27T13:00:00Z	2018-02-27T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	8	2018-03-06T13:00:00Z	2018-03-06T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	9	2018-03-13T13:00:00Z	2018-03-13T16:00:00Z
-ucl-som	MSING034.MSINM034-B2.2	10	2018-03-20T13:00:00Z	2018-03-20T16:00:00Z
+ucl-som	MSING034-B2.2	1	2018-01-09T13:00:00Z	2018-01-09T16:00:00Z
+ucl-som	MSING034-B2.2	2	2018-01-16T13:00:00Z	2018-01-16T16:00:00Z
+ucl-som	MSING034-B2.2	3	2018-01-23T13:00:00Z	2018-01-23T16:00:00Z
+ucl-som	MSING034-B2.2	4	2018-01-30T13:00:00Z	2018-01-30T16:00:00Z
+ucl-som	MSING034-B2.2	5	2018-02-06T13:00:00Z	2018-02-06T16:00:00Z
+ucl-som	MSING034-B2.2	6	2018-02-20T13:00:00Z	2018-02-20T16:00:00Z
+ucl-som	MSING034-B2.2	7	2018-02-27T13:00:00Z	2018-02-27T16:00:00Z
+ucl-som	MSING034-B2.2	8	2018-03-06T13:00:00Z	2018-03-06T16:00:00Z
+ucl-som	MSING034-B2.2	9	2018-03-13T13:00:00Z	2018-03-13T16:00:00Z
+ucl-som	MSING034-B2.2	10	2018-03-20T13:00:00Z	2018-03-20T16:00:00Z
 ucl-som	MSING026	2	2018-05-08T12:00:00Z	2018-05-08T15:30:00Z
 ucl-som	MSING025	1	2018-04-24T12:00:00Z	2018-04-24T18:30:00Z
 ucl-som	MSING025	2	2018-04-24T12:00:00Z	2018-04-24T18:30:00Z
@@ -676,7 +676,6 @@ ucl-som	MSING022B	4	2018-05-01T15:30:00Z	2018-05-01T18:30:00Z
 ucl-som	MSING031	5	2018-05-02T07:30:00Z	2018-05-02T10:30:00Z
 ucl-som	MSING044	1	2018-03-14T08:30:00Z	2018-03-14T11:30:00Z
 ucl-som	MSING057	1	2018-01-24T08:30:00Z	2018-01-24T11:30:00Z
-ucl-som	MSING055.MSINM055	1	2018-01-17T08:30:00Z	2018-01-17T11:30:00Z
 ucl-som	MSING101B	2	2018-05-09T07:30:00Z	2018-05-09T11:00:00Z
 ucl-som	MSING063	2	2018-04-25T07:30:00Z	2018-04-25T12:00:00Z
 ucl-som	MSING073	1	2018-01-10T09:00:00Z	2018-01-10T12:00:00Z
@@ -757,16 +756,16 @@ ucl-som	MSING022B	7	2018-05-03T11:30:00Z	2018-05-03T14:30:00Z
 ucl-som	MSING031	8	2018-05-03T11:30:00Z	2018-05-03T14:30:00Z
 ucl-som	MSINGF99	3	2018-05-10T11:30:00Z	2018-05-10T14:30:00Z
 ucl-som	MSINGF99	4	2018-05-17T11:30:00Z	2018-05-17T14:30:00Z
-ucl-som	MSING034.MSINM034-B1.1	1	2018-01-11T13:00:00Z	2018-01-11T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	2	2018-01-18T13:00:00Z	2018-01-18T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	3	2018-01-25T13:00:00Z	2018-01-25T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	4	2018-02-01T13:00:00Z	2018-02-01T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	5	2018-02-08T13:00:00Z	2018-02-08T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	6	2018-02-22T13:00:00Z	2018-02-22T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	7	2018-03-01T13:00:00Z	2018-03-01T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	8	2018-03-08T13:00:00Z	2018-03-08T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	9	2018-03-15T13:00:00Z	2018-03-15T16:00:00Z
-ucl-som	MSING034.MSINM034-B1.1	10	2018-03-22T13:00:00Z	2018-03-22T16:00:00Z
+ucl-som	MSING034-B1.1	1	2018-01-11T13:00:00Z	2018-01-11T16:00:00Z
+ucl-som	MSING034-B1.1	2	2018-01-18T13:00:00Z	2018-01-18T16:00:00Z
+ucl-som	MSING034-B1.1	3	2018-01-25T13:00:00Z	2018-01-25T16:00:00Z
+ucl-som	MSING034-B1.1	4	2018-02-01T13:00:00Z	2018-02-01T16:00:00Z
+ucl-som	MSING034-B1.1	5	2018-02-08T13:00:00Z	2018-02-08T16:00:00Z
+ucl-som	MSING034-B1.1	6	2018-02-22T13:00:00Z	2018-02-22T16:00:00Z
+ucl-som	MSING034-B1.1	7	2018-03-01T13:00:00Z	2018-03-01T16:00:00Z
+ucl-som	MSING034-B1.1	8	2018-03-08T13:00:00Z	2018-03-08T16:00:00Z
+ucl-som	MSING034-B1.1	9	2018-03-15T13:00:00Z	2018-03-15T16:00:00Z
+ucl-som	MSING034-B1.1	10	2018-03-22T13:00:00Z	2018-03-22T16:00:00Z
 ucl-som	MSING026	6	2018-05-10T12:00:00Z	2018-05-10T15:30:00Z
 ucl-som	MSING027	1	2018-04-26T12:00:00Z	2018-04-26T18:30:00Z
 ucl-som	MSING027	2	2018-04-26T12:00:00Z	2018-04-26T18:30:00Z
@@ -863,8 +862,7 @@ ucl-som	MSING044	9	2018-03-09T13:00:00Z	2018-03-09T16:00:00Z
 ucl-som	MSING044	10	2018-03-16T13:00:00Z	2018-03-16T16:00:00Z
 ucl-som	MSING026	8	2018-05-11T12:00:00Z	2018-05-11T15:30:00Z
 ucl-som	MSING028	1	2018-04-27T12:00:00Z	2018-04-27T17:00:00Z
-ucl-som	MSING028.MSINM028	1	2018-04-27T12:00:00Z	2018-04-27T17:00:00Z
-ucl-som	MSING028.MSINM028	2	2018-04-27T12:00:00Z	2018-04-27T17:00:00Z
+ucl-som	MSING028	2	2018-04-27T12:00:00Z	2018-04-27T17:00:00Z
 ucl-som	MSING015	1	2018-01-12T14:30:00Z	2018-01-12T17:30:00Z
 ucl-som	MSING015	2	2018-01-19T14:30:00Z	2018-01-19T17:30:00Z
 ucl-som	MSING015	3	2018-01-26T14:30:00Z	2018-01-26T17:30:00Z
@@ -993,16 +991,16 @@ ucl-som	MSING062	9	level38	south-east-lt
 ucl-som	MSING062	10	level38	south-east-lt
 ucl-som	MSING042	2	level38	south-east-lt
 ucl-som	MSING042	3	level38	south-east-lt
-ucl-som	MSINM053.MSING053	1	level38	north-east-lt
-ucl-som	MSINM053.MSING053	2	level38	north-east-lt
-ucl-som	MSINM053.MSING053	3	level38	north-east-lt
-ucl-som	MSINM053.MSING053	4	level38	north-east-lt
-ucl-som	MSINM053.MSING053	5	level38	north-east-lt
-ucl-som	MSINM053.MSING053	6	level38	north-east-lt
-ucl-som	MSINM053.MSING053	7	level38	north-east-lt
-ucl-som	MSINM053.MSING053	8	level38	north-east-lt
-ucl-som	MSINM053.MSING053	9	level38	north-east-lt
-ucl-som	MSINM053.MSING053	10	level38	north-east-lt
+ucl-som	MSING053	1	level38	north-east-lt
+ucl-som	MSING053	2	level38	north-east-lt
+ucl-som	MSING053	3	level38	north-east-lt
+ucl-som	MSING053	4	level38	north-east-lt
+ucl-som	MSING053	5	level38	north-east-lt
+ucl-som	MSING053	6	level38	north-east-lt
+ucl-som	MSING053	7	level38	north-east-lt
+ucl-som	MSING053	8	level38	north-east-lt
+ucl-som	MSING053	9	level38	north-east-lt
+ucl-som	MSING053	10	level38	north-east-lt
 ucl-som	MSING022B	3	level38	south-east-lt
 ucl-som	MSING031	4	level38	north-east-lt
 ucl-som	MSING071	1	level38	north-east-lt
@@ -1010,16 +1008,16 @@ ucl-som	MSING071	2	level38	north-east-lt
 ucl-som	MSING071	3	level38	north-east-lt
 ucl-som	MSING071	4	level38	north-east-lt
 ucl-som	MSING071	5	level38	north-east-lt
-ucl-som	MSING034.MSINM034-B2.2	1	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	2	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	3	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	4	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	5	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	6	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	7	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	8	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	9	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B2.2	10	level38	south-east-lt
+ucl-som	MSING034-B2.2	1	level38	south-east-lt
+ucl-som	MSING034-B2.2	2	level38	south-east-lt
+ucl-som	MSING034-B2.2	3	level38	south-east-lt
+ucl-som	MSING034-B2.2	4	level38	south-east-lt
+ucl-som	MSING034-B2.2	5	level38	south-east-lt
+ucl-som	MSING034-B2.2	6	level38	south-east-lt
+ucl-som	MSING034-B2.2	7	level38	south-east-lt
+ucl-som	MSING034-B2.2	8	level38	south-east-lt
+ucl-som	MSING034-B2.2	9	level38	south-east-lt
+ucl-som	MSING034-B2.2	10	level38	south-east-lt
 ucl-som	MSING026	2	level38	south-east-lt
 ucl-som	MSING025	1	level38	north-east-lt
 ucl-som	MSING025	2	level38	seminar-room-s10
@@ -1041,7 +1039,6 @@ ucl-som	MSING022B	4	level38	south-east-lt
 ucl-som	MSING031	5	level38	north-east-lt
 ucl-som	MSING044	1	level38	seminar-room-s10
 ucl-som	MSING057	1	level38	north-east-lt
-ucl-som	MSING055.MSINM055	1	level38	north-east-lt
 ucl-som	MSING101B	2	level38	north-east-lt
 ucl-som	MSING063	2	level38	north-east-lt
 ucl-som	MSING073	1	level38	south-east-lt
@@ -1122,16 +1119,16 @@ ucl-som	MSING022B	7	level38	south-east-lt
 ucl-som	MSING031	8	level38	north-east-lt
 ucl-som	MSINGF99	3	level38	north-east-lt
 ucl-som	MSINGF99	4	level38	north-east-lt
-ucl-som	MSING034.MSINM034-B1.1	1	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	2	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	3	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	4	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	5	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	6	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	7	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	8	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	9	level38	south-east-lt
-ucl-som	MSING034.MSINM034-B1.1	10	level38	south-east-lt
+ucl-som	MSING034-B1.1	1	level38	south-east-lt
+ucl-som	MSING034-B1.1	2	level38	south-east-lt
+ucl-som	MSING034-B1.1	3	level38	south-east-lt
+ucl-som	MSING034-B1.1	4	level38	south-east-lt
+ucl-som	MSING034-B1.1	5	level38	south-east-lt
+ucl-som	MSING034-B1.1	6	level38	south-east-lt
+ucl-som	MSING034-B1.1	7	level38	south-east-lt
+ucl-som	MSING034-B1.1	8	level38	south-east-lt
+ucl-som	MSING034-B1.1	9	level38	south-east-lt
+ucl-som	MSING034-B1.1	10	level38	south-east-lt
 ucl-som	MSING026	6	level38	south-east-lt
 ucl-som	MSING027	1	level38	south-east-lt
 ucl-som	MSING027	2	level38	seminar-room-s10
@@ -1227,9 +1224,8 @@ ucl-som	MSING044	8	level38	seminar-room-s10
 ucl-som	MSING044	9	level38	seminar-room-s10
 ucl-som	MSING044	10	level38	seminar-room-s10
 ucl-som	MSING026	8	level38	south-east-lt
-ucl-som	MSING028	1	level38	south-east-lt
-ucl-som	MSING028.MSINM028	1	level38	north-east-lt
-ucl-som	MSING028.MSINM028	2	level38	seminar-room-s10
+ucl-som	MSING028	1	level38	north-east-lt
+ucl-som	MSING028	2	level38	seminar-room-s10
 ucl-som	MSING015	1	level38	north-east-lt
 ucl-som	MSING015	2	level38	north-east-lt
 ucl-som	MSING015	3	level38	north-east-lt
