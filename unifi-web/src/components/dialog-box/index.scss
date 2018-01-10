@@ -1,0 +1,23 @@
+.unifi-dialog-box {
+
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 9999999;
+
+  &.visible {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+
+  .lightbox {
+    background-color: white;
+    margin: 300px auto;
+    padding: 20px;
+    max-width: 600px;
+  }
+
+}

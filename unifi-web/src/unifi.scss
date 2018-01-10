@@ -1,6 +1,6 @@
 $unifi-primary-color: #1dc992;
 $unifi-primary-hover-color: #1ba278;
-$unifi-secondary-color: #e0;
+$unifi-secondary-color: #e0e0e0;
 $unifi-secondary-hover-color: #ccc;
 $unifi-type-color: #343e47;
 $unifi-line-color: #b1bfc4;
@@ -94,6 +94,18 @@ p.header {
 
 button {
   font-size: 18px;
+  &.unifi-button {
+    background-color: $unifi-secondary-color;
+    border-radius: 3px;
+    width: 172px;
+    height: 48px;
+    line-height: 48px;
+    border: 0;
+    &.primary {
+      background-color: $unifi-primary-color;
+      color: white;
+    }
+  }
 }
 
 input.unifi-input {

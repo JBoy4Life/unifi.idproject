@@ -12,6 +12,8 @@ import SwitchField from './switch-field'
 import SelectField from './select-field'
 import SingleFilePickerField from './single-file-select-field'
 
+import DialogBox from './dialog-box'
+
 import EvacuationProgressBar from './evacuation-progress-bar'
 
 import NetworkReaderDetailsCard from './network-reader-details-card'
