@@ -42,11 +42,13 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     }
     if (nextProps.contactAttendance.attendance) {
       let contact = nextProps.contactAttendance.attendance.find((r) => r.clientReference === this.props.match.params.clientReference);
-      this.setState({
-        committer: {
-          name: contact.name
-        }
-      });
+      if (contact) {
+        this.setState({
+          committer: {
+            name: contact.name
+          }
+        });
+      }
     }
   }
   componentWillMount() {
