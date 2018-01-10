@@ -6,11 +6,11 @@
   left: 0;
   height: 100%;
   width: 100%;
-  z-index: 9999999;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.8);
 
   &.visible {
     display: block;
-    background-color: rgba(0, 0, 0, 0.8);
   }
 
   .lightbox {
