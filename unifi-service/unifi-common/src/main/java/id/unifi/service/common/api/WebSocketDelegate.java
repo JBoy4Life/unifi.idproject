@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
@@ -85,12 +85,12 @@ public class WebSocketDelegate {
     }
 
     @OnWebSocketMessage
-    public void onTextMessage(Session session, Reader reader) {
+    public void onTextMessage(Session session, String message) {
         log.trace("Received text message in {}", session);
         if (protocol.isBinary()) {
             session.close(StatusCode.BAD_DATA, "Text message not supported by binary protocol " + protocol);
         } else {
-            dispatchMessage(session, new MessageStream(reader));
+            dispatchMessage(session, new MessageStream(new StringReader(message)));
         }
     }
 
