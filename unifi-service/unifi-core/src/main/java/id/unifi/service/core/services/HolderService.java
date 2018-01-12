@@ -5,9 +5,9 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import id.unifi.service.core.db.tables.records.HolderRecord;
 
@@ -19,7 +19,7 @@ public class HolderService {
     private final Database db;
 
     public HolderService(DatabaseProvider dbProvider) {
-        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
+        this.db = dbProvider.bySchema(CORE);
     }
 
     @ApiOperation

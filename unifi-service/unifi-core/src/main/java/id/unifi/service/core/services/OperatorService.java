@@ -11,13 +11,13 @@ import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.ExpiringToken;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.operator.OperatorSessionData;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
@@ -62,7 +62,7 @@ public class OperatorService {
                            EmailSenderProvider emailSender,
                            SessionTokenStore sessionTokenStore) {
         this.config = config;
-        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
+        this.db = dbProvider.bySchema(CORE);
         this.passwordReset = passwordReset;
         this.passwordHashing = new SecretHashing(hashingConfig);
         this.emailRenderer = emailRenderer;

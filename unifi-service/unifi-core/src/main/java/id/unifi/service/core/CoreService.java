@@ -20,7 +20,6 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.detection.RawSiteDetectionReports;
@@ -32,6 +31,7 @@ import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import id.unifi.service.common.version.VersionInfo;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.READER;
@@ -46,7 +46,6 @@ import org.jooq.BatchBindStep;
 import org.jooq.Field;
 import org.jooq.InsertReturningStep;
 import org.jooq.Record1;
-import org.jooq.Row1;
 import org.jooq.Row2;
 import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.field;
@@ -117,7 +116,7 @@ public class CoreService {
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
         ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
         Channel channel = startRawDetectionConsumer(mapper, config.mq());
-        processQueue(channel, dbProvider.bySchemaName(CORE_SCHEMA_NAME));
+        processQueue(channel, dbProvider.bySchema(CORE));
     }
 
     private static void processQueue(Channel channel, Database db) {
@@ -239,7 +238,7 @@ public class CoreService {
 
     private static ObjectMapper startAgentService(ComponentHolder componentHolder,
                                                   HostAndPort agentEndpoint) throws Exception {
-        Database db = componentHolder.get(DatabaseProvider.class).bySchemaName(CORE_SCHEMA_NAME);
+        Database db = componentHolder.get(DatabaseProvider.class).bySchema(CORE);
         ServiceRegistry agentRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agents"), componentHolder);
         Dispatcher<AgentSessionData> agentDispatcher =

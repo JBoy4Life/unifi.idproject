@@ -2,8 +2,8 @@ package id.unifi.service.core.agent;
 
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_AGENT_SCHEMA_NAME;
 import id.unifi.service.common.detection.ReaderConfig;
+import static id.unifi.service.core.agent.db.CoreAgent.CORE_AGENT;
 import id.unifi.service.core.agent.db.Tables;
 import id.unifi.service.core.agent.db.tables.records.AntennaRecord;
 import id.unifi.service.core.agent.db.tables.records.ReaderRecord;
@@ -22,7 +22,7 @@ public class ReaderManager {
     private final RfidProvider rfidProvider;
 
     public ReaderManager(DatabaseProvider dbProvider, RfidProvider rfidProvider) {
-        this.db = dbProvider.bySchemaName(CORE_AGENT_SCHEMA_NAME);
+        this.db = dbProvider.bySchema(CORE_AGENT);
         this.rfidProvider = rfidProvider;
     }
 

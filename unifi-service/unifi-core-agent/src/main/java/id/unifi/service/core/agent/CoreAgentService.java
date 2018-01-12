@@ -10,11 +10,10 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_AGENT_SCHEMA_NAME;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetection;
 import id.unifi.service.common.detection.RawDetectionReport;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
@@ -63,7 +62,7 @@ public class CoreAgentService {
 
     private static void mockDetections(DatabaseProvider dbProvider,
                                        RawDetectionProcessor detectionProcessor) throws Exception {
-        Database serviceDb = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
+        Database serviceDb = dbProvider.bySchema(CORE);
         AntennaRecord[] antennae;
         DetectableRecord[] foundDetectables;
         do {

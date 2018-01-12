@@ -6,8 +6,8 @@ import com.google.common.cache.LoadingCache;
 import id.unifi.service.common.api.MessageListener;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.detection.RawDetectionReport;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_CARRIER;
 import static id.unifi.service.core.db.Keys.DETECTABLE__FK_DETECTABLE_TO_CARRIER;
 import static id.unifi.service.core.db.Tables.ANTENNA;
@@ -39,7 +39,7 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
     private final LoadingCache<String, Set<ListenerWithSession>> detectionListeners;
 
     public DefaultDetectionProcessor(DatabaseProvider dbProvider) {
-        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
+        this.db = dbProvider.bySchema(CORE);
         this.detectionListeners = CacheBuilder.newBuilder()
                 .weakValues()
                 .build(CacheLoader.from((String k) -> newSetFromMap(new WeakHashMap<ListenerWithSession, Boolean>())));

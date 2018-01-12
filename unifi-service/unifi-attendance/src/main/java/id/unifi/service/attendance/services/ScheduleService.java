@@ -1,6 +1,8 @@
 package id.unifi.service.attendance.services;
 
 import id.unifi.service.attendance.OverriddenStatus;
+import id.unifi.service.attendance.db.Attendance;
+import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.attendance.db.Keys;
 import id.unifi.service.attendance.db.Tables;
 import static id.unifi.service.attendance.db.Tables.*;
@@ -9,11 +11,11 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import id.unifi.service.core.db.tables.records.HolderRecord;
 import static java.util.function.Function.identity;
@@ -56,7 +58,7 @@ public class ScheduleService {
     private final Database db;
 
     public ScheduleService(DatabaseProvider dbProvider) {
-        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
+        this.db = dbProvider.bySchema(CORE, ATTENDANCE);
     }
 
     @ApiOperation

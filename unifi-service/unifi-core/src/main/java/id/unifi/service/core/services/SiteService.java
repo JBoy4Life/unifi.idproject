@@ -6,11 +6,11 @@ import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import static id.unifi.service.common.db.DatabaseProvider.CORE_SCHEMA_NAME;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
 import id.unifi.service.core.DetectionProcessor;
 import id.unifi.service.common.operator.OperatorSessionData;
+import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.site.ResolvedDetection;
 import org.eclipse.jetty.websocket.api.Session;
@@ -24,7 +24,7 @@ public class SiteService {
     private final DetectionProcessor detectionProcessor;
 
     public SiteService(DatabaseProvider dbProvider, DetectionProcessor detectionProcessor) {
-        this.db = dbProvider.bySchemaName(CORE_SCHEMA_NAME);
+        this.db = dbProvider.bySchema(CORE);
         this.detectionProcessor = detectionProcessor;
     }
 
