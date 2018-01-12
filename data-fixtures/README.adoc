@@ -1,0 +1,6 @@
+= Data fixtures
+
+- link:core.sql[core.sql]: Test fixtures for core functionality.
+- link:attendance.sql[core.sql]: Test fixtures for attendance funtionality. Import core first.
+- link:ucl.sql[core.sql]: Self-contained test fixtures for UCL.
+- ucl-production.sql: Production (or near-production) UCL lecture and student data for early 2018.
