@@ -5,8 +5,8 @@ CREATE TABLE core.holder(
   name             VARCHAR(64) NOT NULL,
   active           BOOLEAN NOT NULL,
 
-  PRIMARY KEY (client_id, client_reference, holder_type),
-  UNIQUE (client_id, client_reference),
+  PRIMARY KEY (client_id, client_reference),
+  UNIQUE (client_id, client_reference, holder_type),
   CONSTRAINT fk_holder_to_client
     FOREIGN KEY (client_id)
     REFERENCES core.client,
