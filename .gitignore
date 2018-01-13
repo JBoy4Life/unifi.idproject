@@ -6,5 +6,6 @@ dependency-reduced-pom.xml
 release.properties
 .idea/
 *.iml
+*.pem
 .vagrant
 .DS_Store

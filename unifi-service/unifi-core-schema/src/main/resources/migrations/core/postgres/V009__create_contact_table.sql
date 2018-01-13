@@ -7,6 +7,6 @@ CREATE TABLE core.contact(
   UNIQUE (client_id, client_reference, holder_type),
   CONSTRAINT fk_contact_to_holder
     FOREIGN KEY (client_id, client_reference, holder_type)
-    REFERENCES core.holder,
+    REFERENCES core.holder (client_id, client_reference, holder_type),
   CHECK (holder_type = 'contact')
 );
