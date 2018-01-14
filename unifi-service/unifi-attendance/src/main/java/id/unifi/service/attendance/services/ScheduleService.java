@@ -1,7 +1,6 @@
 package id.unifi.service.attendance.services;
 
 import id.unifi.service.attendance.OverriddenStatus;
-import id.unifi.service.attendance.db.Attendance;
 import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.attendance.db.Keys;
 import id.unifi.service.attendance.db.Tables;
@@ -13,8 +12,8 @@ import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
-import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
+import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import id.unifi.service.core.db.tables.records.HolderRecord;
@@ -39,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,8 +84,8 @@ public class ScheduleService {
                 .fetch(r -> new BlockInfo(
                         r.get(BLOCK.BLOCK_ID),
                         r.get(BLOCK.NAME),
-                        instantFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                        instantFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                        zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
+                        zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
                         r.get(BLOCK_ZONE.SITE_ID),
                         r.get(BLOCK_ZONE.ZONE_ID))));
     }
@@ -167,8 +167,8 @@ public class ScheduleService {
                             scheduleId,
                             r.get(BLOCK_ID),
                             r.get(BLOCK.NAME),
-                            instantFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                            instantFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                            zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
+                            zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
                             getAttendanceStatus(r.value5(), r.value6())))
         );
     }
@@ -217,10 +217,10 @@ public class ScheduleService {
 
     @ApiOperation
     public List<BlockAttendance> reportContactAttendance(OperatorSessionData session,
-                                                           String clientId,
-                                                           String clientReference,
-                                                           Instant startTime,
-                                                           Instant endTime) {
+                                                         String clientId,
+                                                         String clientReference,
+                                                         ZonedDateTime startTime,
+                                                         ZonedDateTime endTime) {
         authorize(session, clientId);
 
         return db.execute(sql -> sql.select(BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, FULL_ATTENDANCE_OVERRIDDEN_STATUS)
@@ -234,13 +234,13 @@ public class ScheduleService {
                         BLOCK.BLOCK_ID.eq(field(name("full_attendance", "block_id"), String.class)))
                 .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
                 .and(ASSIGNMENT.CLIENT_REFERENCE.eq(clientReference))
-                .and(between(startTime, endTime))
+                .and(between(startTime.toInstant(), endTime.toInstant()))
                 .fetch(r -> new BlockAttendance(
                         r.get(BLOCK.SCHEDULE_ID),
                         r.get(BLOCK_ID),
                         r.get(BLOCK.NAME),
-                        instantFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                        instantFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                        zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
+                        zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
                         getSimpleAttendanceStatus(r.value6(), r.value7()))));
     }
 
@@ -305,8 +305,8 @@ public class ScheduleService {
                     return new ScheduleStat(
                             scheduleId,
                             scheduleName,
-                            instantFromUtcLocal(stats.value3()),
-                            instantFromUtcLocal(stats.value4()),
+                            zonedFromUtcLocal(stats.value3()),
+                            zonedFromUtcLocal(stats.value4()),
                             r.value3(),
                             stats.value2(),
                             Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
@@ -363,16 +363,16 @@ public class ScheduleService {
     public static class ScheduleStat {
         public final String scheduleId;
         public final String name;
-        public final Instant startTime;
-        public final Instant endTime;
+        public final ZonedDateTime startTime;
+        public final ZonedDateTime endTime;
         public final int committerCount;
         public final int blockCount;
         public final int overallAttendance;
 
         public ScheduleStat(String scheduleId,
                             String name,
-                            Instant startTime,
-                            Instant endTime,
+                            ZonedDateTime startTime,
+                            ZonedDateTime endTime,
                             int committerCount,
                             int blockCount,
                             int overallAttendance) {
@@ -389,15 +389,15 @@ public class ScheduleService {
     public class BlockInfo {
         public final String blockId;
         public final String name;
-        public final Instant startTime;
-        public final Instant endTime;
+        public final ZonedDateTime startTime;
+        public final ZonedDateTime endTime;
         public final String siteId;
         public final String zoneId;
 
         public BlockInfo(String blockId,
                          String name,
-                         Instant startTime,
-                         Instant endTime,
+                         ZonedDateTime startTime,
+                         ZonedDateTime endTime,
                          String siteId,
                          String zoneId) {
             this.blockId = blockId;
@@ -435,15 +435,15 @@ public class ScheduleService {
         public final String scheduleId;
         public final String blockId;
         public final String name;
-        public final Instant startTime;
-        public final Instant endTime;
+        public final ZonedDateTime startTime;
+        public final ZonedDateTime endTime;
         public final OverriddenStatus status;
 
         public BlockAttendance(String scheduleId,
                                String blockId,
                                String name,
-                               Instant startTime,
-                               Instant endTime,
+                               ZonedDateTime startTime,
+                               ZonedDateTime endTime,
                                OverriddenStatus status) {
             this.scheduleId = scheduleId;
             this.blockId = blockId;
