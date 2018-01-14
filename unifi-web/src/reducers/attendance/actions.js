@@ -1,4 +1,5 @@
 import { WSPackage } from '../../lib/ws'
+import { clientId } from "../../index";
 
 import {
   LIST_SCHEDULE_STATS,
@@ -14,7 +15,7 @@ export function listScheduleStats() {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.list-schedule-stats',
-    payload:         { clientId: 'ucl-som' }
+    payload:         { clientId }
   });
 
   return {
@@ -30,10 +31,7 @@ export function listBlocks(scheduleId) {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.list-blocks',
-    payload:         {
-      clientId:   'ucl-som',
-      scheduleId
-    }
+    payload:         { clientId, scheduleId }
   });
 
   return {
@@ -49,10 +47,7 @@ export function getContactAttendanceForSchedule(scheduleId) {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.get-contact-attendance-for-schedule',
-    payload:         {
-      clientId:   'ucl-som',
-      scheduleId
-    }
+    payload:         { clientId, scheduleId }
   });
 
   return {
@@ -68,11 +63,7 @@ export function reportBlockAttendance(scheduleId, clientReference) {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.report-block-attendance',
-    payload:         {
-      clientId:   'ucl-som',
-      scheduleId,
-      clientReference
-    }
+    payload:         { clientId, scheduleId, clientReference }
   });
 
   return {
@@ -88,9 +79,7 @@ export function reportContactScheduleAttendance() {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType:     'attendance.schedule.report-contact-schedule-attendance',
-    payload:         {
-      clientId:   'ucl-som'
-    }
+    payload:         { clientId }
   });
 
   return {

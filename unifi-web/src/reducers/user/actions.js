@@ -5,6 +5,7 @@ import {
   USER_LOGIN,
   USER_REAUTHENTICATE
 } from './types';
+import {clientId} from "../../index";
 
 export const loginRequest = ({ username, password /* remember */ }) => {
 
@@ -12,7 +13,7 @@ export const loginRequest = ({ username, password /* remember */ }) => {
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
     messageType: 'core.operator.auth-password',
-    payload: { username, password, clientId: 'ucl-som' },
+    payload: { username, password, clientId },
   });
 
   return {
@@ -27,10 +28,7 @@ export const reauthenticateRequest = (sessionToken) => {
     protocolVersion: '1.0.0',
     releaseVersion:  '1.0.0',
     messageType: 'core.operator.auth-token',
-    payload: {
-      clientId: 'ucl-som',
-      sessionToken
-    }
+    payload: { clientId, sessionToken }
   });
 
   return {
