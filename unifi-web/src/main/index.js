@@ -5,7 +5,7 @@ import createHistory from 'history/createBrowserHistory'
 import { Router, Route, Switch, /* Redirect */
   Redirect } from 'react-router'
 
-import {WSPackage, WSProtocol} from '../lib/ws'
+import {WSProtocol} from '../lib/ws'
 
 import { configureStore } from './store'
 import * as ROUTES from '../utils/routes'
@@ -18,12 +18,6 @@ import {
 
 import { selectors as userSelectors } from '../reducers/user'
 import * as userActions from "../reducers/user/actions";
-
-// // README. Avoid using actions like this. Normally, acitons
-// // should be called by invoking the aciton cretors (see acitons.js files)
-// // In case of login tests this will work better, but in general it is not
-// // a good idea to go this way.
-// import { USER_SET } from '../reducers/user/types'
 
 export default class Main extends Component {
   state = {
@@ -47,7 +41,6 @@ export default class Main extends Component {
         this.setState({
           store,
           persistor,
-          loading: false,
           history: createHistory(),
         })
       })
@@ -61,6 +54,11 @@ export default class Main extends Component {
           const action = userActions.reauthenticateRequest(currentUser.payload.token);
           return wsProtocol.request(action.socketRequest, { json: true });
         }
+      })
+      .then(() => {
+        this.setState({
+          loading: false
+        });
       })
       .catch((err) => {
         console.error(err)
