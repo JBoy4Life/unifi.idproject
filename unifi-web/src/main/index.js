@@ -31,7 +31,7 @@ export default class Main extends Component {
   };
 
   componentDidMount() {
-    const wsProtocol = new WSProtocol({ url: `ws:/${process.env.SOCKET_URI}/service/json` });
+    const wsProtocol = new WSProtocol({ url: `ws://${process.env.SOCKET_URI}/service/json` });
     wsProtocol
       .connect()
       .then(() => wsProtocol.start())
