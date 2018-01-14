@@ -92,11 +92,16 @@ export class AttendanceScheduleDetail extends Component {
     // Use ISO week numbers — dividing by 7 won’t work
     let sw    = this.state.selectedMonth.startOf("month").isoWeek();
     let ew    = this.state.selectedMonth.endOf("month").isoWeek();
-    let rows  = (ew-sw) + 1;
+    if (ew < sw) {
+      // Spillover into new year.
+      ew = 53;
+    }
+    let rows  = (ew - sw) + 1;
     let grid  = Array.from(Array(rows * 7).keys()).fill(<td />);
 
     // Offset into the grid by start-of-month weekday number.
-    let offset = this.state.selectedMonth.startOf("month").day() - 1;
+    // Sunday is zero, which is bloody annoying, hence the weird arithmetic.
+    let offset = (this.state.selectedMonth.startOf("month").day() + 6) % 7;
 
     // Populate the grid. Yes, it’s mutation, so what?
     for (let g = offset, i = 0; i < calendar.length; i++, g++) {
