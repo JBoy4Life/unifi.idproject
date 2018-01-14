@@ -1,6 +1,5 @@
 .unifi-dialog-box {
 
-  display: none;
   position: absolute;
   top: 0;
   left: 0;
@@ -8,10 +7,6 @@
   width: 100%;
   z-index: 9999;
   background-color: rgba(0, 0, 0, 0.8);
-
-  &.visible {
-    display: block;
-  }
 
   .lightbox {
     background-color: white;

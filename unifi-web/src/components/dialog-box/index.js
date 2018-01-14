@@ -5,7 +5,7 @@ import './index.scss'
 export default class DialogBox extends Component {
   render() {
     return (
-      <div className={`unifi-dialog-box ${this.props.visible ? "visible" : ""}`}>
+      <div className="unifi-dialog-box">
         <div className="lightbox">
           {this.props.children}
         </div>

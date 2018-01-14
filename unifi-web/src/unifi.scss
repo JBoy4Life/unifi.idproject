@@ -110,10 +110,11 @@ button {
 
 input.unifi-input {
   border: 1px $unifi-line-color solid;
-  height: 6px;
-  padding: 20px;
-  line-height: 6px;
+  height: 42px;
+  padding: 0 20px;
+  line-height: 42px;
   font-size: 16px;
+  width: 492px;
 }
 
 table.unifi-table {

@@ -1,0 +1,69 @@
+$unifi-primary-color: #1dc992;
+$unifi-primary-hover-color: #1ba278;
+$unifi-secondary-color: #e0;
+$unifi-secondary-hover-color: #ccc;
+$unifi-type-color: #343e47;
+$unifi-line-color: #b1bfc4;
+$unifi-link-color: #00a7c0;
+$unifi-table-header-color: #f5f7fa;
+$unifi-warning: #eda03a;
+$unifi-error: #cc00000;
+$unifi-top-header-1: #353e48;
+$unifi-top-header-2: #404c58;
+
+.unifi-searchable-select-field {
+
+  position: relative;
+  width: 492px;
+  height: 42px;
+  line-height: 42px;
+  font-size: 16px;
+
+  input {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  p {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0 20px;
+    width: 492px;
+    height: 42px;
+    line-height: 42px;
+    cursor: pointer;
+
+    &.visible {
+      display: block;
+    }
+    &:after {
+      color: $unifi-line-color;
+      font-style: italic;
+      content: (" (click to clear)");
+    }
+  }
+  ul {
+    position: absolute;
+    top: 43px;
+    left: 0;
+    width: 100%;
+    li {
+      background-color: white;
+      border-left: 1px $unifi-line-color solid;
+      border-right: 1px $unifi-line-color solid;
+      border-bottom: 1px $unifi-line-color solid;
+      height: 48px;
+      line-height: 48px;
+      padding-left: 20px;
+      padding-right: 20px;
+      cursor: pointer;
+      &:hover {
+        background-color: $unifi-primary-color;
+        color: white;
+      }
+    }
+  }
+
+}
