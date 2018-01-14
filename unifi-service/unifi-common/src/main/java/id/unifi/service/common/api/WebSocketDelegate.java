@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -33,15 +34,19 @@ import java.util.concurrent.CountDownLatch;
 public class WebSocketDelegate {
     private static final Logger log = LoggerFactory.getLogger(WebSocketDelegate.class);
 
+    private static final long PING_INTERVAL_MILLIS = 30_000;
+
     private final Dispatcher dispatcher;
     private final Protocol protocol;
     private final CountDownLatch closeLatch;
+    private Thread pingThread;
     private volatile int closeCode;
+    private volatile long nextPingMillis;
 
     public WebSocketDelegate(Dispatcher<?> dispatcher, Protocol protocol) {
         this.dispatcher = dispatcher;
         this.protocol = protocol;
-        closeLatch = new CountDownLatch(1);
+        this.closeLatch = new CountDownLatch(1);
     }
 
     public static class Creator implements WebSocketCreator {
@@ -73,19 +78,51 @@ public class WebSocketDelegate {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         log.trace("Connected: {}", session);
+        pingThread = new Thread(() -> pingLoop(session));
+        pingThread.start();
+
         dispatcher.createSession(session);
+    }
+
+    private void pingLoop(Session session) {
+        ByteBuffer payload = ByteBuffer.allocate(0);
+        updatePingTime();
+        while (true) {
+            long nowMillis = System.currentTimeMillis();
+            if (nextPingMillis <= nowMillis) {
+                try {
+                    log.trace("Sending ping in {}", session);
+                    session.getRemote().sendPing(payload);
+                    updatePingTime();
+                } catch (IOException | WebSocketException e) {
+                    log.trace("Can't send ping in {}", session, e);
+                    return;
+                }
+            } else {
+                try {
+                    long waitMillis = nextPingMillis - nowMillis;
+                    log.trace("Waiting {} ms ", waitMillis);
+                    Thread.sleep(waitMillis);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
     }
 
     @OnWebSocketClose
     public void onClose(Session session, int code, String reason) {
         log.trace("Closed ({} {}): {}", code, reason, session);
         dispatcher.dropSession(session);
+        if (pingThread != null) pingThread.interrupt();
+
         closeCode = code;
         closeLatch.countDown();
     }
 
     @OnWebSocketMessage
     public void onTextMessage(Session session, Reader reader) {
+        updatePingTime();
         log.trace("Received text message in {}", session);
         if (protocol.isBinary()) {
             session.close(StatusCode.BAD_DATA, "Text message not supported by binary protocol " + protocol);
@@ -96,6 +133,7 @@ public class WebSocketDelegate {
 
     @OnWebSocketMessage
     public void onBinaryMessage(Session session, InputStream stream) {
+        updatePingTime();
         MessageStream messageStream = protocol.isBinary()
                 ? new MessageStream(stream)
                 : new MessageStream(new BufferedReader(new InputStreamReader(stream, UTF_8)));
@@ -132,6 +170,7 @@ public class WebSocketDelegate {
                 };
 
                 log.trace("Sending {} message to {}", protocol, session);
+                updatePingTime();
                 if (bytePayload != null) {
                     remote.sendBytes(bytePayload, writeCallback);
                 } else {
@@ -142,5 +181,9 @@ public class WebSocketDelegate {
 
         log.trace("Dispatching incoming {} message in {}", protocol, session);
         dispatcher.dispatch(session, messageStream, protocol, returnChannel);
+    }
+
+    private void updatePingTime() {
+        nextPingMillis = System.currentTimeMillis() + PING_INTERVAL_MILLIS;
     }
 }
