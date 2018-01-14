@@ -33,6 +33,8 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -45,6 +47,8 @@ import java.util.stream.Stream;
 
 @ApiService("schedule")
 public class ScheduleService {
+    private static final Logger log = LoggerFactory.getLogger(ScheduleService.class);
+
     private static final Field<String> CLIENT_REFERENCE = unqualified(ATTENDANCE_.CLIENT_REFERENCE);
     private static final Field<String> SCHEDULE_ID = unqualified(ATTENDANCE_.SCHEDULE_ID);
     private static final Field<String> BLOCK_ID = unqualified(ATTENDANCE_.BLOCK_ID);
@@ -126,6 +130,21 @@ public class ScheduleService {
                             .fetch(r -> new ContactAttendance(r.value1(), names.get(r.value1()), r.value2()));
             return new ContactAttendanceInfo(blockCount, attendance);
         });
+    }
+
+    @ApiOperation
+    public void putAssignment(OperatorSessionData session,
+                              String clientId,
+                              String clientReference,
+                              String scheduleId) {
+        OperatorPK operator = authorize(session, clientId);
+
+        db.execute(sql -> sql.insertInto(ASSIGNMENT)
+                .set(ASSIGNMENT.CLIENT_ID, operator.clientId)
+                .set(ASSIGNMENT.CLIENT_REFERENCE, clientReference)
+                .set(ASSIGNMENT.SCHEDULE_ID, scheduleId)
+                .onConflictDoNothing()
+                .execute());
     }
 
     @ApiOperation
