@@ -264,7 +264,7 @@ export class AttendanceScheduleDetail extends Component {
               <thead>
                 <tr>
                   <th>Student</th>
-                  <th>UPI</th>
+                  <th>No.</th>
                   <th>Present</th>
                   <th>Absent</th>
                   <th>Attendance</th>
