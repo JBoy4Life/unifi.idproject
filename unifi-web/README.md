@@ -8,7 +8,20 @@ Requires node and npm and yarn to be installed on the local machine.
 
 ## Run steps
 
-`SOCKET_URI=<vagrant socket ip with port incluted> yarn run` - runs the app on a localhost 3000 port
+`SOCKET_URI=<vagrant_ip:port> yarn start` - runs the app on a localhost 3000 port
+
+This will open your browser and point it to `localhost:3000`. However, this will not work, because the app
+parses the hostname to determine which client it is deployed for. So you will have to add entries
+to your `/etc/hosts` file as follows:
+
+```
+127.0.0.1 ucl-som.local.unifi.id
+127.0.0.1 deloitte.local.unifi.id
+127.0.0.1 <client-id>.local.unifi.id
+```
+
+… where `<client-id>` is to be replaced with the service’s client ID. UCL SoM and Deloitte are given as
+examples above. Then use one of those hostnames in your browser session.
 
 ## Dev Workflow 
 
@@ -34,7 +47,7 @@ point and css and js files that will load from within.
 The `/build` folder needs to be servable. **We need to check if the imported css and js from the build
 directory is relative to the location of the html or not**.
 
-## Project strucutre
+## Project structure
 
 The frontend project is split into a flat structure. We try to split the concernes into simple drawers. One folder will contain data interaction components, another one simple reusable ui, another 
 more specialised, project specific content, and so on. 
