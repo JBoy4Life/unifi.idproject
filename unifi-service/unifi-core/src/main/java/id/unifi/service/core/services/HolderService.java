@@ -9,7 +9,11 @@ import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.HOLDER;
+import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import id.unifi.service.core.db.tables.records.HolderRecord;
+import org.jooq.Record1;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.value;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +42,17 @@ public class HolderService {
                 .and(HOLDER.CLIENT_REFERENCE.eq(clientReference))
                 .fetchOne(HolderService::recordToInfo));
     }
+
+    @ApiOperation
+    public List<String> listMetadataValues(OperatorSessionData session, String clientId, String key) {
+        authorize(session, clientId);
+        return db.execute(sql -> sql
+                .selectDistinct(field("{0} ->> {1}", String.class, HOLDER_METADATA.METADATA, value(key)))
+                .from(HOLDER.leftJoin(HOLDER_METADATA).onKey())
+                .where(HOLDER.CLIENT_ID.eq(clientId))
+                .fetch(Record1::value1));
+    }
+
 
     private static HolderInfo recordToInfo(HolderRecord r) {
         return new HolderInfo(r.getClientReference(), r.getName(), r.getHolderType(), r.getActive());
