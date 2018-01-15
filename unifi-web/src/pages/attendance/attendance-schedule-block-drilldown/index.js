@@ -91,7 +91,6 @@ export class AttendanceScheduleBlockDrilldown extends Component {
             let st = moment(block.startTime);
             let et = moment(block.endTime);
             let d  = st.format("DD/MM/Y");
-            console.log({st, et});
             return <tr key={block.blockId}>
               <td className="times">{d}, {st.format("HH:mm")}–{et.format("HH:mm")}</td>
               <td className="status">{block.status}</td>
