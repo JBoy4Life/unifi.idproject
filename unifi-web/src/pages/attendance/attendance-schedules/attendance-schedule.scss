@@ -219,6 +219,7 @@ div.tabs {
         border-bottom-right-radius: 4px;
       }
       button.addCommitter {
+        visibility: hidden;
         border: 0;
         color: $unifi-link-color;
         float: right;
