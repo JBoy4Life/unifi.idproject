@@ -43,8 +43,8 @@ import java.util.stream.Stream;
 public class AttendanceProcessor {
     private static final Logger log = LoggerFactory.getLogger(AttendanceProcessor.class);
 
-    private static final Duration DETECTION_BEFORE_BLOCK_START = Duration.ofMinutes(15);
-    private static final Duration DETECTION_AFTER_BLOCK_END = Duration.ofMinutes(15);
+    public static final Duration DETECTION_BEFORE_BLOCK_START = Duration.ofMinutes(15);
+    public static final Duration DETECTION_AFTER_BLOCK_END = Duration.ofMinutes(15);
     private static final Duration ASSIGNMENT_REFRESH_RATE = Duration.ofMinutes(1);
 
     private final BlockingQueue<Detection> processingQueue;
@@ -71,7 +71,7 @@ public class AttendanceProcessor {
     public AttendanceProcessor(DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE, ATTENDANCE);
         this.processingQueue = new ArrayBlockingQueue<>(100_000);
-        this.processingThread = new Thread(this::process);
+        this.processingThread = new Thread(this::process, "attendance-processor");
         processingThread.start();
     }
 

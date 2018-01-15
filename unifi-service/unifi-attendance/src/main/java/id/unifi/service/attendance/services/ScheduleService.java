@@ -3,6 +3,7 @@ package id.unifi.service.attendance.services;
 import id.unifi.service.attendance.OverriddenStatus;
 import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.attendance.db.Keys;
+import static id.unifi.service.attendance.db.Keys.BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK;
 import id.unifi.service.attendance.db.Tables;
 import static id.unifi.service.attendance.db.Tables.*;
 import id.unifi.service.common.api.annotations.ApiOperation;
@@ -15,21 +16,17 @@ import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
+import static id.unifi.service.core.db.Keys.ANTENNA__FK_ANTENNA_TO_ZONE;
+import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.HOLDER;
+import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.db.tables.records.HolderRecord;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Record;
-import org.jooq.Record2;
-import org.jooq.Record4;
-import org.jooq.Table;
-import org.jooq.TableField;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.*;
 import org.slf4j.Logger;
@@ -49,15 +46,38 @@ import java.util.stream.Stream;
 public class ScheduleService {
     private static final Logger log = LoggerFactory.getLogger(ScheduleService.class);
 
+    private static final Field<String> CLIENT_ID = unqualified(ATTENDANCE_.CLIENT_ID);
     private static final Field<String> CLIENT_REFERENCE = unqualified(ATTENDANCE_.CLIENT_REFERENCE);
     private static final Field<String> SCHEDULE_ID = unqualified(ATTENDANCE_.SCHEDULE_ID);
     private static final Field<String> BLOCK_ID = unqualified(ATTENDANCE_.BLOCK_ID);
-    private static final Field<String> CLIENT_ID = unqualified(ATTENDANCE_.CLIENT_ID);
-    private static final Table<Record> FULL_ATTENDANCE =
-            table("(select distinct on (client_id, client_reference, schedule_id, block_id) client_id, client_reference, schedule_id, block_id, attendance_override.status from attendance.attendance full join attendance.attendance_override using (client_id, client_reference, schedule_id, block_id) order by client_id, client_reference, schedule_id, block_id, attendance_override.override_time DESC)")
+    private static final Field<LocalDateTime> EPOCH = value("epoch", LocalDateTime.class);
+    private static final Table<Record4<String, String, String, LocalDateTime>> ZONE_PROCESSED_UP_TO =
+            select(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID, min(coalesce(PROCESSING_STATE.PROCESSED_UP_TO, EPOCH)).as("processed_up_to"))
+                    .from(ANTENNA.leftJoin(PROCESSING_STATE).on(ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID), ANTENNA.READER_SN.eq(PROCESSING_STATE.READER_SN), ANTENNA.PORT_NUMBER.eq(PROCESSING_STATE.PORT_NUMBER)))
+                    .join(ZONE).onKey(ANTENNA__FK_ANTENNA_TO_ZONE)
+                    .groupBy(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID)
+                    .asTable("zone_processed_up_to");
+    private static final Table<Record6<String, String, String, String, Boolean, String>> FULL_ATTENDANCE = // TODO: add 15 mins
+            select(CLIENT_ID,
+                    CLIENT_REFERENCE,
+                    SCHEDULE_ID,
+                    BLOCK_ID,
+                    field(field(name("zone_processed_up_to", "processed_up_to"), LocalDateTime.class).ge(BLOCK_TIME.END_TIME)).as("processed"),
+                    ATTENDANCE_OVERRIDE.STATUS.as("overridden_status"))
+                    .distinctOn(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
+                    .from(ATTENDANCE_)
+                    .fullJoin(ATTENDANCE_OVERRIDE)
+                    .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
+                    .join(BLOCK_ZONE).using(CLIENT_ID, SCHEDULE_ID, BLOCK_ID)
+                    .join(BLOCK_TIME).using(CLIENT_ID, SCHEDULE_ID, BLOCK_ID)
+                    .join(ZONE_PROCESSED_UP_TO).using(CLIENT_ID, BLOCK_ZONE.SITE_ID, BLOCK_ZONE.ZONE_ID)
+                    .orderBy(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID, ATTENDANCE_OVERRIDE.OVERRIDE_TIME.desc())
                     .asTable("full_attendance");
-    public static final Field<Boolean> FULL_ATTENDANCE_PRESENT = field(field(name("full_attendance", "block_id")).isNotNull());
-    public static final Field<String> FULL_ATTENDANCE_OVERRIDDEN_STATUS = field(name("full_attendance", "status"), String.class);
+
+    private static final Field<Boolean> FULL_ATTENDANCE_PRESENT = field(field(name("full_attendance", "block_id")).isNotNull());
+    private static final Field<String> OVERRIDDEN_STATUS = field(name("overridden_status"), String.class);
+    private static final Field<Boolean> PROCESSED = field(name("processed"), Boolean.class);
+    public static final Field<LocalDateTime> ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO = field(name("zone_processed_up_to", "processed_up_to"), LocalDateTime.class);
 
     private final Database db;
 
@@ -78,7 +98,7 @@ public class ScheduleService {
         authorize(session, clientId);
         return db.execute(sql -> sql.selectFrom(BLOCK
                 .leftJoin(Tables.BLOCK_TIME).onKey(Keys.BLOCK_TIME__FK_BLOCK_TIME_TO_BLOCK)
-                .leftJoin(Tables.BLOCK_ZONE).onKey(Keys.BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
+                .leftJoin(Tables.BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
                 .where(BLOCK.CLIENT_ID.eq(clientId))
                 .and(BLOCK.SCHEDULE_ID.eq(scheduleId))
                 .fetch(r -> new BlockInfo(
@@ -153,23 +173,31 @@ public class ScheduleService {
                                                        String clientReference,
                                                        String scheduleId) {
         OperatorPK operator = authorize(session, clientId);
-        return db.execute(sql -> sql.select(BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, FULL_ATTENDANCE_OVERRIDDEN_STATUS)
-                    .from(BLOCK.leftJoin(BLOCK_TIME).onKey())
-                    .join(ASSIGNMENT).on(BLOCK.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID), BLOCK.SCHEDULE_ID.eq(ASSIGNMENT.SCHEDULE_ID))
-                    .leftJoin(FULL_ATTENDANCE)
-                    .on(
-                            ASSIGNMENT.CLIENT_ID.eq(field(name("full_attendance", "client_id"), String.class)),
-                            ASSIGNMENT.CLIENT_REFERENCE.eq(field(name("full_attendance", "client_reference"), String.class)),
-                            ASSIGNMENT.SCHEDULE_ID.eq(field(name("full_attendance", "schedule_id"), String.class)),
-                            BLOCK.BLOCK_ID.eq(field(name("full_attendance", "block_id"), String.class)))
-                    .where(ASSIGNMENT.CLIENT_ID.eq(clientId), ASSIGNMENT.SCHEDULE_ID.eq(scheduleId), ASSIGNMENT.CLIENT_REFERENCE.eq(clientReference))
-                    .fetch(r -> new BlockAttendance(
-                            scheduleId,
-                            r.get(BLOCK_ID),
-                            r.get(BLOCK.NAME),
-                            zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                            zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
-                            getAttendanceStatus(r.value5(), r.value6())))
+        return db.execute(sql -> {
+            SelectConditionStep<Record7<String, String, LocalDateTime, LocalDateTime, Boolean, String, LocalDateTime>> q =
+                    sql.select(BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, OVERRIDDEN_STATUS, ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO)
+                            .from(BLOCK.join(BLOCK_TIME).onKey().join(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
+                            .join(ZONE_PROCESSED_UP_TO).on(
+                                    BLOCK_ZONE.CLIENT_ID.eq(field(name("zone_processed_up_to", "client_id"), String.class)),
+                                    BLOCK_ZONE.SITE_ID.eq(field(name("zone_processed_up_to", "site_id"), String.class)),
+                                    BLOCK_ZONE.ZONE_ID.eq(field(name("zone_processed_up_to", "zone_id"), String.class)))
+                            .join(ASSIGNMENT).on(BLOCK.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID), BLOCK.SCHEDULE_ID.eq(ASSIGNMENT.SCHEDULE_ID))
+                            .leftJoin(FULL_ATTENDANCE)
+                            .on(
+                                    ASSIGNMENT.CLIENT_ID.eq(field(name("full_attendance", "client_id"), String.class)),
+                                    ASSIGNMENT.CLIENT_REFERENCE.eq(field(name("full_attendance", "client_reference"), String.class)),
+                                    ASSIGNMENT.SCHEDULE_ID.eq(field(name("full_attendance", "schedule_id"), String.class)),
+                                    BLOCK.BLOCK_ID.eq(field(name("full_attendance", "block_id"), String.class)))
+                            .where(ASSIGNMENT.CLIENT_ID.eq(clientId), ASSIGNMENT.SCHEDULE_ID.eq(scheduleId), ASSIGNMENT.CLIENT_REFERENCE.eq(clientReference));
+                    return q
+                            .fetch(r -> new BlockAttendance(
+                                    scheduleId,
+                                    r.get(BLOCK_ID),
+                                    r.get(BLOCK.NAME),
+                                    zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
+                                    zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                                    getAttendanceStatus(r.value5(), r.value6(), r.value4(), r.value7())));
+                }
         );
     }
 
@@ -201,8 +229,8 @@ public class ScheduleService {
                             BLOCK.BLOCK_ID.eq(field(name("full_attendance", "block_id"), String.class)))
                     .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
                     .and(
-                            (FULL_ATTENDANCE_OVERRIDDEN_STATUS.isNotNull().and(FULL_ATTENDANCE_OVERRIDDEN_STATUS.isDistinctFrom(OverriddenStatus.ABSENT.toString())))
-                                    .or(condition(FULL_ATTENDANCE_PRESENT).and(FULL_ATTENDANCE_OVERRIDDEN_STATUS.isNull())))
+                            (OVERRIDDEN_STATUS.isNotNull().and(OVERRIDDEN_STATUS.isDistinctFrom(OverriddenStatus.ABSENT.toString())))
+                                    .or(condition(FULL_ATTENDANCE_PRESENT).and(OVERRIDDEN_STATUS.isNull())))
                     .groupBy(ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
                     .stream()
                     .collect(groupingBy(r -> r.get(ASSIGNMENT.CLIENT_REFERENCE),
@@ -223,7 +251,7 @@ public class ScheduleService {
                                                          ZonedDateTime endTime) {
         authorize(session, clientId);
 
-        return db.execute(sql -> sql.select(BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, FULL_ATTENDANCE_OVERRIDDEN_STATUS)
+        return db.execute(sql -> sql.select(BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, OVERRIDDEN_STATUS, ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO)
                 .from(BLOCK.leftJoin(BLOCK_TIME).onKey())
                 .join(ASSIGNMENT).on(BLOCK.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID), BLOCK.SCHEDULE_ID.eq(ASSIGNMENT.SCHEDULE_ID))
                 .leftJoin(FULL_ATTENDANCE)
@@ -241,13 +269,15 @@ public class ScheduleService {
                         r.get(BLOCK.NAME),
                         zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
                         zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
-                        getSimpleAttendanceStatus(r.value6(), r.value7()))));
+                        getSimpleAttendanceStatus(r.value6(), r.value7(), r.value5(), r.value8()))));
     }
 
-    private Condition between(@Nullable Instant startTime, @Nullable Instant endTime) {
-        Condition startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromInstant(startTime)) : null;
-        Condition endCond = endTime != null ? BLOCK_TIME.END_TIME.lessOrEqual(utcLocalFromInstant(endTime)) : null;
-        return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
+    @ApiOperation
+    String reportAttendanceByMetadata(OperatorSessionData session,
+                                      String clientId,
+                                      String key,
+                                      String value) {
+        return null;
     }
 
     @ApiOperation
@@ -269,6 +299,12 @@ public class ScheduleService {
                     .execute();
             return null;
         });
+    }
+
+    private Condition between(@Nullable Instant startTime, @Nullable Instant endTime) {
+        Condition startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromInstant(startTime)) : null;
+        Condition endCond = endTime != null ? BLOCK_TIME.END_TIME.lessOrEqual(utcLocalFromInstant(endTime)) : null;
+        return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
     }
 
     private static List<ScheduleStat> fetchScheduleStats(DSLContext sql,
@@ -309,8 +345,8 @@ public class ScheduleService {
                             zonedFromUtcLocal(stats.value4()),
                             r.value3(),
                             stats.value2(),
-                            Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0)
-                    );
+                            Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0),
+                            /*processedBlockCount*/ -1);
                 });
     }
 
@@ -327,17 +363,17 @@ public class ScheduleService {
                 .asTable("calculated_attendance");
     }
 
-    private static OverriddenStatus getAttendanceStatus(boolean detectedPresent, String overriddenStatus) {
+    private static @Nullable OverriddenStatus getAttendanceStatus(boolean detected, String overriddenStatus, LocalDateTime endTime, LocalDateTime processedUpTo) {
         return overriddenStatus != null
                 ? OverriddenStatus.fromString(overriddenStatus)
-                : (detectedPresent ? OverriddenStatus.PRESENT : OverriddenStatus.ABSENT);
+                : (detected ? OverriddenStatus.PRESENT : (processedUpTo.isAfter(endTime) ? OverriddenStatus.ABSENT : null));
     }
 
-    private static OverriddenStatus getSimpleAttendanceStatus(boolean detectedPresent, String overriddenStatus) {
+    private static @Nullable OverriddenStatus getSimpleAttendanceStatus(boolean detected, String overriddenStatus, LocalDateTime endTime, LocalDateTime processedUpTo) {
         OverriddenStatus overridden = OverriddenStatus.fromString(overriddenStatus);
         return overriddenStatus != null
                 ? (overridden == OverriddenStatus.AUTH_ABSENT ? OverriddenStatus.PRESENT : overridden)
-                : (detectedPresent ? OverriddenStatus.PRESENT : OverriddenStatus.ABSENT);
+                : (detected ? OverriddenStatus.PRESENT : (processedUpTo.isAfter(endTime) ? OverriddenStatus.ABSENT : null));
     }
 
     private static <R extends Record, T> Field<T> unqualified(TableField<R, T> field) {
@@ -368,6 +404,7 @@ public class ScheduleService {
         public final int committerCount;
         public final int blockCount;
         public final int overallAttendance;
+        public final int processedBlockCount;
 
         public ScheduleStat(String scheduleId,
                             String name,
@@ -375,13 +412,15 @@ public class ScheduleService {
                             ZonedDateTime endTime,
                             int committerCount,
                             int blockCount,
-                            int overallAttendance) {
+                            int overallAttendance,
+                            int processedBlockCount) {
             this.scheduleId = scheduleId;
             this.name = name;
             this.startTime = startTime;
             this.endTime = endTime;
             this.committerCount = committerCount;
             this.blockCount = blockCount;
+            this.processedBlockCount = processedBlockCount;
             this.overallAttendance = overallAttendance;
         }
     }
