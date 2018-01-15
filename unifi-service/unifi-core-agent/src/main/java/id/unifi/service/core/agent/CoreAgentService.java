@@ -46,7 +46,7 @@ public class CoreAgentService {
         @Default("level38")
         String siteId();
 
-        @Default("ws://ucl-som.app.unifi.id:8001/agents/msgpack")
+        @Default("ws://localhost:8001/agents/msgpack")
         URI serviceUri();
     }
 

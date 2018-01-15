@@ -11,6 +11,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
+import id.unifi.service.attendance.AttendanceProcessor;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
@@ -20,7 +21,8 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.common.detection.ClientDetectable;
+import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.detection.RawSiteDetectionReports;
 import id.unifi.service.common.detection.ReaderConfig;
@@ -57,11 +59,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -112,14 +112,14 @@ public class CoreService {
                 SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                 EmailSenderProvider.class, new LoggingEmailSender()));
 
-
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
         ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
         Channel channel = startRawDetectionConsumer(mapper, config.mq());
-        processQueue(channel, dbProvider.bySchema(CORE));
+        AttendanceProcessor attendanceProcessor = new AttendanceProcessor(dbProvider);
+        processQueue(channel, dbProvider.bySchema(CORE), attendanceProcessor);
     }
 
-    private static void processQueue(Channel channel, Database db) {
+    private static void processQueue(Channel channel, Database db, AttendanceProcessor attendanceProcessor) {
         Thread thread = new Thread(() -> {
             InsertReturningStep<UhfDetectionRecord> insertQuery = insertInto(UHF_DETECTION,
                     UHF_DETECTION.CLIENT_ID,
@@ -132,25 +132,28 @@ public class CoreService {
                     .onConflictDoNothing();
 
             while (true) {
-                if (detectionQueue.size() < 20) {
+                if (detectionQueue.size() < 200) {
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException ignored) {}
+                    } catch (InterruptedException e) {
+                        log.info("Detection processing thread interrupted, stopping");
+                        return;
+                    }
                     if (detectionQueue.isEmpty()) continue;
                 }
 
-                ArrayList<TaggedDetectionReport> allTagged = new ArrayList<>(100);
-                detectionQueue.drainTo(allTagged, 100);
+                ArrayList<TaggedDetectionReport> allTagged = new ArrayList<>(1000);
+                detectionQueue.drainTo(allTagged, 1000);
 
                 log.debug("Processing {} detection reports", allTagged.stream().mapToInt(t -> t.reports.size()).sum());
 
                 List<Detection> detections = allTagged.stream()
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
-                                new Detection(t.clientId, d.detectableId, d.detectableType, r.readerSn, d.portNumber, d.timestamp))))
+                                new Detection(new ClientDetectable(t.clientId, d.detectableId, d.detectableType), r.readerSn, d.portNumber, d.timestamp))))
                         .collect(toList());
 
                 Row2<String, String>[] detectableIdRows = detections.stream()
-                        .map(d -> new ClientDetectable(d.clientId, d.detectableId))
+                        .map(d -> d.detectable)
                         .distinct()
                         .map(cd -> DSL.row(cd.clientId, cd.detectableId))
                         .toArray((IntFunction<Row2<String, String>[]>) Row2[]::new);
@@ -160,7 +163,8 @@ public class CoreService {
                     Field<String> vClientId = field(name("v", "client_id"), String.class);
                     List<String> unknownDetectableIds = sql
                             .select(vDetectableId)
-                            .from(values(detectableIdRows).asTable("v", "client_id", "detectable_id").leftJoin(DETECTABLE).using(vClientId, vDetectableId))
+                            .from(values(detectableIdRows).asTable("v", "client_id", "detectable_id"))
+                            .leftJoin(DETECTABLE).using(vClientId, vDetectableId)
                             .where(DETECTABLE.DETECTABLE_ID.isNull())
                             .fetch(Record1::value1);
 
@@ -168,23 +172,24 @@ public class CoreService {
 
                     BatchBindStep batch = sql.batch(insertQuery);
                     detections.forEach(detection -> {
-                        if (!unknownDetectableIds.contains(detection.detectableId)) {
+                        if (!unknownDetectableIds.contains(detection.detectable.detectableId)) {
                             batch.bind(
-                                    detection.clientId,
-                                    detection.detectableId,
-                                    detection.detectableType.toString(),
+                                    detection.detectable.clientId,
+                                    detection.detectable.detectableId,
+                                    detection.detectable.detectableType.toString(),
                                     detection.readerSn,
                                     detection.portNumber,
-                                    utcLocalFromInstant(detection.timestamp));
+                                    utcLocalFromInstant(detection.detectionTime));
                         }
                     });
                     int batchSize = batch.size();
                     if (batchSize > 0) {
-                        log.debug("Inserting {} detections", batchSize);
                         batch.execute();
                     }
                     return null;
                 });
+
+                attendanceProcessor.processDetections(detections);
 
                 if (!allTagged.isEmpty()) {
                     long deliveryTag = allTagged.get(allTagged.size() - 1).deliveryTag;
@@ -317,51 +322,6 @@ public class CoreService {
             this.clientId = clientId;
             this.reports = reports;
             this.deliveryTag = deliveryTag;
-        }
-    }
-
-    private static class Detection {
-        final String clientId;
-        final String detectableId;
-        final DetectableType detectableType;
-        final String readerSn;
-        final int portNumber;
-        final Instant timestamp;
-
-        Detection(String clientId,
-                  String detectableId,
-                  DetectableType detectableType,
-                  String readerSn,
-                  int portNumber,
-                  Instant timestamp) {
-            this.clientId = clientId;
-            this.detectableId = detectableId;
-            this.detectableType = detectableType;
-            this.readerSn = readerSn;
-            this.portNumber = portNumber;
-            this.timestamp = timestamp;
-        }
-    }
-
-    private static class ClientDetectable {
-        final String clientId;
-        final String detectableId;
-
-        ClientDetectable(String clientId, String detectableId) {
-            this.clientId = clientId;
-            this.detectableId = detectableId;
-        }
-
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ClientDetectable that = (ClientDetectable) o;
-            return Objects.equals(clientId, that.clientId) &&
-                    Objects.equals(detectableId, that.detectableId);
-        }
-
-        public int hashCode() {
-            return Objects.hash(clientId, detectableId);
         }
     }
 }
