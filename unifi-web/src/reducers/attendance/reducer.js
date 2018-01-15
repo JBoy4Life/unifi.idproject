@@ -3,7 +3,8 @@ import {
   LIST_BLOCKS,
   GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
   REPORT_BLOCK_ATTENDANCE,
-  REPORT_CONTACT_SCHEDULE_ATTENDANCE
+  REPORT_CONTACT_SCHEDULE_ATTENDANCE,
+  OVERRIDE_ATTENDANCE
 } from './types'
 
 const initialState = {
@@ -14,7 +15,8 @@ const initialState = {
   },
   blockReport: [],
   contactScheduleReport: [],
-  putAssignmentResult: {}
+  putAssignmentResult: {},
+  overrideAttendanceResult: {}
 };
 
 const reducer = (state = initialState, action = {}) => {
@@ -49,6 +51,11 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         contactScheduleReport: action.payload.payload
+      };
+    case `${OVERRIDE_ATTENDANCE}_FULFILLED`:
+      return {
+        ...state,
+        overrideAttendanceResult: action.payload
       };
     default:
       return state;

@@ -279,6 +279,21 @@ div.tabs {
 }
 
 .attendanceScheduleBlockDrilldown {
+
+  .unifi-dialog-box {
+    h1 {
+      margin-bottom: 24px
+    }
+    .buttons {
+      margin-top: 24px;
+      text-align: right;
+    }
+    button {
+      display: inline-block;
+      margin-left: 16px;
+    }
+  }
+
   .views {
     margin-top: 24px;
     p {
