@@ -21,7 +21,6 @@ export default class ClientAdd extends Component {
   }
 
   handleSubmit = (data) => {
-    console.log('handle submit of client form', data)
     this.setState({
       isSubmiting: true,
     })

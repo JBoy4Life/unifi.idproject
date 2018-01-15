@@ -138,7 +138,7 @@ export class AttendanceScheduleDetail extends Component {
     this.setState({
       addCommitterDialogVisible: false
     });
-    console.log(`Would have invoked API to add ${this.state.addCommitterSelectedKey}.`);
+    // console.log(`Would have invoked API to add ${this.state.addCommitterSelectedKey}.`);
   }
   addCommitterDialogCancel() {
     this.setState({

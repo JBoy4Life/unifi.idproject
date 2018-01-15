@@ -51,7 +51,7 @@ const mockData = [
 
 class NetworkDiscovery extends Component {
   handleCardDelete = () => {
-    console.log('handleCardDelete', arguments)
+    // console.log('handleCardDelete', arguments)
   }
 
   renderNetworkReaderCard = card => (
