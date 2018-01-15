@@ -20,10 +20,11 @@ const menus = [{
   key: '/attendance/reports',
   label: 'Reports',
 },
-{
-  key: '/attendance/custom-reports',
-  label: 'Custom Reports',
-}];
+// {
+//   key: '/attendance/custom-reports',
+//   label: 'Custom Reports',
+// }
+];
 
 export default class SitemapContainer extends Component {
   render() {
