@@ -7,7 +7,14 @@ import {
 } from './types'
 
 const initialState = {
-  clients: [],
+  scheduleStats: [],
+  blocks: [],
+  contactAttendance: {
+    attendance: []
+  },
+  blockReport: [],
+  contactScheduleReport: [],
+  putAssignmentResult: {}
 };
 
 const reducer = (state = initialState, action = {}) => {
