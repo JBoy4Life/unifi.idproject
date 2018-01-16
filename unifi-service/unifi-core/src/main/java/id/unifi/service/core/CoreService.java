@@ -12,6 +12,7 @@ import com.rabbitmq.client.Envelope;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import id.unifi.service.attendance.AttendanceProcessor;
+import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
@@ -115,6 +116,7 @@ public class CoreService {
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
         ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
         Channel channel = startRawDetectionConsumer(mapper, config.mq());
+        dbProvider.bySchema(CORE, ATTENDANCE);
         AttendanceProcessor attendanceProcessor = new AttendanceProcessor(dbProvider);
         processQueue(channel, dbProvider.bySchema(CORE), attendanceProcessor);
     }
