@@ -45,14 +45,18 @@ Other useful commands on the VM:
 
 ----
 psql -d unifi
+# Once inside set default schemata using: set search_path to attendance, core, public;
 
 # Quickly recreate and migrate service database
 dropdb --if-exists unifi createdb unifi && mvn flyway:migrate -pl unifi-core-schema,unifi-attendance-schema
+
+# Start agent in mock detection mode (readers must exist in the core DB)
+mvn exec:java -pl unifi-core-agent -Dmock.detections=true
 ----
 
 === Schema generation
 
-The `unifi-core-schema` module requires a local postgres instance with a
+The `unifi-*-schema` modules requires a local postgres instance with a
 database named `unifi` in order to generate a jOOQ schema. This step can be
 skipped with `mvn -pl '!unifi-core-schema' ...` if `unifi-core-schema` is
 already installed.

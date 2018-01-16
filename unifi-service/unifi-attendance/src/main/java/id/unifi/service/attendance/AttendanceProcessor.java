@@ -12,6 +12,7 @@ import static id.unifi.service.attendance.db.Tables.BLOCK_ZONE;
 import static id.unifi.service.attendance.db.Tables.PROCESSING_STATE;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.common.detection.AntennaKey;
 import id.unifi.service.common.detection.ClientDetectable;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.Detection;

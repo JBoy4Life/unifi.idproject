@@ -1,4 +1,4 @@
-package id.unifi.service.attendance;
+package id.unifi.service.common.detection;
 
 import java.util.Objects;
 
