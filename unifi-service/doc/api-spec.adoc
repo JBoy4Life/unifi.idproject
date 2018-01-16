@@ -42,14 +42,6 @@ Response format:
 
 == Clients (currently unauthenticated)
 
-=== Register a client
-
-- Message type: core.client.register-client
-- Request params:
-* clientId: string
-- Response params:
-* expiryDate: timestamp
-
 === List clients
 
 - Message type: core.client.list-clients
@@ -61,7 +53,7 @@ Response format:
 
 == Operators
 
-=== Register operator (currently unauthenticated)
+=== Register operator
 
 Register a new operator, optionally invite by email.
 Invitation tokens and password reset tokens are identical.
@@ -173,4 +165,12 @@ Set a password using a valid password reset token.
 
 == Errors
 
-TBD
+- core.error.already-exists
+- core.error.authentication-failed
+- core.error.internal-server-error
+- core.error.invalid-parameter-format
+- core.error.missing-parameter
+- core.error.not-found
+- core.error.unauthorized
+- core.error.unknown-message-type
+- core.error.validation-failure
