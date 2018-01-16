@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { TextInput, Checkbox } from '../../../../../elements'
+import { TextInput, Checkbox } from 'elements'
 
 import './index.scss'
 

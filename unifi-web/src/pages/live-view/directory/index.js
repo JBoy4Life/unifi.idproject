@@ -10,13 +10,13 @@ import { withRouter } from 'react-router-dom'
 import {
   actions as zonesActions,
   selectors as zoneSelectors,
-} from '../../../reducers/zones'
+} from 'reducers/zones'
 
-import * as ROUTES from '../../../utils/routes'
+import * as ROUTES from 'utils/routes'
 
-import { PageContentTitle, PageContentUnderTitle } from '../../../components'
-import { Collapse } from '../../../elements'
-import { getQueryParams } from '../../../utils/helpers'
+import { PageContentTitle, PageContentUnderTitle } from 'components'
+import { Collapse } from 'elements'
+import { getQueryParams } from 'utils/helpers'
 import { groupItems, filterItems } from './utils/helpers'
 
 import FiltersHeader from './components/filters-header'

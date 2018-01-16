@@ -1,5 +1,5 @@
 import React from 'react'
-import { Radio, Icon } from '../../../../../elements'
+import { Radio, Icon } from 'elements'
 
 import './index.scss'
 

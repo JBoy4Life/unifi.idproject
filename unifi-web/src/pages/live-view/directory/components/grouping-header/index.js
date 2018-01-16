@@ -1,5 +1,5 @@
 import React from 'react'
-import { Tabs } from '../../../../../elements'
+import { Tabs } from 'elements'
 
 const { TabPane } = Tabs
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment'
-import { Table } from '../../../../../elements'
+import { Table } from 'elements'
 
 const columns = [{
   title: 'Name',
