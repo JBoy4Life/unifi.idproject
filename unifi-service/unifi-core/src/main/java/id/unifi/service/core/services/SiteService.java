@@ -4,19 +4,23 @@ import com.google.common.net.HostAndPort;
 import id.unifi.service.common.api.MessageListener;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
 import id.unifi.service.core.DetectionProcessor;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.core.db.Core.CORE;
+import static id.unifi.service.core.db.Tables.SITE;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.site.ResolvedDetection;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @ApiService("site")
 public class SiteService {
@@ -51,7 +55,16 @@ public class SiteService {
     }
 
     @ApiOperation
-    public List<ZoneInfo> listZones(String clientId, String siteId) {
+    public List<SiteInfo> listSites(OperatorSessionData session, String clientId) {
+        authorize(session, clientId);
+        return db.execute(sql -> sql.selectFrom(SITE)
+                .where(SITE.CLIENT_ID.eq(clientId))
+                .fetch(r -> new SiteInfo(r.getSiteId(), r.getDescription(), r.getAddress())));
+    }
+
+    @ApiOperation
+    public List<ZoneInfo> listZones(OperatorSessionData session, String clientId, String siteId) {
+        authorize(session, clientId);
         return db.execute(sql -> sql.selectFrom(ZONE)
                 .where(ZONE.CLIENT_ID.eq(clientId))
                 .and(ZONE.SITE_ID.eq(siteId))
@@ -66,15 +79,35 @@ public class SiteService {
         detectionProcessor.addListener(clientId, siteId, session, listener);
     }
 
+    private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
+        return Optional.ofNullable(sessionData.getOperator())
+                .filter(op -> op.clientId.equals(clientId))
+                .orElseThrow(Unauthorized::new);
+    }
+
+
+
     public static class ZoneInfo {
         public final String zoneId;
         public final String name;
         public final String description;
 
-        public ZoneInfo(String zoneId, String name, String description) {
+        ZoneInfo(String zoneId, String name, String description) {
             this.zoneId = zoneId;
             this.name = name;
             this.description = description;
+        }
+    }
+
+    public class SiteInfo {
+        public final String siteId;
+        public final String description;
+        public final String address;
+
+        SiteInfo(String siteId, String description, String address) {
+            this.siteId = siteId;
+            this.description = description;
+            this.address = address;
         }
     }
 }
