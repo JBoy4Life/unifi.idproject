@@ -52,6 +52,9 @@ dropdb --if-exists unifi createdb unifi && mvn flyway:migrate -pl unifi-core-sch
 
 # Start agent in mock detection mode (readers must exist in the core DB)
 mvn exec:java -pl unifi-core-agent -Dmock.detections=true
+
+# Use JSON API from command line
+ws ws://<vm ip>:8000/service/json # using https://github.com/hashrocket/ws
 ----
 
 === Schema generation
