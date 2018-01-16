@@ -118,10 +118,13 @@ public class CoreService {
         Channel channel = startRawDetectionConsumer(mapper, config.mq());
         dbProvider.bySchema(CORE, ATTENDANCE);
         AttendanceProcessor attendanceProcessor = new AttendanceProcessor(dbProvider);
-        processQueue(channel, dbProvider.bySchema(CORE), attendanceProcessor);
+        processQueue(channel, dbProvider.bySchema(CORE), detectionProcessor, attendanceProcessor);
     }
 
-    private static void processQueue(Channel channel, Database db, AttendanceProcessor attendanceProcessor) {
+    private static void processQueue(Channel channel,
+                                     Database db,
+                                     DetectionProcessor detectionProcessor,
+                                     AttendanceProcessor attendanceProcessor) {
         Thread thread = new Thread(() -> {
             InsertReturningStep<UhfDetectionRecord> insertQuery = insertInto(UHF_DETECTION,
                     UHF_DETECTION.CLIENT_ID,
@@ -191,6 +194,7 @@ public class CoreService {
                     return null;
                 });
 
+                detections.forEach(detectionProcessor::process);
                 attendanceProcessor.processDetections(detections);
 
                 if (!allTagged.isEmpty()) {

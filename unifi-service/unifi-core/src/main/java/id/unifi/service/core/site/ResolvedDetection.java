@@ -3,12 +3,12 @@ package id.unifi.service.core.site;
 import java.time.Instant;
 
 public class ResolvedDetection {
-    public final Instant timestamp;
+    public final Instant detectionTime;
     public final String clientReference;
     public final String zoneId;
 
-    public ResolvedDetection(Instant timestamp, String clientReference, String zoneId) {
-        this.timestamp = timestamp;
+    public ResolvedDetection(Instant detectionTime, String clientReference, String zoneId) {
+        this.detectionTime = detectionTime;
         this.clientReference = clientReference;
         this.zoneId = zoneId;
     }
