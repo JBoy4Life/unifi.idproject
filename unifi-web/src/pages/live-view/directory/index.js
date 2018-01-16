@@ -12,12 +12,18 @@ import {
   selectors as zoneSelectors,
 } from 'reducers/zones'
 
+import {
+  actions as settingsActions,
+  selectors as settingsSelectors
+} from 'reducers/settings'
+
 import * as ROUTES from 'utils/routes'
 
 import { PageContentTitle, PageContentUnderTitle } from 'components'
 import { Collapse } from 'elements'
 import { getQueryParams } from 'utils/helpers'
 import { groupItems, filterItems } from './utils/helpers'
+import { withClientId } from 'hocs'
 
 import FiltersHeader from './components/filters-header'
 import GroupingHeader from './components/grouping-header'
@@ -71,12 +77,14 @@ class DirectoryView extends Component {
   }
 
   componentDidMount() {
-    const { listZones, listHolder, listenToSubscriptions } = this.props
-    Promise.all([
-      listZones(),
-      listHolder(),
-    ])
-      .then(() => listenToSubscriptions())
+    const { listSites, listZones, listHolder, listenToSubscriptions, clientId } = this.props
+    listSites(clientId)
+      .then((result) => {
+        const { siteId } = this.props
+        listZones(clientId, siteId)
+        listHolder(clientId, siteId)
+        listenToSubscriptions(clientId, siteId)
+      })
       .catch(err => console.error(err))
   }
 
@@ -215,6 +223,7 @@ class DirectoryView extends Component {
 
 export const selector = createStructuredSelector({
   discoveredList: zoneSelectors.getDiscoveredList,
+  siteId: settingsSelectors.siteIdSelector,
   liveDiscoveryUpdate: compose(
     fp.get('liveDiscoveryUpdate'),
     zoneSelectors.getReducer
@@ -222,10 +231,12 @@ export const selector = createStructuredSelector({
 })
 
 export const actions = {
-  ...zonesActions
+  ...zonesActions,
+  listSites: settingsActions.listSites
 }
 
 export default compose(
   withRouter,
+  withClientId,
   connect(selector, actions),
 )(DirectoryView)
