@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
 import moment from 'moment'
+import fp from 'lodash/fp'
 
-import { compose, bindActionCreators } from 'redux'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
 
 import {
@@ -211,17 +213,19 @@ class DirectoryView extends Component {
   }
 }
 
-export const mapStateToProps = (state) => {
-  const discoveredList = zoneSelectors.getDiscoveredList(state)
-  return {
-    discoveredList,
-    liveDiscoveryUpdate: zoneSelectors.getReducer(state).liveDiscoveryUpdate,
-  }
-}
+export const selector = createStructuredSelector({
+  discoveredList: zoneSelectors.getDiscoveredList,
+  liveDiscoveryUpdate: compose(
+    fp.get('liveDiscoveryUpdate'),
+    zoneSelectors.getReducer
+  )
+})
 
-export const mapDispatch = dispatch => (bindActionCreators(zonesActions, dispatch))
+export const actions = {
+  ...zonesActions
+}
 
 export default compose(
   withRouter,
-  connect(mapStateToProps, mapDispatch),
+  connect(selector, actions),
 )(DirectoryView)
