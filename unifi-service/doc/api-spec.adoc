@@ -8,7 +8,7 @@ clientId and username have to match `^[a-zA-Z0-9._-]{1,64}$`.
 
 JSON representation of non-native types:
 
-- Timestamp: "yyyy-mm-ddThh:mm:ssZ"
+- Timestamp: "yyyy-mm-ddThh:mm:ssX", where X is zone offset or 'Z'
 - Byte sequence: Base-64 encoded string (MIME or URL-safe variants accepted)
 
 Request format:
