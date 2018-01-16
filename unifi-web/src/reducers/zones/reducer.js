@@ -6,10 +6,11 @@ const initialState = {
   liveDiscovery: [],
 }
 
-const referenceMap = (array, targetkey) => array.reduce((acc, item) => {
-  acc[item[targetkey]] = item
-  return acc
-}, {})
+const referenceMap = (array, targetkey) =>
+  Array.isArray(array) ? array.reduce((acc, item) => {
+    acc[item[targetkey]] = item
+    return acc
+  }, {}) : {}
 
 const reducer = (state = initialState, action = {}) => {
   switch (action.type) {
