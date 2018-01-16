@@ -1,3 +1,4 @@
+import unionBy from 'lodash/unionBy'
 import { ZONE_ENTITIES_SUBSCRIBE, ZONE_LIST_FETCH, ZONE_LIST_HOLDERS_FETCH } from './types'
 
 const initialState = {
@@ -30,10 +31,11 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         liveDiscoveryUpdate: new Date().getTime(),
-        liveDiscovery: [
-          ...state.liveDiscovery,
-          ...action.data.payload,
-        ],
+        liveDiscovery: unionBy(
+          state.liveDiscovery,
+          action.data.payload,
+          'clientReference'
+        ),
       }
     default:
       return state
