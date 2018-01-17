@@ -1,5 +1,6 @@
 package id.unifi.service.attendance.services;
 
+import id.unifi.service.attendance.AttendanceProcessor;
 import id.unifi.service.attendance.OverriddenStatus;
 import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.attendance.db.Keys;
@@ -21,6 +22,7 @@ import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.db.tables.records.HolderRecord;
+import static java.time.ZoneOffset.UTC;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -50,19 +52,28 @@ public class ScheduleService {
     private static final Field<String> CLIENT_REFERENCE = unqualified(ATTENDANCE_.CLIENT_REFERENCE);
     private static final Field<String> SCHEDULE_ID = unqualified(ATTENDANCE_.SCHEDULE_ID);
     private static final Field<String> BLOCK_ID = unqualified(ATTENDANCE_.BLOCK_ID);
-    private static final Field<LocalDateTime> EPOCH = value("epoch", LocalDateTime.class);
+    private static final Field<String> SITE_ID = unqualified(ZONE.SITE_ID);
+    private static final Field<String> ZONE_ID = unqualified(ZONE.ZONE_ID);
+    private static final Field<String> STATUS = field(name("status"), String.class);
+    private static final Field<LocalDateTime> ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO = field(name("z", "processed_up_to"), LocalDateTime.class);
+    private static final Field<LocalDateTime> EPOCH = value(LocalDateTime.ofInstant(Instant.EPOCH, UTC));
+    private static final Field<Boolean> FULL_ATTENDANCE_PRESENT = field(field(name("full_attendance", "block_id")).isNotNull());
+    private static final Field<String> OVERRIDDEN_STATUS = field(name("overridden_status"), String.class);
+    private static final Field<Boolean> DETECTED = field(name("detected"), Boolean.class);
+    private static final Field<LocalDateTime> BLOCK_DETECTION_END_TIME = field("{0} + {1} * interval '1 second'",
+            LocalDateTime.class, BLOCK_TIME.END_TIME, AttendanceProcessor.DETECTION_AFTER_BLOCK_END.toSeconds());
     private static final Table<Record4<String, String, String, LocalDateTime>> ZONE_PROCESSED_UP_TO =
             select(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID, min(coalesce(PROCESSING_STATE.PROCESSED_UP_TO, EPOCH)).as("processed_up_to"))
                     .from(ANTENNA.leftJoin(PROCESSING_STATE).on(ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID), ANTENNA.READER_SN.eq(PROCESSING_STATE.READER_SN), ANTENNA.PORT_NUMBER.eq(PROCESSING_STATE.PORT_NUMBER)))
                     .join(ZONE).onKey(ANTENNA__FK_ANTENNA_TO_ZONE)
                     .groupBy(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID)
-                    .asTable("zone_processed_up_to");
+                    .asTable("z");
     private static final Table<Record6<String, String, String, String, Boolean, String>> FULL_ATTENDANCE = // TODO: add 15 mins
             select(CLIENT_ID,
                     CLIENT_REFERENCE,
                     SCHEDULE_ID,
                     BLOCK_ID,
-                    field(field(name("zone_processed_up_to", "processed_up_to"), LocalDateTime.class).ge(BLOCK_TIME.END_TIME)).as("processed"),
+                    field(ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO.ge(BLOCK_TIME.END_TIME)).as("processed"),
                     ATTENDANCE_OVERRIDE.STATUS.as("overridden_status"))
                     .distinctOn(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
                     .from(ATTENDANCE_)
@@ -74,10 +85,6 @@ public class ScheduleService {
                     .orderBy(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID, ATTENDANCE_OVERRIDE.OVERRIDE_TIME.desc())
                     .asTable("full_attendance");
 
-    private static final Field<Boolean> FULL_ATTENDANCE_PRESENT = field(field(name("full_attendance", "block_id")).isNotNull());
-    private static final Field<String> OVERRIDDEN_STATUS = field(name("overridden_status"), String.class);
-    private static final Field<Boolean> PROCESSED = field(name("processed"), Boolean.class);
-    public static final Field<LocalDateTime> ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO = field(name("zone_processed_up_to", "processed_up_to"), LocalDateTime.class);
 
     private final Database db;
 
@@ -178,9 +185,9 @@ public class ScheduleService {
                     sql.select(BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, BLOCK_ZONE.SITE_ID, BLOCK_ZONE.ZONE_ID, FULL_ATTENDANCE_PRESENT, OVERRIDDEN_STATUS, ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO)
                             .from(BLOCK.join(BLOCK_TIME).onKey().leftJoin(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
                             .join(ZONE_PROCESSED_UP_TO).on(
-                                    BLOCK_ZONE.CLIENT_ID.eq(field(name("zone_processed_up_to", "client_id"), String.class)),
-                                    BLOCK_ZONE.SITE_ID.eq(field(name("zone_processed_up_to", "site_id"), String.class)),
-                                    BLOCK_ZONE.ZONE_ID.eq(field(name("zone_processed_up_to", "zone_id"), String.class)))
+                                    BLOCK_ZONE.CLIENT_ID.eq(field(name("z", "client_id"), String.class)),
+                                    BLOCK_ZONE.SITE_ID.eq(field(name("z", "site_id"), String.class)),
+                                    BLOCK_ZONE.ZONE_ID.eq(field(name("z", "zone_id"), String.class)))
                             .join(ASSIGNMENT).on(BLOCK.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID), BLOCK.SCHEDULE_ID.eq(ASSIGNMENT.SCHEDULE_ID))
                             .leftJoin(FULL_ATTENDANCE)
                             .on(
