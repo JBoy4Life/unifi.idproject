@@ -174,9 +174,9 @@ public class ScheduleService {
                                                        String scheduleId) {
         OperatorPK operator = authorize(session, clientId);
         return db.execute(sql -> {
-            SelectConditionStep<Record7<String, String, LocalDateTime, LocalDateTime, Boolean, String, LocalDateTime>> q =
-                    sql.select(BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, OVERRIDDEN_STATUS, ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO)
-                            .from(BLOCK.join(BLOCK_TIME).onKey().join(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
+            SelectConditionStep<Record9<String, String, LocalDateTime, LocalDateTime, String, String, Boolean, String, LocalDateTime>> q =
+                    sql.select(BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, BLOCK_ZONE.SITE_ID, BLOCK_ZONE.ZONE_ID, FULL_ATTENDANCE_PRESENT, OVERRIDDEN_STATUS, ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO)
+                            .from(BLOCK.join(BLOCK_TIME).onKey().leftJoin(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
                             .join(ZONE_PROCESSED_UP_TO).on(
                                     BLOCK_ZONE.CLIENT_ID.eq(field(name("zone_processed_up_to", "client_id"), String.class)),
                                     BLOCK_ZONE.SITE_ID.eq(field(name("zone_processed_up_to", "site_id"), String.class)),
@@ -196,7 +196,9 @@ public class ScheduleService {
                                     r.get(BLOCK.NAME),
                                     zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
                                     zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
-                                    getAttendanceStatus(r.value5(), r.value6(), r.value4(), r.value7())));
+                                    r.get(BLOCK_ZONE.SITE_ID),
+                                    r.get(BLOCK_ZONE.ZONE_ID),
+                                    getAttendanceStatus(r.value7(), r.value8(), r.value4(), r.value9())));
                 }
         );
     }
@@ -252,7 +254,7 @@ public class ScheduleService {
         authorize(session, clientId);
 
         return db.execute(sql -> sql.select(BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID, BLOCK.NAME, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, FULL_ATTENDANCE_PRESENT, OVERRIDDEN_STATUS, ZONE_PROCESSED_UP_TO_PROCESSED_UP_TO)
-                .from(BLOCK.leftJoin(BLOCK_TIME).onKey())
+                .from(BLOCK.leftJoin(BLOCK_TIME).onKey().leftJoin(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK)))
                 .join(ASSIGNMENT).on(BLOCK.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID), BLOCK.SCHEDULE_ID.eq(ASSIGNMENT.SCHEDULE_ID))
                 .leftJoin(FULL_ATTENDANCE)
                 .on(
@@ -269,7 +271,9 @@ public class ScheduleService {
                         r.get(BLOCK.NAME),
                         zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
                         zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
-                        getSimpleAttendanceStatus(r.value6(), r.value7(), r.value5(), r.value8()))));
+                        r.get(BLOCK_ZONE.SITE_ID),
+                        r.get(BLOCK_ZONE.ZONE_ID),
+                        getSimpleAttendanceStatus(r.value6(), r.value7(), r.value5(), r.value8())));
     }
 
     @ApiOperation
@@ -476,6 +480,8 @@ public class ScheduleService {
         public final String name;
         public final ZonedDateTime startTime;
         public final ZonedDateTime endTime;
+        public final String siteId;
+        public final String zoneId;
         public final OverriddenStatus status;
 
         public BlockAttendance(String scheduleId,
@@ -483,12 +489,16 @@ public class ScheduleService {
                                String name,
                                ZonedDateTime startTime,
                                ZonedDateTime endTime,
+                               String siteId,
+                               String zoneId,
                                OverriddenStatus status) {
             this.scheduleId = scheduleId;
             this.blockId = blockId;
             this.name = name;
             this.startTime = startTime;
             this.endTime = endTime;
+            this.siteId = siteId;
+            this.zoneId = zoneId;
             this.status = status;
         }
     }
