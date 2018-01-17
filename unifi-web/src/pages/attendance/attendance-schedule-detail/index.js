@@ -9,6 +9,7 @@ import * as attendanceActions from "../../../reducers/attendance/actions";
 import moment from "moment";
 import DialogBox from "../../../components/dialog-box";
 import SearchableSelectField from "../../../components/searchable-select-field";
+import ModuleCalendar from './components/module-calendar'
 
 export class AttendanceScheduleDetail extends Component {
   constructor(props) {
@@ -18,8 +19,6 @@ export class AttendanceScheduleDetail extends Component {
       mode: "schedule",
       addCommitterDialogVisible: false,
       addCommitterSelectedKey: null,
-      selectedMonth: now,
-      calendar: new Array(now.daysInMonth()).fill([]),
       schedule: {
         name: "",
         attendance: 0,
@@ -31,12 +30,14 @@ export class AttendanceScheduleDetail extends Component {
       search: ""
     };
   }
+
   componentWillMount() {
     let scheduleId = this.props.match.params.scheduleId;
     this.props.listScheduleStatsRequest(scheduleId);
     this.props.listBlocksRequest(scheduleId);
     this.props.getContactAttendanceForSchedule(scheduleId);
   }
+
   componentWillReceiveProps(nextProps) {
 
     // Schedule information.
@@ -57,126 +58,52 @@ export class AttendanceScheduleDetail extends Component {
         }
       });
     }
-
-    this.setState({
-      calendar: this.generateCalendar(nextProps)
-    });
-
   }
 
-  generateCalendar(props) {
-    // Get number of days in month.
-    let daysInMonth = this.state.selectedMonth.daysInMonth();
-
-    // Generate the calendar, indexed by date of month
-    let calendar = new Array(daysInMonth).fill([]);
-
-    // Populate the calendar.
-    props.blocks.filter((block) => {
-      // Selected month blocks only.
-      let d = moment(block.startTime);
-      return d.year() === this.state.selectedMonth.year() &&
-        d.month() === this.state.selectedMonth.month();
-    }).forEach((block) => {
-      // Insert into calendar.
-      let i = moment(block.startTime).date();
-      calendar[i - 1] = calendar[i - 1].concat(block);
-    });
-
-    return calendar;
-  }
-
-  generateWeekRows(calendar) {
-
-    // Generate a “flat grid” by figuring out how many week rows we’ll have.
-    // Use ISO week numbers — dividing by 7 won’t work
-    let sw    = this.state.selectedMonth.startOf("month").isoWeek();
-    let ew    = this.state.selectedMonth.endOf("month").isoWeek();
-    if (ew < sw) {
-      // Spillover into new year.
-      ew = 53;
-    }
-    let rows  = (ew - sw) + 1;
-    let grid  = Array.from(Array(rows * 7).keys()).fill(<td />);
-
-    // Offset into the grid by start-of-month weekday number.
-    // Sunday is zero, which is bloody annoying, hence the weird arithmetic.
-    let offset = (this.state.selectedMonth.startOf("month").day() + 6) % 7;
-
-    // Populate the grid. Yes, it’s mutation, so what?
-    for (let g = offset, i = 0; i < calendar.length; i++, g++) {
-      grid[g] = <td key={i}>
-        <p className="numeral">{i + 1}</p>
-        {calendar[i].map((block) => {
-          let st = moment(block.startTime).format("HH:mm");
-          let et = moment(block.endTime).format("HH:mm");
-          return <p key={block.blockId} className="block"><span className="time">{st}–{et}</span><br />{block.name}</p>
-        })}
-        <p className="block">&nbsp;</p>
-      </td>;
-    }
-
-    // Now chunk it up into week rows.
-    let chunked = Array.from(Array(rows).keys()).map((row) => {
-      let s = row * 7;
-      let e = s + 7;
-      return <tr key={row}>
-        {grid.slice(s, e)}
-      </tr>
-    });
-
-    // I think we’re done.
-    return chunked;
-
-  }
   addCommitterClick() {
     this.setState({
       addCommitterDialogVisible: true
     });
   }
+
   addCommitterDialogAdd() {
     this.setState({
       addCommitterDialogVisible: false
     });
     // console.log(`Would have invoked API to add ${this.state.addCommitterSelectedKey}.`);
   }
+
   addCommitterDialogCancel() {
     this.setState({
       addCommitterDialogVisible: false
     });
   }
+
   onCommitterClear() {
     this.setState({
       addCommitterSelectedKey: null
     });
   }
+
   onCommitterSelect(key) {
     this.setState({
       addCommitterSelectedKey: key
     });
   }
-  prevMonthClick() {
-    this.setState({
-      selectedMonth: this.state.selectedMonth.subtract(1, "month")
-    });
-  }
-  nextMonthClick() {
-    this.setState({
-      selectedMonth: this.state.selectedMonth.add(1, "month")
-    });
-  }
+
   switchMode(newMode) {
     this.setState({
       mode: newMode
     });
   }
+
   searchChange(event) {
     this.setState({
       search: event.target.value.toLowerCase()
     });
   }
   render() {
-    let calendar   = this.generateCalendar(this.props);
+    const { blocks } = this.props
     let scheduleId = this.props.match.params.scheduleId;
     let startDate  = moment(this.state.schedule.startDate).format("DD/MM/Y");
     let endDate    = moment(this.state.schedule.endDate).format("DD/MM/Y");
@@ -222,30 +149,7 @@ export class AttendanceScheduleDetail extends Component {
           <Link className={this.state.mode === "committers" ? "current" : ""} onClick={() => this.switchMode("committers")} to={`/attendance/schedules/${scheduleId}`}>Students</Link>
         </div>
         {this.state.mode === "schedule" ?
-          <div className="schedule">
-            <div className="controls">
-              <h2>{this.state.selectedMonth.format("MMM Y")}</h2>
-              <button className="arrow" onClick={() => this.prevMonthClick()}>&lt;</button>
-              <button className="arrow" onClick={() => this.nextMonthClick()}>&gt;</button>
-              <button className="addBlock">⊕ Add a lecture</button>
-            </div>
-            <table className="timetable">
-              <thead>
-              <tr>
-                <th>M</th>
-                <th>T</th>
-                <th>W</th>
-                <th>T</th>
-                <th>F</th>
-                <th>S</th>
-                <th>S</th>
-              </tr>
-              </thead>
-              <tbody>
-              {this.generateWeekRows(calendar)}
-              </tbody>
-            </table>
-          </div>
+          <ModuleCalendar blocks={blocks} />
           :
           <div className="committers">
             <div className="controls">
