@@ -1,40 +1,51 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import { bindActionCreators } from 'redux'
+import moment from 'moment'
 import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
+import { Link } from 'react-router-dom'
 
-import EvacuationProgressBar from "../../../components/evacuation-progress-bar";
+import EvacuationProgressBar from '../../../components/evacuation-progress-bar'
 
-import * as attendanceActions from "../../../reducers/attendance/actions";
-import moment from "moment";
-import DialogBox from "../../../components/dialog-box";
-import SearchableSelectField from "../../../components/searchable-select-field";
+import {
+  getContactAttendanceForSchedule,
+  listBlocks,
+  listScheduleStats
+} from '../../../reducers/attendance/actions'
+
+import {
+  blocksSelector,
+  contactAttendanceSelector,
+  schedulesSelector
+} from '../../../reducers/attendance/selectors'
+
+import DialogBox from '../../../components/dialog-box'
+import SearchableSelectField from '../../../components/searchable-select-field'
 import ModuleCalendar from './components/module-calendar'
 
 export class AttendanceScheduleDetail extends Component {
   constructor(props) {
-    super(props);
-    let now = moment();
+    super(props)
+
     this.state = {
-      mode: "schedule",
+      mode: 'schedule',
       addCommitterDialogVisible: false,
       addCommitterSelectedKey: null,
       schedule: {
-        name: "",
+        name: '',
         attendance: 0,
         startDate: null,
         endDate: null,
         committerCount: 0,
         blockCount: 0,
       },
-      search: ""
+      search: ''
     };
   }
 
   componentWillMount() {
-    let scheduleId = this.props.match.params.scheduleId;
-    this.props.listScheduleStatsRequest(scheduleId);
-    this.props.listBlocksRequest(scheduleId);
+    const { scheduleId } = this.props.match.params;
+    this.props.listScheduleStats(scheduleId);
+    this.props.listBlocks(scheduleId);
     this.props.getContactAttendanceForSchedule(scheduleId);
   }
 
@@ -105,12 +116,12 @@ export class AttendanceScheduleDetail extends Component {
   render() {
     const { blocks } = this.props
     let scheduleId = this.props.match.params.scheduleId;
-    let startDate  = moment(this.state.schedule.startDate).format("DD/MM/Y");
-    let endDate    = moment(this.state.schedule.endDate).format("DD/MM/Y");
+    let startDate  = moment(this.state.schedule.startDate).format('DD/MM/Y');
+    let endDate    = moment(this.state.schedule.endDate).format('DD/MM/Y');
     let committerMap = mapObject(
       this.props.contactAttendance.attendance || [],
-      "clientReference",
-      "name");
+      'clientReference',
+      'name');
     return (
       <div className="attendanceScheduleDetail">
         {this.state.addCommitterDialogVisible ?
@@ -135,13 +146,13 @@ export class AttendanceScheduleDetail extends Component {
           <p className="label">Overall Attendance to Date</p>
           <div className="stats">
             {(this.state.schedule.startDate === null) ?
-              <p className="stat"><span>Dates:</span>&nbsp;Unscheduled</p>
+              <p className="stat"><span>Dates:</span>{' '}Unscheduled</p>
               :
-              <p className="stat"><span>Dates:</span>&nbsp;{startDate} – {endDate}</p>
+              <p className="stat"><span>Dates:</span>{' '}{startDate} – {endDate}</p>
             }
             <br />
-            <p className="stat"><span>Students:</span>&nbsp;{this.state.schedule.committerCount}</p>
-            <p className="stat"><span>Lectures:</span>&nbsp;{this.state.schedule.blockCount}</p>
+            <p className="stat"><span>Students:</span>{' '}{this.state.schedule.committerCount}</p>
+            <p className="stat"><span>Lectures:</span>{' '}{this.state.schedule.blockCount}</p>
           </div>
         </div>
         <div className="tabs">
@@ -199,18 +210,16 @@ function mapObject(objectArray, keyField, dataField) {
   }, {})
 }
 
-export function mapStateToProps(state) {
-  return {
-    scheduleStats: state.attendance.scheduleStats || [],
-    blocks: state.attendance.blocks || [],
-    contactAttendance: state.attendance.contactAttendance || {}
-  };
+const selector = createStructuredSelector({
+  scheduleStats: schedulesSelector,
+  blocks: blocksSelector,
+  contactAttendance: contactAttendanceSelector
+})
+
+const actions = {
+  listScheduleStats,
+  listBlocks,
+  getContactAttendanceForSchedule
 }
 
-export const mapDispatch = dispatch => (bindActionCreators({
-  listScheduleStatsRequest: attendanceActions.listScheduleStats,
-  listBlocksRequest: attendanceActions.listBlocks,
-  getContactAttendanceForSchedule: attendanceActions.getContactAttendanceForSchedule
-}, dispatch));
-
-export default connect(mapStateToProps, mapDispatch)(AttendanceScheduleDetail);
+export default connect(selector, actions)(AttendanceScheduleDetail);
