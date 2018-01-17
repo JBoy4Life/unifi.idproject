@@ -7,12 +7,22 @@ export const blocksSelector = fp.compose(
   getReducer
 )
 
-export const schedulesSelector = fp.compose(
-  fp.get('scheduleStats'),
+export const blockReportSelector = fp.compose(
+  fp.get('blockReport'),
   getReducer
 )
 
 export const contactAttendanceSelector = fp.compose(
   fp.get('contactAttendance'),
+  getReducer
+)
+
+export const schedulesSelector = fp.compose(
+  fp.get('scheduleStats'),
+  getReducer
+)
+
+export const overrideAttendanceResultSelector = fp.compose(
+  fp.get('overrideAttendanceResult'),
   getReducer
 )

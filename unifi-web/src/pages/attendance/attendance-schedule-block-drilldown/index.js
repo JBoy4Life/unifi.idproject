@@ -1,23 +1,46 @@
 import React, { Component } from 'react'
-import {bindActionCreators} from 'redux';
-import moment from 'moment';
-import {Link} from 'react-router-dom';
-import {connect} from 'react-redux';
+import moment from 'moment'
+import fp from 'lodash/fp'
+import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
+import { Link } from 'react-router-dom'
 
-import EvacuationProgressBar from "../../../components/evacuation-progress-bar";
-import * as attendanceActions from "../../../reducers/attendance/actions";
-import DialogBox from "../../../components/dialog-box";
-import SearchableSelectField from "../../../components/searchable-select-field";
+import DialogBox from '../../../components/dialog-box'
+import EvacuationProgressBar from 'components/evacuation-progress-bar'
+import SearchableSelectField from '../../../components/searchable-select-field'
+
+import {
+  blockReportSelector,
+  contactAttendanceSelector,
+  overrideAttendanceResultSelector,
+  schedulesSelector
+} from 'reducers/attendance/selectors'
+
+import {
+  getContactAttendanceForSchedule,
+  listScheduleStats,
+  overrideAttendance,
+  reportBlockAttendance
+} from 'reducers/attendance/actions'
+
+const sortBlockReport = fp.compose(
+  fp.sortBy((item) => item.startDate),
+  fp.map((item) => ({
+    ...item,
+    startTime: moment(item.startTime),
+    endTime: moment(item.endTime)
+  }))
+)
 
 export class AttendanceScheduleBlockDrilldown extends Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       committer: {
-        name: ""
+        name: ''
       },
       schedule: {
-        name: "",
+        name: '',
         attendance: 0,
         startDate: null,
         endDate: null,
@@ -29,12 +52,13 @@ export class AttendanceScheduleBlockDrilldown extends Component {
       editAttendanceBlockId: null
     }
   }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.scheduleStats.length > 0) {
-      let scheduleId = nextProps.match.params.scheduleId;
-      let schedule = nextProps.scheduleStats.filter((schedule) => schedule.scheduleId === scheduleId)[0];
+      let scheduleId = nextProps.match.params.scheduleId
+      let schedule = nextProps.scheduleStats.filter((schedule) => schedule.scheduleId === scheduleId)[0]
       let percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
-        (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
+        (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100
 
       this.setState({
         schedule: {
@@ -45,16 +69,16 @@ export class AttendanceScheduleBlockDrilldown extends Component {
           committerCount: schedule.committerCount,
           blockCount: schedule.blockCount
         }
-      });
+      })
     }
     if (nextProps.contactAttendance.attendance) {
-      let contact = nextProps.contactAttendance.attendance.find((r) => r.clientReference === this.props.match.params.clientReference);
+      let contact = nextProps.contactAttendance.attendance.find((r) => r.clientReference === this.props.match.params.clientReference)
       if (contact) {
         this.setState({
           committer: {
             name: contact.name
           }
-        });
+        })
       }
     }
     if (nextProps.overrideAttendanceResult !== this.props.overrideAttendanceResult &&
@@ -67,25 +91,29 @@ export class AttendanceScheduleBlockDrilldown extends Component {
       this.props.getContactAttendanceForSchedule(scheduleId);
     }
   }
+
   componentWillMount() {
-    let scheduleId = this.props.match.params.scheduleId;
-    let clientReference = this.props.match.params.clientReference;
-    this.props.listScheduleStats(scheduleId);
-    this.props.reportBlockAttendance(scheduleId, clientReference);
-    this.props.getContactAttendanceForSchedule(scheduleId);
+    const scheduleId = this.props.match.params.scheduleId
+    const clientReference = this.props.match.params.clientReference
+    this.props.listScheduleStats(scheduleId)
+    this.props.reportBlockAttendance(scheduleId, clientReference)
+    this.props.getContactAttendanceForSchedule(scheduleId)
   }
-  onEditAttendance(blockId) {
+
+  handleEditAttendance = (blockId) => () => {
     this.setState({
       editAttendanceVisible: true,
       editAttendanceBlockId: blockId
     });
   }
-  onEditAttendanceCancel() {
+
+  onEditAttendanceCancel = () => {
     this.setState({
       editAttendanceVisible: false
     });
   }
-  onEditAttendanceSave() {
+
+  onEditAttendanceSave = () => {
     this.props.overrideAttendance(
       this.props.match.params.clientReference,
       this.props.match.params.scheduleId,
@@ -95,72 +123,71 @@ export class AttendanceScheduleBlockDrilldown extends Component {
       editAttendanceVisible: false
     });
   }
-  onNewAttendanceSelect(key) {
+
+  handleNewAttendanceSelect = (key) => {
     this.setState({
       editAttendanceSelectedStatus: key
     });
   }
-  onNewAttendanceClear() {
+
+  handleNewAttendanceClear = () => {
     this.setState({
       editAttendanceSelectedStatus: null
     });
   }
+
   render() {
+    const { blockReport } = this.props
+    const { committer, schedule } = this.state
+
     return (
       <div className="attendanceScheduleBlockDrilldown">
         {this.state.editAttendanceVisible ?
           <DialogBox>
             <h1>Edit Attendance</h1>
-            <SearchableSelectField inputId="newAttendanceStatus"
-                                   inputClassName="unifi-input"
-                                   data={{
-                                     'present': "Present",
-                                     'absent': "Absent [Unauthorized]",
-                                     'auth-absent': "Absent [Authorized]"
-                                   }}
-                                   onItemSelect={(key) => this.onNewAttendanceSelect(key)}
-                                   onSelectionClear={() => this.onNewAttendanceClear()} />
+            <SearchableSelectField 
+              inputId="newAttendanceStatus"
+              inputClassName="unifi-input"
+              data={{
+                'present': "Present",
+                'absent': "Absent [Unauthorized]",
+                'auth-absent': "Absent [Authorized]"
+              }}
+              onItemSelect={this.handleNewAttendanceSelect}
+              onSelectionClear={this.handleNewAttendanceClear}
+            />
             <div className="buttons">
-              <button className="unifi-button primary"
-                      disabled={this.editAttendanceSelectedStatus ? "disabled" : ""}
-                      onClick={() => this.onEditAttendanceSave()}>Save</button>
-              <button className="unifi-button"
-                      onClick={() => this.onEditAttendanceCancel()}>Cancel</button>
+              <button
+                className="unifi-button primary"
+                disabled={this.editAttendanceSelectedStatus ? "disabled" : ""}
+                onClick={this.onEditAttendanceSave}
+              >
+                Save
+              </button>
+              <button
+                className="unifi-button"
+                onClick={this.onEditAttendanceCancel}
+              >
+                Cancel
+              </button>
             </div>
           </DialogBox>
         :
           ""}
-        <h1>{this.state.committer.name}</h1>
-        <h2>{this.state.schedule.name}</h2>
+        <h1>{committer.name}</h1>
+        <h2>{schedule.name}</h2>
         <div className="schedule-stats-summary">
-          <EvacuationProgressBar
-            percentage={Math.floor(this.state.schedule.attendance)}
-            warningThreshold={80}
-            criticalThreshold={50} />
+          <EvacuationProgressBar percentage={Math.floor(schedule.attendance)} warningThreshold={80} criticalThreshold={50} />
           <p className="label">Overall Attendance</p>
           <div className="stats">
-            <p className="stat">
-              <span>Lectures:</span>
-              &nbsp;
-              {this.props.blockReport.length}
-            </p>
+            <p className="stat"><span>Lectures:</span>{' '}{blockReport.length}</p>
             <br />
-            <p className="stat">
-              <span>Present:</span>
-              &nbsp;
-              {this.props.blockReport.filter((block) =>
-                block.status === "present").length}
-            </p>
-            <p className="stat">
-              <span>Absent:</span>
-              &nbsp;
-              {this.props.blockReport.filter((block) =>
-                block.status === "absent").length}
-            </p>
+            <p className="stat"><span>Present:</span>{' '}{blockReport.filter((block) => block.status === "present").length}</p>
+            <p className="stat"><span>Absent:</span>{' '}{blockReport.filter((block) => block.status === "absent").length}</p>
           </div>
         </div>
         <div className="views">
-          <p>Showing {this.props.blockReport.length} lectures</p>
+          <p>Showing {blockReport.length} lectures</p>
           <div className="buttons">
             <button />
           </div>
@@ -173,22 +200,21 @@ export class AttendanceScheduleBlockDrilldown extends Component {
             </tr>
           </thead>
           <tbody>
-          {this.props.blockReport.map((block) => {
-            let st = moment(block.startTime);
-            let et = moment(block.endTime);
-            let d  = st.format("DD/MM/Y");
-            return <tr key={block.blockId}>
-              <td className="times">
-                {d}, {st.format("HH:mm")}–{et.format("HH:mm")}
-              </td>
-              <td className="status">{block.status}&nbsp;
-                <Link to="#"
-                      onClick={() => this.onEditAttendance(block.blockId)}>
-                  Edit
-                </Link>
-              </td>
-            </tr>;
-          })}
+            {sortBlockReport(blockReport).map((block) => (
+              <tr key={block.blockId}>
+                <td className="times">
+                  {block.startTime.format('DD/MM/Y')}, {block.startTime.format('HH:mm')}–{block.endTime.format('HH:mm')}
+                </td>
+                <td className="status">{block.status}{' '}
+                  <Link
+                    to="#"
+                    onClick={this.handleEditAttendance(block.blockId)}
+                  >
+                    Edit
+                  </Link>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -196,20 +222,18 @@ export class AttendanceScheduleBlockDrilldown extends Component {
   }
 }
 
-export function mapStateToProps(state) {
-  return {
-    scheduleStats: state.attendance.scheduleStats,
-    blockReport: state.attendance.blockReport,
-    contactAttendance: state.attendance.contactAttendance,
-    overrideAttendanceResult: state.attendance.overrideAttendanceResult
-  };
+const selector = createStructuredSelector({
+  blockReport: blockReportSelector,
+  contactAttendance: contactAttendanceSelector,
+  overrideAttendanceResult: overrideAttendanceResultSelector,
+  scheduleStats: schedulesSelector
+})
+
+const actions = {
+  getContactAttendanceForSchedule,
+  listScheduleStats,
+  overrideAttendance,
+  reportBlockAttendance
 }
 
-export const mapDispatch = dispatch => (bindActionCreators({
-  listScheduleStats: attendanceActions.listScheduleStats,
-  reportBlockAttendance: attendanceActions.reportBlockAttendance,
-  getContactAttendanceForSchedule: attendanceActions.getContactAttendanceForSchedule,
-  overrideAttendance: attendanceActions.overrideAttendance
-}, dispatch));
-
-export default connect(mapStateToProps, mapDispatch)(AttendanceScheduleBlockDrilldown);
+export default connect(selector, actions)(AttendanceScheduleBlockDrilldown)
