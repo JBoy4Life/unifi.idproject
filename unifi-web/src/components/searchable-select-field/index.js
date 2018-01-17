@@ -7,7 +7,8 @@ export default class SearchableSelectField extends Component {
     super(props);
     this.state = {
       searchTerm: "",
-      selectedKey: null
+      selectedKey: null,
+      resultsVisible: false
     };
   }
   itemDeselect() {
@@ -20,9 +21,15 @@ export default class SearchableSelectField extends Component {
   itemSelect(key) {
     this.setState({
       searchTerm: "",
-      selectedKey: key
+      selectedKey: key,
+      resultsVisible: false
     });
     this.props.onItemSelect(key);
+  }
+  inputFocus() {
+    this.setState({
+      resultsVisible: true
+    });
   }
   searchTermChange(newTerm) {
     this.setState({
@@ -35,13 +42,15 @@ export default class SearchableSelectField extends Component {
         <input id={this.props.inputId}
                className={this.props.inputClassName || ""}
                value={this.state.searchTerm}
-               onChange={(event) => this.searchTermChange(event.target.value)} />
+               onChange={(event) => this.searchTermChange(event.target.value)}
+               onFocus={() => this.inputFocus()}
+        />
         <ul>
           {Object.keys(this.props.data)
             .filter((k) => {
               const haystack = this.props.data[k].trim().toLowerCase();
               const needle   = this.state.searchTerm.trim().toLowerCase();
-              return needle.length > 0 && haystack.indexOf(needle) > -1;
+              return this.state.resultsVisible && haystack.indexOf(needle) > -1;
             })
             .map((k) => {
               return <li key={k}
