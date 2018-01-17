@@ -1,17 +1,21 @@
 import React, { Component } from 'react'
 
+import logo from 'assets/images/ucl-logo.svg'
+import { Button } from 'elements'
+
 import './index.scss'
-import logo from '../../assets/images/ucl-logo.png'
-import { Button } from '../../elements/index'
+
+const COMPONENT_CSS_CLASS = 'ident-bar'
+const bemE = (suffix) => `${COMPONENT_CSS_CLASS}__${suffix}`
 
 export default class IdentBar extends Component {
   render() {
     return (
-      <div className="ident-bar">
-        <img className="logo" src={logo} alt="logo" />
+      <div className={COMPONENT_CSS_CLASS}>
+        <img className={bemE('logo')} src={logo} alt="logo" />
         {this.props.user && (
-          <div className="indent-bar-user-content">
-            {/* <span className="indent-bar-user-content-label">{this.props.user}</span> */}
+          <div className={bemE('user-content')}>
+            {/*<span className={bemE('user-content-label')}>{this.props.user}</span>*/}
             <Button onClick={this.props.onLogout}>Logout</Button>
           </div>
         )}
