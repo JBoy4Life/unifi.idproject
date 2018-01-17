@@ -14,10 +14,12 @@ import AttendanceCustomReports from './attendance-custom-reports';
 
 const menus = [{
   key: '/attendance/schedules',
+  icon: 'calendar',
   label: 'Modules',
 },
 {
   key: '/attendance/reports',
+  icon: 'bar-chart',
   label: 'Reports',
 },
 // {
