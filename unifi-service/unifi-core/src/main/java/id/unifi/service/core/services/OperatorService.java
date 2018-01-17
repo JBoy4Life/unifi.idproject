@@ -145,7 +145,7 @@ public class OperatorService {
 
     @ApiOperation
     public List<OperatorInfo> listOperators(OperatorSessionData session, String clientId) {
-        authorize(session);
+        authorize(session, clientId);
         return db.execute(sql -> sql.selectFrom(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .stream()
@@ -155,13 +155,11 @@ public class OperatorService {
 
     @ApiOperation
     public OperatorInfo getOperator(OperatorSessionData session, String clientId, String username) {
-        authorize(session);
+        authorize(session, clientId);
         return db.execute(sql -> sql.selectFrom(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
-                .fetchOptional()
-                .map(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())))
-                .orElse(null);
+                .fetchOne(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())));
     }
 
     @ApiOperation
