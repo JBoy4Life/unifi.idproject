@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import fp from 'lodash/fp'
 import moment from "moment"
-import { Link } from 'react-router-dom'
 
 import { Button, Icon } from 'elements'
 
