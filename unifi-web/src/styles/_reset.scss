@@ -1,0 +1,138 @@
+html, body, p, ol, ul, li, dl, dt, dd, blockquote, 
+figure, fieldset, legend, textarea, pre, iframe, hr, 
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: 100%;
+  font-weight: normal;
+  color: #343E47;
+}
+
+ul {
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  margin: 0;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+img,
+embed,
+iframe,
+object,
+audio,
+video {
+  height: auto;
+  max-width: 100%;
+}
+
+iframe {
+  border: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+td,
+th {
+  padding: 0;
+  text-align: left;
+}
+
+html, body {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  height: 100%;
+}
+
+h1 {
+  font-size: 48px;
+  margin-bottom: 24px;
+}
+
+h1 + h2 {
+  font-size: 20px;
+  margin-top: -24px;
+}
+
+p.header {
+  margin-bottom: 82px;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  overflow: auto;
+  flex-flow: column;
+}
+
+button {
+  font-size: 18px;
+  &.unifi-button {
+    background-color: $unifi-secondary-color;
+    border-radius: 3px;
+    width: 172px;
+    height: 48px;
+    line-height: 48px;
+    border: 0;
+    &.primary {
+      background-color: $unifi-primary-color;
+      color: white;
+    }
+  }
+}
+
+input.unifi-input {
+  border: 1px $unifi-line-color solid;
+  height: 42px;
+  padding: 0 20px;
+  line-height: 42px;
+  font-size: 16px;
+  width: 492px;
+}
+
+table.unifi-table {
+
+  width: 100%;
+  font-size: 15px;
+
+  thead {
+    height: 16px;
+    line-height: 16px;
+    background-color: $unifi-table-header-color;
+    th {
+      font-weight: 500;
+    }
+  }
+
+  td, th {
+    border: 1px $unifi-line-color solid;
+    padding: 16px 20px;
+  }
+
+  a, a:visited {
+    color: $unifi-link-color;
+  }
+
+}
+
+#root .CircularProgressbar .CircularProgressbar-path {
+  stroke-linecap: butt;
+}

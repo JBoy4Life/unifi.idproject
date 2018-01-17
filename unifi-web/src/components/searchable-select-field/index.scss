@@ -1,15 +1,4 @@
-$unifi-primary-color: #1dc992;
-$unifi-primary-hover-color: #1ba278;
-$unifi-secondary-color: #e0;
-$unifi-secondary-hover-color: #ccc;
-$unifi-type-color: #343e47;
-$unifi-line-color: #b1bfc4;
-$unifi-link-color: #00a7c0;
-$unifi-table-header-color: #f5f7fa;
-$unifi-warning: #eda03a;
-$unifi-error: #cc00000;
-$unifi-top-header-1: #353e48;
-$unifi-top-header-2: #404c58;
+@import "src/styles/variables";
 
 .unifi-searchable-select-field {
 
