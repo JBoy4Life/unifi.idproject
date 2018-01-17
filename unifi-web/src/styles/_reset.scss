@@ -109,7 +109,6 @@ input.unifi-input {
 }
 
 table.unifi-table {
-
   width: 100%;
   font-size: 15px;
 
@@ -126,11 +125,6 @@ table.unifi-table {
     border: 1px $unifi-line-color solid;
     padding: 16px 20px;
   }
-
-  a, a:visited {
-    color: $unifi-link-color;
-  }
-
 }
 
 #root .CircularProgressbar .CircularProgressbar-path {

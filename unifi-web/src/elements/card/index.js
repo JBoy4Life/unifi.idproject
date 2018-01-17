@@ -1,4 +1,4 @@
 import Card from 'antd/lib/card'
-import 'antd/lib/card/style/index.css'
+import './index.less'
 
 export default Card

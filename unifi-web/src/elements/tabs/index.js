@@ -1,4 +1,4 @@
 import Tabs from 'antd/lib/tabs'
-import 'antd/lib/tabs/style/index.css'
+import './index.less'
 
 export default Tabs

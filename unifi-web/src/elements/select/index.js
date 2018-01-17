@@ -1,4 +1,4 @@
 import Select from 'antd/lib/select'
-import 'antd/lib/select/style/index.css'
+import './index.less'
 
 export default Select

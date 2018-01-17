@@ -1,4 +1,4 @@
 import Radio from 'antd/lib/radio'
-import 'antd/lib/radio/style/index.css'
+import './index.less'
 
 export default Radio

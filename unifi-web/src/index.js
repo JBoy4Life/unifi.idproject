@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import './styles/less/index.less'
 import './styles/index.scss'
 
 import Main from './main'

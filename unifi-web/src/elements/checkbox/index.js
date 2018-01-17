@@ -1,7 +1,6 @@
 import React from 'react'
 import AntdCheckbox from 'antd/lib/checkbox'
-import 'antd/lib/checkbox/style/index.css'
-import './index.scss'
+import './index.less'
 
 const Checkbox = props => (
   <AntdCheckbox {...props} />

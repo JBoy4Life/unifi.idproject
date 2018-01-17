@@ -1,4 +1,4 @@
 import Menu from 'antd/lib/menu'
-import 'antd/lib/menu/style/index.css'
+import './index.less'
 
 export default Menu
