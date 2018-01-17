@@ -1,6 +1,7 @@
 import Aux from './aux'
 
 import Menu from './menu'
+import Dropdown from './dropdown'
 
 import Button from './button'
 import Icon from './icon'
@@ -40,6 +41,7 @@ export {
   Alert,
 
   Menu,
+  Dropdown,
   Table,
   Modal,
 

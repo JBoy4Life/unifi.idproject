@@ -1,3 +1,5 @@
+@import "src/styles/variables";
+
 .page-container {
 
   .ant-layout-header {
@@ -13,6 +15,8 @@
   }
 
   .header-ident {
+    z-index: 6;
+    height: $ident-bar-height;
     background-color: rgba(53, 62, 72, 1);
   }
 
@@ -22,5 +26,4 @@
     height: 44px;
     line-height: 44px;
   }
-
 }
