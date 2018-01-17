@@ -1,41 +1,55 @@
-import React, { Component } from 'react';
-import { bindActionCreators } from 'redux'
+import React, { Component } from 'react'
+import fp from 'lodash/fp'
+import trimStart from 'lodash/trimStart'
 import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
 
-import AttendanceSchedule from "./attendance-schedule";
-import * as attendanceActions from "../../../reducers/attendance/actions";
+import * as attendanceActions from 'reducers/attendance/actions'
+import { schedulesSelector } from 'reducers/attendance/selectors'
+
+import AttendanceSchedule from './attendance-schedule'
+
+const sortSchedules = fp.sortBy((item) =>
+  fp.compose(
+    (str) => trimStart(str, '- '),
+    fp.replace(item.scheduleId, '')
+  )(item.name)
+)
 
 export class AttendanceSchedules extends Component {
   componentDidMount() {
     this.props.listScheduleStatsRequest();
   }
+
   render() {
+    const { schedules } = this.props
+
     return (
       <div>
         <h1>Modules</h1>
-        {this.props.schedules.map((schedule) => {
-          return <AttendanceSchedule key={schedule.scheduleId}
-                                     scheduleId={schedule.scheduleId}
-                                     title={schedule.name}
-                                     attendance={schedule.overallAttendance}
-                                     startDate={schedule.startTime}
-                                     endDate={schedule.endTime}
-                                     committerCount={schedule.committerCount}
-                                     blockCount={schedule.blockCount} />
-        })}
+        {sortSchedules(schedules).map((schedule) => (
+          <AttendanceSchedule
+            key={schedule.scheduleId}
+            scheduleId={schedule.scheduleId}
+            title={schedule.name}
+            attendance={schedule.overallAttendance}
+            startDate={schedule.startTime}
+            endDate={schedule.endTime}
+            committerCount={schedule.committerCount}
+            blockCount={schedule.blockCount}
+          />
+        ))}
       </div>
     )
   }
 }
 
-export function mapStateToProps(state) {
-  return {
-    schedules: state.attendance.scheduleStats || []
-  };
+const selector = createStructuredSelector({
+  schedules: schedulesSelector
+})
+
+export const actions = {
+  listScheduleStatsRequest: attendanceActions.listScheduleStats
 }
 
-export const mapDispatch = dispatch => (bindActionCreators({
-  listScheduleStatsRequest: attendanceActions.listScheduleStats,
-}, dispatch));
-
-export default connect(mapStateToProps, mapDispatch)(AttendanceSchedules);
+export default connect(selector, actions)(AttendanceSchedules);

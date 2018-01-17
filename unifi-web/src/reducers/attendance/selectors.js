@@ -1,2 +1,8 @@
-export const getReducer = state => state.clients
-export const getClients = state => getReducer(state).clients
+import fp from 'lodash/fp'
+
+export const getReducer = fp.get('attendance')
+
+export const schedulesSelector = fp.compose(
+  fp.get('scheduleStats'),
+  getReducer
+)
