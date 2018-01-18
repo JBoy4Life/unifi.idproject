@@ -50,8 +50,8 @@ export default class Main extends Component {
           JSON.parse(localStorage.getItem('unifi-current-user')) :
           {};
 
-        if (currentUser.payload && currentUser.payload.token) {
-          const action = userActions.reauthenticateRequest(currentUser.payload.token);
+        if (currentUser && currentUser.token) {
+          const action = userActions.reauthenticateRequest(currentUser.token);
           return wsProtocol.request(action.socketRequest, { json: true });
         }
       })

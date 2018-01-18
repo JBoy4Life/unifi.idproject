@@ -26,7 +26,7 @@ const reducer = (state = initialState, action = {}) => {
 
       return {
         ...state,
-        currentUser: action.payload,
+        currentUser: action.payload.payload,
       }
 
     case USER_LOGOUT:

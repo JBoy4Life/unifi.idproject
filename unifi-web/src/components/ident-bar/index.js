@@ -47,12 +47,13 @@ export default class IdentBar extends Component {
   }
 
   render() {
+    const { user } = this.props
     const { menuOpen } = this.state
 
     return (
       <div className={COMPONENT_CSS_CLASS}>
         <img className={bemE('logo')} src={logo} alt="logo" />
-        {this.props.user && (
+        {user && (
           <div className={bemE('user-content')}>
             <button
               className={cn(bemE('menu-toggle'), {
@@ -61,7 +62,7 @@ export default class IdentBar extends Component {
               onClick={this.toggleMenuOpen}
             >
               <span className={bemE('username')}>
-                {'William Winterbotham'}
+                {user.operator.username}
               </span>
               <Icon type={menuOpen ? 'caret-up' : 'caret-down'} className={bemE('caret')} />
             </button>
