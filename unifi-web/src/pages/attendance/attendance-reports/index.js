@@ -1,8 +1,74 @@
-import React, { Component } from 'react';
-import {connect} from "react-redux";
-import {Link} from "react-router-dom";
-import {bindActionCreators} from "redux";
-import * as attendanceActions from "../../../reducers/attendance/actions";
+import React, { Component } from 'react'
+import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
+import { Link } from 'react-router-dom'
+import sumBy from 'lodash/sumBy'
+
+import {
+  listScheduleStats,
+  reportContactScheduleAttendance
+} from 'reducers/attendance/actions'
+
+import {
+  contactScheduleReportSelector,
+  schedulesSelector
+} from 'reducers/attendance/selectors'
+
+import { Table } from 'elements'
+
+import './index.scss'
+
+const COMPONENT_CSS_CLASSNAME = 'attendance-reports'
+const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
+
+const getCommittersTableData = ({ attendance, schedules }) =>
+  attendance ? attendance.map((c) => {
+    const attendanceData = c.attendance.map((a) => {
+      const schedule = schedules.find((s) => s.scheduleId === a.scheduleId);
+      return {
+        schedule: a.scheduleId, // `/attendance/schedules/${a.scheduleId}/${c.clientReference}`
+        blockCount: schedule.blockCount,
+        presentCount: a.count,
+        absentCount: schedule.blockCount - a.count,
+        attendanceRate: `${Math.floor(a.count / (schedule.blockCount || 1) * 100)}%`,
+        key: `${c.clientReference}-${a.scheduleId}`
+      }
+    })
+
+    const blockCount = sumBy(attendanceData, 'blockCount')
+    const presentCount = sumBy(attendanceData, 'presentCount')
+    const absentCount = sumBy(attendanceData, 'absentCount')
+
+    return {
+      name: c.name,
+      blockCount,
+      presentCount,
+      absentCount,
+      attendanceRate: `${Math.floor(presentCount / (blockCount || 1) * 100)}%`,
+      attendance: attendanceData,
+      key: c.clientReference
+    }
+  }) : []
+
+const outerColumns = [
+  { title: 'Name', dataIndex: 'name', key: 'date' },
+  { title: 'Lectures', dataIndex: 'blockCount', key: 'blockCount' },
+  { title: 'Present', dataIndex: 'presentCount', key: 'presentCount' },
+  { title: 'Absent', dataIndex: 'absentCount', key: 'absentCount' },
+  { title: 'Attendance', dataIndex: 'attendanceRate', key: 'attendanceRate' },
+]
+
+const innerColumns = [
+  { title: 'Modules', dataIndex: 'schedule', key: 'date',
+    render: (record) => {
+      return 
+    }
+  },
+  { title: 'Lectures', dataIndex: 'blockCount', key: 'blockCount' },
+  { title: 'Present', dataIndex: 'presentCount', key: 'presentCount' },
+  { title: 'Absent', dataIndex: 'absentCount', key: 'absentCount' },
+  { title: 'Attendance', dataIndex: 'attendanceRate', key: 'attendanceRate' },
+]
 
 export class AttendanceReports extends Component {
   constructor(props) {
@@ -11,32 +77,51 @@ export class AttendanceReports extends Component {
       mode: "schedules"
     };
   }
+
   componentWillMount() {
-    this.props.listScheduleStatsRequest();
-    this.props.reportContactScheduleAttendance();
+    this.props.listScheduleStats()
+    this.props.reportContactScheduleAttendance()
   }
-  switchMode(newMode) {
+
+  handleSwitchMode = (newMode) => () => {
     this.setState({
       mode: newMode
     });
   }
-  render() {
-    const totalCommitters = this.props.scheduleStats.reduce((acc, v) => acc + v.committerCount, 0);
-    const totalBlocks     = this.props.scheduleStats.reduce((acc, v) => acc + v.blockCount, 0);
-    const totalPresent    = this.props.scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0);
+
+  renderExpandedRow = (record) => {
     return (
-      <div className="attendanceReports">
+      <Table
+        columns={innerColumns}
+        dataSource={record.attendance}
+        pagination={false}
+      />
+    );
+  }
+
+  render() {
+    const { contactScheduleReport, scheduleStats } = this.props
+    const { mode } = this.state
+    const totalCommitters = scheduleStats.reduce((acc, v) => acc + v.committerCount, 0)
+    const totalBlocks     = scheduleStats.reduce((acc, v) => acc + v.blockCount, 0)
+    const totalPresent    = scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0)
+    return (
+      <div className={COMPONENT_CSS_CLASSNAME}>
         <h1>Reports</h1>
         <div className="tabs">
-          <Link className={this.state.mode === "schedules"  ? "current" : ""} onClick={() => this.switchMode("schedules")}  to={`/attendance/reports`}>All Modules</Link>
-          <Link className={this.state.mode === "committers" ? "current" : ""} onClick={() => this.switchMode("committers")} to={`/attendance/reports`}>All Students</Link>
+          <Link className={mode === "schedules" ? "current" : ""} onClick={this.handleSwitchMode("schedules")} to={`/attendance/reports`}>
+            All Modules
+          </Link>
+          <Link className={mode === "committers" ? "current" : ""} onClick={this.handleSwitchMode("committers")} to={`/attendance/reports`}>
+            All Students
+          </Link>
         </div>
         <div className="downloads">
         </div>
         <div className="views">
-          <p>Showing {this.props.scheduleStats.length} results</p>
+          <p>Showing {scheduleStats.length} results</p>
         </div>
-        {this.state.mode === "schedules" ?
+        {mode === "schedules" ?
           <table className="unifi-table">
             <thead>
               <tr>
@@ -57,7 +142,7 @@ export class AttendanceReports extends Component {
                 <td>{(totalCommitters * totalBlocks) - totalPresent}</td>
                 <td>—</td>
               </tr>
-              {this.props.scheduleStats.map((schedule) => {
+              {scheduleStats.map((schedule) => {
                 const percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
                   (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
                 return <tr key={schedule.scheduleId}>
@@ -72,57 +157,28 @@ export class AttendanceReports extends Component {
             </tbody>
           </table>
           :
-          <table className="unifi-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Modules</th>
-                <th>Lectures</th>
-                <th>Present</th>
-                <th>Absent</th>
-                <th>Attendance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="summary">
-                <td>Total</td>
-                <td>–</td>
-                <td>–</td>
-                <td>–</td>
-                <td>–</td>
-                <td>–</td>
-              </tr>
-              {[].concat.apply([], this.props.contactScheduleReport.attendance.map((c) => {
-                return c.attendance.map((a) => {
-                  const schedule = this.props.contactScheduleReport.schedules.find((s) => s.scheduleId === a.scheduleId);
-                  return <tr key={`${c.clientReference}-${a.scheduleId}`}>
-                    <td>{c.name}</td>
-                    <td><Link to={`/attendance/schedules/${a.scheduleId}/${c.clientReference}`}>{a.scheduleId}</Link></td>
-                    <td>{schedule.blockCount}</td>
-                    <td>{a.count}</td>
-                    <td>{schedule.blockCount-a.count}</td>
-                    <td>{Math.floor((a.count/schedule.blockCount)*100)}%</td>
-                  </tr>
-                });
-              }))}
-            </tbody>
-          </table>
+          <Table
+            className={bemE('committers-table')}
+            columns={outerColumns}
+            dataSource={getCommittersTableData(contactScheduleReport)}
+            expandedRowRender={this.renderExpandedRow}
+            pagination={false}
+            defaultExpandAllRows
+          />
         }
       </div>
     )
   }
 }
 
-export function mapStateToProps(state) {
-  return {
-    scheduleStats: state.attendance.scheduleStats || [],
-    contactScheduleReport: state.attendance.contactScheduleReport || []
-  };
+const selector = createStructuredSelector({
+  contactScheduleReport: contactScheduleReportSelector,
+  scheduleStats: schedulesSelector
+})
+
+const actions = {
+  listScheduleStats,
+  reportContactScheduleAttendance
 }
 
-export const mapDispatch = dispatch => (bindActionCreators({
-  listScheduleStatsRequest: attendanceActions.listScheduleStats,
-  reportContactScheduleAttendance: attendanceActions.reportContactScheduleAttendance
-}, dispatch));
-
-export default connect(mapStateToProps, mapDispatch)(AttendanceReports);
+export default connect(selector, actions)(AttendanceReports)

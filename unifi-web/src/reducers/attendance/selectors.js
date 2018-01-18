@@ -26,3 +26,8 @@ export const overrideAttendanceResultSelector = fp.compose(
   fp.get('overrideAttendanceResult'),
   getReducer
 )
+
+export const contactScheduleReportSelector = fp.compose(
+  fp.get('contactScheduleReport'),
+  getReducer
+)
