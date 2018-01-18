@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
@@ -26,11 +27,11 @@ const getCommittersTableData = ({ attendance, schedules }) =>
     const attendanceData = c.attendance.map((a) => {
       const schedule = schedules.find((s) => s.scheduleId === a.scheduleId);
       return {
-        schedule: a.scheduleId, // `/attendance/schedules/${a.scheduleId}/${c.clientReference}`
+        schedule: a.scheduleId,
         blockCount: schedule.blockCount,
         presentCount: a.count,
         absentCount: schedule.blockCount - a.count,
-        attendanceRate: `${Math.floor(a.count / (schedule.blockCount || 1) * 100)}%`,
+        attendanceRate: Math.floor(a.count / (schedule.blockCount || 1) * 100),
         key: `${c.clientReference}-${a.scheduleId}`
       }
     })
@@ -44,31 +45,11 @@ const getCommittersTableData = ({ attendance, schedules }) =>
       blockCount,
       presentCount,
       absentCount,
-      attendanceRate: `${Math.floor(presentCount / (blockCount || 1) * 100)}%`,
+      attendanceRate: Math.floor(presentCount / (blockCount || 1) * 100),
       attendance: attendanceData,
       key: c.clientReference
     }
   }) : []
-
-const outerColumns = [
-  { title: 'Name', dataIndex: 'name', key: 'date' },
-  { title: 'Lectures', dataIndex: 'blockCount', key: 'blockCount' },
-  { title: 'Present', dataIndex: 'presentCount', key: 'presentCount' },
-  { title: 'Absent', dataIndex: 'absentCount', key: 'absentCount' },
-  { title: 'Attendance', dataIndex: 'attendanceRate', key: 'attendanceRate' },
-]
-
-const innerColumns = [
-  { title: 'Modules', dataIndex: 'schedule', key: 'date',
-    render: (record) => {
-      return 
-    }
-  },
-  { title: 'Lectures', dataIndex: 'blockCount', key: 'blockCount' },
-  { title: 'Present', dataIndex: 'presentCount', key: 'presentCount' },
-  { title: 'Absent', dataIndex: 'absentCount', key: 'absentCount' },
-  { title: 'Attendance', dataIndex: 'attendanceRate', key: 'attendanceRate' },
-]
 
 export class AttendanceReports extends Component {
   constructor(props) {
@@ -89,22 +70,106 @@ export class AttendanceReports extends Component {
     });
   }
 
-  renderExpandedRow = (record) => {
-    return (
-      <Table
-        columns={innerColumns}
-        dataSource={record.attendance}
-        pagination={false}
-      />
-    );
-  }
-
-  render() {
-    const { contactScheduleReport, scheduleStats } = this.props
-    const { mode } = this.state
+  renderBlocksTable() {
+    const { scheduleStats } = this.props
     const totalCommitters = scheduleStats.reduce((acc, v) => acc + v.committerCount, 0)
     const totalBlocks     = scheduleStats.reduce((acc, v) => acc + v.blockCount, 0)
     const totalPresent    = scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0)
+
+    return (
+      <table className="unifi-table">
+        <thead>
+          <tr>
+            <th>Modules</th>
+            <th>Students</th>
+            <th>Lectures</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>Attendance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="summary">
+            <td>Total</td>
+            <td>{totalCommitters}</td>
+            <td>{totalBlocks}</td>
+            <td>{totalPresent}</td>
+            <td>{(totalCommitters * totalBlocks) - totalPresent}</td>
+            <td>—</td>
+          </tr>
+          {scheduleStats.map((schedule) => {
+            const percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
+              (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
+            return <tr key={schedule.scheduleId}>
+              <td><Link className="unifi-link" to={`/attendance/schedules/${schedule.scheduleId}`}>{schedule.name}</Link></td>
+              <td>{schedule.committerCount}</td>
+              <td>{schedule.blockCount}</td>
+              <td>{schedule.overallAttendance}</td>
+              <td>{(schedule.committerCount * schedule.blockCount) - schedule.overallAttendance}</td>
+              <td>{Math.floor(percentage)}%</td>
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    )
+  }
+
+  renderCommittersTable() {
+    const { committersTableData } = this.props
+
+    const blockCount = sumBy(committersTableData, 'blockCount')
+    const presentCount = sumBy(committersTableData, 'presentCount')
+    const absentCount = sumBy(committersTableData, 'absentCount')
+    const attendanceRate = Math.floor(presentCount / (blockCount || 1) * 100)
+
+    return (
+      <table className="unifi-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Modules</th>
+            <th>Lectures</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>Attendance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="summary">
+            <td>Total</td>
+            <td>–</td>
+            <td>{blockCount}</td>
+            <td>{presentCount}</td>
+            <td>{absentCount}</td>
+            <td>{attendanceRate}%</td>
+          </tr>
+          {[].concat.apply([], committersTableData.map((c) =>
+            c.attendance.map((a, index) => (
+              <tr key={a.key}>
+                {index === 0 &&
+                  <td className="valign-top" rowSpan={c.attendance.length}>{c.name}</td>
+                }
+                <td>
+                  <Link to={`/attendance/schedules/${a.schedule}/${c.clientReference}`}>
+                    {a.schedule}
+                  </Link>
+                </td>
+                <td>{a.blockCount}</td>
+                <td>{a.presentCount}</td>
+                <td>{a.absentCount}</td>
+                <td>{a.attendanceRate}%</td>
+              </tr>
+            ))
+          ))}
+        </tbody>
+      </table>
+    )
+  }
+
+  render() {
+    const { scheduleStats } = this.props
+    const { mode } = this.state
+
     return (
       <div className={COMPONENT_CSS_CLASSNAME}>
         <h1>Reports</h1>
@@ -121,59 +186,22 @@ export class AttendanceReports extends Component {
         <div className="views">
           <p>Showing {scheduleStats.length} results</p>
         </div>
-        {mode === "schedules" ?
-          <table className="unifi-table">
-            <thead>
-              <tr>
-                <th>Modules</th>
-                <th>Students</th>
-                <th>Lectures</th>
-                <th>Present</th>
-                <th>Absent</th>
-                <th>Attendance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="summary">
-                <td>Total</td>
-                <td>{totalCommitters}</td>
-                <td>{totalBlocks}</td>
-                <td>{totalPresent}</td>
-                <td>{(totalCommitters * totalBlocks) - totalPresent}</td>
-                <td>—</td>
-              </tr>
-              {scheduleStats.map((schedule) => {
-                const percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
-                  (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
-                return <tr key={schedule.scheduleId}>
-                  <td><Link className="unifi-link" to={`/attendance/schedules/${schedule.scheduleId}`}>{schedule.name}</Link></td>
-                  <td>{schedule.committerCount}</td>
-                  <td>{schedule.blockCount}</td>
-                  <td>{schedule.overallAttendance}</td>
-                  <td>{(schedule.committerCount * schedule.blockCount) - schedule.overallAttendance}</td>
-                  <td>{Math.floor(percentage)}%</td>
-                </tr>;
-              })}
-            </tbody>
-          </table>
-          :
-          <Table
-            className={bemE('committers-table')}
-            columns={outerColumns}
-            dataSource={getCommittersTableData(contactScheduleReport)}
-            expandedRowRender={this.renderExpandedRow}
-            pagination={false}
-            defaultExpandAllRows
-          />
-        }
+        {mode === "schedules" ? (
+          this.renderBlocksTable()
+        ) : (
+          this.renderCommittersTable()
+        )}
       </div>
     )
   }
 }
 
 const selector = createStructuredSelector({
-  contactScheduleReport: contactScheduleReportSelector,
-  scheduleStats: schedulesSelector
+  scheduleStats: schedulesSelector,
+  committersTableData: compose(
+    getCommittersTableData,
+    contactScheduleReportSelector
+  )
 })
 
 const actions = {
