@@ -111,6 +111,7 @@ input.unifi-input {
 table.unifi-table {
   width: 100%;
   font-size: 15px;
+  border: 1px solid $unifi-line-color;
 
   thead {
     height: 16px;
@@ -123,7 +124,14 @@ table.unifi-table {
 
   td, th {
     border: 1px $unifi-line-color solid;
+    border-left: none;
+    border-right: none;
+
     padding: 16px 20px;
+  }
+
+  .valign-top {
+    vertical-align: top;
   }
 }
 
