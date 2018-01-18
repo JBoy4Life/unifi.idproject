@@ -114,7 +114,7 @@ public class OperatorService {
             sessionTokenStore.put(sessionToken, operator);
             session.setAuth(sessionToken, operator);
             recordAuthAttempt(clientId, username, true);
-            return new ExpiringToken(sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
+            return new ExpiringToken(operator, sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
         } else {
             // TODO recordLoginAttempt(clientId, username, false);
             session.setAuth(null, null);
@@ -127,7 +127,7 @@ public class OperatorService {
         Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
-            return new ExpiringToken(sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
+            return new ExpiringToken(operator.get(), sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
         } else {
             session.setAuth(null, null);
             throw new AuthenticationFailed();
@@ -156,10 +156,7 @@ public class OperatorService {
     @ApiOperation
     public OperatorInfo getOperator(OperatorSessionData session, String clientId, String username) {
         authorize(session, clientId);
-        return db.execute(sql -> sql.selectFrom(OPERATOR)
-                .where(OPERATOR.CLIENT_ID.eq(clientId))
-                .and(OPERATOR.USERNAME.eq(username))
-                .fetchOne(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())));
+        return getOperatorInfo(clientId, username);
     }
 
     @ApiOperation
@@ -217,6 +214,13 @@ public class OperatorService {
         } else {
             throw new AuthenticationFailed();
         }
+    }
+
+    private OperatorInfo getOperatorInfo(String clientId, String username) {
+        return db.execute(sql -> sql.selectFrom(OPERATOR)
+                .where(OPERATOR.CLIENT_ID.eq(clientId))
+                .and(OPERATOR.USERNAME.eq(username))
+                .fetchOne(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())));
     }
 
     private void setPassword(DSLContext sql, String clientId, String username, String password) {
