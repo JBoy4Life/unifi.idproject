@@ -29,9 +29,10 @@ const getCommittersTableData = ({ attendance, schedules }) =>
       return {
         schedule: a.scheduleId,
         blockCount: schedule.blockCount,
+        processedBlockCount: schedule.processedBlockCount,
         presentCount: a.count,
-        absentCount: schedule.blockCount - a.count,
-        attendanceRate: Math.floor(a.count / (schedule.blockCount || 1) * 100),
+        absentCount: schedule.processedBlockCount - a.count,
+        attendanceRate: Math.floor(a.count / (schedule.processedBlockCount || 1) * 100),
         key: `${c.clientReference}-${a.scheduleId}`
       }
     })
@@ -74,6 +75,7 @@ export class AttendanceReports extends Component {
     const { scheduleStats } = this.props
     const totalCommitters = scheduleStats.reduce((acc, v) => acc + v.committerCount, 0)
     const totalBlocks     = scheduleStats.reduce((acc, v) => acc + v.blockCount, 0)
+    const totalProcessedBlocks = scheduleStats.reduce((acc, v) => acc + v.processedBlockCount, 0)
     const totalPresent    = scheduleStats.reduce((acc, v) => acc + v.overallAttendance, 0)
 
     return (
@@ -92,20 +94,20 @@ export class AttendanceReports extends Component {
           <tr className="summary">
             <td>Total</td>
             <td>{totalCommitters}</td>
-            <td>{totalBlocks}</td>
+            <td>{totalProcessedBlocks} / {totalBlocks}</td>
             <td>{totalPresent}</td>
-            <td>{(totalCommitters * totalBlocks) - totalPresent}</td>
+            <td>{(totalCommitters * totalProcessedBlocks) - totalPresent}</td>
             <td>—</td>
           </tr>
           {scheduleStats.map((schedule) => {
-            const percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
-              (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
+            const percentage = (schedule.processedBlockCount === 0 || schedule.committerCount === 0) ? 0 :
+              (schedule.overallAttendance / (schedule.committerCount * schedule.processedBlockCount)) * 100;
             return <tr key={schedule.scheduleId}>
               <td><Link className="unifi-link" to={`/attendance/schedules/${schedule.scheduleId}`}>{schedule.name}</Link></td>
               <td>{schedule.committerCount}</td>
-              <td>{schedule.blockCount}</td>
+              <td>{schedule.processedBlockCount} / {schedule.blockCount}</td>
               <td>{schedule.overallAttendance}</td>
-              <td>{(schedule.committerCount * schedule.blockCount) - schedule.overallAttendance}</td>
+              <td>{(schedule.committerCount * schedule.processedBlockCount) - schedule.overallAttendance}</td>
               <td>{Math.floor(percentage)}%</td>
             </tr>;
           })}
@@ -117,10 +119,11 @@ export class AttendanceReports extends Component {
   renderCommittersTable() {
     const { committersTableData } = this.props
 
+    const processedBlockCount = sumBy(committersTableData, 'processedBlockCount')
     const blockCount = sumBy(committersTableData, 'blockCount')
     const presentCount = sumBy(committersTableData, 'presentCount')
     const absentCount = sumBy(committersTableData, 'absentCount')
-    const attendanceRate = Math.floor(presentCount / (blockCount || 1) * 100)
+    const attendanceRate = Math.floor(presentCount / (processedBlockCount || 1) * 100)
 
     return (
       <table className="unifi-table">

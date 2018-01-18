@@ -8,8 +8,8 @@ import './attendance-schedule.scss';
 
 export default class AttendanceSchedule extends Component {
   render() {
-    let percentage = (this.props.blockCount === 0 || this.props.committerCount === 0) ? 0 :
-      (this.props.attendance / (this.props.committerCount * this.props.blockCount)) * 100;
+    let percentage = (this.props.processedBlockCount === 0 || this.props.committerCount === 0) ? 0 :
+      Math.floor((this.props.attendance / (this.props.committerCount * this.props.processedBlockCount)) * 100);
     let startDate = moment(this.props.startDate).format('DD/MM/Y');
     let endDate   = moment(this.props.endDate).format('DD/MM/Y');
     return (
@@ -19,7 +19,7 @@ export default class AttendanceSchedule extends Component {
               <h2>{this.props.title}</h2>
             </div>
             <div className="schedule-stats-summary">
-              <EvacuationProgressBar percentage={Math.floor(percentage)} warningThreshold={80} criticalThreshold={50} />
+              <EvacuationProgressBar percentage={percentage} warningThreshold={80} criticalThreshold={50} />
               <p className="label">Overall Attendance to Date</p>
               <div className="stats">
                 {(this.props.startDate === null) ?

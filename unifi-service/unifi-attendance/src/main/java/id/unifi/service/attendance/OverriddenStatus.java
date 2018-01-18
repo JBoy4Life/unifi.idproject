@@ -18,7 +18,7 @@ public enum OverriddenStatus {
 
     @JsonCreator
     public static OverriddenStatus fromString(String status) {
-        return valueOf(inputConverter.convert(status));
+        return status == null ? null : valueOf(inputConverter.convert(status));
     }
 
     @JsonValue

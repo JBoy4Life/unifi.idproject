@@ -35,6 +35,7 @@ export class AttendanceScheduleDetail extends Component {
         endDate: null,
         committerCount: 0,
         blockCount: 0,
+        processedBlockCount: 0
       }
     }
   }
@@ -52,8 +53,8 @@ export class AttendanceScheduleDetail extends Component {
     if (nextProps.scheduleStats.length > 0) {
       let scheduleId = nextProps.match.params.scheduleId;
       let schedule = nextProps.scheduleStats.filter((schedule) => schedule.scheduleId === scheduleId)[0];
-      let percentage = (schedule.blockCount === 0 || schedule.committerCount === 0) ? 0 :
-        (schedule.overallAttendance / (schedule.committerCount * schedule.blockCount)) * 100;
+      let percentage = (schedule.processedBlockCount === 0 || schedule.committerCount === 0) ? 0 :
+        (schedule.overallAttendance / (schedule.committerCount * schedule.processedBlockCount)) * 100;
 
       this.setState({
         schedule: {
@@ -62,7 +63,8 @@ export class AttendanceScheduleDetail extends Component {
           startDate: schedule.startTime,
           endDate:   schedule.endTime,
           committerCount: schedule.committerCount,
-          blockCount: schedule.blockCount
+          blockCount: schedule.blockCount,
+          processedBlockCount: schedule.processedBlockCount
         }
       });
     }

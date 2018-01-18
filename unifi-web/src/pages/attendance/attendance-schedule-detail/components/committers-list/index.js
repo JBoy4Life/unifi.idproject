@@ -128,9 +128,9 @@ export class CommittersList extends Component {
                 <tr key={committer.clientReference}>
                   <td><Link to={`/attendance/schedules/${scheduleId}/${committer.clientReference}`}>{committer.name}</Link></td>
                   <td>{committer.clientReference}</td>
-                  <td>{committer.attendedCount}</td>
-                  <td>{contactAttendance.blockCount - committer.attendedCount}</td>
-                  <td>{Math.floor((committer.attendedCount / contactAttendance.blockCount) * 100)}%</td>
+                  <td>{committer.presentCount}</td>
+                  <td>{committer.absentCount}</td>
+                  <td>{Math.floor((committer.presentCount / (committer.presentCount + committer.absentCount)) * 100)}%</td>
                 </tr>
               )
             })}

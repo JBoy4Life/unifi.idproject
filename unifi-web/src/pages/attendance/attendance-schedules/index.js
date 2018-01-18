@@ -33,6 +33,7 @@ export class AttendanceSchedules extends Component {
             scheduleId={schedule.scheduleId}
             title={schedule.name}
             attendance={schedule.overallAttendance}
+            processedBlockCount={schedule.processedBlockCount}
             startDate={schedule.startTime}
             endDate={schedule.endTime}
             committerCount={schedule.committerCount}
