@@ -18,8 +18,8 @@ import {
   schedulesSelector
 } from 'reducers/attendance/selectors'
 
-import ModuleCalendar from './components/module-calendar'
-import StudentsList from './components/students-list'
+import ScheduleCalendar from './components/schedule-calendar'
+import CommittersList from './components/committers-list'
 
 export class AttendanceScheduleDetail extends Component {
   constructor(props) {
@@ -114,9 +114,9 @@ export class AttendanceScheduleDetail extends Component {
           </Link>
         </div>
         {this.state.mode === "schedule" ? (
-          <ModuleCalendar blocks={blocks} />
+          <schedule-calendar blocks={blocks} />
         ) : (
-          <StudentsList contactAttendance={contactAttendance} scheduleId={scheduleId} />
+          <CommittersList contactAttendance={contactAttendance} scheduleId={scheduleId} />
         )}
       </div>
     );

@@ -13,7 +13,7 @@ const mapObject = (objectArray, keyField, dataField) =>
     return objectSoFar
   }, {})
 
-export class StudentsList extends Component {
+export class CommittersList extends Component {
   constructor(props) {
     super(props)
 
@@ -141,4 +141,4 @@ export class StudentsList extends Component {
   }
 }
 
-export default StudentsList
+export default CommittersList

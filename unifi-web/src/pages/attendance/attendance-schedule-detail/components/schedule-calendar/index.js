@@ -11,7 +11,7 @@ const getFirstMonthFromBlock = ({ blocks }) =>
     fp.map(block => moment(block.startTime))
   )(blocks) || moment()
 
-export class ModuleCalendar extends Component {
+export class ScheduleCalendar extends Component {
   constructor(props) {
     super(props)
 
@@ -152,4 +152,4 @@ export class ModuleCalendar extends Component {
   }
 }
 
-export default ModuleCalendar
+export default ScheduleCalendar
