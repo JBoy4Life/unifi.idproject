@@ -23,6 +23,12 @@ import {
   reportBlockAttendance
 } from 'reducers/attendance/actions'
 
+const absenceLabels = {
+  'present': "Present",
+  'absent': "Absent",
+  'auth-absent': "Absent [Authorized]"
+}
+
 const sortBlockReport = fp.compose(
   fp.sortBy((item) => item.startDate),
   fp.map((item) => ({
@@ -148,11 +154,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
             <SearchableSelectField 
               inputId="newAttendanceStatus"
               inputClassName="unifi-input"
-              data={{
-                'present': "Present",
-                'absent': "Absent [Unauthorized]",
-                'auth-absent': "Absent [Authorized]"
-              }}
+              data={absenceLabels}
               onItemSelect={this.handleNewAttendanceSelect}
               onSelectionClear={this.handleNewAttendanceClear}
             />
@@ -205,7 +207,9 @@ export class AttendanceScheduleBlockDrilldown extends Component {
                 <td className="times">
                   {block.startTime.format('DD/MM/Y')}, {block.startTime.format('HH:mm')}–{block.endTime.format('HH:mm')}
                 </td>
-                <td className="status">{block.status}{' '}
+                <td className="status">
+                  {absenceLabels[block.status]}
+                  {' '}
                   <Link
                     to="#"
                     onClick={this.handleEditAttendance(block.blockId)}

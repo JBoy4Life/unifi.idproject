@@ -1,4 +1,5 @@
 import React, {Component} from 'react'
+import cn from 'classnames'
 
 import './index.scss'
 
@@ -11,56 +12,69 @@ export default class SearchableSelectField extends Component {
       resultsVisible: false
     };
   }
-  itemDeselect() {
+
+  handleItemDeselect = () => {
     this.setState({
       selectedKey: null
     });
     document.getElementById(this.props.inputId).focus();
     this.props.onSelectionClear();
   }
-  itemSelect(key) {
+
+  handleItemSelect = (key) => () => {
     this.setState({
       searchTerm: "",
       selectedKey: key,
       resultsVisible: false
     });
-    this.props.onItemSelect(key);
+    this.props.onItemSelect(key)
   }
-  inputFocus() {
+
+  handleInputFocus = () => {
     this.setState({
       resultsVisible: true
-    });
+    })
   }
-  searchTermChange(newTerm) {
+
+  handleSearchTermChange = (event) => {
     this.setState({
-      searchTerm: newTerm
-    });
+      searchTerm: event.target.value
+    })
   }
+
   render() {
+    const { data, inputId, inputClassName, containerClassName } = this.props
+    const { searchTerm, resultsVisible, selectedKey } = this.state
+
     return (
-      <div className={`unifi-searchable-select-field ${this.props.containerClassName || ""}`}>
-        <input id={this.props.inputId}
-               className={this.props.inputClassName || ""}
-               value={this.state.searchTerm}
-               onChange={(event) => this.searchTermChange(event.target.value)}
-               onFocus={() => this.inputFocus()}
+      <div className={cn('unifi-searchable-select-field', containerClassName)}>
+        <input
+          id={inputId}
+          className={inputClassName || ""}
+          value={searchTerm}
+          onChange={this.handleSearchTermChange}
+          onFocus={this.handleInputFocus}
         />
         <ul>
-          {Object.keys(this.props.data)
+          {Object.keys(data)
             .filter((k) => {
-              const haystack = this.props.data[k].trim().toLowerCase();
-              const needle   = this.state.searchTerm.trim().toLowerCase();
-              return this.state.resultsVisible && haystack.indexOf(needle) > -1;
+              const haystack = data[k].trim().toLowerCase();
+              const needle   = searchTerm.trim().toLowerCase();
+              return resultsVisible && haystack.indexOf(needle) > -1;
             })
-            .map((k) => {
-              return <li key={k}
-                         onClick={() => this.itemSelect(k)}>{this.props.data[k]}</li>
-            })}
+            .map((k) => (
+              <li key={k} onClick={this.handleItemSelect(k)}>{data[k]}</li>
+            ))
+          }
         </ul>
-        <p className={`${this.state.selectedKey ? "visible" : ""}`}
-           onClick={() => this.itemDeselect()}>{this.state.selectedKey}</p>
+        <p 
+          className={`${selectedKey ? "visible" : ""}`}
+          onClick={this.handleItemDeselect}
+        >
+          {data[selectedKey]}
+        </p>
       </div>
 
-    );
+    )
   }
 }
