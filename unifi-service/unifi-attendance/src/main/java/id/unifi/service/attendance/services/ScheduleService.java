@@ -394,9 +394,6 @@ public class ScheduleService {
                     String scheduleName = r.get(SCHEDULE.NAME);
                     Record5<String, Integer, LocalDateTime, LocalDateTime, Integer> stats =
                             blockSummary.get(scheduleId);
-                    if (stats == null) {
-                        log.error("N'stats");
-                    }
                     return new ScheduleStat(
                             scheduleId,
                             scheduleName,
