@@ -31,7 +31,7 @@ const absenceLabels = {
 }
 
 const sortBlockReport = fp.compose(
-  fp.sortBy((item) => item.startDate),
+  fp.sortBy((item) => item.startTime),
   fp.map((item) => ({
     ...item,
     startTime: moment(item.startTime),
