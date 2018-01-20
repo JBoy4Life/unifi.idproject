@@ -175,7 +175,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
           />
           <p className="label">Overall Attendance</p>
           <div className="stats">
-            <p className="stat"><span>Client Reference:</span> {clientReference}</p>
+            <p className="stat"><span>Student No:</span> {clientReference}</p>
             <p className="stat"><span>Lectures:</span> {blockReport.length}</p>
             <br />
             <p className="stat">
