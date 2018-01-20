@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import moment from 'moment'
 import fp from 'lodash/fp'
+import sortBy from 'lodash/sortBy'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
@@ -58,10 +59,11 @@ const singleScheduleSelector = (state, props) =>
     schedulesSelector
   )(state)
 
-const commiterSelector = (state, props) =>
+const committerSelector = (state, props) =>
   fp.compose(
     fp.find({ clientReference: props.match.params.clientReference }),
     fp.defaultTo([]),
+    fp.get('attendance'),
     contactAttendanceSelector
   )(state)
 
@@ -231,7 +233,7 @@ const selector = createStructuredSelector({
   overrideAttendanceResult: overrideAttendanceResultSelector,
   scheduleStats: schedulesSelector,
   schedule: singleScheduleSelector,
-  commiter: commiterSelector
+  committer: committerSelector
 })
 
 const actions = {
