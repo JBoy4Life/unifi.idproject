@@ -55,7 +55,7 @@ const getProcessedCount = fp.compose(
 )
 
 const getPercentage = (blockReport) =>
-  getPresentCount(blockReport) / (getProcessedCount(blockReport) || 1) * 100
+  Math.round(getPresentCount(blockReport) / (getProcessedCount(blockReport) || 1) * 100, 10)
 
 const singleScheduleSelector = (state, props) =>
   fp.compose(
