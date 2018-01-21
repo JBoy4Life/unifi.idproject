@@ -39,17 +39,23 @@ const sortBlockReport = fp.compose(
   }))
 )
 
-const getPercentage = (blockReport) => {
-  const presentCount = fp.compose(
-    fp.size,
-    fp.filter({ status: 'present' })
-  )(blockReport)
-  const processedCount = fp.compose(
-    fp.size,
-    fp.reject({ status: null })
-  )(blockReport)
-  return presentCount / (processedCount || 1) * 100
-}
+const getAbsentCount = fp.compose(
+  fp.size,
+  fp.filter({ status: 'absent' })
+)
+
+const getPresentCount = fp.compose(
+  fp.size,
+  fp.filter(item => ['present', 'auth-absent'].includes(item.status))
+)
+
+const getProcessedCount = fp.compose(
+  fp.size,
+  fp.reject({ status: null })
+)
+
+const getPercentage = (blockReport) =>
+  getPresentCount(blockReport) / (getProcessedCount(blockReport) || 1) * 100
 
 const singleScheduleSelector = (state, props) =>
   fp.compose(
@@ -181,10 +187,10 @@ export class AttendanceScheduleBlockDrilldown extends Component {
             <p className="stat"><span>Lectures:</span> {blockReport.length}</p>
             <br />
             <p className="stat">
-              <span>Present:</span> {blockReport.filter((block) => block.status === "present").length}
+              <span>Present:</span> {getPresentCount(blockReport)}
             </p>
             <p className="stat">
-              <span>Absent:</span> {blockReport.filter((block) => block.status === "absent").length}
+              <span>Absent:</span> {getAbsentCount(blockReport)}
             </p>
           </div>
         </div>
