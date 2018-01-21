@@ -86,7 +86,7 @@ export class AttendanceScheduleDetail extends Component {
       <div className="attendanceScheduleDetail">
         <h1>{this.state.schedule.name}</h1>
         <div className="schedule-stats-summary">
-          <EvacuationProgressBar percentage={Math.floor(this.state.schedule.attendance)} warningThreshold={80} criticalThreshold={50} />
+          <EvacuationProgressBar percentage={Math.floor(this.state.schedule.attendance)} warningThreshold={90} criticalThreshold={70} />
           <p className="label">Overall Attendance to Date</p>
           <div className="stats">
             {(this.state.schedule.startDate === null) ?

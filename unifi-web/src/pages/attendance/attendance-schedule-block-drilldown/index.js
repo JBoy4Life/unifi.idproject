@@ -178,8 +178,8 @@ export class AttendanceScheduleBlockDrilldown extends Component {
         <div className="schedule-stats-summary">
           <EvacuationProgressBar
             percentage={(getPercentage(sortedBlockReport))}
-            warningThreshold={80}
-            criticalThreshold={50}
+            warningThreshold={90}
+            criticalThreshold={70}
           />
           <p className="label">Overall Attendance</p>
           <div className="stats">
