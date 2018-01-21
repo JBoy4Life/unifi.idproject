@@ -74,6 +74,7 @@ function getClientEnvironment(publicUrl) {
         // images into the `src` and `import` them in code to get their paths.
         PUBLIC_URL: publicUrl,
 
+        SOCKET_PROTO: process.env.SOCKET_PROTO || 'ws',
         SOCKET_URI: process.env.SOCKET_URI || 'localhost:8000',
       },
     )
