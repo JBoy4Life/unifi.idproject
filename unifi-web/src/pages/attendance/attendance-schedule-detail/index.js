@@ -116,7 +116,7 @@ export class AttendanceScheduleDetail extends Component {
           </Link>
         </div>
         {this.state.mode === "schedule" ? (
-          <schedule-calendar blocks={blocks} />
+          <ScheduleCalendar blocks={blocks} />
         ) : (
           <CommittersList contactAttendance={contactAttendance} scheduleId={scheduleId} />
         )}
