@@ -203,8 +203,8 @@ export class AttendanceScheduleBlockDrilldown extends Component {
         <table className="unifi-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Attendance</th>
+              <th width="65%">Date</th>
+              <th width="35%">Attendance</th>
             </tr>
           </thead>
           <tbody>

@@ -112,6 +112,7 @@ table.unifi-table {
   width: 100%;
   font-size: 15px;
   border: 1px solid $unifi-line-color;
+  table-layout: fixed;
 
   thead {
     height: 16px;
