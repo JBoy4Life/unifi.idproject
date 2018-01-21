@@ -2,7 +2,7 @@ CREATE TABLE core.uhf_detection(
   client_id       CITEXT NOT NULL,
   detectable_id   CITEXT NOT NULL,
   detectable_type VARCHAR(12) NOT NULL,
-  reader_sn       CITEXT NOT NULL,
+  reader_sn       VARCHAR(64) NOT NULL,
   port_number     INTEGER NOT NULL,
   detection_time  TIMESTAMP NOT NULL,
 

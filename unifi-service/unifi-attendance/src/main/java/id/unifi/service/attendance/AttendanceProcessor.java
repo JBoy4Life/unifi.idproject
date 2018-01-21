@@ -21,12 +21,15 @@ import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.*;
 import static id.unifi.service.core.db.Tables.*;
+import id.unifi.service.core.db.tables.records.AntennaRecord;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.*;
 import org.jooq.BatchBindStep;
 import org.jooq.DSLContext;
 import org.jooq.Query;
+import org.jooq.Record;
 import org.jooq.Record4;
+import org.jooq.Result;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -61,7 +65,7 @@ public class AttendanceProcessor {
             ATTENDANCE_.CLIENT_ID, ATTENDANCE_.CLIENT_REFERENCE, ATTENDANCE_.SCHEDULE_ID, ATTENDANCE_.BLOCK_ID)
             .values((String) null, null, null, null)
             .onConflict(ATTENDANCE_PKEY.getFieldsArray()).doNothing();
-    private static final Query processingStateInsert = DSL.insertInto(PROCESSING_STATE,
+    private static final Query insertProcessingStateQuery = DSL.insertInto(PROCESSING_STATE,
             PROCESSING_STATE.CLIENT_ID, PROCESSING_STATE.READER_SN, PROCESSING_STATE.PORT_NUMBER, PROCESSING_STATE.PROCESSED_UP_TO)
             .values((String) null, null, null, null)
             .onConflict(PROCESSING_STATE_PKEY.getFieldsArray())
@@ -154,7 +158,7 @@ public class AttendanceProcessor {
                     }
                 }
 
-                BatchBindStep stateBatch = sql.batch(processingStateInsert);
+                BatchBindStep stateBatch = sql.batch(insertProcessingStateQuery);
                 for (Map.Entry<AntennaKey, Instant> entry : newProcessingStates.entrySet()) {
                     AntennaKey antenna = entry.getKey();
                     LocalDateTime processedUpTo = utcLocalFromInstant(entry.getValue());
@@ -183,11 +187,17 @@ public class AttendanceProcessor {
                     UHF_DETECTION.PORT_NUMBER,
                     UHF_DETECTION.DETECTION_TIME)
                     .from(UHF_DETECTION.join(ANTENNA).onKey())
-                    .leftJoin(PROCESSING_STATE).on(ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID), ANTENNA.READER_SN.eq(PROCESSING_STATE.READER_SN), ANTENNA.PORT_NUMBER.eq(PROCESSING_STATE.PORT_NUMBER))
-                    .where(PROCESSING_STATE.PROCESSED_UP_TO.isNull())
-                    .or(UHF_DETECTION.DETECTION_TIME.gt(PROCESSING_STATE.PROCESSED_UP_TO))
+                    .join(PROCESSING_STATE).on(
+                            ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID),
+                            ANTENNA.READER_SN.eq(PROCESSING_STATE.READER_SN),
+                            ANTENNA.PORT_NUMBER.eq(PROCESSING_STATE.PORT_NUMBER))
+                    .where(UHF_DETECTION.DETECTION_TIME.gt(PROCESSING_STATE.PROCESSED_UP_TO))
                     .stream()
-                    .map(d -> new Detection(new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())), d.value4(), d.value5(), instantFromUtcLocal(d.value6())))
+                    .map(d -> new Detection(
+                            new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
+                            d.value4(),
+                            d.value5(),
+                            instantFromUtcLocal(d.value6())))
                     .collect(toList());
         });
 
@@ -197,6 +207,21 @@ public class AttendanceProcessor {
 
     private Void refreshAssignments(DSLContext sql) {
         long timerStart = System.currentTimeMillis();
+
+        List<Record> neverProcessedAntennae = sql
+                .selectFrom(ANTENNA.leftAntiJoin(PROCESSING_STATE)
+                        .using(ANTENNA.CLIENT_ID, ANTENNA.READER_SN, ANTENNA.PORT_NUMBER))
+                .fetch();
+        for (Record antenna : neverProcessedAntennae) {
+            sql.insertInto(PROCESSING_STATE)
+                    .set(PROCESSING_STATE.CLIENT_ID, antenna.get(ANTENNA.CLIENT_ID))
+                    .set(PROCESSING_STATE.READER_SN, antenna.get(ANTENNA.READER_SN))
+                    .set(PROCESSING_STATE.PORT_NUMBER, antenna.get(ANTENNA.PORT_NUMBER))
+                    .set(PROCESSING_STATE.PROCESSED_UP_TO, LocalDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
+                    .onConflictDoNothing()
+                    .execute();
+            log.info("Added initial processing state for\n{}", antenna);
+        }
 
         detectableHolders = sql
                 .select(DETECTABLE.CLIENT_ID, DETECTABLE.DETECTABLE_ID, DETECTABLE.DETECTABLE_TYPE, ASSIGNMENT.CLIENT_REFERENCE)
