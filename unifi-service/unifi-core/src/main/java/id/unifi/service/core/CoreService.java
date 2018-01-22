@@ -104,6 +104,7 @@ public class CoreService {
         Config config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
 
         DatabaseProvider dbProvider = new DatabaseProvider();
+        dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
         DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
 
         ComponentHolder componentHolder = new ComponentHolder(Map.of(
@@ -116,7 +117,6 @@ public class CoreService {
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
         ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
         Channel channel = startRawDetectionConsumer(mapper, config.mq());
-        dbProvider.bySchema(CORE, ATTENDANCE);
         AttendanceProcessor attendanceProcessor = new AttendanceProcessor(dbProvider);
         processQueue(channel, dbProvider.bySchema(CORE), detectionProcessor, attendanceProcessor);
     }

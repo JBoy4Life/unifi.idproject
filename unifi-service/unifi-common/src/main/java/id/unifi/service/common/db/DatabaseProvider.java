@@ -5,6 +5,8 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.core.db.Core;
 import static id.unifi.service.core.db.Core.CORE;
 import org.jooq.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DatabaseProvider {
+    private static final Logger log = LoggerFactory.getLogger(DatabaseProvider.class);
+
     private final Map<Schema, Database> databases;
 
     public DatabaseProvider() {
@@ -33,6 +37,7 @@ public class DatabaseProvider {
 
     private static Database prepareSqlDatabase(String schemaName, DatabaseConfig config) {
         Database db = getSqlDatabase(schemaName, config);
+        log.info("Migrating schema {}", schemaName);
         db.migrate();
         return db;
     }
