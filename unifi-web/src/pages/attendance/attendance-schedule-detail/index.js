@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import moment from 'moment'
+import fp from 'lodash/fp'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
@@ -21,22 +23,32 @@ import {
 import ScheduleCalendar from './components/schedule-calendar'
 import CommittersList from './components/committers-list'
 
+const singleScheduleSelector = (state, props) =>
+  fp.compose(
+    fp.defaultTo({}),
+    fp.get('[0]'),
+    fp.filter({ scheduleId: props.match.params.scheduleId }),
+    fp.defaultTo([]),
+    schedulesSelector
+  )(state)
+
 export class AttendanceScheduleDetail extends Component {
+  static propTypes = {
+    blocks: PropTypes.array,
+    schedule: PropTypes.object,
+    contactAttendance: PropTypes.object,
+    listScheduleStats: PropTypes.func,
+    listBlocks: PropTypes.func,
+    match: PropTypes.object,
+    getContactAttendanceForSchedule: PropTypes.func
+  }
+
   constructor(props) {
     super(props)
 
     this.state = {
       mode: 'schedule',
       addCommitterSelectedKey: null,
-      schedule: {
-        name: '',
-        attendance: 0,
-        startDate: null,
-        endDate: null,
-        committerCount: 0,
-        blockCount: 0,
-        processedBlockCount: 0
-      }
     }
   }
 
@@ -47,29 +59,6 @@ export class AttendanceScheduleDetail extends Component {
     this.props.getContactAttendanceForSchedule(scheduleId)
   }
 
-  componentWillReceiveProps(nextProps) {
-
-    // Schedule information.
-    if (nextProps.scheduleStats.length > 0) {
-      let scheduleId = nextProps.match.params.scheduleId;
-      let schedule = nextProps.scheduleStats.filter((schedule) => schedule.scheduleId === scheduleId)[0];
-      let percentage = (schedule.processedBlockCount === 0 || schedule.committerCount === 0) ? 0 :
-        (schedule.overallAttendance / (schedule.committerCount * schedule.processedBlockCount)) * 100;
-
-      this.setState({
-        schedule: {
-          name: schedule.name,
-          attendance: percentage,
-          startDate: schedule.startTime,
-          endDate:   schedule.endTime,
-          committerCount: schedule.committerCount,
-          blockCount: schedule.blockCount,
-          processedBlockCount: schedule.processedBlockCount
-        }
-      });
-    }
-  }
-
   handleSwitchMode = (newMode) => () => {
     this.setState({
       mode: newMode
@@ -77,26 +66,34 @@ export class AttendanceScheduleDetail extends Component {
   }
 
   render() {
-    const { blocks, contactAttendance } = this.props
+    const { blocks, contactAttendance, schedule } = this.props
     const { scheduleId } = this.props.match.params
-    let startDate  = moment(this.state.schedule.startDate).format('DD/MM/Y')
-    let endDate    = moment(this.state.schedule.endDate).format('DD/MM/Y')
+
+    const startDate  = moment(schedule.startDate).format('DD/MM/Y')
+    const endDate    = moment(schedule.endDate).format('DD/MM/Y')
+    const processedCount = schedule.committerCount * schedule.processedBlockCount
+    const percentage = Math.round(schedule.overallAttendance / (processedCount || 1) * 100);
 
     return (
       <div className="attendanceScheduleDetail">
-        <h1>{this.state.schedule.name}</h1>
+        <h1>{schedule.name}</h1>
         <div className="schedule-stats-summary">
-          <EvacuationProgressBar percentage={Math.floor(this.state.schedule.attendance)} warningThreshold={90} criticalThreshold={70} />
+          <EvacuationProgressBar
+            percentage={percentage}
+            tbd={!processedCount}
+            warningThreshold={90}
+            criticalThreshold={70}
+          />
           <p className="label">Overall Attendance to Date</p>
           <div className="stats">
-            {(this.state.schedule.startDate === null) ?
+            {(schedule.startDate === null) ? (
               <p className="stat"><span>Dates:</span>{' '}Unscheduled</p>
-              :
+            ) : (
               <p className="stat"><span>Dates:</span>{' '}{startDate} – {endDate}</p>
-            }
+            )}
             <br />
-            <p className="stat"><span>Students:</span>{' '}{this.state.schedule.committerCount}</p>
-            <p className="stat"><span>Lectures:</span>{' '}{this.state.schedule.blockCount}</p>
+            <p className="stat"><span>Students:</span>{' '}{schedule.committerCount}</p>
+            <p className="stat"><span>Lectures:</span>{' '}{schedule.blockCount}</p>
           </div>
         </div>
         <div className="tabs">
@@ -126,8 +123,8 @@ export class AttendanceScheduleDetail extends Component {
 }
 
 const selector = createStructuredSelector({
-  scheduleStats: schedulesSelector,
   blocks: blocksSelector,
+  schedule: singleScheduleSelector,
   contactAttendance: contactAttendanceSelector
 })
 
