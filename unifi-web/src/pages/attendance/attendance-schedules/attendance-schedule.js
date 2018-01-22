@@ -14,7 +14,7 @@ export default class AttendanceSchedule extends Component {
     committerCount: PropTypes.number,
     endDate: PropTypes.string,
     processedBlockCount: PropTypes.number,
-    scheduleId: PropTypes.number,
+    scheduleId: PropTypes.string,
     startDate: PropTypes.string,
     title: PropTypes.string
   }
