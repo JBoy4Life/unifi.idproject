@@ -131,20 +131,20 @@ export class AttendanceReports extends Component {
           <tr>
             <th>Name</th>
             <th>Modules</th>
-            <th>Lectures</th>
-            <th>Present</th>
-            <th>Absent</th>
-            <th>Attendance</th>
+            <th className="text-right">Lectures</th>
+            <th className="text-right">Present</th>
+            <th className="text-right">Absent</th>
+            <th className="text-right">Attendance</th>
           </tr>
         </thead>
         <tbody>
           <tr className="summary">
             <td>Total</td>
             <td>–</td>
-            <td>{blockCount}</td>
-            <td>{presentCount}</td>
-            <td>{absentCount}</td>
-            <td>{attendanceRate}%</td>
+            <td className="text-right">{blockCount}</td>
+            <td className="text-right">{presentCount}</td>
+            <td className="text-right">{absentCount}</td>
+            <td className="text-right">{attendanceRate}%</td>
           </tr>
           {[].concat.apply([], committersTableData.map((c) =>
             c.attendance.map((a, index) => (
@@ -157,10 +157,10 @@ export class AttendanceReports extends Component {
                     {a.schedule}
                   </Link>
                 </td>
-                <td>{a.blockCount}</td>
-                <td>{a.presentCount}</td>
-                <td>{a.absentCount}</td>
-                <td>{a.attendanceRate}%</td>
+                <td className="text-right">{a.blockCount}</td>
+                <td className="text-right">{a.presentCount}</td>
+                <td className="text-right">{a.absentCount}</td>
+                <td className="text-right">{a.attendanceRate}%</td>
               </tr>
             ))
           ))}

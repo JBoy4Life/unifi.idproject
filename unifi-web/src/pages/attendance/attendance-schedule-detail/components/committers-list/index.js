@@ -116,10 +116,10 @@ export class CommittersList extends Component {
           <thead>
             <tr>
               <th>Student</th>
-              <th>No.</th>
-              <th>Present</th>
-              <th>Absent</th>
-              <th>Attendance</th>
+              <th className="text-right">No.</th>
+              <th className="text-right">Present</th>
+              <th className="text-right">Absent</th>
+              <th className="text-right">Attendance</th>
             </tr>
           </thead>
           <tbody>
@@ -127,10 +127,10 @@ export class CommittersList extends Component {
               return (
                 <tr key={committer.clientReference}>
                   <td><Link to={`/attendance/schedules/${scheduleId}/${committer.clientReference}`}>{committer.name}</Link></td>
-                  <td>{committer.clientReference}</td>
-                  <td>{committer.presentCount}</td>
-                  <td>{committer.absentCount}</td>
-                  <td>{Math.floor((committer.presentCount / (committer.presentCount + committer.absentCount)) * 100)}%</td>
+                  <td className="text-right">{committer.clientReference}</td>
+                  <td className="text-right">{committer.presentCount}</td>
+                  <td className="text-right">{committer.absentCount}</td>
+                  <td className="text-right">{Math.round((committer.presentCount / (committer.presentCount + committer.absentCount)) * 100)}%</td>
                 </tr>
               )
             })}
