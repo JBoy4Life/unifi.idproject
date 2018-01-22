@@ -62,7 +62,7 @@ export class ScheduleCalendar extends Component {
       ew = 53
     }
     let rows  = (ew - sw) + 1
-    let grid  = Array.from(Array(rows * 7).keys()).fill(<td />)
+    let grid  = Array.from(Array(rows * 7).keys()).map((key) => <td key={`empty-${key}`} />)
 
     // Offset into the grid by start-of-month weekday number.
     // Sunday is zero, which is bloody annoying, hence the weird arithmetic.
