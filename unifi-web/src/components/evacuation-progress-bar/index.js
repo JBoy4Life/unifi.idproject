@@ -1,10 +1,12 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
+import cn from 'classnames'
+import PropTypes from 'prop-types'
 
 import { CircularProgressBar } from '../../elements'
 
 import './index.scss'
 
-function getStatusClass(percentage, warningThreshold, criticalThreshold) {
+const getStatusClass = ({ percentage, warningThreshold, criticalThreshold }) => {
   if (percentage < criticalThreshold) {
     return 'status-critical';
   } else if (percentage < warningThreshold) {
@@ -15,12 +17,29 @@ function getStatusClass(percentage, warningThreshold, criticalThreshold) {
 }
 
 export default class EvacuationProgressBar extends Component {
+  static propTypes = {
+    criticalThreshold: PropTypes.number,
+    percentage: PropTypes.number,
+    tbd: PropTypes.bool,
+    warningThreshold: PropTypes.number
+  }
+
+  handleTextForPercentage = (pct) => {
+    const { tbd } = this.props
+    return tbd ? 'TBD' : `${pct}%`
+  }
+
   render() {
+    const { percentage } = this.props
+
     return (
-      <div className={`evacuation-progress-bar ${getStatusClass(this.props.percentage, this.props.warningThreshold, this.props.criticalThreshold)}`}>
+      <div className={cn('evacuation-progress-bar', getStatusClass(this.props))}>
         <div className="evacuation-progress-bar-circle">
-          <CircularProgressBar strokeWidth={10}
-                               percentage={Math.round(this.props.percentage * 100) / 100}/>
+          <CircularProgressBar
+            strokeWidth={10}
+            percentage={Math.round(percentage * 100) / 100}
+            textForPercentage={this.handleTextForPercentage}
+          />
         </div>
         <div className="evacuation-progress-background"/>
       </div>
