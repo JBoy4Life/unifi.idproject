@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import moment from 'moment'
 import fp from 'lodash/fp'
+import PropTypes from 'prop-types'
 import sortBy from 'lodash/sortBy'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
@@ -54,9 +55,6 @@ const getProcessedCount = fp.compose(
   fp.reject({ status: null })
 )
 
-const getPercentage = (blockReport) =>
-  Math.round(getPresentCount(blockReport) / (getProcessedCount(blockReport) || 1) * 100, 10)
-
 const singleScheduleSelector = (state, props) =>
   fp.compose(
     fp.get('[0]'),
@@ -74,6 +72,18 @@ const committerSelector = (state, props) =>
   )(state)
 
 export class AttendanceScheduleBlockDrilldown extends Component {
+  static propTypes = {
+    blockReport: PropTypes.array,
+    committer: PropTypes.object,
+    getContactAttendanceForSchedule: PropTypes.func,
+    listScheduleStats: PropTypes.func,
+    match: PropTypes.object,
+    overrideAttendanceResult: PropTypes.object,
+    reportBlockAttendance: PropTypes.func,
+    schedule: PropTypes.object,
+    scheduleStats: PropTypes.array
+  }
+
   constructor(props) {
     super(props)
     this.state = {
@@ -143,6 +153,8 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     const { blockReport, committer, schedule } = this.props
     const sortedBlockReport = sortBlockReport(blockReport)
     const { clientReference } = this.props.match.params
+    const processedCount = getProcessedCount(blockReport)
+    const percentage = Math.round(getPresentCount(blockReport) / (processedCount || 1) * 100, 10)
 
     return (
       <div className="attendanceScheduleBlockDrilldown">
@@ -177,9 +189,10 @@ export class AttendanceScheduleBlockDrilldown extends Component {
         <h2>{schedule && schedule.name}</h2>
         <div className="schedule-stats-summary">
           <EvacuationProgressBar
-            percentage={(getPercentage(sortedBlockReport))}
+            percentage={percentage}
             warningThreshold={90}
             criticalThreshold={70}
+            tbd={!processedCount}
           />
           <p className="label">Overall Attendance</p>
           <div className="stats">
