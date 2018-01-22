@@ -32,7 +32,7 @@ const getCommittersTableData = ({ attendance, schedules }) =>
         processedBlockCount: schedule.processedBlockCount,
         presentCount: a.count,
         absentCount: schedule.processedBlockCount - a.count,
-        attendanceRate: Math.floor(a.count / (schedule.processedBlockCount || 1) * 100),
+        attendanceRate: Math.round(a.count / (schedule.processedBlockCount || 1) * 100),
         key: `${c.clientReference}-${a.scheduleId}`
       }
     })
@@ -46,7 +46,7 @@ const getCommittersTableData = ({ attendance, schedules }) =>
       blockCount,
       presentCount,
       absentCount,
-      attendanceRate: Math.floor(presentCount / (blockCount || 1) * 100),
+      attendanceRate: Math.round(presentCount / (blockCount || 1) * 100),
       attendance: attendanceData,
       key: c.clientReference
     }
@@ -108,7 +108,7 @@ export class AttendanceReports extends Component {
               <td>{schedule.processedBlockCount} / {schedule.blockCount}</td>
               <td>{schedule.overallAttendance}</td>
               <td>{(schedule.committerCount * schedule.processedBlockCount) - schedule.overallAttendance}</td>
-              <td>{Math.floor(percentage)}%</td>
+              <td>{Math.round(percentage)}%</td>
             </tr>;
           })}
         </tbody>
@@ -123,7 +123,7 @@ export class AttendanceReports extends Component {
     const blockCount = sumBy(committersTableData, 'blockCount')
     const presentCount = sumBy(committersTableData, 'presentCount')
     const absentCount = sumBy(committersTableData, 'absentCount')
-    const attendanceRate = Math.floor(presentCount / (processedBlockCount || 1) * 100)
+    const attendanceRate = Math.round(presentCount / (processedBlockCount || 1) * 100)
 
     return (
       <table className="unifi-table">
