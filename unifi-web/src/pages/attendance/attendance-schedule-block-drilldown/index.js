@@ -7,9 +7,9 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
-import DialogBox from '../../../components/dialog-box'
+import DialogBox from 'components/dialog-box'
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
-import SearchableSelectField from '../../../components/searchable-select-field'
+import SearchableSelectField from 'components/searchable-select-field'
 
 import {
   blockReportSelector,

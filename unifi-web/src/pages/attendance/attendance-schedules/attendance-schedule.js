@@ -3,7 +3,7 @@ import moment from "moment"
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 
-import EvacuationProgressBar from "../../../components/evacuation-progress-bar"
+import EvacuationProgressBar from 'components/evacuation-progress-bar'
 
 import './attendance-schedule.scss'
 
