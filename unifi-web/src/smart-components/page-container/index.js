@@ -1,13 +1,14 @@
 import React from 'react'
 
-import { bindActionCreators } from 'redux'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
+import { withRouter } from 'react-router'
 
-import { actions as userActions, selectors as userSelectors } from '../../reducers/user'
-
-import { IdentBar } from '../../components'
+import { actions as userActions, selectors as userSelectors } from 'reducers/user'
+import { Breadcrumb, Layout, Aux } from 'elements'
+import { IdentBar } from 'components'
 import { LinkedNavigationMenu } from '../'
-import { Layout, Aux } from '../../elements'
 
 import './index.scss'
 
@@ -29,9 +30,15 @@ const renderHeader = props => (
 )
 
 const PageContainer = (props) => {
-  const { className = '', children } = props
+  const { className = '', children, location } = props
   return (
     <Layout className={`${className} page-container`}>
+      {location.pathname !== '/' && (
+        <Breadcrumb data={{
+          title: 'Home',
+          pathname: '/'
+        }} />
+      )}
       {props.noHeader ? '' : renderHeader(props)}
       <Content className="main-content-container">
         {children}
@@ -40,11 +47,15 @@ const PageContainer = (props) => {
   )
 }
 
-const mapStateToProps = state => ({
-  user: userSelectors.getCurrentUser(state),
+const selector = createStructuredSelector({
+  user: userSelectors.getCurrentUser,
 })
-const mapDispatchToProps = d => bindActionCreators(userActions, d)
 
+const actions = {
+  ...userActions
+}
 
-export default connect(mapStateToProps, mapDispatchToProps)(PageContainer)
-
+export default compose(
+  withRouter,
+  connect(selector, actions)
+)(PageContainer)

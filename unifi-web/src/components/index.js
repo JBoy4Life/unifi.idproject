@@ -20,6 +20,8 @@ import NetworkReaderDetailsCard from './network-reader-details-card'
 
 import LiveSiteFloorView from './live-site-floor-view'
 
+import CrumbRoute from './crumb-route'
+
 export {
   IdentBar,
   TopNavigation,
@@ -37,6 +39,8 @@ export {
   EvacuationProgressBar,
   NetworkReaderDetailsCard,
   LiveSiteFloorView,
+
+  CrumbRoute
 }
 
 export default null
