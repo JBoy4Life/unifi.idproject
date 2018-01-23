@@ -2,6 +2,7 @@ import { REHYDRATE } from 'redux-persist'
 import { USER_LOGOUT, USER_LOGIN } from './types'
 
 const initialState = {
+  isLoggingIn: false,
   currentUser: null,
   initialising: true,
 }
@@ -12,6 +13,7 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         currentUser: null,
+        isLoggingIn: true,
         error: null,
       }
 
@@ -20,6 +22,7 @@ const reducer = (state = initialState, action = {}) => {
         return {
           ...state,
           currentUser: null,
+          isLoggingIn: false,
           error: action.payload.payload.message,
         }
       }
@@ -27,6 +30,7 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         currentUser: action.payload.payload,
+        isLoggingIn: false,
       }
 
     case USER_LOGOUT:

@@ -48,7 +48,7 @@ const PageContainer = (props) => {
 }
 
 const selector = createStructuredSelector({
-  user: userSelectors.getCurrentUser,
+  user: userSelectors.currentUserSelector,
 })
 
 const actions = {

@@ -37,13 +37,11 @@ const ModulesRoutes = () => (
     />
     <Route
       exact
-      title="Modules"
       path={ROUTES.ATTENDANCE_SCHEDULES_DETAIL}
       component={AttendanceScheduleDetail}
     />
     <Route
       exact
-      title="Modules"
       path={ROUTES.ATTENDANCE_SCHEDULES_BLOCK_DRILLDOWN}
       component={AttendanceScheduleBlockDrilldown}
     />
