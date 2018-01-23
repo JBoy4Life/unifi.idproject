@@ -2,13 +2,14 @@ import React, { Component } from 'react'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/es/integration/react'
 import createHistory from 'history/createBrowserHistory'
-import { Router, Route, Switch, /* Redirect */
-  Redirect } from 'react-router'
+import { Router, Switch, Redirect } from 'react-router'
 
-import {WSProtocol} from '../lib/ws'
+import { CrumbRoute as Route } from 'components'
+
+import { WSProtocol } from 'lib/ws'
 
 import { configureStore } from './store'
-import * as ROUTES from '../utils/routes'
+import * as ROUTES from 'utils/routes'
 
 import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
@@ -79,27 +80,26 @@ export default class Main extends Component {
     return (
       <Router history={this.state.history}>
         <Switch>
-          <Route exact path={ROUTES.SITEMAP} component={Sitemap} />
-          <Route exact path={ROUTES.MY_ACCOUNT} component={MyAccount} />
-          <Route exact path={ROUTES.DIRECTORY} component={Discovery} />
+          <Route exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
+          <Route exact path={ROUTES.MY_ACCOUNT} title="My Account" component={MyAccount} />
+          <Route exact path={ROUTES.DIRECTORY} title="Discovery" component={Discovery} />
 
-          <Route path={ROUTES.EVACUATION} component={Evacuation} />
-          <Route path={ROUTES.ATTENDANCE} component={Attendance} />
+          <Route path={ROUTES.EVACUATION} title="Evacuation" component={Evacuation} />
+          <Route path={ROUTES.ATTENDANCE} title="Attendance" component={Attendance} />
 
-          <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
+          <Route path={ROUTES.CLIENT_REGISTRY} title="client Registry" component={ClientRegistry} />
 
-          <Route path={ROUTES.LIVE_VIEW} component={LiveView} />
+          <Route path={ROUTES.LIVE_VIEW} title="Live View" component={LiveView} />
 
-          <Route exact path={ROUTES.NAVIGATION} component={Navigation} />
+          <Route exact path={ROUTES.NAVIGATION} title="Navigation" component={Navigation} />
 
-          <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
+          <Route path={ROUTES.SITE_MANAGER} title="Site Manager" component={SiteManager} />
 
-          <Route exact path={ROUTES.USERS} component={Users} />
+          <Route exact path={ROUTES.USERS} title="Users" component={Users} />
 
           <Redirect exact from={ROUTES.LOGIN} to={ROUTES.SITEMAP} />
           <Route component={NotFound} />
         </Switch>
-
       </Router>
     )
   }
