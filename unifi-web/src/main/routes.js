@@ -13,6 +13,7 @@ import {
 
 const ProtectedRoutes = () => (
   <Switch>
+    <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
     <CrumbRoute exact path={ROUTES.MY_ACCOUNT} title="My Account" component={MyAccount} />
     <CrumbRoute exact path={ROUTES.DIRECTORY} title="Discovery" component={Discovery} />
 
@@ -34,7 +35,6 @@ const ProtectedRoutes = () => (
 export default ({ history }) => (
   <Router history={history}>
     <Switch>
-      <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
       <CrumbRoute exact path={ROUTES.LOGIN} title="Login" component={userIsNotAuthenticatedRedir(Login)} />
       <Route path="/" component={userIsAuthenticatedRedir(ProtectedRoutes)} />
 
