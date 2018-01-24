@@ -500,11 +500,13 @@ public class ScheduleService {
 
     public static class ScheduleAttendance {
         public final String scheduleId;
-        public final int count;
+        public final int presentCount;
+        private final int absentCount;
 
         public ScheduleAttendance(String scheduleId, int presentCount, int absentCount) {
             this.scheduleId = scheduleId;
-            this.count = presentCount;
+            this.presentCount = presentCount;
+            this.absentCount = absentCount;
         }
     }
 
