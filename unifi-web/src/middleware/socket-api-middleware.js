@@ -8,12 +8,20 @@
  */
 const socketApiMiddleware = socketClient => store => next => (action) => {
   if (action.socketRequest) {
-    const promiseResource = socketClient.request(action.socketRequest, { json: true })
+    const promiseResource = new Promise((resolve, reject) => {
+      socketClient.request(action.socketRequest, { json: true })
+        .then(res => {
+          res.messageType.startsWith('core.error')
+          ? reject(res)
+          : resolve(res)
+        })
+        .catch(ex => reject(ex))
+    })
 
     store.dispatch({
       type: action.type,
-      payload: promiseResource,
-    });
+      payload: promiseResource
+    }).catch(() => {})
 
     return promiseResource
   }
@@ -28,6 +36,6 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
   }
 
   return next(action)
-};
+}
 
 export default socketApiMiddleware

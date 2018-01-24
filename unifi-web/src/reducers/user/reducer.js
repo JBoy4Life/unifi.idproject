@@ -18,19 +18,18 @@ const reducer = (state = initialState, action = {}) => {
       }
 
     case `${USER_LOGIN}_FULFILLED`:
-      if (action.payload.payload.message) {
-        return {
-          ...state,
-          currentUser: null,
-          isLoggingIn: false,
-          error: action.payload.payload.message,
-        }
-      }
-
       return {
         ...state,
         currentUser: action.payload.payload,
         isLoggingIn: false,
+      }
+
+    case `${USER_LOGIN}_REJECTED`:
+      return {
+        ...state,
+        currentUser: null,
+        isLoggingIn: false,
+        error: action.payload.payload.message,
       }
 
     case USER_LOGOUT:
