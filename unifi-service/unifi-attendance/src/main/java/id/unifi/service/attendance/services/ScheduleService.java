@@ -68,7 +68,6 @@ public class ScheduleService {
                         .fullJoin(ATTENDANCE_OVERRIDE)
                         .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID));
 
-
     private static final CommonTableExpression<Record4<String, String, String, LocalDateTime>> ZONE_PROCESSING_STATE =
             name("z").as(select(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID,
                     min(coalesce(PROCESSING_STATE.PROCESSED_UP_TO, EPOCH)).as("processed_up_to"))
@@ -278,38 +277,6 @@ public class ScheduleService {
 
             return new ContactScheduleAttendanceInfo(schedules, attendance);
         });
-    }
-
-    @ApiOperation
-    public List<BlockAttendance> reportContactAttendance(OperatorSessionData session,
-                                                         String clientId,
-                                                         String clientReference,
-                                                         ZonedDateTime startTime,
-                                                         ZonedDateTime endTime) {
-        authorize(session, clientId);
-
-        return db.execute(sql -> sql
-                .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
-                .select(BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID, BLOCK_TIME.START_TIME, BLOCK_TIME.END_TIME, STATUS)
-                .from(ASSIGNMENT)
-                .join(BLOCK_WITH_TIME_AND_ZONE)
-                .using(CLIENT_ID, SCHEDULE_ID)
-                .join(ZONE_PROCESSING_STATE)
-                .using(CLIENT_ID, SITE_ID, ZONE_ID)
-                .leftJoin(FULL_ATTENDANCE)
-                .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
-                .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
-                .and(ASSIGNMENT.CLIENT_REFERENCE.eq(clientReference))
-                .and(between(startTime.toInstant(), endTime.toInstant()))
-                .fetch(r -> new BlockAttendance(
-                        r.get(BLOCK.SCHEDULE_ID),
-                        r.get(BLOCK_ID),
-                        r.get(BLOCK.NAME),
-                        zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                        zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
-                        r.get(BLOCK_ZONE.SITE_ID),
-                        r.get(BLOCK_ZONE.ZONE_ID),
-                        OverriddenStatus.fromString(r.get(STATUS)))));
     }
 
     @ApiOperation
