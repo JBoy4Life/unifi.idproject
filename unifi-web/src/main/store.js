@@ -4,7 +4,7 @@ import storage from 'redux-persist/es/storage'
 import { persistStore, persistCombineReducers } from 'redux-persist'
 import { composeWithDevTools } from 'redux-devtools-extension'
 
-import { socketApiMiddleware } from '../middleware'
+import { authMiddleware, socketApiMiddleware } from '../middleware'
 import reducers from '../reducers'
 import * as userActions from "../reducers/user/actions";
 
@@ -22,6 +22,7 @@ export const configureStore = (wsClient) => {
   const middlewares = [
     promiseMiddleware(),
     socketApiMiddleware(wsClient),
+    authMiddleware
   ];
 
   // Add the reducer to your store on the `router` key

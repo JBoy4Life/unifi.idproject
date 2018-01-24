@@ -14,6 +14,7 @@ import {
 const ProtectedRoutes = () => (
   <Switch>
     <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
+
     <CrumbRoute exact path={ROUTES.MY_ACCOUNT} title="My Account" component={MyAccount} />
     <CrumbRoute exact path={ROUTES.DIRECTORY} title="Discovery" component={Discovery} />
 
