@@ -5307,10 +5307,6 @@ lodash.isequal@^3.0:
     lodash._baseisequal "^3.0.0"
     lodash._bindcallback "^3.0.0"
 
-lodash.isequal@^4.5.0:
-  version "4.5.0"
-  resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
-
 lodash.isplainobject@^4.0.6:
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz#7c526a52d89b45c45cc690b88163be0497f550cb"
@@ -7159,14 +7155,6 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.1.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-breadcrumbs@^2.1.4:
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/react-breadcrumbs/-/react-breadcrumbs-2.1.4.tgz#6a73f30458dc7aa1314bff9945c0f04ffa33cc7e"
-  dependencies:
-    lodash.isequal "^4.5.0"
-    redux "^3.6.0"
-    uuid "^3.0.1"
-
 react-circular-progressbar@^0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/react-circular-progressbar/-/react-circular-progressbar-0.5.0.tgz#74b67862431f3fa5e46f380874e4284f5f321b9a"
@@ -7495,7 +7483,7 @@ redux-promise-middleware@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/redux-promise-middleware/-/redux-promise-middleware-5.0.0.tgz#1656b24f9ac962bf11fbe55ea8360810e18d47a7"
 
-redux@^3.6.0, redux@^3.7.2:
+redux@^3.7.2:
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/redux/-/redux-3.7.2.tgz#06b73123215901d25d065be342eb026bc1c8537b"
   dependencies:
@@ -8731,10 +8719,6 @@ uuid@^2.0.1, uuid@^2.0.2:
 uuid@^3.0.0, uuid@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.1.0.tgz#3dd3d3e790abc24d7b0d3a034ffababe28ebbc04"
-
-uuid@^3.0.1:
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.2.1.tgz#12c528bb9d58d0b9265d9a2f6f0fe8be17ff1f14"
 
 validate-npm-package-license@^3.0.1:
   version "3.0.1"

@@ -3,7 +3,7 @@ import { Route, Switch /*, Redirect*/ } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
-import { CrumbRoute, PageContent } from 'components'
+import { PageContent } from 'components'
 
 import AttendanceCustomReports from './attendance-custom-reports'
 import AttendanceReports from './attendance-reports'
@@ -28,28 +28,6 @@ const menus = [
   // }
 ]
 
-const ModulesRoutes = () => (
-  <Switch>
-    <Route
-      exact
-      path={ROUTES.ATTENDANCE_SCHEDULES}
-      component={AttendanceSchedules}
-    />
-    <Route
-      exact
-      title="Modules"
-      path={ROUTES.ATTENDANCE_SCHEDULES_DETAIL}
-      component={AttendanceScheduleDetail}
-    />
-    <Route
-      exact
-      title="Modules"
-      path={ROUTES.ATTENDANCE_SCHEDULES_BLOCK_DRILLDOWN}
-      component={AttendanceScheduleBlockDrilldown}
-    />
-  </Switch>
-)
-
 const SitemapContainer = () => (
   <PageContainer>
     <PageContent>
@@ -58,14 +36,23 @@ const SitemapContainer = () => (
       </PageContent.Sidebar>
       <PageContent.Main>
         <Switch>
-          <CrumbRoute
-            title="Modules"
-            path={ROUTES.ATTENDANCE_SCHEDULES}
-            component={ModulesRoutes}
-          />
-          <CrumbRoute
+          <Route
             exact
-            title="Reports"
+            path={ROUTES.ATTENDANCE_SCHEDULES}
+            component={AttendanceSchedules}
+          />
+          <Route
+            exact
+            path={ROUTES.ATTENDANCE_SCHEDULES_DETAIL}
+            component={AttendanceScheduleDetail}
+          />
+          <Route
+            exact
+            path={ROUTES.ATTENDANCE_SCHEDULES_BLOCK_DRILLDOWN}
+            component={AttendanceScheduleBlockDrilldown}
+          />
+          <Route
+            exact
             path={ROUTES.ATTENDANCE_REPORTS}
             component={AttendanceReports}
           />

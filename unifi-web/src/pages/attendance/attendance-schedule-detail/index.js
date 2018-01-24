@@ -7,7 +7,6 @@ import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
-import { Breadcrumb } from 'elements'
 
 import {
   getContactAttendanceForSchedule,
@@ -67,7 +66,7 @@ export class AttendanceScheduleDetail extends Component {
   }
 
   render() {
-    const { blocks, contactAttendance, location, schedule } = this.props
+    const { blocks, contactAttendance, schedule } = this.props
     const { scheduleId } = this.props.match.params
 
     const startDate  = moment(schedule.startDate).format('DD/MM/Y')
@@ -77,10 +76,6 @@ export class AttendanceScheduleDetail extends Component {
 
     return (
       <div className="attendanceScheduleDetail">
-        <Breadcrumb data={{
-          title: schedule.name,
-          pathname: location.pathname
-        }} />
         <h1>{schedule.name}</h1>
         <div className="schedule-stats-summary">
           <EvacuationProgressBar

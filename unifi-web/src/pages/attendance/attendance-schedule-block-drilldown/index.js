@@ -7,12 +7,9 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
 import DialogBox from 'components/dialog-box'
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
 import SearchableSelectField from 'components/searchable-select-field'
-
-import { Breadcrumb } from 'elements'
 
 import {
   blockReportSelector,
@@ -153,7 +150,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
   }
 
   render() {
-    const { blockReport, committer, schedule, location } = this.props
+    const { blockReport, committer, schedule } = this.props
     const sortedBlockReport = sortBlockReport(blockReport)
     const { clientReference } = this.props.match.params
     const processedCount = getProcessedCount(blockReport)
@@ -161,16 +158,6 @@ export class AttendanceScheduleBlockDrilldown extends Component {
 
     return (
       <div className="attendanceScheduleBlockDrilldown">
-        <Breadcrumb data={{
-          title: schedule ? schedule.name : '',
-          pathname: ROUTES.ATTENDANCE_SCHEDULES_DETAIL.replace(
-            ':scheduleId', schedule ? schedule.scheduleId : ':scheduleId'
-          )
-        }} />
-        <Breadcrumb data={{
-          title: committer ? committer.name : '',
-          pathname: location.pathname
-        }} />
         {this.state.editAttendanceVisible &&
           <DialogBox>
             <h1>Edit Attendance</h1>

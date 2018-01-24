@@ -36,9 +36,6 @@ import Layout from './layout'
 
 import SingleFilePicker from './single-file-picker'
 
-import Breadcrumb from './breadcrumb'
-import Breadcrumbs from './breadcrumbs'
-
 export {
   Aux,
   Alert,
@@ -73,9 +70,6 @@ export {
   SingleFilePicker,
   Tabs,
   Collapse,
-
-  Breadcrumb,
-  Breadcrumbs
 }
 
 export default null

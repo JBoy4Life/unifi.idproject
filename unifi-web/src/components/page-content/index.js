@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Breadcrumbs, Layout, Aux } from 'elements'
+import { Layout, Aux } from '../../elements'
 
 import './index.scss'
 
@@ -21,12 +21,7 @@ const PageContent = ({ children }) => (
         return <Sider className="page-sidebar">{child}</Sider>
       }
 
-      return (
-        <Content className="page-content">
-          <Breadcrumbs className="page-content__crumbs" />
-          {child}
-        </Content>
-      )
+      return <Content className="page-content">{child}</Content>
     })}
   </Layout>
 )
