@@ -31,15 +31,15 @@ public class ServiceRegistry {
 
     static class Operation {
         final Class<?> cls;
-        final Map<String, Type> params;
+        final Map<String, Param> params;
         final InvocationType invocationType;
         final String resultMessageType;
         final Type resultType;
         final Method method;
 
-        Operation(Class<?> cls,
+        private Operation(Class<?> cls,
                   Method method,
-                  Map<String, Type> params,
+                  Map<String, Param> params,
                   InvocationType invocationType,
                   Type resultType,
                   @Nullable String resultMessageType) {
@@ -49,6 +49,16 @@ public class ServiceRegistry {
             this.invocationType = invocationType;
             this.resultType = resultType;
             this.resultMessageType = resultMessageType;
+        }
+    }
+
+    static class Param {
+        final Type type;
+        final boolean nullable;
+
+        private Param(Type type, boolean nullable) {
+            this.type = type;
+            this.nullable = nullable;
         }
     }
 
@@ -148,7 +158,7 @@ public class ServiceRegistry {
                     Type multiReturnType = getMultiResponseReturnType(returnType, methodParams);
                     InvocationType invocationType =
                             multiReturnType != null ? InvocationType.MULTI : InvocationType.RPC;
-                    Map<String, Type> params;
+                    Map<String, Param> params;
                     switch (invocationType) {
                         case MULTI:
                             params = preloadParams(Arrays.copyOfRange(methodParams, 0, methodParams.length - 1));
@@ -172,14 +182,14 @@ public class ServiceRegistry {
         return operations;
     }
 
-    private static Map<String, Type> preloadParams(Parameter[] methodParameters) {
-        Map<String, Type> params = new LinkedHashMap<>(methodParameters.length);
+    private static Map<String, Param> preloadParams(Parameter[] methodParameters) {
+        Map<String, Param> params = new LinkedHashMap<>(methodParameters.length);
         for (Parameter parameter : methodParameters) {
             if (!parameter.isNamePresent()) {
                 throw new RuntimeException(
                         "Method parameter names not found. Java compiler must be called with -parameter.");
             }
-            params.put(parameter.getName(), parameter.getParameterizedType());
+            params.put(parameter.getName(), new Param(parameter.getParameterizedType(), parameter.isAnnotationPresent(Nullable.class)));
         }
         return params;
     }

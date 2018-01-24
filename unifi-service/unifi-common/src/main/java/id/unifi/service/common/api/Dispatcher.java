@@ -189,19 +189,23 @@ public class Dispatcher<S> {
                                 Message message,
                                 ServiceRegistry.Operation operation) {
         Object[] params = operation.params.entrySet().stream().map(entry -> {
-            if (entry.getValue() == Session.class)
+            Type type = entry.getValue().type;
+            if (type == Session.class)
                 return session;
-            if (entry.getValue() == ObjectMapper.class)
+            if (type == ObjectMapper.class)
                 return mapper;
-            if (entry.getValue() == sessionDataType)
+            if (type == sessionDataType)
                 return sessionDataStore.get(session);
 
             String name = entry.getKey();
-            Type type = entry.getValue();
             try {
                 JsonNode paramNode = message.payload.get(name);
                 if (paramNode == null || paramNode.isNull()) {
-                    throw new MissingParameter(name, type.getTypeName());
+                    if (entry.getValue().nullable) {
+                        return null;
+                    } else {
+                        throw new MissingParameter(name, type.getTypeName());
+                    }
                 }
                 return readValue(mapper, type, paramNode);
             } catch (JsonProcessingException e) {
