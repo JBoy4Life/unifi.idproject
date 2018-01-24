@@ -1,5 +1,9 @@
 package id.unifi.service.core.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
@@ -14,7 +18,10 @@ import id.unifi.service.core.db.tables.records.HolderRecord;
 import org.jooq.Record1;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.value;
+import org.jooq.tools.json.JSONObject;
+import org.postgresql.util.PGobject;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,12 +42,21 @@ public class HolderService {
     }
 
     @ApiOperation
-    public HolderInfo getHolder(OperatorSessionData session, String clientId, String clientReference) {
+    public HolderInfoWithMetadata getHolder(OperatorSessionData session,
+                                            ObjectMapper mapper /* FIXME! */,
+                                            String clientId,
+                                            String clientReference) {
         authorize(session, clientId);
-        return db.execute(sql -> sql.selectFrom(HOLDER)
+        return db.execute(sql -> sql.selectFrom(HOLDER.leftJoin(HOLDER_METADATA).onKey())
                 .where(HOLDER.CLIENT_ID.eq(clientId))
                 .and(HOLDER.CLIENT_REFERENCE.eq(clientReference))
-                .fetchOne(HolderService::recordToInfo));
+                .fetchOne(r -> new HolderInfoWithMetadata(
+                        r.get(HOLDER.CLIENT_REFERENCE),
+                        r.get(HOLDER.NAME),
+                        r.get(HOLDER.HOLDER_TYPE),
+                        r.get(HOLDER.ACTIVE),
+                        r.get(HOLDER_METADATA.METADATA),
+                        mapper)));
     }
 
     @ApiOperation
@@ -75,6 +91,42 @@ public class HolderService {
             this.name = name;
             this.holderType = holderType;
             this.active = active;
+        }
+    }
+
+    public class HolderInfoWithMetadata {
+        public final String clientReference;
+        public final String name;
+        public final String holderType;
+        public final boolean active;
+        public final JsonNode metadata;
+
+        public HolderInfoWithMetadata(String clientReference,
+                                      String name,
+                                      String holderType,
+                                      boolean active,
+                                      Object metadata,
+                                      ObjectMapper mapper) {
+            this.clientReference = clientReference;
+            this.name = name;
+            this.holderType = holderType;
+            this.active = active;
+
+            if (metadata == null) {
+                this.metadata = NullNode.getInstance();
+            } else {
+                if (!(metadata instanceof PGobject) || !((PGobject) metadata).getType().equals("jsonb")) {
+                    throw new IllegalArgumentException("Unexpected metadata type: " + metadata);
+                }
+
+                String metadataString = ((PGobject) metadata).getValue();
+
+                try {
+                    this.metadata = mapper.readTree(metadataString);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }
