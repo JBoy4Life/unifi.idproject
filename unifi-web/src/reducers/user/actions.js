@@ -7,7 +7,7 @@ import {
 } from './types';
 import {clientId} from "../../index";
 
-export const loginRequest = ({ username, password /* remember */ }) => {
+export const loginRequest = ({ username, password, /* remember */ formSubmit }) => {
 
   const pack = new WSPackage({
     protocolVersion: '1.0.0',
@@ -19,6 +19,7 @@ export const loginRequest = ({ username, password /* remember */ }) => {
   return {
     socketRequest: pack.content,
     type: USER_LOGIN,
+    formSubmit
   }
 };
 

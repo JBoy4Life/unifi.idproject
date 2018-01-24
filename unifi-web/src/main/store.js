@@ -4,26 +4,27 @@ import storage from 'redux-persist/es/storage'
 import { persistStore, persistCombineReducers } from 'redux-persist'
 import { composeWithDevTools } from 'redux-devtools-extension'
 
-import { authMiddleware, socketApiMiddleware } from '../middleware'
-import reducers from '../reducers'
-import * as userActions from "../reducers/user/actions";
+import { authMiddleware, formSubmitMiddleware, socketApiMiddleware } from 'middleware'
+import reducers from 'reducers'
+import * as userActions from "reducers/user/actions"
 
 const config = {
   key: 'root',
   storage,
   whitelist: ['user'],
-};
+}
 
 export const configureStore = (wsClient) => {
 
   // Create a history of your choosing (we're using a browser history in this case)
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === 'development'
 
   const middlewares = [
     promiseMiddleware(),
     socketApiMiddleware(wsClient),
-    authMiddleware
-  ];
+    authMiddleware,
+    formSubmitMiddleware,
+  ]
 
   // Add the reducer to your store on the `router` key
   // Also apply our middleware for navigating
@@ -32,20 +33,20 @@ export const configureStore = (wsClient) => {
     isDevelopment ?
       composeWithDevTools(applyMiddleware(...middlewares)) :
       compose(applyMiddleware(...middlewares)),
-  );
+  )
 
-  const persistor = persistStore(store);
+  const persistor = persistStore(store)
 
   store.subscribe(() => {
     // Ensure that user sessions go to local storage.
-    const newUser = store.getState().user.currentUser;
+    const newUser = store.getState().user.currentUser
     if (newUser) {
-      localStorage.setItem('unifi-current-user', JSON.stringify(newUser));
+      localStorage.setItem('unifi-current-user', JSON.stringify(newUser))
     } else if (newUser === null) {
-      localStorage.removeItem('unifi-current-user');
+      localStorage.removeItem('unifi-current-user')
     }
-  });
+  })
 
   return { store, persistor }
 
-};
+}

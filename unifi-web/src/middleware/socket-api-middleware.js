@@ -11,9 +11,13 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
     const promiseResource = new Promise((resolve, reject) => {
       socketClient.request(action.socketRequest, { json: true })
         .then(res => {
+          const payload = {
+            ...res,
+            formSubmit: action.formSubmit
+          }
           res.messageType.startsWith('core.error')
-          ? reject(res)
-          : resolve(res)
+          ? reject(payload)
+          : resolve(payload)
         })
         .catch(ex => reject(ex))
     })

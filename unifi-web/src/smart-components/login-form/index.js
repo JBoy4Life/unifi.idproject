@@ -1,9 +1,10 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Field, reduxForm } from 'redux-form'
-import { TextField /* CheckboxField */ } from '../../components'
-import { Button } from '../../elements'
 
+import { TextField /* CheckboxField */ } from 'components'
+import { Alert, Button } from 'elements'
+            
 import validate from './validate'
 
 class LoginForm extends Component {
@@ -12,9 +13,10 @@ class LoginForm extends Component {
   }
 
   render() {
-    const { handleSubmit, onSubmit } = this.props
+    const { error, handleSubmit } = this.props
     return (
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit}>
+        {error && <Alert message={error} type="error" />}
         <Field
           name="username"
           label="Username"
