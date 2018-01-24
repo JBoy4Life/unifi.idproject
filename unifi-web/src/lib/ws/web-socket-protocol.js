@@ -28,6 +28,7 @@ export default class WebSocketProtocol {
       this.attemptCount += 1
       await sleep(this.reconnectionDelay)
       await this.connect()
+      this.start()
     }
   }
 
