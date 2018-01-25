@@ -20,6 +20,7 @@ import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.HOLDER;
+import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.db.tables.records.HolderRecord;
 import static java.time.ZoneOffset.UTC;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -157,7 +159,7 @@ public class ScheduleService {
                     .stream()
                     .collect(toMap(Record2::value1, Record2::value2));
 
-            List<ContactAttendance> attendance = sql
+            List<ContactAttendanceWithName> attendance = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(ASSIGNMENT.CLIENT_REFERENCE,
                             count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT),
@@ -173,7 +175,7 @@ public class ScheduleService {
                     .and(ASSIGNMENT.SCHEDULE_ID.eq(scheduleId))
                     .and(ZONE_PROCESSED)
                     .groupBy(ASSIGNMENT.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
-                    .fetch(r -> new ContactAttendance(r.value1(), names.get(r.value1()), r.value2(), r.value3()));
+                    .fetch(r -> new ContactAttendanceWithName(r.value1(), names.get(r.value1()), r.value2(), r.value3()));
             return new ContactAttendanceInfo(blockCount, attendance);
         });
     }
@@ -280,11 +282,36 @@ public class ScheduleService {
     }
 
     @ApiOperation
-    String reportAttendanceByMetadata(OperatorSessionData session,
-                                      String clientId,
-                                      String key,
-                                      String value) {
-        return null;
+    public Map<String, Object> reportLowAttendanceByMetadata(OperatorSessionData session,
+                                                             String clientId,
+                                                             String metadataKey,
+                                                             String metadataValue,
+                                                             BigDecimal attendanceThreshold,
+                                                             @Nullable ZonedDateTime startTime,
+                                                             @Nullable ZonedDateTime endTime) {
+        authorize(session, clientId);
+        List<ContactScheduleSummaryAttendance> attendance = db.execute(sql -> sql
+                .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
+                .select(ASSIGNMENT.CLIENT_REFERENCE,
+                        ASSIGNMENT.SCHEDULE_ID,
+                        count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT),
+                        count().filterWhere(IS_ABSENT))
+                .from(HOLDER.join(HOLDER_METADATA).using(CLIENT_ID, CLIENT_REFERENCE))
+                .join(ASSIGNMENT)
+                .using(CLIENT_ID, CLIENT_REFERENCE)
+                .join(BLOCK_WITH_TIME_AND_ZONE)
+                .using(CLIENT_ID, SCHEDULE_ID)
+                .join(ZONE_PROCESSING_STATE)
+                .using(CLIENT_ID, SITE_ID, ZONE_ID)
+                .leftJoin(FULL_ATTENDANCE)
+                .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
+                .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                .and(metadataKeyEquals(metadataKey, metadataValue))
+                .and(ZONE_PROCESSED)
+                .groupBy(ASSIGNMENT.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
+                .having(field("{0}::decimal / {1}", BigDecimal.class, count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT), count()).lt(attendanceThreshold))
+                .fetch(r -> new ContactScheduleSummaryAttendance(r.value1(), r.value2(), r.value3(), r.value4())));
+        return Map.of("startTime", "TODO", "endTime", "TODO", "attendance", attendance);
     }
 
     @ApiOperation
@@ -308,10 +335,14 @@ public class ScheduleService {
         });
     }
 
-    private Condition between(@Nullable Instant startTime, @Nullable Instant endTime) {
+    private static Condition between(@Nullable Instant startTime, @Nullable Instant endTime) {
         Condition startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromInstant(startTime)) : null;
         Condition endCond = endTime != null ? BLOCK_TIME.END_TIME.lessOrEqual(utcLocalFromInstant(endTime)) : null;
         return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
+    }
+
+    private static Condition metadataKeyEquals(String key, String value) {
+        return field("{0} ->> {1}", String.class, HOLDER_METADATA.METADATA, value(key)).eq(value);
     }
 
     private static List<ScheduleStat> fetchScheduleStats(DSLContext sql,
@@ -447,11 +478,23 @@ public class ScheduleService {
 
     public static class ContactAttendance {
         public final String clientReference;
+        public final int presentCount;
+        public final int absentCount;
+
+        public ContactAttendance(String clientReference, int presentCount, int absentCount) {
+            this.clientReference = clientReference;
+            this.presentCount = presentCount;
+            this.absentCount = absentCount;
+        }
+    }
+
+    public static class ContactAttendanceWithName {
+        public final String clientReference;
         public final String name;
         public final int presentCount;
         public final int absentCount;
 
-        public ContactAttendance(String clientReference, String name, int presentCount, int absentCount) {
+        public ContactAttendanceWithName(String clientReference, String name, int presentCount, int absentCount) {
             this.clientReference = clientReference;
             this.name = name;
             this.presentCount = presentCount;
@@ -461,9 +504,9 @@ public class ScheduleService {
 
     public static class ContactAttendanceInfo {
         public final int blockCount;
-        public final List<ContactAttendance> attendance;
+        public final List<ContactAttendanceWithName> attendance;
 
-        public ContactAttendanceInfo(int blockCount, List<ContactAttendance> attendance) {
+        public ContactAttendanceInfo(int blockCount, List<ContactAttendanceWithName> attendance) {
             this.blockCount = blockCount;
             this.attendance = attendance;
         }
@@ -541,6 +584,20 @@ public class ScheduleService {
             this.scheduleId = scheduleId;
             this.name = name;
             this.blockCount = blockCount;
+        }
+    }
+
+    private class ContactScheduleSummaryAttendance {
+        public final String clientReference;
+        public final String scheduleId;
+        public final int presentCount;
+        public final int absentCount;
+
+        public ContactScheduleSummaryAttendance(String clientReference, String scheduleId, int presentCount, int absentCount) {
+            this.clientReference = clientReference;
+            this.scheduleId = scheduleId;
+            this.presentCount = presentCount;
+            this.absentCount = absentCount;
         }
     }
 }

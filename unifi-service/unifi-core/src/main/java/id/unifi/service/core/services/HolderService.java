@@ -60,10 +60,10 @@ public class HolderService {
     }
 
     @ApiOperation
-    public List<String> listMetadataValues(OperatorSessionData session, String clientId, String key) {
+    public List<String> listMetadataValues(OperatorSessionData session, String clientId, String metadataKey) {
         authorize(session, clientId);
         return db.execute(sql -> sql
-                .selectDistinct(field("{0} ->> {1}", String.class, HOLDER_METADATA.METADATA, value(key)))
+                .selectDistinct(field("{0} ->> {1}", String.class, HOLDER_METADATA.METADATA, value(metadataKey)))
                 .from(HOLDER.leftJoin(HOLDER_METADATA).onKey())
                 .where(HOLDER.CLIENT_ID.eq(clientId))
                 .fetch(Record1::value1));
