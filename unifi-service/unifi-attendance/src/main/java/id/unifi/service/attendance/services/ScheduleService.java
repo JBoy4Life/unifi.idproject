@@ -159,7 +159,7 @@ public class ScheduleService {
                     .stream()
                     .collect(toMap(Record2::value1, Record2::value2));
 
-            List<ContactAttendanceWithName> attendance = sql
+            List<ContactAttendance> attendance = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(ASSIGNMENT.CLIENT_REFERENCE,
                             count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT),
@@ -175,7 +175,7 @@ public class ScheduleService {
                     .and(ASSIGNMENT.SCHEDULE_ID.eq(scheduleId))
                     .and(ZONE_PROCESSED)
                     .groupBy(ASSIGNMENT.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
-                    .fetch(r -> new ContactAttendanceWithName(r.value1(), names.get(r.value1()), r.value2(), r.value3()));
+                    .fetch(r -> new ContactAttendance(r.value1(), names.get(r.value1()), r.value2(), r.value3()));
             return new ContactAttendanceInfo(blockCount, attendance);
         });
     }
@@ -478,23 +478,11 @@ public class ScheduleService {
 
     public static class ContactAttendance {
         public final String clientReference;
-        public final int presentCount;
-        public final int absentCount;
-
-        public ContactAttendance(String clientReference, int presentCount, int absentCount) {
-            this.clientReference = clientReference;
-            this.presentCount = presentCount;
-            this.absentCount = absentCount;
-        }
-    }
-
-    public static class ContactAttendanceWithName {
-        public final String clientReference;
         public final String name;
         public final int presentCount;
         public final int absentCount;
 
-        public ContactAttendanceWithName(String clientReference, String name, int presentCount, int absentCount) {
+        public ContactAttendance(String clientReference, String name, int presentCount, int absentCount) {
             this.clientReference = clientReference;
             this.name = name;
             this.presentCount = presentCount;
@@ -504,9 +492,9 @@ public class ScheduleService {
 
     public static class ContactAttendanceInfo {
         public final int blockCount;
-        public final List<ContactAttendanceWithName> attendance;
+        public final List<ContactAttendance> attendance;
 
-        public ContactAttendanceInfo(int blockCount, List<ContactAttendanceWithName> attendance) {
+        public ContactAttendanceInfo(int blockCount, List<ContactAttendance> attendance) {
             this.blockCount = blockCount;
             this.attendance = attendance;
         }
