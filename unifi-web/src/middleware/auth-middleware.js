@@ -1,7 +1,11 @@
 import { logoutRequest } from 'reducers/user/actions'
 
 const authMiddleware = store => next => action => {
-  if (action.payload && action.payload.messageType === 'core.error.unauthorized') {
+  const { payload } = action
+  if (payload && (
+    payload.messageType === 'core.error.unauthorized' ||
+    payload.messageType === 'core.error.authentication-failed'
+  )) {
     store.dispatch(logoutRequest())
   }
   return next(action)

@@ -31,16 +31,13 @@ export default class Main extends Component {
         this.setState({
           loading: false
         })
-      })
-      .then(() => {
         // Reauthenticate if we have a session.
         const currentUser = localStorage.getItem('unifi-current-user') ?
           JSON.parse(localStorage.getItem('unifi-current-user')) :
           {}
 
         if (currentUser && currentUser.token) {
-          const action = userActions.reauthenticateRequest(currentUser.token)
-          return wsProtocol.request(action.socketRequest, { json: true })
+          store.dispatch(userActions.reauthenticateRequest(currentUser.token))
         }
       })
       .catch((err) => {
