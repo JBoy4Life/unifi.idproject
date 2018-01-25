@@ -36,7 +36,7 @@ class LoginForm extends Component {
           id="remember"
           component={CheckboxField}
         /> */}
-        <Button htmlType="submit" type="primary">Login</Button>
+        <Button htmlType="submit" type="primary">Log In</Button>
       </form>
     )
   }
