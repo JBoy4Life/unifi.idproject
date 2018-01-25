@@ -27,6 +27,10 @@ export default class Main extends Component {
           persistor,
           history: createHistory(),
         })
+
+        this.setState({
+          loading: false
+        })
       })
       .then(() => {
         // Reauthenticate if we have a session.
@@ -38,11 +42,6 @@ export default class Main extends Component {
           const action = userActions.reauthenticateRequest(currentUser.token)
           return wsProtocol.request(action.socketRequest, { json: true })
         }
-      })
-      .then(() => {
-        this.setState({
-          loading: false
-        })
       })
       .catch((err) => {
         console.error(err)
