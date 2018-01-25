@@ -85,11 +85,13 @@ public class ScheduleService {
             LocalDateTime.class, BLOCK_TIME.END_TIME, AttendanceProcessor.DETECTION_AFTER_BLOCK_END.toSeconds());
     private static final Condition ZONE_PROCESSED = ZONE_PROCESSED_UP_TO.ge(BLOCK_DETECTION_END_TIME);
 
-    private static final Field<String> STATUS_DEF = coalesce(
+    private static final Field<String> STATUS = coalesce(
             FULL_ATTENDANCE.field(OVERRIDDEN_STATUS),
             when(FULL_ATTENDANCE.field(BLOCK_ID).isNotNull(), "present").when(ZONE_PROCESSED, "absent")
-    );
-    private static final Field<String> STATUS = STATUS_DEF.as("status");
+    ).as("status");
+
+    private static final Field<Boolean> STATUS_OVERRIDDEN = field(FULL_ATTENDANCE.field(OVERRIDDEN_STATUS).isNotNull());
+
     private static final Condition IS_PRESENT_OR_AUTH_ABSENT = condition(coalesce(
             field(FULL_ATTENDANCE.field(OVERRIDDEN_STATUS).in(PRESENT.toString(), AUTH_ABSENT.toString())),
             field(FULL_ATTENDANCE.field(BLOCK_ID).isNotNull())
@@ -202,7 +204,7 @@ public class ScheduleService {
                                                        String scheduleId) {
         OperatorPK operator = authorize(session, clientId);
         return db.execute(sql -> {
-            SelectConditionStep<Record7<String, String, LocalDateTime, LocalDateTime, String, String, String>> q = sql
+            SelectConditionStep<Record8<String, String, LocalDateTime, LocalDateTime, String, String, Boolean, String>> q = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(BLOCK_ID,
                             BLOCK.NAME,
@@ -210,6 +212,7 @@ public class ScheduleService {
                             BLOCK_TIME.END_TIME,
                             BLOCK_ZONE.SITE_ID,
                             BLOCK_ZONE.ZONE_ID,
+                            STATUS_OVERRIDDEN,
                             STATUS)
                     .from(ASSIGNMENT)
                     .join(BLOCK_WITH_TIME_AND_ZONE)
@@ -230,7 +233,8 @@ public class ScheduleService {
                                     zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
                                     r.get(BLOCK_ZONE.SITE_ID),
                                     r.get(BLOCK_ZONE.ZONE_ID),
-                                    OverriddenStatus.fromString(r.get(STATUS))));
+                                    OverriddenStatus.fromString(r.get(STATUS)),
+                                    r.get(STATUS_OVERRIDDEN)));
                 }
         );
     }
@@ -509,6 +513,7 @@ public class ScheduleService {
         public final String siteId;
         public final String zoneId;
         public final OverriddenStatus status;
+        public final boolean statusOverridden;
 
         public BlockAttendance(String scheduleId,
                                String blockId,
@@ -517,7 +522,8 @@ public class ScheduleService {
                                ZonedDateTime endTime,
                                String siteId,
                                String zoneId,
-                               OverriddenStatus status) {
+                               OverriddenStatus status,
+                               boolean statusOverridden) {
             this.scheduleId = scheduleId;
             this.blockId = blockId;
             this.name = name;
@@ -526,13 +532,14 @@ public class ScheduleService {
             this.siteId = siteId;
             this.zoneId = zoneId;
             this.status = status;
+            this.statusOverridden = statusOverridden;
         }
     }
 
     public static class ScheduleAttendance {
         public final String scheduleId;
         public final int presentCount;
-        private final int absentCount;
+        public final int absentCount;
 
         public ScheduleAttendance(String scheduleId, int presentCount, int absentCount) {
             this.scheduleId = scheduleId;
