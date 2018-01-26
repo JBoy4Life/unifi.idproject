@@ -63,17 +63,17 @@ export class AttendanceScheduleDetail extends Component {
   handleSwitchMode = (newMode) => () => {
     this.setState({
       mode: newMode
-    });
+    })
   }
 
   render() {
     const { blocks, contactAttendance, location, schedule } = this.props
     const { scheduleId } = this.props.match.params
 
-    const startDate  = moment(schedule.startDate).format('DD/MM/Y')
-    const endDate    = moment(schedule.endDate).format('DD/MM/Y')
+    const startDate  = moment(schedule.startTime).format('DD/MM/Y')
+    const endDate    = moment(schedule.endTime).format('DD/MM/Y')
     const processedCount = schedule.committerCount * schedule.processedBlockCount
-    const percentage = Math.round(schedule.overallAttendance / (processedCount || 1) * 100);
+    const percentage = Math.round(schedule.overallAttendance / (processedCount || 1) * 100)
 
     return (
       <div className="attendanceScheduleDetail">
@@ -91,7 +91,7 @@ export class AttendanceScheduleDetail extends Component {
           />
           <p className="label">Overall Attendance to Date</p>
           <div className="stats">
-            {(schedule.startDate === null) ? (
+            {(schedule.startTime === null) ? (
               <p className="stat"><span>Dates:</span>{' '}Unscheduled</p>
             ) : (
               <p className="stat"><span>Dates:</span>{' '}{startDate} – {endDate}</p>
@@ -123,7 +123,7 @@ export class AttendanceScheduleDetail extends Component {
           <CommittersList contactAttendance={contactAttendance} scheduleId={scheduleId} />
         )}
       </div>
-    );
+    )
   }
 }
 
@@ -139,4 +139,4 @@ const actions = {
   getContactAttendanceForSchedule
 }
 
-export default connect(selector, actions)(AttendanceScheduleDetail);
+export default connect(selector, actions)(AttendanceScheduleDetail)
