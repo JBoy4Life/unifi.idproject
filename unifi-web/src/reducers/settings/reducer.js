@@ -1,8 +1,9 @@
 // import fp from 'lodash/fp'
-import { SITES_LIST_FETCH } from './types'
+import { PROGRAMMES_LIST_FETCH, SITES_LIST_FETCH } from './types'
 
 const initialState = {
-  sitesList: [],
+  programmesList: [],
+  sitesList: []
 }
 
 const reducer = (state = initialState, action = {}) => {
@@ -12,6 +13,13 @@ const reducer = (state = initialState, action = {}) => {
         ...state,
         sitesList: action.payload.payload
       }
+
+    case `${PROGRAMMES_LIST_FETCH}_FULFILLED`:
+      return {
+        ...state,
+        programmesList: action.payload.payload.filter(val => Boolean(val))
+      }
+
     default:
       return state
   }

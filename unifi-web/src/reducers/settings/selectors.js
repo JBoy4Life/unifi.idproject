@@ -11,3 +11,8 @@ export const siteIdSelector = fp.compose(
   fp.get('siteId'),
   siteSelector
 )
+
+export const programmesSelector = fp.compose(
+  fp.get('programmesList'),
+  getReducer
+)
