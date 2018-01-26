@@ -34,6 +34,7 @@ import Steps from './steps'
 import { Row, Col } from './grid-row'
 import Layout from './layout'
 
+import DatePicker from './date-picker'
 import SingleFilePicker from './single-file-picker'
 
 import Breadcrumb from './breadcrumb'
@@ -70,6 +71,7 @@ export {
   FloorLayout, FloorSection, StairsIcon,
 
   Card,
+  DatePicker,
   SingleFilePicker,
   Tabs,
   Collapse,
