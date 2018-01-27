@@ -27,7 +27,8 @@ const DateRangeField = ({
         className={className}
         format='L'
         defaultValue={defaultValue}
-        {...input}
+        onChange={input.onChange}
+        value={input.value}
       />
     </FormItem>
   )

@@ -7,10 +7,10 @@ import { Link } from 'react-router-dom'
 
 import ResultsList from './components/results-list'
 import withClientId from 'hocs/with-client-id'
-import { listProgrammes } from 'reducers/settings/actions'
+import { listHolders, listProgrammes } from 'reducers/settings/actions'
 import { listScheduleStats } from 'reducers/attendance/actions'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-import { programmesSelector } from 'reducers/settings/selectors'
+import { holdersSelector, programmesSelector } from 'reducers/settings/selectors'
 import { schedulesSelector } from 'reducers/attendance/selectors'
 
 import { Col, Row, Select } from 'elements'
@@ -29,7 +29,8 @@ export class AttendanceReports extends Component {
   }
 
   componentWillMount() {
-    const { clientId, listProgrammes, listScheduleStats } = this.props
+    const { clientId, listHolders, listProgrammes, listScheduleStats } = this.props
+    listHolders(clientId)
     listProgrammes(clientId)
     listScheduleStats()
   }
@@ -47,7 +48,7 @@ export class AttendanceReports extends Component {
   }
 
   render() {
-    const { clientId, schedules, programmesList } = this.props
+    const { clientId, holdersList, programmesList, schedules } = this.props
     const { programme } = parseQueryString(location.search)
 
     return (
@@ -76,6 +77,7 @@ export class AttendanceReports extends Component {
           <ResultsList
             clientId={clientId}
             programme={programme}
+            holdersList={holdersList}
             schedules={schedules}
           />
         )}
@@ -85,11 +87,13 @@ export class AttendanceReports extends Component {
 }
 
 const selector = createStructuredSelector({
+  holdersList: holdersSelector,
   schedules: schedulesSelector,
   programmesList: programmesSelector
 })
 
 const actions = {
+  listHolders,
   listProgrammes,
   listScheduleStats
 }

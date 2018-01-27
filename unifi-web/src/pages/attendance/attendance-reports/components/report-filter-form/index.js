@@ -11,6 +11,7 @@ import { withRouter } from 'react-router'
 import { Button, Form, FormItem } from 'elements'
 import { DateRangeField } from 'components'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
+import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'ar-report-filter-form'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
