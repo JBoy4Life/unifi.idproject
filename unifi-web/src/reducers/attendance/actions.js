@@ -7,6 +7,7 @@ import {
   GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
   REPORT_BLOCK_ATTENDANCE,
   REPORT_CONTACT_SCHEDULE_ATTENDANCE,
+  REPORT_LOW_ATTENDANCE_BY_METADATA,
   OVERRIDE_ATTENDANCE
 } from './types'
 
@@ -101,6 +102,27 @@ export function overrideAttendance(clientReference, scheduleId, blockId, status)
 
   return {
     type: OVERRIDE_ATTENDANCE,
+    socketRequest: pack.content
+  };
+
+}
+
+export function reportLowAttendanceByMetadata(clientId, programme) {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion: '1.0.0',
+    messageType: 'attendance.schedule.report-low-attendance-by-metadata',
+    payload: {
+      clientId,
+      metadataKey: 'programme',
+      metadataValue: programme,
+      attendanceThreshold: '0.90'
+    }
+  });
+
+  return {
+    type: REPORT_LOW_ATTENDANCE_BY_METADATA,
     socketRequest: pack.content
   };
 

@@ -31,3 +31,8 @@ export const contactScheduleReportSelector = fp.compose(
   fp.get('contactScheduleReport'),
   getReducer
 )
+
+export const lowAttendanceReportSelector = fp.compose(
+  fp.get('lowAttendanceReport'),
+  getReducer
+)

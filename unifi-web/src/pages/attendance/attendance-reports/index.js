@@ -5,16 +5,13 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
+import ResultsList from './components/results-list'
 import withClientId from 'hocs/with-client-id'
+import { listProgrammes } from 'reducers/settings/actions'
+import { listScheduleStats } from 'reducers/attendance/actions'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-
-import {
-  listProgrammes
-} from 'reducers/settings/actions'
-
-import {
-  programmesSelector
-} from 'reducers/settings/selectors'
+import { programmesSelector } from 'reducers/settings/selectors'
+import { schedulesSelector } from 'reducers/attendance/selectors'
 
 import { Col, Row, Select } from 'elements'
 
@@ -32,8 +29,9 @@ export class AttendanceReports extends Component {
   }
 
   componentWillMount() {
-    const { clientId, listProgrammes } = this.props
+    const { clientId, listProgrammes, listScheduleStats } = this.props
     listProgrammes(clientId)
+    listScheduleStats()
   }
 
   handleProgrammeChange = (programme) => {
@@ -49,7 +47,7 @@ export class AttendanceReports extends Component {
   }
 
   render() {
-    const { programmesList, location } = this.props
+    const { clientId, schedules, programmesList } = this.props
     const { programme } = parseQueryString(location.search)
 
     return (
@@ -74,17 +72,26 @@ export class AttendanceReports extends Component {
             </Select>
           </Col>
         </Row>
+        {programme && (
+          <ResultsList
+            clientId={clientId}
+            programme={programme}
+            schedules={schedules}
+          />
+        )}
       </div>
     )
   }
 }
 
 const selector = createStructuredSelector({
+  schedules: schedulesSelector,
   programmesList: programmesSelector
 })
 
 const actions = {
-  listProgrammes
+  listProgrammes,
+  listScheduleStats
 }
 
 export default compose(

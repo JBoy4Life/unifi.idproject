@@ -6,11 +6,12 @@ import PageContent from './page-content'
 import PageContentTitle from './page-content-title'
 import PageContentUnderTitle from './page-content-under-title'
 
-import TextField from './text-field'
 import CheckboxField from './checkbox-field'
-import SwitchField from './switch-field'
+import DateRangeField from './date-range-field'
 import SelectField from './select-field'
 import SingleFilePickerField from './single-file-select-field'
+import SwitchField from './switch-field'
+import TextField from './text-field'
 
 import DialogBox from './dialog-box'
 
@@ -30,11 +31,12 @@ export {
   PageContentTitle,
   PageContentUnderTitle,
 
-  TextField,
   CheckboxField,
-  SwitchField,
+  DateRangeField,
   SelectField,
   SingleFilePickerField,
+  SwitchField,
+  TextField,
 
   EvacuationProgressBar,
   NetworkReaderDetailsCard,

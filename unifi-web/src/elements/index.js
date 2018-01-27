@@ -27,6 +27,7 @@ import Checkbox from './checkbox'
 import Switch from './switch'
 import Select from './select'
 
+import Form from './form'
 import FormItem from './form-item'
 
 import Steps from './steps'
@@ -49,6 +50,7 @@ export {
   Table,
   Modal,
 
+  Form,
   FormItem,
   Steps,
 
