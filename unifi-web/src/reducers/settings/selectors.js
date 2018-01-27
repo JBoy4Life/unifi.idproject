@@ -16,3 +16,8 @@ export const programmesSelector = fp.compose(
   fp.get('programmesList'),
   getReducer
 )
+
+export const holdersSelector = fp.compose(
+  fp.get('holdersList'),
+  getReducer
+)

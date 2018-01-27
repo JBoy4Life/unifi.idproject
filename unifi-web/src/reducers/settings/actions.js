@@ -1,6 +1,6 @@
 import { WSPackage } from '../../lib/ws'
 
-import { PROGRAMMES_LIST_FETCH, SITES_LIST_FETCH } from './types'
+import { HOLDERS_LIST_FETCH, PROGRAMMES_LIST_FETCH, SITES_LIST_FETCH } from './types'
 
 export const listSites = (clientId) => {
   const pack = new WSPackage({
@@ -30,6 +30,21 @@ export function listProgrammes(clientId) {
     type: PROGRAMMES_LIST_FETCH,
     socketRequest: pack.content
   };
+}
+
+
+export const listHolders = (clientId) => {
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion: '1.0.0',
+    messageType: 'core.holder.list-holders',
+    payload: { clientId }
+  })
+
+  return {
+    type: HOLDERS_LIST_FETCH,
+    socketRequest: pack.content
+  }
 }
 
 
