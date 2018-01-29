@@ -243,7 +243,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
                 </td>
                 <td className="status">
                   {absenceLabels[block.status]}
-                  {' '}
+                  {block.statusOverridden ? ' (manual) ' : ' '}
                   <Link
                     to="#"
                     onClick={this.handleEditAttendance(block.blockId)}
