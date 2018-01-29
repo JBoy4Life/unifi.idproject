@@ -2,16 +2,15 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import groupBy from 'lodash/groupBy'
 import find from 'lodash/find'
+import moment from 'moment'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
-import ReportFilterForm from '../report-filter-form'
 import ScheduleTable from '../schedule-table'
 import { Collapse } from 'elements'
 import { lowAttendanceReportSelector } from 'reducers/attendance/selectors'
 import { reportLowAttendanceByMetadata } from 'reducers/attendance/actions'
-import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'ar-results-list'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
@@ -19,14 +18,20 @@ const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 export class ResultsList extends Component {
   static propTypes = {
     clientId: PropTypes.string,
+    endDate: PropTypes.string,
     holdersList: PropTypes.array,
     programme: PropTypes.string,
-    schedules: PropTypes.array
+    schedules: PropTypes.array,
+    startDate: PropTypes.string
   }
 
   componentWillMount() {
-    const { clientId, programme, reportLowAttendanceByMetadata } = this.props
-    reportLowAttendanceByMetadata(clientId, programme)
+    const { clientId, endDate, programme, reportLowAttendanceByMetadata, startDate } = this.props
+    reportLowAttendanceByMetadata(clientId, {
+      programme,
+      startTime: moment.utc(startDate).startOf('day'),
+      endTime: moment.utc(endDate).endOf('day')
+    })
   }
 
   render() {
@@ -35,9 +40,7 @@ export class ResultsList extends Component {
 
     return (
       <div className={COMPONENT_CSS_CLASSNAME}>
-        {programme && <h2 className={bemE('title')}>{programme}</h2>}
-        <ReportFilterForm programme={programme} />
-        <Collapse bordered={false} prefixCls="ant-collapse">
+        <Collapse bordered={false}>
           {Object.keys(groupedAttendance).map((scheduleId) => {
             const schedule = find(schedules, { scheduleId })
             return (

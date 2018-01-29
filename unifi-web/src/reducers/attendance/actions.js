@@ -107,7 +107,7 @@ export function overrideAttendance(clientReference, scheduleId, blockId, status)
 
 }
 
-export function reportLowAttendanceByMetadata(clientId, programme) {
+export function reportLowAttendanceByMetadata(clientId, { programme, startTime, endTime }) {
 
   const pack = new WSPackage({
     protocolVersion: '1.0.0',
@@ -117,6 +117,8 @@ export function reportLowAttendanceByMetadata(clientId, programme) {
       clientId,
       metadataKey: 'programme',
       metadataValue: programme,
+      startTime,
+      endTime,
       attendanceThreshold: '0.90'
     }
   });

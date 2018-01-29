@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
@@ -6,6 +6,7 @@ import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
 import ResultsList from './components/results-list'
+import ReportFilterForm from './components/report-filter-form'
 import withClientId from 'hocs/with-client-id'
 import { listHolders, listProgrammes } from 'reducers/settings/actions'
 import { listScheduleStats } from 'reducers/attendance/actions'
@@ -49,7 +50,7 @@ export class AttendanceReports extends Component {
 
   render() {
     const { clientId, holdersList, programmesList, schedules } = this.props
-    const { programme } = parseQueryString(location.search)
+    const { programme, startDate, endDate } = parseQueryString(location.search)
 
     return (
       <div className={COMPONENT_CSS_CLASSNAME}>
@@ -74,12 +75,21 @@ export class AttendanceReports extends Component {
           </Col>
         </Row>
         {programme && (
-          <ResultsList
-            clientId={clientId}
-            programme={programme}
-            holdersList={holdersList}
-            schedules={schedules}
-          />
+          <Fragment>
+            <h2 className={bemE('programme')}>{programme}</h2>
+            <ReportFilterForm programme={programme} />
+            {programme && (
+              <ResultsList
+                key={`${programme}-${startDate}-${endDate}`}
+                clientId={clientId}
+                programme={programme}
+                holdersList={holdersList}
+                schedules={schedules}
+                startDate={startDate}
+                endDate={endDate}
+              />
+            )}
+          </Fragment>
         )}
       </div>
     )
