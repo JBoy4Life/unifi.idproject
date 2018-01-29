@@ -28,9 +28,6 @@ export default class Main extends Component {
           history: createHistory(),
         })
 
-        this.setState({
-          loading: false
-        })
         // Reauthenticate if we have a session.
         const currentUser = localStorage.getItem('unifi-current-user') ?
           JSON.parse(localStorage.getItem('unifi-current-user')) :
@@ -38,6 +35,15 @@ export default class Main extends Component {
 
         if (currentUser && currentUser.token) {
           store.dispatch(userActions.reauthenticateRequest(currentUser.token))
+            .then(() => {
+              this.setState({
+                loading: false
+              })
+            })
+        } else {
+          this.setState({
+            loading: false
+          })
         }
       })
       .catch((err) => {
