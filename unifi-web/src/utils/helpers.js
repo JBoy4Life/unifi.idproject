@@ -1,4 +1,5 @@
 import fp from 'lodash/fp'
+import trimStart from 'lodash/trimStart'
 
 export const sleep = time => new Promise(resolve => (
   setTimeout(resolve, time)
@@ -41,5 +42,12 @@ export const jsonToQueryString = (obj) => {
 
   return pairs.length ? `?${pairs.join('&')}` : ''
 }
+
+export const sortSchedules = fp.sortBy((item) =>
+  fp.compose(
+    (str) => trimStart(str, '- '),
+    fp.replace(item.scheduleId, '')
+  )(item.name)
+)
 
 export default null

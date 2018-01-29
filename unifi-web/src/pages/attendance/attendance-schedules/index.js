@@ -1,20 +1,12 @@
 import React, { Component } from 'react'
 import fp from 'lodash/fp'
-import trimStart from 'lodash/trimStart'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import * as attendanceActions from 'reducers/attendance/actions'
 import { scheduleStatsSelector } from 'reducers/attendance/selectors'
-
 import AttendanceSchedule from './attendance-schedule'
-
-const sortSchedules = fp.sortBy((item) =>
-  fp.compose(
-    (str) => trimStart(str, '- '),
-    fp.replace(item.scheduleId, '')
-  )(item.name)
-)
+import { sortSchedules } from 'utils/helpers'
 
 export class AttendanceSchedules extends Component {
   componentDidMount() {
