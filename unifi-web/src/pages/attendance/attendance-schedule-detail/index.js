@@ -18,7 +18,7 @@ import {
 import {
   blocksSelector,
   contactAttendanceSelector,
-  schedulesSelector
+  scheduleStatsSelector
 } from 'reducers/attendance/selectors'
 
 import ScheduleCalendar from './components/schedule-calendar'
@@ -30,7 +30,7 @@ const singleScheduleSelector = (state, props) =>
     fp.get('[0]'),
     fp.filter({ scheduleId: props.match.params.scheduleId }),
     fp.defaultTo([]),
-    schedulesSelector
+    scheduleStatsSelector
   )(state)
 
 export class AttendanceScheduleDetail extends Component {

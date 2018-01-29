@@ -3,6 +3,7 @@ import { clientId } from "../../index";
 
 import {
   LIST_SCHEDULE_STATS,
+  LIST_SCHEDULES,
   LIST_BLOCKS,
   GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
   REPORT_BLOCK_ATTENDANCE,
@@ -22,6 +23,22 @@ export function listScheduleStats() {
 
   return {
     type: LIST_SCHEDULE_STATS,
+    socketRequest: pack.content
+  };
+
+}
+
+export function listSchedules(clientId) {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion:  '1.0.0',
+    messageType:     'attendance.schedule.list-schedules',
+    payload:         { clientId }
+  });
+
+  return {
+    type: LIST_SCHEDULES,
     socketRequest: pack.content
   };
 

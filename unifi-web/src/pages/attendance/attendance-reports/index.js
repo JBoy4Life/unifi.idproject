@@ -9,7 +9,7 @@ import ResultsList from './components/results-list'
 import ReportFilterForm from './components/report-filter-form'
 import withClientId from 'hocs/with-client-id'
 import { listHolders, listProgrammes } from 'reducers/settings/actions'
-import { listScheduleStats } from 'reducers/attendance/actions'
+import { listSchedules } from 'reducers/attendance/actions'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
 import { holdersSelector, programmesSelector } from 'reducers/settings/selectors'
 import { schedulesSelector } from 'reducers/attendance/selectors'
@@ -30,10 +30,10 @@ export class AttendanceReports extends Component {
   }
 
   componentWillMount() {
-    const { clientId, listHolders, listProgrammes, listScheduleStats } = this.props
+    const { clientId, listHolders, listProgrammes, listSchedules } = this.props
     listHolders(clientId)
     listProgrammes(clientId)
-    listScheduleStats()
+    listSchedules(clientId)
   }
 
   handleProgrammeChange = (programme) => {
@@ -105,7 +105,7 @@ const selector = createStructuredSelector({
 const actions = {
   listHolders,
   listProgrammes,
-  listScheduleStats
+  listSchedules
 }
 
 export default compose(

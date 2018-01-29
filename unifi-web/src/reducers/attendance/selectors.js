@@ -17,8 +17,13 @@ export const contactAttendanceSelector = fp.compose(
   getReducer
 )
 
-export const schedulesSelector = fp.compose(
+export const scheduleStatsSelector = fp.compose(
   fp.get('scheduleStats'),
+  getReducer
+)
+
+export const schedulesSelector = fp.compose(
+  fp.get('schedules'),
   getReducer
 )
 

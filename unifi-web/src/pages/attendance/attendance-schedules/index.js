@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import * as attendanceActions from 'reducers/attendance/actions'
-import { schedulesSelector } from 'reducers/attendance/selectors'
+import { scheduleStatsSelector } from 'reducers/attendance/selectors'
 
 import AttendanceSchedule from './attendance-schedule'
 
@@ -46,7 +46,7 @@ export class AttendanceSchedules extends Component {
 }
 
 const selector = createStructuredSelector({
-  schedules: schedulesSelector
+  schedules: scheduleStatsSelector
 })
 
 export const actions = {

@@ -1,5 +1,6 @@
 import {
   LIST_SCHEDULE_STATS,
+  LIST_SCHEDULES,
   LIST_BLOCKS,
   GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
   REPORT_BLOCK_ATTENDANCE,
@@ -10,6 +11,7 @@ import {
 
 const initialState = {
   scheduleStats: [],
+  schedules: [],
   blocks: [],
   contactAttendance: {
     attendance: []
@@ -33,6 +35,11 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         scheduleStats: action.payload.payload,
+      }
+    case `${LIST_SCHEDULES}_FULFILLED`:
+      return {
+        ...state,
+        schedules: action.payload.payload
       }
     case `${LIST_BLOCKS}_FULFILLED`:
       return {

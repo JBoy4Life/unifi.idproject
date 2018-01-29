@@ -12,7 +12,7 @@ import {
 
 import {
   contactScheduleReportSelector,
-  schedulesSelector
+  scheduleStatsSelector
 } from 'reducers/attendance/selectors'
 
 import { Table } from 'elements'
@@ -200,7 +200,7 @@ export class AttendanceReports extends Component {
 }
 
 const selector = createStructuredSelector({
-  scheduleStats: schedulesSelector,
+  scheduleStats: scheduleStatsSelector,
   committersTableData: compose(
     getCommittersTableData,
     contactScheduleReportSelector

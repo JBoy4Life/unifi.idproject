@@ -18,7 +18,7 @@ import {
   blockReportSelector,
   contactAttendanceSelector,
   overrideAttendanceResultSelector,
-  schedulesSelector
+  scheduleStatsSelector
 } from 'reducers/attendance/selectors'
 
 import {
@@ -63,7 +63,7 @@ const singleScheduleSelector = (state, props) =>
     fp.get('[0]'),
     fp.filter({ scheduleId: props.match.params.scheduleId }),
     fp.defaultTo([]),
-    schedulesSelector
+    scheduleStatsSelector
   )(state)
 
 const committerSelector = (state, props) =>
@@ -263,7 +263,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
 const selector = createStructuredSelector({
   blockReport: blockReportSelector,
   overrideAttendanceResult: overrideAttendanceResultSelector,
-  scheduleStats: schedulesSelector,
+  scheduleStats: scheduleStatsSelector,
   schedule: singleScheduleSelector,
   committer: committerSelector
 })
