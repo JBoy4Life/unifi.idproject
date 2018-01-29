@@ -22,4 +22,8 @@ public class TimeUtils {
     public static LocalDateTime utcLocalFromInstant(Instant instant) {
         return LocalDateTime.ofInstant(instant, UTC);
     }
+
+    public static LocalDateTime utcLocalFromZoned(@Nullable ZonedDateTime date) {
+        return date == null ? null : utcLocalFromInstant(date.toInstant());
+    }
 }

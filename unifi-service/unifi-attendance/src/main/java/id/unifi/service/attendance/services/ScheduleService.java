@@ -15,7 +15,8 @@ import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
+import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
+import static id.unifi.service.common.util.TimeUtils.utcLocalFromZoned;
 import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
@@ -44,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @ApiService("schedule")
@@ -100,6 +103,8 @@ public class ScheduleService {
             field(FULL_ATTENDANCE.field(OVERRIDDEN_STATUS).eq(ABSENT.toString())),
             field(ZONE_PROCESSED.and(FULL_ATTENDANCE.field(BLOCK_ID).isNull()))
     ));
+    private static final Field<BigDecimal> ATTENDANCE_RATIO =
+            field("{0}::decimal / {1}", BigDecimal.class, count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT), count());
 
     private final Database db;
 
@@ -286,7 +291,7 @@ public class ScheduleService {
     }
 
     @ApiOperation
-    public Map<String, Object> reportLowAttendanceByMetadata(OperatorSessionData session,
+    public LowAttendanceReport reportLowAttendanceByMetadata(OperatorSessionData session,
                                                              String clientId,
                                                              String metadataKey,
                                                              String metadataValue,
@@ -294,28 +299,41 @@ public class ScheduleService {
                                                              @Nullable ZonedDateTime startTime,
                                                              @Nullable ZonedDateTime endTime) {
         authorize(session, clientId);
-        List<ContactScheduleSummaryAttendance> attendance = db.execute(sql -> sql
-                .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
-                .select(ASSIGNMENT.CLIENT_REFERENCE,
-                        ASSIGNMENT.SCHEDULE_ID,
-                        count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT),
-                        count().filterWhere(IS_ABSENT))
-                .from(HOLDER.join(HOLDER_METADATA).using(CLIENT_ID, CLIENT_REFERENCE))
-                .join(ASSIGNMENT)
-                .using(CLIENT_ID, CLIENT_REFERENCE)
-                .join(BLOCK_WITH_TIME_AND_ZONE)
-                .using(CLIENT_ID, SCHEDULE_ID)
-                .join(ZONE_PROCESSING_STATE)
-                .using(CLIENT_ID, SITE_ID, ZONE_ID)
-                .leftJoin(FULL_ATTENDANCE)
-                .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
-                .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
-                .and(metadataKeyEquals(metadataKey, metadataValue))
-                .and(ZONE_PROCESSED)
-                .groupBy(ASSIGNMENT.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
-                .having(field("{0}::decimal / {1}", BigDecimal.class, count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT), count()).lt(attendanceThreshold))
-                .fetch(r -> new ContactScheduleSummaryAttendance(r.value1(), r.value2(), r.value3(), r.value4())));
-        return Map.of("startTime", "TODO", "endTime", "TODO", "attendance", attendance);
+        return db.execute(sql -> {
+            List<ContactScheduleSummaryAttendance> attendance = sql
+                    .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
+                    .select(ASSIGNMENT.CLIENT_REFERENCE,
+                            ASSIGNMENT.SCHEDULE_ID,
+                            count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT),
+                            count().filterWhere(IS_ABSENT))
+                    .from(HOLDER.join(HOLDER_METADATA).using(CLIENT_ID, CLIENT_REFERENCE))
+                    .join(ASSIGNMENT)
+                    .using(CLIENT_ID, CLIENT_REFERENCE)
+                    .join(BLOCK_WITH_TIME_AND_ZONE)
+                    .using(CLIENT_ID, SCHEDULE_ID)
+                    .join(ZONE_PROCESSING_STATE)
+                    .using(CLIENT_ID, SITE_ID, ZONE_ID)
+                    .leftJoin(FULL_ATTENDANCE)
+                    .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID)
+                    .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                    .and(between(startTime, endTime))
+                    .and(metadataKeyEquals(metadataKey, metadataValue))
+                    .and(ZONE_PROCESSED)
+                    .groupBy(ASSIGNMENT.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE, ASSIGNMENT.SCHEDULE_ID)
+                    .having(ATTENDANCE_RATIO.lt(attendanceThreshold))
+                    .fetch(r -> new ContactScheduleSummaryAttendance(r.value1(), r.value2(), r.value3(), r.value4()));
+
+            // Get the start time of the first block if there is one
+            ZonedDateTime actualStartTime = null;
+            if (startTime == null) {
+                Set<String> scheduleIds = attendance.stream().map(a -> a.scheduleId).collect(Collectors.toSet());
+                actualStartTime = zonedFromUtcLocal(sql.select(min(BLOCK_TIME.START_TIME))
+                        .from(BLOCK_TIME)
+                        .where(BLOCK_TIME.SCHEDULE_ID.in(scheduleIds))
+                        .fetchOne(Record1::value1));
+            }
+            return new LowAttendanceReport(actualStartTime, attendance);
+        });
     }
 
     @ApiOperation
@@ -339,9 +357,9 @@ public class ScheduleService {
         });
     }
 
-    private static Condition between(@Nullable Instant startTime, @Nullable Instant endTime) {
-        Condition startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromInstant(startTime)) : null;
-        Condition endCond = endTime != null ? BLOCK_TIME.END_TIME.lessOrEqual(utcLocalFromInstant(endTime)) : null;
+    private static Condition between(@Nullable ZonedDateTime startTime, @Nullable ZonedDateTime endTime) {
+        Condition startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromZoned(startTime)) : null;
+        Condition endCond = endTime != null ? BLOCK_TIME.START_TIME.lessOrEqual(utcLocalFromZoned(endTime)) : null;
         return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
     }
 
@@ -582,7 +600,7 @@ public class ScheduleService {
         }
     }
 
-    private class ContactScheduleSummaryAttendance {
+    public class ContactScheduleSummaryAttendance {
         public final String clientReference;
         public final String scheduleId;
         public final int presentCount;
@@ -593,6 +611,17 @@ public class ScheduleService {
             this.scheduleId = scheduleId;
             this.presentCount = presentCount;
             this.absentCount = absentCount;
+        }
+    }
+
+    public class LowAttendanceReport {
+        public final ZonedDateTime startTime;
+        public final List<ContactScheduleSummaryAttendance> attendance;
+
+        public LowAttendanceReport(@Nullable ZonedDateTime startTime,
+                                   List<ContactScheduleSummaryAttendance> attendance) {
+            this.startTime = startTime;
+            this.attendance = attendance;
         }
     }
 }
