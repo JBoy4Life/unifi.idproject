@@ -24,7 +24,7 @@ export default ({ schedule, report, holdersList }) => (
       </tr>
     </thead>
     <tbody>
-      {report.map((item) => (
+      {fp.sortBy('presentCount')(report).map((item) => (
         <tr key={item.clientReference}>
           <td>{getHolderName(holdersList, item.clientReference)}</td>
           <td>{item.presentCount}</td>
