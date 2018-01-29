@@ -8,6 +8,7 @@ import { createStructuredSelector } from 'reselect'
 
 import ReportFilterForm from '../report-filter-form'
 import ScheduleTable from '../schedule-table'
+import { Collapse } from 'elements'
 import { lowAttendanceReportSelector } from 'reducers/attendance/selectors'
 import { reportLowAttendanceByMetadata } from 'reducers/attendance/actions'
 import './index.scss'
@@ -36,14 +37,20 @@ export class ResultsList extends Component {
       <div className={COMPONENT_CSS_CLASSNAME}>
         {programme && <h2 className={bemE('title')}>{programme}</h2>}
         <ReportFilterForm programme={programme} />
-        {Object.keys(groupedAttendance).map((scheduleId) => (
-          <ScheduleTable
-            key={scheduleId}
-            schedule={find(schedules, { scheduleId })}
-            report={groupedAttendance[scheduleId]}
-            holdersList={holdersList}
-          />
-        ))}
+        <Collapse bordered={false} prefixCls="ant-collapse">
+          {Object.keys(groupedAttendance).map((scheduleId) => {
+            const schedule = find(schedules, { scheduleId })
+            return (
+              <Collapse.Panel header={schedule.name} key={scheduleId}>
+                <ScheduleTable
+                  schedule={schedule}
+                  report={groupedAttendance[scheduleId]}
+                  holdersList={holdersList}
+                />
+              </Collapse.Panel>
+            )
+          })}
+        </Collapse>
       </div>
     )
   }
