@@ -3,6 +3,7 @@ CREATE TABLE attendance.attendance(
   client_reference CITEXT NOT NULL,
   schedule_id      CITEXT NOT NULL,
   block_id         CITEXT NOT NULL,
+  processed_time   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (client_id, client_reference, schedule_id, block_id),
   CONSTRAINT fk_attendance_to_assignment

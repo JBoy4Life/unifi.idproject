@@ -223,8 +223,7 @@ public class AttendanceProcessor {
 
         detectableHolders = sql
                 .select(DETECTABLE.CLIENT_ID, DETECTABLE.DETECTABLE_ID, DETECTABLE.DETECTABLE_TYPE, ASSIGNMENT.CLIENT_REFERENCE)
-                .from(ASSIGNMENT.join(CARRIER).onKey())
-                .join(DETECTABLE).onKey(DETECTABLE__FK_DETECTABLE_TO_CARRIER)
+                .from(ASSIGNMENT.join(DETECTABLE).onKey())
                 .stream()
                 .collect(toMap(
                         d -> new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())),

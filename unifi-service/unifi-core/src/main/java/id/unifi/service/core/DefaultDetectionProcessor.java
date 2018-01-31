@@ -9,11 +9,8 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.RawDetectionReport;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_CARRIER;
-import static id.unifi.service.core.db.Keys.DETECTABLE__FK_DETECTABLE_TO_CARRIER;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
-import static id.unifi.service.core.db.Tables.CARRIER;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
 import id.unifi.service.core.site.ResolvedDetection;
@@ -64,9 +61,10 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
                     .fetchOne(ANTENNA.ZONE_ID);
             if (zoneId == null) return Stream.<ResolvedDetection>empty();
 
-            String clientReference = sql.selectFrom(DETECTABLE
-                    .join(CARRIER).onKey(DETECTABLE__FK_DETECTABLE_TO_CARRIER)
-                    .join(ASSIGNMENT).onKey(ASSIGNMENT__FK_ASSIGNMENT_TO_CARRIER))
+            String clientReference = sql
+                    .select(ASSIGNMENT.CLIENT_REFERENCE)
+                    .from(DETECTABLE)
+                    .join(ASSIGNMENT).onKey()
                     .where(DETECTABLE.DETECTABLE_ID.eq(detection.detectable.detectableId))
                     .fetchOne(ASSIGNMENT.CLIENT_REFERENCE);
             if (clientReference == null) return Stream.<ResolvedDetection>empty();

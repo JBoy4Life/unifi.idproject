@@ -2,5 +2,5 @@
 
 - link:core.sql[core.sql]: Test fixtures for core functionality.
 - link:attendance.sql[attendance.sql]: Test fixtures for attendance funtionality. Import core first.
-- link:ucl.sql[ucl.sql]: Self-contained test fixtures for UCL. Includes test:test user for client ID 'ucl-som'.
-- ucl-production.sql: Production (or near-production) UCL lecture and student data for early 2018. (Ask for GPG access)
+- ucl-base.sql[ucl-base.sql]: Production (or near-production) UCL site and reader data for early 2018. Includes `test:test` user.
+- ucl-import-production.sql[ucl-import-production.sql.gpg]: Production (or near-production) UCL lecture and student data for early 2018. (Ask for GPG access) Generated using link:../scripts/attendance_import.py[attendance_import.py]. Import link:ucl-base.sql[ucl-base.sql] first.
