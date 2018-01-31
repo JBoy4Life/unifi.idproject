@@ -10,6 +10,7 @@ import { withRouter } from 'react-router'
 
 import { Button, Form, FormItem } from 'elements'
 import { DateRangeField } from 'components'
+import { lowAttendanceReportSelector } from 'reducers/attendance/selectors'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
 import './index.scss'
 
@@ -66,9 +67,10 @@ export class ReportFilterForm extends Component {
 }
 
 const formInitialValuesSelector = (state, props) => {
+  const report = lowAttendanceReportSelector(state)
   const params = parseQueryString(props.location.search)
-  const startDate = params.startDate || params.endDate
-  const endDate = params.endDate || params.startDate
+  const startDate = params.startDate || (report && report.startTime) || params.endDate
+  const endDate = params.endDate || moment().format('YYYY-MM-DD')
   const dateRange = startDate ? [moment(startDate), moment(endDate)] : undefined
   return {
     programme: params.programme,
@@ -84,6 +86,7 @@ export default compose(
   withRouter,
   connect(selector),
   reduxForm({
-    form: 'lowAttendanceReportFilterForm'
+    form: 'lowAttendanceReportFilterForm',
+    enableReinitialize: true
   })
 )(ReportFilterForm)
