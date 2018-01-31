@@ -40,6 +40,11 @@ export default class Main extends Component {
                 loading: false
               })
             })
+            .catch(ex => {
+              this.setState({
+                loading: false
+              })
+            })
         } else {
           this.setState({
             loading: false
