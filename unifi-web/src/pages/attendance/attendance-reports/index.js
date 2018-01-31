@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from 'react'
 import cx from 'classnames'
+import moment from 'moment'
 import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
@@ -39,9 +40,14 @@ export class AttendanceReports extends Component {
 
   handleProgrammeChange = (programme) => {
     const { history, location } = this.props
+    const { startDate, endDate } = parseQueryString(location.search)
     history.push({
       pathname: location.pathname,
-      search: jsonToQueryString({ programme })
+      search: jsonToQueryString({
+        programme,
+        startDate,
+        endDate
+      })
     })
   }
 
