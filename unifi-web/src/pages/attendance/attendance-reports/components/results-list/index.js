@@ -61,7 +61,7 @@ export class ResultsList extends Component {
           ))}
         </Collapse>
         {fsSchedules.map((schedule) => (
-          <div className={bemE('print')}>
+          <div className={bemE('print')} key={schedule.scheduleId}>
             <h3 className={bemE('print-title')}>{schedule.name}</h3>
             <ScheduleTable
               schedule={schedule}
