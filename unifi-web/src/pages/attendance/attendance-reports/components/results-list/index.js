@@ -35,8 +35,8 @@ export class ResultsList extends Component {
     const { clientId, endDate, programme, reportLowAttendanceByMetadata, startDate } = this.props
     reportLowAttendanceByMetadata(clientId, {
       programme,
-      startTime: moment.utc(startDate).startOf('day'),
-      endTime: moment.utc(endDate).endOf('day')
+      startTime: startDate ? moment.utc(startDate).startOf('day') : undefined,
+      endTime: endDate ? moment.utc(endDate).endOf('day') : undefined
     })
   }
 

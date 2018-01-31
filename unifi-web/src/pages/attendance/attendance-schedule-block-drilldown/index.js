@@ -3,6 +3,7 @@ import moment from 'moment'
 import fp from 'lodash/fp'
 import PropTypes from 'prop-types'
 import sortBy from 'lodash/sortBy'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
@@ -11,6 +12,7 @@ import * as ROUTES from 'utils/routes'
 import DialogBox from 'components/dialog-box'
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
 import SearchableSelectField from 'components/searchable-select-field'
+import withClientId from 'hocs/with-client-id'
 
 import { Breadcrumb } from 'elements'
 
@@ -27,6 +29,9 @@ import {
   overrideAttendance,
   reportBlockAttendance
 } from 'reducers/attendance/actions'
+
+import { getHolder } from 'reducers/settings/actions'
+import { holdersMetaSelector } from 'reducers/settings/selectors'
 
 const absenceLabels = {
   'present': "Present",
@@ -74,6 +79,14 @@ const committerSelector = (state, props) =>
     contactAttendanceSelector
   )(state)
 
+const getHolderProgrammeSelector = (state, props) =>
+  fp.compose(
+    fp.get('metadata.programme'),
+    fp.defaultTo({}),
+    fp.find({ clientReference: props.match.params.clientReference }),
+    holdersMetaSelector
+  )(state)
+
 export class AttendanceScheduleBlockDrilldown extends Component {
   static propTypes = {
     blockReport: PropTypes.array,
@@ -111,9 +124,11 @@ export class AttendanceScheduleBlockDrilldown extends Component {
   }
 
   loadData(clientReference, scheduleId) {
+    const { clientId } = this.props
     this.props.listScheduleStats(scheduleId)
     this.props.reportBlockAttendance(scheduleId, clientReference)
     this.props.getContactAttendanceForSchedule(scheduleId)
+    this.props.getHolder(clientId, clientReference)
   }
 
   handleEditAttendance = (blockId) => () => {
@@ -153,7 +168,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
   }
 
   render() {
-    const { blockReport, committer, schedule, location } = this.props
+    const { blockReport, committer, location, programme, schedule } = this.props
     const sortedBlockReport = sortBlockReport(blockReport)
     const { clientReference } = this.props.match.params
     const processedCount = getProcessedCount(blockReport)
@@ -200,6 +215,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
         }
         <h1>{committer && committer.name}</h1>
         <h2>{schedule && schedule.name}</h2>
+        <h3>Programme: {programme || '(None)'}</h3>
         <div className="schedule-stats-summary">
           <EvacuationProgressBar
             percentage={percentage}
@@ -265,14 +281,19 @@ const selector = createStructuredSelector({
   overrideAttendanceResult: overrideAttendanceResultSelector,
   scheduleStats: scheduleStatsSelector,
   schedule: singleScheduleSelector,
-  committer: committerSelector
+  committer: committerSelector,
+  programme: getHolderProgrammeSelector
 })
 
 const actions = {
   getContactAttendanceForSchedule,
+  getHolder,
   listScheduleStats,
   overrideAttendance,
   reportBlockAttendance
 }
 
-export default connect(selector, actions)(AttendanceScheduleBlockDrilldown)
+export default compose(
+  connect(selector, actions),
+  withClientId
+)(AttendanceScheduleBlockDrilldown)
