@@ -32,7 +32,7 @@ export class ReportFilterForm extends Component {
   }
 
   doSubmit = (values) => {
-    const { history, location, programme } = this.props
+    const { history, location, programme, reset } = this.props
     history.push({
       pathname: location.pathname,
       search: jsonToQueryString({
@@ -40,6 +40,9 @@ export class ReportFilterForm extends Component {
         ...getDateRangeParams(values.dateRange)
       })
     })
+    if (!values.dateRange || values.dateRange.length === 0) {
+      reset()
+    }
   }
 
   render() {
