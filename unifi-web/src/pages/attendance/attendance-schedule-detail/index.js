@@ -60,7 +60,8 @@ export class AttendanceScheduleDetail extends Component {
     this.props.getContactAttendanceForSchedule(scheduleId)
   }
 
-  handleSwitchMode = (newMode) => () => {
+  handleSwitchMode = (newMode) => (event) => {
+    event.preventDefault()
     this.setState({
       mode: newMode
     })
@@ -103,15 +104,15 @@ export class AttendanceScheduleDetail extends Component {
         </div>
         <div className="tabs">
           <Link
-            className={this.state.mode === "schedule" ? "current" : ""}
-            onClick={this.handleSwitchMode("schedule")}
+            className={this.state.mode === 'schedule' ? 'current' : ''}
+            onClick={this.handleSwitchMode('schedule')}
             to={`/attendance/schedules/${scheduleId}`}
           >
             Module
           </Link>
           <Link
-            className={this.state.mode === "committers" ? "current" : ""}
-            onClick={this.handleSwitchMode("committers")}
+            className={this.state.mode === 'committers' ? 'current' : ''}
+            onClick={this.handleSwitchMode('committers')}
             to={`/attendance/schedules/${scheduleId}`}
           >
             Students
