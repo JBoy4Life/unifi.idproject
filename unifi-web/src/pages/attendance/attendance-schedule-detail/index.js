@@ -77,7 +77,7 @@ export class AttendanceScheduleDetail extends Component {
     const percentage = Math.round(schedule.overallAttendance / (processedCount || 1) * 100)
 
     return (
-      <div className="attendanceScheduleDetail">
+      <div className="attendanceScheduleDetail section-to-print">
         <Breadcrumb data={{
           title: schedule.name,
           pathname: location.pathname
@@ -102,7 +102,7 @@ export class AttendanceScheduleDetail extends Component {
             <p className="stat"><span>Lectures:</span>{' '}{schedule.blockCount}</p>
           </div>
         </div>
-        <div className="tabs">
+        <div className="tabs no-print">
           <Link
             className={this.state.mode === 'schedule' ? 'current' : ''}
             onClick={this.handleSwitchMode('schedule')}

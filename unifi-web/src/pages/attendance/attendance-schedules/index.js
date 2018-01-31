@@ -4,8 +4,9 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import * as attendanceActions from 'reducers/attendance/actions'
-import { scheduleStatsSelector } from 'reducers/attendance/selectors'
 import AttendanceSchedule from './attendance-schedule'
+import { Button, Col, Row } from 'elements'
+import { scheduleStatsSelector } from 'reducers/attendance/selectors'
 import { sortSchedules } from 'utils/helpers'
 
 export class AttendanceSchedules extends Component {
@@ -13,12 +14,23 @@ export class AttendanceSchedules extends Component {
     this.props.listScheduleStatsRequest();
   }
 
+  handlePrint = () => {
+    window.print()
+  }
+
   render() {
     const { schedules } = this.props
 
     return (
-      <div>
-        <h1>Modules</h1>
+      <div className="section-to-print">
+        <Row type="flex" justify="center" align="middle">
+          <Col sm={20}>
+            <h1>Modules</h1>
+          </Col>
+          <Col sm={4} className="text-right">
+            <Button className="no-print" onClick={this.handlePrint}>Print</Button>
+          </Col>
+        </Row>
         {sortSchedules(schedules).map((schedule) => (
           <AttendanceSchedule
             key={schedule.scheduleId}

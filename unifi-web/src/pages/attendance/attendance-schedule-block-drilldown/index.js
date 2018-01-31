@@ -14,7 +14,7 @@ import EvacuationProgressBar from 'components/evacuation-progress-bar'
 import SearchableSelectField from 'components/searchable-select-field'
 import withClientId from 'hocs/with-client-id'
 
-import { Breadcrumb } from 'elements'
+import { Button, Breadcrumb, Col, Row } from 'elements'
 
 import {
   blockReportSelector,
@@ -167,6 +167,10 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     })
   }
 
+  handlePrint = () => {
+    window.print()
+  }
+
   render() {
     const { blockReport, committer, location, programme, schedule } = this.props
     const sortedBlockReport = sortBlockReport(blockReport)
@@ -175,7 +179,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     const percentage = Math.round(getPresentCount(blockReport) / (processedCount || 1) * 100, 10)
 
     return (
-      <div className="attendanceScheduleBlockDrilldown">
+      <div className="attendanceScheduleBlockDrilldown section-to-print">
         <Breadcrumb data={{
           title: schedule ? schedule.name : '',
           pathname: ROUTES.ATTENDANCE_SCHEDULES_DETAIL.replace(
@@ -213,7 +217,14 @@ export class AttendanceScheduleBlockDrilldown extends Component {
             </div>
           </DialogBox>
         }
-        <h1>{committer && committer.name}</h1>
+        <Row type="flex" justify="center" align="middle">
+          <Col sm={20}>
+            <h1>{committer && committer.name}</h1>
+          </Col>
+          <Col sm={4} className="text-right">
+            <Button className="no-print" onClick={this.handlePrint}>Print</Button>
+          </Col>
+        </Row>
         <h2>{schedule && schedule.name}</h2>
         <h3>Programme: {programme || '(None)'}</h3>
         <div className="schedule-stats-summary">
@@ -262,6 +273,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
                   {block.statusOverridden ? ' (manual) ' : ' '}
                   <Link
                     to="#"
+                    className="no-print"
                     onClick={this.handleEditAttendance(block.blockId)}
                   >
                     Edit

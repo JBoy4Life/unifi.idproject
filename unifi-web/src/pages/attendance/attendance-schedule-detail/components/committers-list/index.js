@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 
 import DialogBox from 'components/dialog-box'
 import SearchableSelectField from 'components/searchable-select-field'
-import { Button, Icon, TextInput } from 'elements'
+import { Button, Col, Icon, Row, TextInput } from 'elements'
 
 const mapObject = (objectArray, keyField, dataField) =>
   objectArray.reduce((objectSoFar, newObject) => {
@@ -60,6 +60,10 @@ export class CommittersList extends Component {
     })
   }
 
+  handlePrint = () => {
+    window.print()
+  }
+
   render() {
     const { contactAttendance, scheduleId } = this.props
     const committerMap = mapObject(
@@ -98,15 +102,22 @@ export class CommittersList extends Component {
             </div>
           </DialogBox>
         }
-        <div className="controls">
+        <div className="controls no-print">
           <TextInput className="unifi-input" type="text" placeholder="Search" onChange={this.handleSearchChange} />
           <Button className="addCommitter" onClick={this.handleAddCommitterClick}>
             <Icon type="plus-circle-o" /> Add a student
           </Button>
         </div>
         <div className="views">
-          <p>Showing {numStudents} students</p>
-          <div className="buttons">
+          <Row type="flex" justify="center" align="middle">
+            <Col sm={20}>
+              <p>Showing {numStudents} students</p>
+            </Col>
+            <Col sm={4} className="text-right">
+              <Button className="no-print" onClick={this.handlePrint}>Print</Button>
+            </Col>
+          </Row>
+          <div className="buttons no-print">
             <button className="table-view"></button>
             <button className="tile-view"></button>
             <button className="grid-view"></button>
