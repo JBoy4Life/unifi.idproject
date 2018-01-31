@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react'
+import cx from 'classnames'
 import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
@@ -48,12 +49,17 @@ export class AttendanceReports extends Component {
     return option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
   }
 
+  handlePrint = () => {
+    window.print();
+    return true;
+  }
+
   render() {
     const { clientId, holdersList, programmesList, schedules } = this.props
     const { programme, startDate, endDate } = parseQueryString(location.search)
 
     return (
-      <div className={COMPONENT_CSS_CLASSNAME}>
+      <div className={cx(COMPONENT_CSS_CLASSNAME, 'section-to-print')}>
         <Row type="flex" justify="center" align="middle">
           <Col sm={18}>
             <h1>Attendance Alert Report</h1>
@@ -77,7 +83,7 @@ export class AttendanceReports extends Component {
         {programme && (
           <Fragment>
             <h2 className={bemE('programme')}>{programme}</h2>
-            <ReportFilterForm programme={programme} />
+            <ReportFilterForm programme={programme} onPrint={this.handlePrint} />
             {programme && (
               <ResultsList
                 key={`${programme}-${startDate}-${endDate}`}

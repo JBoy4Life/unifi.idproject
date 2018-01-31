@@ -1,0 +1,19 @@
+.ar-results-list {
+  &__browser {
+    @media print {
+      display: none !important;
+    }
+  }
+
+  &__print {
+    display: none;
+    margin-bottom: 30px;
+    @media print {
+      display: block;
+    }
+  }
+
+  &__print-title {
+    font-size: 24px;
+  }
+}

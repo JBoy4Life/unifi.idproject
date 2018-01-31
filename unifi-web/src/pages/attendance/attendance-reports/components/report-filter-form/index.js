@@ -25,8 +25,9 @@ const getDateRangeParams = (dateRange) =>
 export class ReportFilterForm extends Component {
   static propTypes = {
     handleSubmit: PropTypes.func,
+    history: PropTypes.object,
     location: PropTypes.object,
-    history: PropTypes.object
+    onPrint: PropTypes.func
   }
 
   doSubmit = (values) => {
@@ -41,7 +42,7 @@ export class ReportFilterForm extends Component {
   }
 
   render() {
-    const { handleSubmit, location } = this.props
+    const { handleSubmit, location, onPrint } = this.props
 
     return (
       <Form
@@ -54,7 +55,10 @@ export class ReportFilterForm extends Component {
           component={DateRangeField}
         />
         <FormItem>
-          <Button type="primary" htmlType="submit">Go</Button>
+          <Button type="primary" htmlType="submit" className="no-print">Go</Button>
+        </FormItem>
+        <FormItem>
+          <Button onClick={onPrint} className="no-print">Print</Button>
         </FormItem>
       </Form>
     )

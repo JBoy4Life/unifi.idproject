@@ -13,6 +13,8 @@ import { lowAttendanceReportSelector } from 'reducers/attendance/selectors'
 import { reportLowAttendanceByMetadata } from 'reducers/attendance/actions'
 import { sortSchedules } from 'utils/helpers'
 
+import './index.scss'
+
 const COMPONENT_CSS_CLASSNAME = 'ar-results-list'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 
@@ -47,7 +49,7 @@ export class ResultsList extends Component {
 
     return (
       <div className={COMPONENT_CSS_CLASSNAME}>
-        <Collapse bordered={false}>
+        <Collapse bordered={false} className={bemE('browser')}>
           {fsSchedules.map((schedule) => (
             <Collapse.Panel header={schedule.name} key={schedule.scheduleId}>
               <ScheduleTable
@@ -58,6 +60,16 @@ export class ResultsList extends Component {
             </Collapse.Panel>
           ))}
         </Collapse>
+        {fsSchedules.map((schedule) => (
+          <div className={bemE('print')}>
+            <h3 className={bemE('print-title')}>{schedule.name}</h3>
+            <ScheduleTable
+              schedule={schedule}
+              report={groupedAttendance[schedule.scheduleId]}
+              holdersList={holdersList}
+            />
+          </div>
+        ))}
       </div>
     )
   }
