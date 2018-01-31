@@ -131,7 +131,8 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     this.props.getHolder(clientId, clientReference)
   }
 
-  handleEditAttendance = (blockId) => () => {
+  handleEditAttendance = (blockId) => (event) => {
+    event.preventDefault()
     this.setState({
       editAttendanceVisible: true,
       editAttendanceBlockId: blockId
