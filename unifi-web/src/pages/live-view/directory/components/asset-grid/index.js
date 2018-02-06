@@ -9,7 +9,7 @@ const formatTime = (value) => {
 }
 
 const renderAssetCard = item => (
-  <div className="asset-card">
+  <div className="asset-card" key={item.clientReference}>
     <div className="asset-card-image" />
     <div className="asset-meta">
       <div className="asset-card-name">{item.client.name}</div>
