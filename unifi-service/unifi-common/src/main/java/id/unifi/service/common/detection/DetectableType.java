@@ -6,7 +6,7 @@ import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import com.google.common.base.Converter;
 
 public enum DetectableType {
-    UHF_EPC, UHF_TID;
+    UHF_EPC, UHF_TID, MIFARE_CSN, PROX_ID;
 
     private static final Converter<String, String> inputConverter = LOWER_HYPHEN.converterTo(UPPER_UNDERSCORE);
 

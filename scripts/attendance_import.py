@@ -16,6 +16,7 @@ import sys
 import codecs
 from pytz import timezone, utc
 from uuid import uuid4
+from itertools import product
 
 from datetime import datetime
 
@@ -23,7 +24,9 @@ from datetime import datetime
 schedule_headers = frozenset(['schedule_id', 'name'])
 block_headers = frozenset(['schedule_id', 'block_id', 'start_time', 'end_time', 'site_id', 'zone_id'])
 contact_headers = frozenset(['client_reference', 'name', 'metadata', 'detectable_id', 'schedule_id'])
+assignment_headers = frozenset(['client_reference', 'detectable_id:mifare-csn', 'detectable_id:uhf-epc'])
 
+detectable_types = ['mifare-csn', 'uhf-epc']
 london_tz = timezone('Europe/London')
 
 
@@ -53,7 +56,7 @@ def utf8_open(filename):
     return codecs.open(filename, 'r', encoding='utf-8')
 
 
-def dump_schedules(schedule_names, blocks):
+def dump_schedules(client_id, schedule_names, blocks):
     dump('schedule (client_id, schedule_id, name)',
          ((client_id, schedule_id, name) for schedule_id, name in schedule_names.viewitems()))
     dump('block (client_id, schedule_id, block_id, name)',
@@ -64,19 +67,24 @@ def dump_schedules(schedule_names, blocks):
          ((client_id, b['schedule_id'], b['block_id'], b['site_id'], b['zone_id']) for b in blocks))
 
 
-def dump_contacts(contacts):
+def dump_contacts(client_id, contacts):
     dump('holder (client_id, client_reference, holder_type, name)',
          ((client_id, c['client_reference'], 'contact', c['name']) for c in contacts))
     dump('holder_metadata (client_id, client_reference, metadata)',
          ((client_id, c['client_reference'], c['metadata']) for c in contacts))
     dump('contact (client_id, client_reference, holder_type)',
          ((client_id, c['client_reference'], 'contact') for c in contacts))
-    dump('detectable (client_id, detectable_id, detectable_type, description)',
-         ((client_id, c['detectable_id'], 'uhf-epc', '') for c in contacts if c['detectable_id']))
-    dump('core.assignment (client_id, detectable_id, detectable_type, client_reference)',
-         ((client_id, c['detectable_id'], 'uhf-epc', c['client_reference']) for c in contacts if c['detectable_id']))
     dump('attendance.assignment (client_id, client_reference, schedule_id)',
          ((client_id, c['client_reference'], schedule_id) for c in contacts for schedule_id in c['schedule_id']))
+
+
+def dump_assignments(client_id, assignments):
+    dump('detectable (client_id, detectable_id, detectable_type, description)',
+         ((client_id, a[t], t, '') for a, t in product(assignments, detectable_types)
+          if a[t]))
+    dump('core.assignment (client_id, detectable_id, detectable_type, client_reference)',
+         ((client_id, a[t], 'uhf-epc', a['client_reference']) for a, t in product(assignments, detectable_types)
+          if a[t]))
 
 
 def dump(row_def, data):
@@ -92,10 +100,14 @@ def parse_timestamp(s): # TODO: maybe support other formats
     return london_tz.localize(datetime.strptime(s, '%d/%m/%y %H:%M')).astimezone(utc).isoformat()
 
 
-def analyse(schedule_names, blocks, contacts):
+def analyse(schedule_names, blocks, contacts, assignments):
     unknown_schedules_in_blocks = frozenset(b['schedule_id'] for b in blocks if b['schedule_id'] not in schedule_names)
     schedules_with_no_blocks = schedule_names.viewkeys() - frozenset(b['schedule_id'] for b in blocks)
-    unknown_schedules_in_contacts = frozenset(schedule_id for c in contacts for schedule_id in c['schedule_id'] if schedule_id not in schedule_names)
+    unknown_schedules_in_contacts = frozenset(schedule_id for c in contacts for schedule_id in c['schedule_id']
+                                              if schedule_id not in schedule_names)
+    unknown_client_references_in_assignments =\
+        frozenset(a['client_reference'] for a in assignments
+                  if a['client_reference'] not in [c['client_reference'] for c in contacts])
 
     if unknown_schedules_in_blocks:
         print('Unknown schedule IDs in blocks: ', u', '.join(unknown_schedules_in_blocks), file=sys.stderr)
@@ -103,9 +115,12 @@ def analyse(schedule_names, blocks, contacts):
         print('Schedules with no blocks: ', u', '.join(schedules_with_no_blocks), file=sys.stderr)
     if unknown_schedules_in_contacts:
         print('Unknown schedules in contacts: ', u', '.join(unknown_schedules_in_contacts), file=sys.stderr)
+    if unknown_client_references_in_assignments:
+        print('Unknown client references in assignments: ',
+              u', '.join(unknown_client_references_in_assignments), file=sys.stderr)
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 2:
         print('Usage: ', sys.argv[0], ' <client-id>', file=sys.stderr)
         exit(1)
@@ -145,7 +160,15 @@ if __name__ == "__main__":
             'schedule_id': frozenset(s.strip() for s in row[col['schedule_id']].split(u',') if s),
         } for row in reader]
 
-    analyse(schedule_names, blocks, contacts)
+    with utf8_open('assignments.csv') as f:
+        reader = utf8_csv_reader(f)
+        col = get_column_map(assignment_headers, reader.next())
+        assignments = [{
+            'client_reference': row[col['client_reference']],
+            'mifare-csn': row[col['detectable_id:mifare-csn']],
+            'uhf-epc': row[col['detectable_id:uhf-epc']],
+        } for row in reader]
+    analyse(schedule_names, blocks, contacts, assignments)
 
     print('''
 SET statement_timeout = 0;
@@ -159,5 +182,10 @@ SET row_security = off;
 
 SET search_path = attendance, core, pg_catalog;
 ''')
-    dump_schedules(schedule_names, blocks)
-    dump_contacts(contacts)
+    dump_schedules(client_id, schedule_names, blocks)
+    dump_contacts(client_id, contacts)
+    dump_assignments(client_id, assignments)
+
+
+if __name__ == "__main__":
+    main()

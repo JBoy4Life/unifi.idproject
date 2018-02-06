@@ -7,5 +7,5 @@ CREATE TABLE core.detectable(
 
   PRIMARY KEY (client_id, detectable_id, detectable_type),
   CHECK (LENGTH(detectable_id) <= 64),
-  CHECK (detectable_type IN ('uhf-epc', 'uhf-tid'))
+  CHECK (detectable_type IN ('uhf-epc', 'uhf-tid', 'mifare-csn', 'prox-id'))
 );
