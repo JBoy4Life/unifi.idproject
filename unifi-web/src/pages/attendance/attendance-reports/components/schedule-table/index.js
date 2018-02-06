@@ -1,6 +1,7 @@
 import React from 'react'
 import fp from 'lodash/fp'
 
+import { getAttendanceRate } from 'pages/attendance/helpers'
 import './index.scss'
 
 const getHolderName = (holdersList, clientReference) =>
@@ -9,9 +10,6 @@ const getHolderName = (holdersList, clientReference) =>
     fp.defaultTo({}),
     fp.find({ clientReference })
   )(holdersList)
-
-const getAttendanceRate = (att) =>
-  Math.round(att.presentCount / (att.presentCount + att.absentCount || 1) * 100)
 
 export default ({ schedule, report, holdersList }) => (
   <table className="unifi-table">

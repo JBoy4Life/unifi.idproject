@@ -13,7 +13,6 @@ import DialogBox from 'components/dialog-box'
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
 import SearchableSelectField from 'components/searchable-select-field'
 import withClientId from 'hocs/with-client-id'
-
 import { Button, Breadcrumb, Col, Row } from 'elements'
 
 import {
@@ -29,6 +28,13 @@ import {
   overrideAttendance,
   reportBlockAttendance
 } from 'reducers/attendance/actions'
+
+import { 
+  getAttendanceRate,
+  getAbsentCount,
+  getPresentCount,
+  getProcessedCount
+} from 'pages/attendance/helpers'
 
 import { getHolder } from 'reducers/settings/actions'
 import { holdersMetaSelector } from 'reducers/settings/selectors'
@@ -46,21 +52,6 @@ const sortBlockReport = fp.compose(
     startTime: moment(item.startTime),
     endTime: moment(item.endTime)
   }))
-)
-
-const getAbsentCount = fp.compose(
-  fp.size,
-  fp.filter({ status: 'absent' })
-)
-
-const getPresentCount = fp.compose(
-  fp.size,
-  fp.filter(item => ['present', 'auth-absent'].includes(item.status))
-)
-
-const getProcessedCount = fp.compose(
-  fp.size,
-  fp.reject({ status: null })
 )
 
 const singleScheduleSelector = (state, props) =>
@@ -177,7 +168,10 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     const sortedBlockReport = sortBlockReport(blockReport)
     const { clientReference } = this.props.match.params
     const processedCount = getProcessedCount(blockReport)
-    const percentage = Math.round(getPresentCount(blockReport) / (processedCount || 1) * 100, 10)
+    const percentage = getAttendanceRate({
+      presentCount: getPresentCount(blockReport),
+      absentCount: getAbsentCount(blockReport)
+    });
 
     return (
       <div className="attendanceScheduleBlockDrilldown section-to-print">

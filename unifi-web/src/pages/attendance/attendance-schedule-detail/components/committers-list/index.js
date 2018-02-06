@@ -7,6 +7,8 @@ import DialogBox from 'components/dialog-box'
 import SearchableSelectField from 'components/searchable-select-field'
 import { Button, Col, Icon, Row, TextInput } from 'elements'
 
+import { getAttendanceRate } from 'pages/attendance/helpers'
+
 const mapObject = (objectArray, keyField, dataField) =>
   objectArray.reduce((objectSoFar, newObject) => {
     objectSoFar[`${newObject[keyField]}`] = newObject[dataField]
@@ -141,7 +143,7 @@ export class CommittersList extends Component {
                   <td className="text-right">{committer.clientReference}</td>
                   <td className="text-right">{committer.presentCount}</td>
                   <td className="text-right">{committer.absentCount}</td>
-                  <td className="text-right">{Math.round((committer.presentCount / (committer.presentCount + committer.absentCount)) * 100)}%</td>
+                  <td className="text-right">{getAttendanceRate(committer)}%</td>
                 </tr>
               )
             })}
