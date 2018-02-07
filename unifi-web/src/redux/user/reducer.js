@@ -1,5 +1,5 @@
 import { REHYDRATE } from 'redux-persist'
-import { USER_LOGOUT, USER_LOGIN } from './types'
+import { USER_LOGOUT, USER_LOGIN, USER_REAUTHENTICATE, USER_SET_INITIALIZED } from './types'
 
 const initialState = {
   isLoggingIn: false,
@@ -39,13 +39,26 @@ const reducer = (state = initialState, action = {}) => {
       }
 
     case REHYDRATE:
-      if (action.payload && action.payload.user) {
-        return {
-          ...state,
-          ...action.payload.user,
-          initialising: false,
-        }
+      return {
+        ...state,
+        ...action.payload.user,
+        initialising: state.initialising
       }
+
+    case USER_SET_INITIALIZED:
+      return {
+        ...state,
+        initialising: false
+      }
+
+    case `${USER_REAUTHENTICATE}_FULFILLED`:
+      return {
+        ...state,
+        ...action.payload.user,
+        initialising: false,
+      }
+
+    case `${USER_REAUTHENTICATE}_REJECTED`:
       return {
         ...state,
         initialising: false,

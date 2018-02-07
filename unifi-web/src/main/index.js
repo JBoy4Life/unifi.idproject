@@ -1,73 +1,41 @@
 import React, { Component } from 'react'
-import { Provider } from 'react-redux'
-import { PersistGate } from 'redux-persist/es/integration/react'
-import createHistory from 'history/createBrowserHistory'
+import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
 
-import * as userActions from 'redux/user/actions'
+import Loading from 'components/loading'
 import Routes from './routes'
-import { configureStore } from 'redux/store'
-import { selectors as userSelectors } from 'redux/user'
-import { WSProtocol } from 'lib/ws'
+import { getReducer as userSelector } from 'redux/user/selectors'
+import { reauthenticateRequest, setInitialized } from 'redux/user/actions'
 
-export default class Main extends Component {
-  state = {
-    loading: true,
-  }
-
-  componentDidMount() {
-    const wsProtocol = new WSProtocol({ url: `${process.env.SOCKET_PROTO}://${process.env.SOCKET_URI}/service/json` })
-    wsProtocol
-      .connect()
-      .then(() => wsProtocol.start())
-      .then(() => {
-        const { store, persistor } = configureStore(wsProtocol)
-
-        this.setState({
-          store,
-          persistor,
-          history: createHistory(),
-        })
-
-        // Reauthenticate if we have a session.
-        const currentUser = localStorage.getItem('unifi-current-user') ?
-          JSON.parse(localStorage.getItem('unifi-current-user')) :
-          {}
-
-        if (currentUser && currentUser.token) {
-          store.dispatch(userActions.reauthenticateRequest(currentUser.token))
-            .then(() => {
-              this.setState({
-                loading: false
-              })
-            })
-            .catch(ex => {
-              this.setState({
-                loading: false
-              })
-            })
-        } else {
-          this.setState({
-            loading: false
-          })
-        }
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+class Main extends Component {
+  componentWillMount() {
+    const { reauthenticateRequest, setInitialized, user: { currentUser } } = this.props;
+    // Reauthenticate if we have a session.
+    if (currentUser && currentUser.token) {
+      reauthenticateRequest(currentUser.token)
+    } else {
+      setInitialized()
+    }
   }
 
   render() {
-    const { history, loading, store, persistor } = this.state
-
-    return loading ? <div>Loading...</div> : (
-      <Provider store={store}>
-        <PersistGate
-          loading="loading"
-          persistor={persistor}
-        >
-          <Routes history={history} />
-        </PersistGate>
-      </Provider>
+    const { user, history } = this.props
+    return user.initialising ? (
+      <Loading />
+    ) : (
+      <Routes history={history} />
     )
   }
 }
+
+const selector = createStructuredSelector({
+  user: userSelector
+})
+
+const actions = {
+  reauthenticateRequest,
+  setInitialized
+}
+
+export default connect(selector, actions)(Main)
+
