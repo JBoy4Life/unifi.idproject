@@ -8,12 +8,12 @@ import sumBy from 'lodash/sumBy'
 import {
   listScheduleStats,
   reportContactScheduleAttendance
-} from 'reducers/attendance/actions'
+} from 'redux/attendance/actions'
 
 import {
   contactScheduleReportSelector,
   scheduleStatsSelector
-} from 'reducers/attendance/selectors'
+} from 'redux/attendance/selectors'
 
 import { Table } from 'elements'
 

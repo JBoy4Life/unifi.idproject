@@ -9,8 +9,8 @@ import { createStructuredSelector } from 'reselect'
 
 import ScheduleTable from '../schedule-table'
 import { Collapse } from 'elements'
-import { lowAttendanceReportSelector } from 'reducers/attendance/selectors'
-import { reportLowAttendanceByMetadata } from 'reducers/attendance/actions'
+import { lowAttendanceReportSelector } from 'redux/attendance/selectors'
+import { reportLowAttendanceByMetadata } from 'redux/attendance/actions'
 import { sortSchedules } from 'utils/helpers'
 
 import './index.scss'

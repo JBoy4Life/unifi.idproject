@@ -1,4 +1,4 @@
-import { logoutRequest } from 'reducers/user/actions'
+import { logoutRequest } from 'redux/user/actions'
 
 const authMiddleware = store => next => action => {
   const { payload } = action

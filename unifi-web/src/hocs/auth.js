@@ -2,7 +2,7 @@ import React from 'react'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
-import { loginStatusSelector, currentUserSelector } from 'reducers/user/selectors'
+import { loginStatusSelector, currentUserSelector } from 'redux/user/selectors'
 
 const locationHelper = locationHelperBuilder({})
 

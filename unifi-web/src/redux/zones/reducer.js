@@ -32,8 +32,8 @@ const reducer = (state = initialState, action = {}) => {
         ...state,
         liveDiscoveryUpdate: new Date().getTime(),
         liveDiscovery: unionBy(
-          state.liveDiscovery,
           action.data.payload,
+          state.liveDiscovery,
           'clientReference'
         ),
       }

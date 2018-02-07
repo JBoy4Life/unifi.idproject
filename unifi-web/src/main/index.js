@@ -3,10 +3,10 @@ import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/es/integration/react'
 import createHistory from 'history/createBrowserHistory'
 
-import * as userActions from 'reducers/user/actions'
+import * as userActions from 'redux/user/actions'
 import Routes from './routes'
-import { configureStore } from './store'
-import { selectors as userSelectors } from 'reducers/user'
+import { configureStore } from 'redux/store'
+import { selectors as userSelectors } from 'redux/user'
 import { WSProtocol } from 'lib/ws'
 
 export default class Main extends Component {

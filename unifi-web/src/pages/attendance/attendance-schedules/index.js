@@ -3,10 +3,10 @@ import fp from 'lodash/fp'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
-import * as attendanceActions from 'reducers/attendance/actions'
+import * as attendanceActions from 'redux/attendance/actions'
 import AttendanceSchedule from './attendance-schedule'
 import { Button, Col, Row } from 'elements'
-import { scheduleStatsSelector } from 'reducers/attendance/selectors'
+import { scheduleStatsSelector } from 'redux/attendance/selectors'
 import { sortSchedules } from 'utils/helpers'
 
 export class AttendanceSchedules extends Component {

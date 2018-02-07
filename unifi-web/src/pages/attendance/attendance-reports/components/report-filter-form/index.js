@@ -10,7 +10,7 @@ import { withRouter } from 'react-router'
 
 import { Button, Form, FormItem } from 'elements'
 import { DateRangeField } from 'components'
-import { lowAttendanceReportSelector } from 'reducers/attendance/selectors'
+import { lowAttendanceReportSelector } from 'redux/attendance/selectors'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
 import './index.scss'
 

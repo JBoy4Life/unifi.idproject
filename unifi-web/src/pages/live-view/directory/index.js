@@ -10,12 +10,12 @@ import { withRouter } from 'react-router-dom'
 import {
   actions as zonesActions,
   selectors as zoneSelectors,
-} from 'reducers/zones'
+} from 'redux/zones'
 
 import {
   actions as settingsActions,
   selectors as settingsSelectors
-} from 'reducers/settings'
+} from 'redux/settings'
 
 import * as ROUTES from 'utils/routes'
 

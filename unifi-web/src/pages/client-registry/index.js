@@ -5,7 +5,7 @@ import { compose, bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router-dom'
 
-import { actions as clientActions, selectors as clientSelectors } from '../../reducers/clients'
+import { actions as clientActions, selectors as clientSelectors } from 'redux/clients'
 
 import * as ROUTES from '../../utils/routes'
 

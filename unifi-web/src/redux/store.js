@@ -5,8 +5,8 @@ import { persistStore, persistCombineReducers } from 'redux-persist'
 import { composeWithDevTools } from 'redux-devtools-extension'
 
 import { authMiddleware, formSubmitMiddleware, socketApiMiddleware } from 'middleware'
-import reducers from 'reducers'
-import * as userActions from "reducers/user/actions"
+import reducers from 'redux/reducers'
+import * as userActions from 'redux/user/actions'
 
 const config = {
   key: 'root',

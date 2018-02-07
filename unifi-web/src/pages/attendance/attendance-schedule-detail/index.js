@@ -13,13 +13,13 @@ import {
   getContactAttendanceForSchedule,
   listBlocks,
   listScheduleStats
-} from 'reducers/attendance/actions'
+} from 'redux/attendance/actions'
 
 import {
   blocksSelector,
   contactAttendanceSelector,
   scheduleStatsSelector
-} from 'reducers/attendance/selectors'
+} from 'redux/attendance/selectors'
 
 import ScheduleCalendar from './components/schedule-calendar'
 import CommittersList from './components/committers-list'

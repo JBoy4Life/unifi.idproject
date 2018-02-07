@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router'
 
-import { actions as userActions, selectors as userSelectors } from 'reducers/user'
+import { actions as userActions, selectors as userSelectors } from 'redux/user'
 import { Breadcrumb, Layout, Aux } from 'elements'
 import { IdentBar } from 'components'
 import { LinkedNavigationMenu } from '../'

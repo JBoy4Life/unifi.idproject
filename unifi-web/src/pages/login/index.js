@@ -13,7 +13,7 @@ import logo from '../../assets/images/ucl-logo-2.png'
 import { formSubmit } from 'utils/form'
 
 
-import { actions as userActions } from '../../reducers/user'
+import { actions as userActions } from 'redux/user'
 
 class LoginContainer extends Component {
   static defaultProps = {
