@@ -1,0 +1,19 @@
+= Minimum requirements
+
+== On premise deployment (estimated)
+
+- All hardware (server, readers) on one subnet, broadcasts allowed, static IP
+  addresses provided via DHCP.
+- Subnet should be isolated for security as reader payloads are not
+  authenticated.
+- Total bandwidth between readers and server at least 1 Mbps per reader in both
+  directions at all times.
+- Server port 443 accessible to all operators.
+- Remote SSH access to server for maintenance.
+- Minimum server spec: dual-core Xeon, i7 or equivalent AMD CPU with 8 MB cache,
+  32 GB RAM, 1 TB disk (but varies with use case)
+
+== Cloud deployment
+
+- On-prem agent minimum spec: 50 GB disk, 8 GB RAM
+- TBD
