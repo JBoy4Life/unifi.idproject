@@ -1,4 +1,5 @@
 import React from 'react'
+import fp from 'lodash/fp'
 import moment from 'moment'
 
 import './index.scss'
@@ -25,7 +26,10 @@ const renderAssetCard = item => (
 
 const AssetGrid = props => (
   <div className="asset-grid">
-    {props.items.map(renderAssetCard)}
+    {fp.compose(
+      fp.map(renderAssetCard),
+      fp.sortBy('timestamp')
+    )(props.items)}
   </div>
 )
 

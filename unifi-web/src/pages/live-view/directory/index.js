@@ -150,32 +150,41 @@ class DirectoryView extends Component {
 
   renderZoneGroupTitle(groupName, items) {
     return (
-      <div>{groupName} {items.length} contacts</div>
+      <div>{groupName} - {items.length} contacts</div>
     )
   }
 
   renderContent(filteredItems) {
     const { grouping } = this.state.queryParams
-    const itemGroups = groupItems(filteredItems, grouping)
-    const keys = Object.keys(itemGroups)
+    const { zonesInfo } = this.props
 
     if (grouping === 'zones') {
+      const zones = fp.compose(
+        fp.sortBy('name'),
+        fp.map(key => zonesInfo[key]),
+        fp.keys
+      )(zonesInfo)
       return (
-        <Collapse defaultActiveKey={keys.map((item, idx) => idx.toString())}>
-          {
-            keys.map((key, index) => (
+        <Collapse defaultActiveKey={zones.map(zone => zone.zoneId)}>
+          {zones.map((zone) => {
+            const zoneItems = fp.compose(
+              fp.filter(item => item.zone.zoneId === zone.zoneId)
+            )(filteredItems)
+            return (
               <Collapse.Panel
-                key={index.toString()}
-                header={this.renderZoneGroupTitle(key, itemGroups[key])}
+                key={zone.zoneId}
+                header={this.renderZoneGroupTitle(zone.name, zoneItems)}
               >
-                {this.renderContentList(itemGroups[key])}
+                {this.renderContentList(zoneItems)}
               </Collapse.Panel>
-            ))
-          }
+            )
+          })}
         </Collapse>
       )
+    } else {
+      const sortedItems = fp.sortBy('detectionTime')(filteredItems)
+      return this.renderContentList(sortedItems)
     }
-    return this.renderContentList(itemGroups)
   }
 
   render() {
@@ -227,7 +236,8 @@ export const selector = createStructuredSelector({
   liveDiscoveryUpdate: compose(
     fp.get('liveDiscoveryUpdate'),
     zoneSelectors.getReducer
-  )
+  ),
+  zonesInfo: zoneSelectors.zonesInfoSelector
 })
 
 export const actions = {
