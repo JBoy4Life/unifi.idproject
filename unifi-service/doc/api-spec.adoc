@@ -39,6 +39,21 @@ Response format:
 }
 ----
 
+== Subscriptions
+
+In addition to single request-response interactions, multiple responses are sent for some requests.
+
+These have types matching `*.*.subscribe-*` by convention.
+
+The flow is as follows:
+
+- The client sends a request.
+- The server sends zero or more non-error responses.
+- If the server responds with an error (`core.error.*`) the subscription is terminated, i.e. no need for the client to unsubscribe.
+- The client can unsubscribe by requesting `core.protocol.unsubscribe` with the same correlation ID. Some responses may still arrive after that.
+
+Subscriptions are dropped on disconnection, so clients need to resubscribe after reconnection if appropriate.
+
 
 == Clients (currently unauthenticated)
 
