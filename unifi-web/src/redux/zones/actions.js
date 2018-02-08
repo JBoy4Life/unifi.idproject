@@ -21,12 +21,12 @@ export const listZones = (clientId = 'deloitte', siteId = '1nss') => {
   }
 }
 
-export const listHolder = (clientId = 'deloitte', siteId = '1nss') => {
+export const listHolder = (clientId = 'deloitte') => {
   const pack = new WSPackage({
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
     messageType: 'core.holder.list-holders',
-    payload: { clientId, siteId },
+    payload: { clientId, withImages: true },
   })
 
 

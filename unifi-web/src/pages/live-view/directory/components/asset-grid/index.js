@@ -10,12 +10,15 @@ const formatTime = (value) => {
 
 const renderAssetCard = item => (
   <div className="asset-card" key={item.clientReference}>
-    <div className="asset-card-image" />
-    <div className="asset-meta">
-      <div className="asset-card-name">{item.client.name}</div>
-      <div className="asset-card-name">ID {item.clientReference}</div>
-      <div className="asset-card-name">{formatTime(item.timestamp)}</div>
-      <div className="asset-card-name">{item.zone.name}</div>
+    <div
+      className="asset-card__image"
+      style={{ backgroundImage: `url(data:image/png;base64,${item.client.image})` }}
+    />
+    <div className="asset-card__meta">
+      <div className="asset-card__field">{item.client.name}</div>
+      <div className="asset-card__field">ID {item.clientReference}</div>
+      <div className="asset-card__field">{formatTime(item.timestamp)}</div>
+      <div className="asset-card__field">{item.zone.name}</div>
     </div>
   </div>
 )
