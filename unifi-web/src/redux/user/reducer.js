@@ -41,7 +41,7 @@ const reducer = (state = initialState, action = {}) => {
     case REHYDRATE:
       return {
         ...state,
-        ...action.payload.user,
+        ...(action.payload ? action.payload.user : null),
         initialising: state.initialising
       }
 
