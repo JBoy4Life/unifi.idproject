@@ -1,0 +1,17 @@
+.asset-card {
+  width: 175px;
+  padding: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &__meta {
+    padding-top: 8px;
+  }
+
+  &__image {
+    width: 100%;
+    padding-top: 100%;
+    background-color: #ddd;
+    background-size: cover;
+  }
+}

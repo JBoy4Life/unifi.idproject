@@ -81,7 +81,7 @@ public class MockReaderManager implements ReaderManager {
             }
 
             try {
-                Thread.sleep((long) (300 * Math.abs(random.nextGaussian())));
+                Thread.sleep((long) (3000 * Math.abs(random.nextGaussian())));
             } catch (InterruptedException e) {
                 log.info("Mock detection thread interrupted, stopping");
                 return;

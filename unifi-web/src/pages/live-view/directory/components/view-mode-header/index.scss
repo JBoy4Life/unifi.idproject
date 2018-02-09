@@ -1,9 +1,7 @@
 .directory-view-header {
-  display: flex;
-  align-items: center;
   margin-bottom: 14px;
 
-  .directory-view-status {
-    flex: 1;
+  &__mode {
+    text-align: right;
   }
 }

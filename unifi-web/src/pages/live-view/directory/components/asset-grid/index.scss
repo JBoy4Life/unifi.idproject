@@ -3,21 +3,3 @@
   flex-flow: row wrap;
   margin: 0 -8px;
 }
-
-.asset-card {
-  width: 175px;
-  height: 266px;
-  margin: 8px;
-  font-size: 14px;
-
-  &__meta {
-    padding: 8px;
-  }
-
-  &__image {
-    width: 172px;
-    height: 172px;
-    background-color: #ddd;
-    background-size: cover;
-  }
-}

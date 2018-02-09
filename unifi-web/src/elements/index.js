@@ -41,6 +41,8 @@ import SingleFilePicker from './single-file-picker'
 import Breadcrumb from './breadcrumb'
 import Breadcrumbs from './breadcrumbs'
 
+import Slider from './slider'
+
 export {
   Aux,
   Alert,
@@ -79,7 +81,9 @@ export {
   Collapse,
 
   Breadcrumb,
-  Breadcrumbs
+  Breadcrumbs,
+
+  Slider
 }
 
 export default null

@@ -72,8 +72,13 @@ const getQueryString = (params) => {
 }
 
 class DirectoryView extends Component {
-  state = {
-    queryParams: getQueryParams(this.props.location.search),
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      queryParams: getQueryParams(this.props.location.search),
+      itemsPerRow: 4,
+    }
   }
 
   componentDidMount() {
@@ -145,7 +150,7 @@ class DirectoryView extends Component {
       return <AssetList items={items} />
     }
 
-    return <AssetGrid items={items} />
+    return <AssetGrid items={items} itemsPerRow={this.state.itemsPerRow} />
   }
 
   renderZoneGroupTitle(groupName, items) {
@@ -192,6 +197,12 @@ class DirectoryView extends Component {
     }
   }
 
+  handleItemsPerRowChange = (value) => {
+    this.setState({
+      itemsPerRow: value
+    })
+  }
+
   render() {
     const {
       filters, grouping, view, search,
@@ -227,6 +238,8 @@ class DirectoryView extends Component {
           onChange={this.handleViewModeChange}
           viewValue={view}
           resultCount={filteredItems.length}
+          itemsPerRow={this.state.itemsPerRow}
+          onItemsPerRowChange={this.handleItemsPerRowChange}
         />
 
         {this.renderContent(filteredItems)}
