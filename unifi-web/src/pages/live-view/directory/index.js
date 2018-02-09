@@ -168,6 +168,8 @@ class DirectoryView extends Component {
         <Collapse defaultActiveKey={zones.map(zone => zone.zoneId)}>
           {zones.map((zone) => {
             const zoneItems = fp.compose(
+              fp.reverse,
+              fp.sortBy('detectionTime'),
               fp.filter(item => item.zone.zoneId === zone.zoneId)
             )(filteredItems)
             return (
@@ -182,7 +184,10 @@ class DirectoryView extends Component {
         </Collapse>
       )
     } else {
-      const sortedItems = fp.sortBy('detectionTime')(filteredItems)
+      const sortedItems = fp.compose(
+        fp.reverse,
+        fp.sortBy('detectionTime')
+      )(filteredItems)
       return this.renderContentList(sortedItems)
     }
   }
