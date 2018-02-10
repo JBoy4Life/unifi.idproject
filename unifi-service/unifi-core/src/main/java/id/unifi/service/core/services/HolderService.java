@@ -21,14 +21,19 @@ import org.jooq.Table;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.value;
 import org.postgresql.util.PGobject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.util.List;
 import java.util.Optional;
 
 @ApiService("holder")
 public class HolderService {
+    private static final Logger log = LoggerFactory.getLogger(HolderService.class);
     private final Database db;
 
     public HolderService(DatabaseProvider dbProvider) {
@@ -79,7 +84,23 @@ public class HolderService {
                 r.get(HOLDER.NAME),
                 r.get(HOLDER.HOLDER_TYPE),
                 r.get(HOLDER.ACTIVE),
-                r.field(HOLDER_IMAGE.IMAGE) == null ? null : r.get(HOLDER_IMAGE.IMAGE));
+                r.field(HOLDER_IMAGE.IMAGE) == null ? null : imageWithType(r.get(HOLDER_IMAGE.IMAGE)));
+    }
+
+    private static ImageWithType imageWithType(byte[] data) {
+        String mimeType;
+        try {
+            mimeType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(data));
+        } catch (IOException ignored) {
+            return null;
+        }
+
+        if (mimeType == null || !mimeType.startsWith("image/")) {
+            log.warn("Ignoring image of unrecognizable type: {}", mimeType);
+            return null;
+        }
+
+        return new ImageWithType(mimeType, data);
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
@@ -93,14 +114,24 @@ public class HolderService {
         public final String name;
         public final String holderType;
         public final boolean active;
-        public final byte[] image;
+        public final ImageWithType image;
 
-        public HolderInfo(String clientReference, String name, String holderType, boolean active, byte[] image) {
+        public HolderInfo(String clientReference, String name, String holderType, boolean active, ImageWithType image) {
             this.clientReference = clientReference;
             this.name = name;
             this.holderType = holderType;
             this.active = active;
             this.image = image;
+        }
+    }
+
+    public static class ImageWithType {
+        public final String mimeType;
+        public final byte[] data;
+
+        public ImageWithType(String mimeType, byte[] data) {
+            this.mimeType = mimeType;
+            this.data = data;
         }
     }
 
