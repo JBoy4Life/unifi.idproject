@@ -19,7 +19,7 @@ const AssetCard = ({ item, itemsPerRow }) => (
   >
     <div
       className={bemE('image')}
-      style={{ backgroundImage: `url(data:image/png;base64,${item.client.image})` }}
+      style={{ backgroundImage: `url(data:${item.client.image.type};base64,${item.client.image.data})` }}
     />
     <div className={bemE('meta')}>
       <div className={bemE('field')}>{item.client.name}</div>
