@@ -71,6 +71,17 @@ const getQueryString = (params) => {
   }, resultString)
 }
 
+const zonesSelector = fp.compose(
+  (zonesInfo) => (
+    fp.compose(
+      fp.sortBy('name'),
+      fp.map(key => zonesInfo[key]),
+      fp.keys
+    )(zonesInfo)
+  ),
+  zoneSelectors.zonesInfoSelector
+)
+
 class DirectoryView extends Component {
   constructor(props) {
     super(props)
@@ -160,34 +171,18 @@ class DirectoryView extends Component {
   }
 
   renderContent(filteredItems) {
+    const { zoneId } = this.state
     const { grouping } = this.state.queryParams
-    const { zonesInfo } = this.props
+    const { zones } = this.props
 
     if (grouping === 'zones') {
-      const zones = fp.compose(
-        fp.sortBy('name'),
-        fp.map(key => zonesInfo[key]),
-        fp.keys
-      )(zonesInfo)
-      return (
-        <Collapse defaultActiveKey={zones.map(zone => zone.zoneId)}>
-          {zones.map((zone) => {
-            const zoneItems = fp.compose(
-              fp.reverse,
-              fp.sortBy('detectionTime'),
-              fp.filter(item => item.zone.zoneId === zone.zoneId)
-            )(filteredItems)
-            return (
-              <Collapse.Panel
-                key={zone.zoneId}
-                header={this.renderZoneGroupTitle(zone.name, zoneItems)}
-              >
-                {this.renderContentList(zoneItems)}
-              </Collapse.Panel>
-            )
-          })}
-        </Collapse>
-      )
+      const zoneItems = fp.compose(
+        fp.reverse,
+        fp.sortBy('detectionTime'),
+        fp.filter(item => item.zone.zoneId === zoneId)
+      )(filteredItems)
+
+      return this.renderContentList(zoneItems)
     } else {
       const sortedItems = fp.compose(
         fp.reverse,
@@ -203,6 +198,12 @@ class DirectoryView extends Component {
     })
   }
 
+  handleZoneChange = (value) => {
+    this.setState({
+      zoneId: value
+    })
+  }
+
   render() {
     const {
       filters, grouping, view, search,
@@ -211,6 +212,7 @@ class DirectoryView extends Component {
     const {
       liveDiscoveryUpdate,
       discoveredList,
+      zones
     } = this.props
 
     const filteredItems = filterItems(discoveredList, filters, search)
@@ -235,11 +237,15 @@ class DirectoryView extends Component {
         />
 
         <ViewModeHeader
-          onChange={this.handleViewModeChange}
-          viewValue={view}
+          onViewModeChange={this.handleViewModeChange}
+          viewMode={view}
+          grouping={grouping}
           resultCount={filteredItems.length}
           itemsPerRow={this.state.itemsPerRow}
           onItemsPerRowChange={this.handleItemsPerRowChange}
+          onZoneChange={this.handleZoneChange}
+          zoneId={this.state.zoneId}
+          zones={zones}
         />
 
         {this.renderContent(filteredItems)}
@@ -255,7 +261,7 @@ export const selector = createStructuredSelector({
     fp.get('liveDiscoveryUpdate'),
     zoneSelectors.getReducer
   ),
-  zonesInfo: zoneSelectors.zonesInfoSelector
+  zones: zonesSelector
 })
 
 export const actions = {

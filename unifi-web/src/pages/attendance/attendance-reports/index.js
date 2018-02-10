@@ -22,7 +22,7 @@ import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'attendance-reports'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
-const Option = Select.Option;
+const Option = Select.Option
 
 export class AttendanceReports extends Component {
   static propTypes = {
