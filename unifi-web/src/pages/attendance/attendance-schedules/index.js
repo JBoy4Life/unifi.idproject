@@ -24,10 +24,10 @@ export class AttendanceSchedules extends Component {
     return (
       <div className="section-to-print">
         <Row type="flex" justify="center" align="middle">
-          <Col sm={20}>
+          <Col xs={20}>
             <h1>Modules</h1>
           </Col>
-          <Col sm={4} className="text-right">
+          <Col xs={4} className="text-right">
             <Button className="no-print" onClick={this.handlePrint}>Print</Button>
           </Col>
         </Row>

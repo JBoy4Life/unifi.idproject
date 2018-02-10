@@ -1,4 +1,5 @@
 import React from 'react'
+import cx from 'classnames'
 import PropTypes from 'prop-types'
 import { Col, Icon, Radio, Row, Select, Slider } from 'elements'
 
@@ -27,7 +28,7 @@ const handleFilterOption = (input, option) => {
 const ViewModeHeader = props => (
   <div className={COMPONENT_CSS_CLASSNAME}>
     <Row gutter={16}>
-      <Col sm={12} className={bemE('status')}>
+      <Col sm={12} className={bemE('col')}>
         {props.grouping === 'zones' &&
           <Select
             showSearch
@@ -44,7 +45,7 @@ const ViewModeHeader = props => (
           </Select>
         }
       </Col>
-      <Col sm={6} className={bemE('num-items')}>
+      <Col sm={6} className={bemE('col')}>
         {props.viewMode === 'grid' &&
           <Slider
             min={2} max={8}
@@ -55,7 +56,7 @@ const ViewModeHeader = props => (
           />
         }
       </Col>
-      <Col sm={6} className={bemE('mode')}>
+      <Col sm={6} className={cx(bemE('col'), bemE('mode'))}>
         <Radio.Group onChange={props.onViewModeChange} value={props.viewMode || 'list'}>
           <Radio.Button value="list"><Icon type="bars" /></Radio.Button>
           <Radio.Button value="grid"><Icon type="appstore-o" /></Radio.Button>

@@ -9,7 +9,9 @@
   }
 
   .main-content-container {
-    padding: 0 50px;
+    @media (min-width: 992px) {
+      padding: 0 50px;
+    }
     margin-top: 84px;
     display: flex;
   }

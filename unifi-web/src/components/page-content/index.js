@@ -18,7 +18,7 @@ const PageContent = ({ children }) => (
         return child
       }
       if (child.type === Sidebar) {
-        return <Sider className="page-sidebar">{child}</Sider>
+        return <Sider className="page-sidebar" collapsedWidth="0" breakpoint="md">{child}</Sider>
       }
 
       return (

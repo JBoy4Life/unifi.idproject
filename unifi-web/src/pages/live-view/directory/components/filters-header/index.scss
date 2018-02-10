@@ -1,11 +1,12 @@
 .directory-filters-header {
-  display: flex;
   margin: 16px 0px;
 
-  .search-bar {
-    min-width: 200px;
-    max-width: 300px;
-    margin-right: 18px;
-    flex: 1;
+  &__col {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__search-bar {
+    width: 100%;
   }
 }

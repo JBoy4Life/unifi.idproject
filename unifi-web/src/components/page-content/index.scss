@@ -1,17 +1,24 @@
 .page-sidebar {
   width: 200px;
+  z-index: 1;
   background: #fff
 }
 
 .page-content-layout {
   padding-top: 50px;
   background-color: #fff;
-  border-left: 1px solid #c6d0d5;
-  border-right: 1px solid #c6d0d5;
   max-width: 1140px;
   margin: 0 auto;
+
+  @media (min-width: 992px) {
+    border-left: 1px solid #c6d0d5;
+    border-right: 1px solid #c6d0d5;
+  }
 }
 
 .page-content {
-  padding: 24px;
+  padding: 15px;
+  @media (min-width: 992px) {
+    padding: 24px;
+  }
 }

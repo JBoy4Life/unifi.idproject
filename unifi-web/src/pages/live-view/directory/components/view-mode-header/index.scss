@@ -1,6 +1,11 @@
 .directory-view-header {
   margin-bottom: 14px;
 
+  &__col {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
   &__mode {
     text-align: right;
   }
