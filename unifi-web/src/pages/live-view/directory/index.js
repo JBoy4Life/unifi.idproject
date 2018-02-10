@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import moment from 'moment'
 import fp from 'lodash/fp'
 
@@ -21,9 +21,10 @@ import * as ROUTES from 'utils/routes'
 
 import { PageContentTitle, PageContentUnderTitle } from 'components'
 import { Collapse } from 'elements'
-import { getQueryParams } from 'utils/helpers'
+import { getQueryParams, jsonToQueryString } from 'utils/helpers'
 import { groupItems, filterItems } from './utils/helpers'
 import { withClientId } from 'hocs'
+import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
 
 import FiltersHeader from './components/filters-header'
 import GroupingHeader from './components/grouping-header'
@@ -82,7 +83,7 @@ const zonesSelector = fp.compose(
   zoneSelectors.zonesInfoSelector
 )
 
-class DirectoryView extends Component {
+class DirectoryView extends PureComponent {
   constructor(props) {
     super(props)
 
@@ -102,6 +103,11 @@ class DirectoryView extends Component {
         listenToSubscriptions(clientId, siteId)
       })
       .catch(err => console.error(err))
+
+    this.timerId = window.setInterval(
+      this.props.clearInactiveEntities,
+      ZONE_ENTITIES_VALIDATE_INTERVAL
+    )
   }
 
   componentWillReceiveProps(nextProps) {
@@ -112,9 +118,16 @@ class DirectoryView extends Component {
     }
   }
 
+  componentWillUnmount() {
+    this.timerId && window.clearInterval(this.timerId)
+  }
+
   setURLHref(params) {
     const { history } = this.props
-    history.push(`${ROUTES.LIVE_VIEW_DIRECTORY}${getQueryString(params)}`)
+    history.push({
+      location: ROUTES.LIVE_VIEW_DIRECTORY,
+      search: jsonToQueryString(params)
+    })
   }
 
   handleFilterChange = (value) => {

@@ -4,6 +4,7 @@ import {
   ZONE_LIST_FETCH,
   ZONE_LIST_HOLDERS_FETCH,
   ZONE_ENTITIES_SUBSCRIBE,
+  ZONE_ENTITIES_CLEAR_INACTIVE
 } from './types'
 
 export const listZones = (clientId = 'deloitte', siteId = '1nss') => {
@@ -13,7 +14,6 @@ export const listZones = (clientId = 'deloitte', siteId = '1nss') => {
     messageType: 'core.site.list-zones',
     payload: { clientId, siteId },
   })
-
 
   return {
     socketRequest: pack.content,
@@ -28,7 +28,6 @@ export const listHolder = (clientId = 'deloitte') => {
     messageType: 'core.holder.list-holders',
     payload: { clientId, withImages: true },
   })
-
 
   return {
     socketRequest: pack.content,
@@ -49,3 +48,7 @@ export const listenToSubscriptions = (clientId = 'deloitte', siteId = '1nss') =>
     type: ZONE_ENTITIES_SUBSCRIBE,
   }
 }
+
+export const clearInactiveEntities = () => ({
+  type: ZONE_ENTITIES_CLEAR_INACTIVE
+})
