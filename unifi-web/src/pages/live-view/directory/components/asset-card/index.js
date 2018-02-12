@@ -7,10 +7,7 @@ import './index.scss'
 const COMPONENT_CSS_CLASSNAME = 'asset-card'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 
-const formatTime = (value) => {
-  const m = moment(value)
-  return `${m.format('HH:MM:ss')}`
-}
+const formatTime = (value) => moment.utc(value).format('LTS')
 
 const AssetCard = ({ item, itemsPerRow }) => (
   <div
