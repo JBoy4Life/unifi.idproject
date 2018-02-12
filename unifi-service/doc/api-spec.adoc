@@ -77,6 +77,7 @@ Invitation tokens and password reset tokens are identical.
 - Request params:
 * clientId: string
 * username: string
+* name: string
 * email: string
 * invite: boolean (invite to set login password?; can also be done later)
 - Response params: <none>
@@ -113,6 +114,7 @@ Invitation tokens and password reset tokens are identical.
 * clientId: string
 - Response params: (sequence of)
 * clientId: string
+* name: string
 * username: string
 * email: string
 * active: boolean
@@ -126,6 +128,7 @@ Invitation tokens and password reset tokens are identical.
 - Response params:
 * clientId: string
 * username: string
+* name: string
 * email: string
 * active: boolean
 
@@ -165,9 +168,7 @@ Set a password using a valid password reset token.
 * clientId: string
 * username: string
 * token: byte sequence
-- Response params:
-* expiryDate: timestamp
-* email: string
+- Response params: <none>
 
 
 === Change password
