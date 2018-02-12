@@ -38,9 +38,9 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.READER;
-import static id.unifi.service.core.db.Tables.UHF_DETECTION;
+import static id.unifi.service.core.db.Tables.RFID_DETECTION;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
-import id.unifi.service.core.db.tables.records.UhfDetectionRecord;
+import id.unifi.service.core.db.tables.records.RfidDetectionRecord;
 import static java.net.InetSocketAddress.createUnresolved;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -126,13 +126,13 @@ public class CoreService {
                                      DetectionProcessor detectionProcessor,
                                      AttendanceProcessor attendanceProcessor) {
         Thread thread = new Thread(() -> {
-            InsertReturningStep<UhfDetectionRecord> insertQuery = insertInto(UHF_DETECTION,
-                    UHF_DETECTION.CLIENT_ID,
-                    UHF_DETECTION.DETECTABLE_ID,
-                    UHF_DETECTION.DETECTABLE_TYPE,
-                    UHF_DETECTION.READER_SN,
-                    UHF_DETECTION.PORT_NUMBER,
-                    UHF_DETECTION.DETECTION_TIME)
+            InsertReturningStep<RfidDetectionRecord> insertQuery = insertInto(RFID_DETECTION,
+                    RFID_DETECTION.CLIENT_ID,
+                    RFID_DETECTION.DETECTABLE_ID,
+                    RFID_DETECTION.DETECTABLE_TYPE,
+                    RFID_DETECTION.READER_SN,
+                    RFID_DETECTION.PORT_NUMBER,
+                    RFID_DETECTION.DETECTION_TIME)
                     .values(null, null, null, null, (Integer) null, null)
                     .onConflictDoNothing();
 

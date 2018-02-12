@@ -201,7 +201,3 @@ test-club	test	test@example.com	t
 COPY operator_password (client_id, username, password_hash, algorithm) FROM stdin;
 test-club	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt
 \.
-
-
-COPY uhf_detection (client_id, detectable_id, detectable_type, reader_sn, port_number, detection_time) FROM stdin;
-\.

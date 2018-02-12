@@ -178,18 +178,18 @@ public class AttendanceProcessor {
             refreshAssignments(sql);
 
             return sql.select(
-                    UHF_DETECTION.CLIENT_ID,
-                    UHF_DETECTION.DETECTABLE_ID,
-                    UHF_DETECTION.DETECTABLE_TYPE,
-                    UHF_DETECTION.READER_SN,
-                    UHF_DETECTION.PORT_NUMBER,
-                    UHF_DETECTION.DETECTION_TIME)
-                    .from(UHF_DETECTION.join(ANTENNA).onKey())
+                    RFID_DETECTION.CLIENT_ID,
+                    RFID_DETECTION.DETECTABLE_ID,
+                    RFID_DETECTION.DETECTABLE_TYPE,
+                    RFID_DETECTION.READER_SN,
+                    RFID_DETECTION.PORT_NUMBER,
+                    RFID_DETECTION.DETECTION_TIME)
+                    .from(RFID_DETECTION.join(ANTENNA).onKey())
                     .join(PROCESSING_STATE).on(
                             ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID),
                             ANTENNA.READER_SN.eq(PROCESSING_STATE.READER_SN),
                             ANTENNA.PORT_NUMBER.eq(PROCESSING_STATE.PORT_NUMBER))
-                    .where(UHF_DETECTION.DETECTION_TIME.gt(PROCESSING_STATE.PROCESSED_UP_TO))
+                    .where(RFID_DETECTION.DETECTION_TIME.gt(PROCESSING_STATE.PROCESSED_UP_TO))
                     .stream()
                     .map(d -> new Detection(
                             new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
