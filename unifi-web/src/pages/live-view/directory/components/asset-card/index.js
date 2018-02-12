@@ -24,7 +24,7 @@ const AssetCard = ({ item, itemsPerRow }) => (
     <div className={bemE('meta')}>
       <div className={bemE('field')}>{item.client.name}</div>
       <div className={bemE('field')}>ID {item.clientReference}</div>
-      <div className={bemE('field')}>{formatTime(item.timestamp)}</div>
+      <div className={bemE('field')}>{formatTime(item.detectionTime)}</div>
       <div className={bemE('field')}>{item.zone.name}</div>
     </div>
   </div>
