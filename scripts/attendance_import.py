@@ -23,7 +23,7 @@ from datetime import datetime
 
 schedule_headers = frozenset(['schedule_id', 'name'])
 block_headers = frozenset(['schedule_id', 'block_id', 'start_time', 'end_time', 'site_id', 'zone_id'])
-contact_headers = frozenset(['client_reference', 'name', 'metadata', 'detectable_id', 'schedule_id'])
+contact_headers = frozenset(['client_reference', 'name', 'metadata', 'schedule_id'])
 assignment_headers = frozenset(['client_reference', 'detectable_id:mifare-csn', 'detectable_id:uhf-epc'])
 
 detectable_types = ['mifare-csn', 'uhf-epc']
@@ -156,7 +156,6 @@ def main():
             'client_reference': row[col['client_reference']],
             'name': row[col['name']],
             'metadata': row[col['metadata']],
-            'detectable_id': row[col['detectable_id']],
             'schedule_id': frozenset(s.strip() for s in row[col['schedule_id']].split(u',') if s),
         } for row in reader]
 
