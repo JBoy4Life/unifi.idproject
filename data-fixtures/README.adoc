@@ -9,9 +9,3 @@
 == Best for live view
 
 - link:test-club.sql[test-club.sql]: Self-contained data for `test-club` client with contacts with photos and assigned UHF detectables.
-
-
-== Other, older data
-
-- link:core.sql[core.sql]: Test fixtures for core functionality.
-- link:attendance.sql[attendance.sql]: Test fixtures for attendance funtionality. Import core first.
