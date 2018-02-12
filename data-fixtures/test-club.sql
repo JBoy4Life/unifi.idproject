@@ -193,8 +193,8 @@ test-club	025	uhf-epc	R25
 \.
 
 
-COPY operator (client_id, username, email, active) FROM stdin;
-test-club	test	test@example.com	t
+COPY operator (client_id, username, name, email, active) FROM stdin;
+test-club	test	Test Club Tester	test@example.com	t
 \.
 
 

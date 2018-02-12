@@ -154,7 +154,7 @@ Invitation tokens and password reset tokens are identical.
 * token: byte sequence
 - Response params: (null if invalid)
 * expiryDate: timestamp
-* email: string
+* operator: { clientId: string, username: string, name: string, email: string }
 
 === Set password
 

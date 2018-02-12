@@ -1,6 +1,7 @@
 CREATE TABLE core.operator(
   client_id     CITEXT NOT NULL,
   username      CITEXT NOT NULL,
+  name          VARCHAR(64) NOT NULL,
   email         VARCHAR(64) NOT NULL,
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   since         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

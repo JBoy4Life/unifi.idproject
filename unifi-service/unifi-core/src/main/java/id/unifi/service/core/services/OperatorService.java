@@ -21,12 +21,12 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
+import id.unifi.service.core.db.tables.records.OperatorRecord;
 import id.unifi.service.core.operator.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
-import static java.util.stream.Collectors.toList;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -74,11 +74,13 @@ public class OperatorService {
     public void registerOperator(OperatorSessionData session,
                                  String clientId,
                                  String username,
+                                 String name,
                                  String email,
                                  boolean invite) {
         authorize(session, clientId);
         validateAll(
                 v("username", shortId(username)),
+                v("name", shortString(name)),
                 v("email", email(email))
         );
         OperatorPK onboarder = session.getOperator();
@@ -87,6 +89,7 @@ public class OperatorService {
                 sql.insertInto(OPERATOR)
                         .set(OPERATOR.CLIENT_ID, clientId)
                         .set(OPERATOR.USERNAME, username)
+                        .set(OPERATOR.NAME, name)
                         .set(OPERATOR.EMAIL, email)
                         .set(OPERATOR.ACTIVE, true)
                         .execute();
@@ -148,9 +151,7 @@ public class OperatorService {
         authorize(session, clientId);
         return db.execute(sql -> sql.selectFrom(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
-                .stream()
-                .map(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())))
-                .collect(toList());
+                .fetch(OperatorService::operatorFromRecord));
     }
 
     @ApiOperation
@@ -182,8 +183,8 @@ public class OperatorService {
             Optional<PasswordReset.TimestampedTokenHash> tokenHash =
                     passwordReset.findValidTokenHash(sql, clientId, username, token);
             if (tokenHash.isPresent()) {
-                String email = findEmail(sql, clientId, username).orElseThrow(AssertionError::new);
-                return new PasswordResetInfo(tokenHash.get().since, email);
+                OperatorInfo operator = findOperator(sql, clientId, username).orElseThrow(AssertionError::new);
+                return new PasswordResetInfo(tokenHash.get().since, operator);
             } else {
                 return null;
             }
@@ -220,7 +221,11 @@ public class OperatorService {
         return db.execute(sql -> sql.selectFrom(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
-                .fetchOne(r -> new OperatorInfo(r.getClientId(), r.getUsername(), r.getEmail(), r.getActive())));
+                .fetchOne(OperatorService::operatorFromRecord));
+    }
+
+    private static OperatorInfo operatorFromRecord(OperatorRecord r) {
+        return new OperatorInfo(r.getClientId(), r.getUsername(), r.getName(), r.getEmail(), r.getActive());
     }
 
     private void setPassword(DSLContext sql, String clientId, String username, String password) {
@@ -246,7 +251,7 @@ public class OperatorService {
         TimestampedToken token = passwordReset.generateResetToken(sql, clientId, username);
 
         String actualEmailAddress = emailAddress.or(() ->
-                findEmail(sql, clientId, username))
+                findOperator(sql, clientId, username).map(o -> o.email))
                 .orElseThrow(() -> new NotFound("operator"));
 
         EmailSenderProvider.EmailMessage message;
@@ -285,12 +290,11 @@ public class OperatorService {
                 .fetchOptional(OPERATOR_PASSWORD.PASSWORD_HASH);
     }
 
-    private static Optional<String> findEmail(DSLContext sql, String clientId, String username) {
-        return sql.select(OPERATOR.EMAIL)
-                .from(OPERATOR)
+    private static Optional<OperatorInfo> findOperator(DSLContext sql, String clientId, String username) {
+        return sql.selectFrom(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
-                .fetchOptional(OPERATOR.EMAIL);
+                .fetchOptional(OperatorService::operatorFromRecord);
     }
 
     private boolean passwordMatches(String clientId, String username, String password) {
@@ -300,11 +304,11 @@ public class OperatorService {
 
     public class PasswordResetInfo {
         public final Instant expiryDate;
-        public final String email;
+        public final OperatorInfo operator;
 
-        public PasswordResetInfo(Instant expiryDate, String email) {
+        public PasswordResetInfo(Instant expiryDate, OperatorInfo operator) {
             this.expiryDate = expiryDate;
-            this.email = email;
+            this.operator = operator;
         }
     }
 }

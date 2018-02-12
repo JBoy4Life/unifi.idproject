@@ -155,9 +155,9 @@ ucl-som	ERAN17	contact
 \.
 
 
-COPY operator (client_id, username, email, active, since) FROM stdin;
-deloitte	test	test@example.com	t	2017-12-27 13:49:25.159918
-ucl-som	test	test@example.com	t	2017-12-31 13:49:25.159918
+COPY operator (client_id, username, name, email, active, since) FROM stdin;
+deloitte	test	Deloitte Tester	test@example.com	t	2017-12-27 13:49:25.159918
+ucl-som	test	UCL SoM Tester	test@example.com	t	2017-12-31 13:49:25.159918
 \.
 
 

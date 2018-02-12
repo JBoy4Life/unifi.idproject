@@ -14,8 +14,8 @@ ucl-som	UCL School of Management
 \.
 
 
-COPY operator (client_id, username, email, active) FROM stdin;
-ucl-som	test	test@example.org	t
+COPY operator (client_id, username, name, email, active) FROM stdin;
+ucl-som	test	Tester	test@example.org	t
 \.
 
 
