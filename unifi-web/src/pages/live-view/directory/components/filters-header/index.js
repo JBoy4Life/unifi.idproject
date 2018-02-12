@@ -65,13 +65,6 @@ export default class FiltersHeader extends Component {
             >
               Assets
             </Checkbox>
-
-            <Checkbox
-              checked={filterValues.indexOf('visitor') !== -1}
-              onChange={this.onVisitorsFilter}
-            >
-              Visitors
-            </Checkbox>
           </Col>
         </Row>
       </div>

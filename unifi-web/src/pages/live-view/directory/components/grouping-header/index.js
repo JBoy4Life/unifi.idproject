@@ -6,7 +6,6 @@ const { TabPane } = Tabs
 const GroupingHeader = ({ onChange, groupValue }) => (
   <Tabs onChange={onChange} activeKey={groupValue || 'all'} className="directory-grouping-header">
     <TabPane tab="ALL" key="all" />
-    <TabPane tab="FLOORS" key="floors" />
     <TabPane tab="ZONES" key="zones" />
   </Tabs>
 )
