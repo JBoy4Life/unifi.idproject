@@ -4,7 +4,9 @@ import {
   USER_LOGOUT,
   USER_LOGIN,
   USER_REAUTHENTICATE,
-  USER_SET_INITIALIZED
+  USER_SET_INITIALIZED,
+  PASSWORD_RESET_INFO_FETCH,
+  SET_PASSWORD
 } from './types'
 import {clientId} from "../../index"
 
@@ -47,5 +49,37 @@ export const logoutRequest = () => ({
 export const setInitialized = () => ({
   type: USER_SET_INITIALIZED
 })
+
+export const getPasswordResetInfo = ({ clientId, username, token }) => {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion:  '1.0.0',
+    messageType: 'core.operator.get-password-reset',
+    payload: { clientId, username, token }
+  })
+
+  return {
+    socketRequest: pack.content,
+    type: PASSWORD_RESET_INFO_FETCH
+  }
+
+}
+
+export const setPassword = ({ clientId, username, password, token }) => {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion:  '1.0.0',
+    messageType: 'core.operator.set-password',
+    payload: { clientId, username, password, token }
+  })
+
+  return {
+    socketRequest: pack.content,
+    type: SET_PASSWORD
+  }
+
+}
 
 export default null

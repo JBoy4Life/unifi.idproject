@@ -1,6 +1,7 @@
 export const SITEMAP = '/'
 export const MY_ACCOUNT = '/my-account'
 export const LOGIN = '/login'
+export const RESET_PASSWORD = '/reset-password/:username/:token'
 export const DIRECTORY = '/directory'
 export const EVACUATION = '/evacuation'
 export const EVACUATION_DIRECTORY_VIEW = '/evacuation/directory'

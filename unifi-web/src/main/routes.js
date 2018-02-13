@@ -8,10 +8,10 @@ import * as ROUTES from 'utils/routes'
 import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
   Discovery, LiveView, SiteManager, Users, Navigation,
-  ClientRegistry, Attendance
+  ClientRegistry, Attendance, ResetPassword
 } from '../pages'
 
-const ProtectedRoutes = () => (
+const ProtectedRoutes = userIsAuthenticatedRedir(() => (
   <Switch>
     <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
 
@@ -31,13 +31,14 @@ const ProtectedRoutes = () => (
 
     <CrumbRoute exact path={ROUTES.USERS} title="Users" component={Users} />
   </Switch>
-)
+))
 
 export default ({ history }) => (
   <Router history={history}>
     <Switch>
-      <CrumbRoute exact path={ROUTES.LOGIN} title="Login" component={userIsNotAuthenticatedRedir(Login)} />
-      <Route path="/" component={userIsAuthenticatedRedir(ProtectedRoutes)} />
+      <CrumbRoute exact path={ROUTES.LOGIN} title="Login" component={Login} />
+      <CrumbRoute exact path={ROUTES.RESET_PASSWORD} title="Reset Password" component={ResetPassword} />
+      <Route path="/" component={ProtectedRoutes} />
 
       <Route component={NotFound} />
     </Switch>

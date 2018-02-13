@@ -1,19 +1,17 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-
-import { bindActionCreators } from 'redux'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
-import { PageContainer, LoginForm } from '../../smart-components'
-
-import { noop } from '../../utils/helpers'
+import { createStructuredSelector } from 'reselect'
 
 import './index.scss'
-import unifilogo from '../../assets/images/unifi-logo.png'
-import logo from '../../assets/images/ucl-logo-2.png'
-import { formSubmit } from 'utils/form'
-
-
+import logo from 'assets/images/ucl-logo-2.png'
+import unifilogo from 'assets/images/unifi-logo.png'
 import { actions as userActions } from 'redux/user'
+import { formSubmit } from 'utils/form'
+import { noop } from 'utils/helpers'
+import { PageContainer, LoginForm } from 'smart-components'
+import { userIsNotAuthenticatedRedir } from 'hocs/auth'
 
 class LoginContainer extends Component {
   static defaultProps = {
@@ -42,12 +40,11 @@ class LoginContainer extends Component {
   }
 }
 
-export const mapStateToProps = state => ({
-  user: state.user,
-})
-
-export const mapDispatch = dispatch => (bindActionCreators({
+export const actions = {
   loginRequest: userActions.loginRequest,
-}, dispatch))
+}
 
-export default connect(mapStateToProps, mapDispatch)(LoginContainer)
+export default compose(
+  userIsNotAuthenticatedRedir,
+  connect(null, actions)
+)(LoginContainer)

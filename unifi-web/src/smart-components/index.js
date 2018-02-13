@@ -1,6 +1,7 @@
 import LoginForm from './login-form'
 import ClientRegisterForm from './client-register-form'
 import NotificationForm from './notification-form'
+import ResetPasswordForm from './reset-password-form'
 
 import LinkedNavigationMenu from './linked-top-navigation'
 import LinkedSideNavigation from './linked-side-navigation'
@@ -15,6 +16,7 @@ export {
   LoginForm,
   ClientRegisterForm,
   NotificationForm,
+  ResetPasswordForm,
 
   PageContainer,
   LinkedNavigationMenu,

@@ -1,10 +1,24 @@
 import { REHYDRATE } from 'redux-persist'
-import { USER_LOGOUT, USER_LOGIN, USER_REAUTHENTICATE, USER_SET_INITIALIZED } from './types'
+
+import {
+  USER_LOGOUT,
+  USER_LOGIN,
+  USER_REAUTHENTICATE,
+  USER_SET_INITIALIZED,
+  SET_PASSWORD,
+  PASSWORD_RESET_INFO_FETCH
+} from './types'
+import { API_SUCCESS, API_FAIL } from 'redux/api/request'
 
 const initialState = {
   isLoggingIn: false,
   currentUser: null,
   initialising: true,
+  passwordResetInfo: {
+    status: 'INIT',
+    payload: null
+  },
+  setPasswordStatus: 'INIT'
 }
 
 const reducer = (state = initialState, action = {}) => {
@@ -41,8 +55,7 @@ const reducer = (state = initialState, action = {}) => {
     case REHYDRATE:
       return {
         ...state,
-        ...(action.payload ? action.payload.user : null),
-        initialising: state.initialising
+        currentUser: action.payload ? action.payload.user.currentUser : state.currentUser
       }
 
     case USER_SET_INITIALIZED:
@@ -62,6 +75,36 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         initialising: false,
+      }
+
+    case `${PASSWORD_RESET_INFO_FETCH}_FULFILLED`:
+      return {
+        ...state,
+        passwordResetInfo: {
+          ...action.payload.payload,
+          status: action.payload.payload ? API_SUCCESS : API_FAIL
+        }
+      }
+
+    case `${PASSWORD_RESET_INFO_FETCH}_REJECTED`:
+      return {
+        ...state,
+        passwordResetInfo: {
+          ...action.payload.payload,
+          status: API_FAIL
+        }
+      }
+
+    case `${SET_PASSWORD}_FULFILLED`:
+      return {
+        ...state,
+        setPasswordStatus: API_SUCCESS
+      }
+
+    case `${SET_PASSWORD}_REJECTED`:
+      return {
+        ...state,
+        setPasswordStatus: API_FAIL
       }
 
     default:
