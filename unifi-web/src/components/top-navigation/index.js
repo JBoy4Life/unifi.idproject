@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
+import get from 'lodash/get'
 import { Menu } from '../../elements'
 
 import './index.scss'
 
 export default class TopNavigation extends Component {
   render() {
+    const { liveViewEnabled } = this.props;
     return (
       <Menu
         className="top-navigation"
@@ -21,9 +23,9 @@ export default class TopNavigation extends Component {
           {/*Directory*/}
         {/*</Menu.Item>*/}
 
-        <Menu.Item key="/live-view">
+        {liveViewEnabled && <Menu.Item key="/live-view">
           Live View
-        </Menu.Item>
+        </Menu.Item>}
 
         {/*<Menu.Item key="/navigation">*/}
           {/*Navigation*/}

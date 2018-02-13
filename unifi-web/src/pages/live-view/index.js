@@ -1,14 +1,13 @@
 import React, { Component } from 'react'
 import { Route, Switch /* Redirect */ } from 'react-router'
 
-import * as ROUTES from '../../utils/routes'
-
-import { PageContent } from '../../components'
-import { PageContainer, LinkedSideNavigation } from '../../smart-components'
-
+import * as ROUTES from 'utils/routes'
 import Dashboard from './dashboard'
-import FloorView from './floor-view'
 import DirectoryView from './directory'
+import FloorView from './floor-view'
+import { liveViewEnabledRedir } from 'hocs/auth'
+import { PageContainer, LinkedSideNavigation } from 'smart-components'
+import { PageContent } from 'components'
 
 const menus = [
   {
@@ -25,7 +24,7 @@ const menus = [
   },
 ]
 
-export default class LiveViewContainer extends Component {
+class LiveViewContainer extends Component {
   render() {
     return (
       <PageContainer>
@@ -57,3 +56,5 @@ export default class LiveViewContainer extends Component {
     )
   }
 }
+
+export default liveViewEnabledRedir(LiveViewContainer)

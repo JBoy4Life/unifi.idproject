@@ -1,8 +1,9 @@
 import React from 'react'
+import get from 'lodash/get'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
-import { loginStatusSelector, currentUserSelector } from 'redux/user/selectors'
+import { loginStatusSelector, currentUserSelector, liveViewEnabledSelector } from 'redux/user/selectors'
 
 const locationHelper = locationHelperBuilder({})
 
@@ -30,6 +31,13 @@ const userIsNotAuthenticatedDefaults = {
 
 export const userIsNotAuthenticatedRedir = connectedRouterRedirect({
   ...userIsNotAuthenticatedDefaults,
-  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance',
+  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance', // TODO: replace with dashboard path
+  allowRedirectBack: false
+})
+
+export const liveViewEnabledRedir = connectedRouterRedirect({
+  authenticatedSelector: liveViewEnabledSelector,
+  wrapperDisplayName: 'LiveViewEnabled',
+  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance', // TODO: replace with dashboard path
   allowRedirectBack: false
 })
