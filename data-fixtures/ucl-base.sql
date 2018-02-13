@@ -14,6 +14,21 @@ ucl-som	UCL School of Management
 \.
 
 
+COPY core.client_config (client_id, delete_detections_after, live_view_enabled) FROM stdin;
+ucl-som	28 days	f
+\.
+
+
+COPY core.client_vertical (client_id, vertical_id) FROM stdin;
+ucl-som	attendance
+\.
+
+
+COPY attendance.client_config (client_id, vertical_id, grace_period_before_block, grace_period_after_block) FROM stdin;
+ucl-som	attendance	15 minutes	15 minutes
+\.
+
+
 COPY operator (client_id, username, name, email, active) FROM stdin;
 ucl-som	test	Tester	test@example.org	t
 \.

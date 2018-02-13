@@ -4,8 +4,8 @@ CREATE TABLE attendance.schedule(
   name        VARCHAR(64) NOT NULL,
 
   PRIMARY KEY (client_id, schedule_id),
-  CONSTRAINT fk_schedule_to_client
+  CONSTRAINT fk_schedule_to_client_config
     FOREIGN KEY (client_id)
-    REFERENCES core.client,
+    REFERENCES attendance.client_config,
   CHECK (LENGTH(schedule_id) <= 64)
 );

@@ -11,12 +11,13 @@ import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.operator.ExpiringToken;
+import id.unifi.service.common.operator.AuthInfo;
 import id.unifi.service.common.operator.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.operator.OperatorSessionData;
+import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
@@ -47,6 +48,7 @@ public class OperatorService {
     private final OperatorEmailRenderer emailRenderer;
     private final EmailSenderProvider emailSender;
     private final SessionTokenStore sessionTokenStore;
+    private final VerticalConfigManager verticalConfigManager;
     private final Config config;
 
     private interface Config {
@@ -60,7 +62,8 @@ public class OperatorService {
                            PasswordReset passwordReset,
                            OperatorEmailRenderer emailRenderer,
                            EmailSenderProvider emailSender,
-                           SessionTokenStore sessionTokenStore) {
+                           SessionTokenStore sessionTokenStore,
+                           VerticalConfigManager verticalConfigManager) {
         this.config = config;
         this.db = dbProvider.bySchema(CORE);
         this.passwordReset = passwordReset;
@@ -68,6 +71,7 @@ public class OperatorService {
         this.emailRenderer = emailRenderer;
         this.emailSender = emailSender;
         this.sessionTokenStore = sessionTokenStore;
+        this.verticalConfigManager = verticalConfigManager;
     }
 
     @ApiOperation
@@ -105,7 +109,7 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public ExpiringToken authPassword(OperatorSessionData session, String clientId, String username, String password) {
+    public AuthInfo authPassword(OperatorSessionData session, String clientId, String username, String password) {
         validateAll(
                 v(shortId(clientId), AuthenticationFailed::new),
                 v(shortId(username), AuthenticationFailed::new),
@@ -117,7 +121,10 @@ public class OperatorService {
             sessionTokenStore.put(sessionToken, operator);
             session.setAuth(sessionToken, operator);
             recordAuthAttempt(clientId, username, true);
-            return new ExpiringToken(operator, sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
+            return new AuthInfo(operator,
+                    sessionToken,
+                    Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                    verticalConfigManager.getClientSideConfig(clientId));
         } else {
             // TODO recordLoginAttempt(clientId, username, false);
             session.setAuth(null, null);
@@ -126,11 +133,14 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public ExpiringToken authToken(OperatorSessionData session, Token sessionToken) {
+    public AuthInfo authToken(OperatorSessionData session, Token sessionToken) {
         Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
-            return new ExpiringToken(operator.get(), sessionToken, Instant.now().plusSeconds(config.sessionTokenValiditySeconds()));
+            return new AuthInfo(operator.get(),
+                    sessionToken,
+                    Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                    verticalConfigManager.getClientSideConfig(operator.get().clientId));
         } else {
             session.setAuth(null, null);
             throw new AuthenticationFailed();

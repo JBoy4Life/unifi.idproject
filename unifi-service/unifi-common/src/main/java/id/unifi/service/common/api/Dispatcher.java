@@ -287,7 +287,8 @@ public class Dispatcher<S> {
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule())
                 .registerModule(customSerializationModule)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
 
     private static Message parseMessage(MessageStream stream, ObjectMapper mapper) throws IOException {

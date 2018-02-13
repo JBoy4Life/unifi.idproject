@@ -6,7 +6,7 @@ CREATE TABLE attendance.block(
 
   PRIMARY KEY (client_id, schedule_id, block_id),
   CONSTRAINT fk_block_to_schedule
-  FOREIGN KEY (client_id, schedule_id)
-  REFERENCES attendance.schedule,
+    FOREIGN KEY (client_id, schedule_id)
+    REFERENCES attendance.schedule,
   CHECK (LENGTH(block_id) <= 64)
 );
