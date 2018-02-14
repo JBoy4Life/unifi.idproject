@@ -4,7 +4,7 @@ import { composeWithDevTools } from 'redux-devtools-extension'
 import { createStore, applyMiddleware, compose } from 'redux'
 import { persistStore, persistCombineReducers } from 'redux-persist'
 
-import { authMiddleware, formSubmitMiddleware, socketApiMiddleware } from 'middleware'
+import { authMiddleware, formSubmitMiddleware, socketApiMiddleware } from './middleware'
 import reducers from 'redux/reducers'
 import persistConfig from 'config/persist'
 
