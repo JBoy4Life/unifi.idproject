@@ -19,7 +19,7 @@ export const verticalConfigSelector = fp.compose(
 
 export const attendanceEnabledSelector = fp.compose(
   Boolean,
-  fp.get('attedance'),
+  fp.get('attendance'),
   verticalConfigSelector
 )
 
