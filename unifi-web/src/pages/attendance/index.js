@@ -10,6 +10,7 @@ import AttendanceReports from './attendance-reports'
 import AttendanceScheduleBlockDrilldown from './attendance-schedule-block-drilldown'
 import AttendanceScheduleDetail from './attendance-schedule-detail'
 import AttendanceSchedules from './attendance-schedules'
+import { attendanceEnabledRedir } from 'hocs/auth'
 
 const menus = [
   {
@@ -48,7 +49,7 @@ const ModulesRoutes = () => (
   </Switch>
 )
 
-const SitemapContainer = () => (
+const Attendance = () => (
   <PageContainer>
     <PageContent>
       <PageContent.Sidebar>
@@ -78,4 +79,4 @@ const SitemapContainer = () => (
   </PageContainer>
 )
 
-export default SitemapContainer
+export default attendanceEnabledRedir(Attendance)

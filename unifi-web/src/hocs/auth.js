@@ -3,7 +3,7 @@ import get from 'lodash/get'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
-import { loginStatusSelector, currentUserSelector, liveViewEnabledSelector } from 'redux/user/selectors'
+import { loginStatusSelector, currentUserSelector, attendanceEnabledSelector, liveViewEnabledSelector } from 'redux/user/selectors'
 
 const locationHelper = locationHelperBuilder({})
 
@@ -32,6 +32,14 @@ const userIsNotAuthenticatedDefaults = {
 export const userIsNotAuthenticatedRedir = connectedRouterRedirect({
   ...userIsNotAuthenticatedDefaults,
   redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance', // TODO: replace with dashboard path
+  allowRedirectBack: false
+})
+
+
+export const attendanceEnabledRedir = connectedRouterRedirect({
+  authenticatedSelector: attendanceEnabledSelector,
+  wrapperDisplayName: 'AttendanceEnabled',
+  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/live-view', // TODO: replace with dashboard path
   allowRedirectBack: false
 })
 

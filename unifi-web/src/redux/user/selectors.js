@@ -12,9 +12,20 @@ export const loginStatusSelector = fp.compose(
   getReducer
 )
 
-export const liveViewEnabledSelector = fp.compose(
-  fp.get('verticalConfig.core.liveViewEnabled'),
+export const verticalConfigSelector = fp.compose(
+  fp.get('verticalConfig'),
   currentUserSelector
+)
+
+export const attendanceEnabledSelector = fp.compose(
+  Boolean,
+  fp.get('attedance'),
+  verticalConfigSelector
+)
+
+export const liveViewEnabledSelector = fp.compose(
+  fp.get('core.liveViewEnabled'),
+  verticalConfigSelector
 )
 
 export const passwordResetInfoSelector = fp.compose(

@@ -4,18 +4,18 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
 
-import { liveViewEnabledSelector } from 'redux/user/selectors'
+import { verticalConfigSelector } from 'redux/user/selectors'
 import { TopNavigation } from '../../components'
 
 class LinkedTopNavigation extends Component {
   handleMenuNavigation = target => this.props.history.push(target.key)
 
   render() {
-    const { liveViewEnabled, match } = this.props
+    const { verticalConfig, match } = this.props
 
     return (
       <TopNavigation
-        liveViewEnabled={liveViewEnabled}
+        verticalConfig={verticalConfig}
         selectedKeys={[match.path]}
         onMenuClick={this.handleMenuNavigation}
       />
@@ -24,7 +24,7 @@ class LinkedTopNavigation extends Component {
 }
 
 const selector = createStructuredSelector({
-  liveViewEnabled: liveViewEnabledSelector
+  verticalConfig: verticalConfigSelector
 })
 
 export default compose(

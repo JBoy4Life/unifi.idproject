@@ -6,7 +6,9 @@ import './index.scss'
 
 export default class TopNavigation extends Component {
   render() {
-    const { liveViewEnabled } = this.props;
+    const { verticalConfig } = this.props;
+    const liveViewEnabled = get(verticalConfig, 'core.liveViewEnabled', false)
+    const attendanceEnabled = Boolean(get(verticalConfig, 'attendance', false))
     return (
       <Menu
         className="top-navigation"
@@ -43,9 +45,9 @@ export default class TopNavigation extends Component {
           {/*Evacuation*/}
         {/*</Menu.Item>*/}
 
-        <Menu.Item key="/attendance/schedules">
+        {attendanceEnabled && <Menu.Item key="/attendance/schedules">
           Attendance
-        </Menu.Item>
+        </Menu.Item>}
 
       </Menu>
     )
