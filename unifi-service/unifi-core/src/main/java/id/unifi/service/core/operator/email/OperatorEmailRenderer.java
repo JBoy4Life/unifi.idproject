@@ -17,23 +17,21 @@ import java.util.Base64;
 import java.util.Map;
 
 public class OperatorEmailRenderer {
-    private final Config config;
-    private final String baseUrl;
+    private final String baseUrlFormat;
     private final Template htmlInvitationTemplate;
     private final Template htmlPasswordResetRequestedTemplate;
     private final Base64.Encoder base64;
 
     private interface Config {
-        @Default("127.0.0.1:3000")
-        String webServerHost();
+        @Default("local.unifi.id:3000")
+        String webServerTopDomain();
 
         @Default("http")
         String webServerScheme();
     }
 
     public OperatorEmailRenderer(Config config) {
-        this.config = config;
-        this.baseUrl = String.format("%s://%s", config.webServerScheme(), config.webServerHost());
+        this.baseUrlFormat = String.format("%s://%%s.%s", config.webServerScheme(), config.webServerTopDomain());
 
         Mustache.Compiler htmlCompiler = Mustache.compiler().escapeHTML(true).defaultValue("???");
         this.htmlInvitationTemplate = compileTemplate(htmlCompiler, "invitation");
@@ -49,8 +47,8 @@ public class OperatorEmailRenderer {
                 "clientId", clientId,
                 "username", username,
                 "onboarder", onboarder,
-                "setPasswordUrl", String.format("%s/#/invitation/accept/%s/%s/%s",
-                        baseUrl, clientId, username, base64.encodeToString(token.encoded()))
+                "setPasswordUrl", String.format("%s/reset-password/%s/%s",
+                        baseUrlForClient(clientId), username, base64.encodeToString(token.encoded()))
         );
 
         String htmlBody = htmlInvitationTemplate.execute(context);
@@ -60,11 +58,11 @@ public class OperatorEmailRenderer {
     public EmailSenderProvider.EmailMessage renderPasswordResetInstructions(String clientId,
                                                                             String username,
                                                                             TimestampedToken token) {
+        String baseUrl = baseUrlForClient(clientId);
+        String encodedToken = base64.encodeToString(token.encoded());
         Map<String, Object> context = Map.of(
-                "setPasswordUrl", String.format("%s/#/password-reset/use/%s/%s/%s",
-                        baseUrl, clientId, username, base64.encodeToString(token.encoded())),
-                "cancelUrl", String.format("%s/#/password-reset/cancel/%s/%s/%s",
-                        baseUrl, clientId, username, base64.encodeToString(token.encoded()))
+                "setPasswordUrl", String.format("%s/reset-password/%s/%s", baseUrl, username, encodedToken),
+                "cancelUrl", String.format("%s/password-reset-cancel/%s/%s", baseUrl, username, encodedToken)
         );
 
         String htmlBody = htmlPasswordResetRequestedTemplate.execute(context);
@@ -79,5 +77,9 @@ public class OperatorEmailRenderer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String baseUrlForClient(String clientId) {
+        return String.format(baseUrlFormat, clientId);
     }
 }
