@@ -17,6 +17,7 @@ import codecs
 from pytz import timezone, utc
 from uuid import uuid4
 from itertools import product
+from collections import Counter
 
 from datetime import datetime
 
@@ -109,6 +110,8 @@ def analyse(schedule_names, blocks, contacts, assignments):
         frozenset(a['client_reference'] for a in assignments
                   if a['client_reference'] not in [c['client_reference'] for c in contacts])
 
+    duplicate_detectable_ids = [i for i, count in Counter([a['uhf-epc'] for a in assignments if a['uhf-epc']]).items() if count > 1]
+
     if unknown_schedules_in_blocks:
         print('Unknown schedule IDs in blocks: ', u', '.join(unknown_schedules_in_blocks), file=sys.stderr)
     if schedules_with_no_blocks:
@@ -118,6 +121,8 @@ def analyse(schedule_names, blocks, contacts, assignments):
     if unknown_client_references_in_assignments:
         print('Unknown client references in assignments: ',
               u', '.join(unknown_client_references_in_assignments), file=sys.stderr)
+    if duplicate_detectable_ids:
+        print('Duplicate detectables: ', u', '.join(duplicate_detectable_ids), file=sys.stderr)
 
 
 def main():
