@@ -7,10 +7,11 @@ export default class WebSocketProtocol {
     WebSocketLayerClass = WebSocketLayer,
     reconnectionAttempts = 100,
     reconnectionDelay = 1000,
+    type = 'json'
   }) {
     // console.log('WebSocketProtocol', url)
     this.correlations = []
-    this.ws = new WebSocketLayerClass(url)
+    this.ws = new WebSocketLayerClass(url, type)
     this.reconnectionAttempts = reconnectionAttempts
     this.reconnectionDelay = reconnectionDelay
     this.attemptCount = 0
