@@ -261,6 +261,7 @@ public class CoreService {
                     Map<String, List<AntennaRecord>> antennae = sql.selectFrom(ANTENNA)
                             .where(ANTENNA.CLIENT_ID.eq(sessionData.getClientId()))
                             .and(ANTENNA.SITE_ID.eq(sessionData.getSiteId()))
+                            .and(ANTENNA.ACTIVE)
                             .stream()
                             .collect(groupingBy(AntennaRecord::getReaderSn));
                     return sql.selectFrom(READER)
