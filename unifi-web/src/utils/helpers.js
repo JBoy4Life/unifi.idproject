@@ -7,12 +7,6 @@ export const sleep = time => new Promise(resolve => (
 
 export const noop = () => Promise.resolve()
 
-export const convertUint8ArrayToBase64 = (buffer) => fp.compose(
-  btoa,
-  fp.join(''),
-  fp.map(char => String.fromCharCode(char))
-)(buffer)
-
 export const parseQueryString = string =>
   fp.compose(
     JSON.parse,
