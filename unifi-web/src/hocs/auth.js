@@ -25,7 +25,7 @@ export const userIsAuthenticatedRedir = connectedRouterRedirect({
 
 const userIsNotAuthenticatedDefaults = {
   // Want to redirect the user when they are done LoggingIn and authenticated
-  authenticatedSelector: state => !isLoggedIn(state) || !isLoggedIn(state),
+  authenticatedSelector: state => !isLoggedIn(state),
   wrapperDisplayName: 'UserIsNotAuthenticated'
 }
 

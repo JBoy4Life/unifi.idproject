@@ -1,4 +1,4 @@
-export const SITEMAP = '/'
+export const SITEMAP = '/sitemap'
 export const MY_ACCOUNT = '/my-account'
 export const LOGIN = '/login'
 export const RESET_PASSWORD = '/reset-password/:username/:token'
