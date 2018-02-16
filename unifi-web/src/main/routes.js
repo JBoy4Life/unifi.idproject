@@ -30,6 +30,8 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
     <CrumbRoute path={ROUTES.SITE_MANAGER} title="Site Manager" component={SiteManager} />
 
     <CrumbRoute exact path={ROUTES.USERS} title="Users" component={Users} />
+
+    <Redirect from="/" to={ROUTES.ATTENDANCE} />
   </Switch>
 ))
 
