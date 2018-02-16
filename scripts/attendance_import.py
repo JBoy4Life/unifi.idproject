@@ -84,7 +84,7 @@ def dump_assignments(client_id, assignments):
          ((client_id, a[t], t, '') for a, t in product(assignments, detectable_types)
           if a[t]))
     dump('core.assignment (client_id, detectable_id, detectable_type, client_reference)',
-         ((client_id, a[t], 'uhf-epc', a['client_reference']) for a, t in product(assignments, detectable_types)
+         ((client_id, a[t], t, a['client_reference']) for a, t in product(assignments, detectable_types)
           if a[t]))
 
 
