@@ -4,13 +4,16 @@
  */
 import msgpack from 'msgpack-lite'
 
+import { base64EncodeUint8Array } from 'utils/helpers'
+
 const binarryCodec = msgpack.createCodec({ binarraybuffer: true, preset: true })
 
 export default class WebSocketLayer {
-  constructor(wsConnectionURL) {
+  constructor(wsConnectionURL, type = 'json') {
     this.wsConnectionURL = wsConnectionURL
     this.socket = null
     this.correlations = {}
+    this.type = type // should be one of ['json', 'msgpack']
   }
 
   connect() {
@@ -59,6 +62,21 @@ export default class WebSocketLayer {
     return msgpack.encode(json, { codec: binarryCodec })
   }
 
+  base64EncodeUint8ArraysRecursively(obj) {
+    const traverse = (obj) => {
+      for (let key in obj) {
+        if (obj[key] instanceof Uint8Array) {
+          obj[key] = base64EncodeUint8Array(obj[key])
+        }
+        if (typeof obj[key] === 'object' && obj[key] && Object.keys(obj[key]).length > 0) {
+          traverse(obj[key])
+        }
+      }
+    }
+    traverse(obj)
+    return obj
+  }
+
   decodeJSONFromBlob(response) {
     if (typeof Blob !== 'undefined' && response instanceof Blob) {
       return new Promise((resolve, reject) => {
@@ -75,9 +93,9 @@ export default class WebSocketLayer {
         reader.readAsArrayBuffer(response)
       })
     } else if (typeof Buffer !== 'undefined' && response instanceof Buffer) {
-      return Promise.resolve(msgpack.decode(new Uint8Array(response)))
+      return Promise.resolve(this.base64EncodeUint8ArraysRecursively(msgpack.decode(new Uint8Array(response))))
     } else if (typeof ArrayBuffer !== 'undefined' && response instanceof ArrayBuffer) {
-      return Promise.resolve(msgpack.decode(new Uint8Array(response)))
+      return Promise.resolve(this.base64EncodeUint8ArraysRecursively(msgpack.decode(new Uint8Array(response))))
     }
 
     return Promise.reject(new Error({ message: 'Unsupported message type' }))
@@ -99,12 +117,18 @@ export default class WebSocketLayer {
     }
 
     // console.log('connected, sending')
-    if (json) {
-      // console.log('sending', JSON.stringify(content))
-      this.socket.send(JSON.stringify(content))
+    if (this.type === 'json') {
+      if (json) {
+        // console.log('sending', JSON.stringify(content))
+        this.socket.send(JSON.stringify(content))
+      } else {
+        const encodedContent = this.encodeJSON(content)
+        this.socket.send(encodedContent.buffer)
+      }
+    } else if (this.type === 'msgpack') {
+      this.socket.send(msgpack.encode(content))
     } else {
-      const encodedContent = this.encodeJSON(content)
-      this.socket.send(encodedContent.buffer)
+      throw 'Unsupported message format'
     }
   }
 

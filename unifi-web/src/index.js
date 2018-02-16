@@ -16,7 +16,11 @@ export const clientId = window.location.hostname.split(".")[0];
 
 ReactDOM.render(<Loading />, document.getElementById('root'))
 
-const wsProtocol = new WSProtocol({ url: `${process.env.SOCKET_PROTO}://${process.env.SOCKET_URI}/service/json` })
+const wsProtocol = new WSProtocol({
+  url: `${process.env.SOCKET_PROTO}://${process.env.SOCKET_URI}/service/${process.env.REACT_APP_WS_MESSAGE_FORMAT}`,
+  type: process.env.REACT_APP_WS_MESSAGE_FORMAT
+})
+
 wsProtocol
   .connect()
   .then(() => wsProtocol.start())
