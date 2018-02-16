@@ -117,14 +117,7 @@ public class OperatorService {
         );
         if (passwordMatches(clientId, username, password)) {
             OperatorPK operator = new OperatorPK(clientId, username);
-            Token sessionToken = new Token();
-            sessionTokenStore.put(sessionToken, operator);
-            session.setAuth(sessionToken, operator);
-            recordAuthAttempt(clientId, username, true);
-            return new AuthInfo(operator,
-                    sessionToken,
-                    Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
-                    verticalConfigManager.getClientSideConfig(clientId));
+            return approveAuthAttempt(session, operator);
         } else {
             // TODO recordLoginAttempt(clientId, username, false);
             session.setAuth(null, null);
@@ -202,12 +195,16 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void setPassword(String clientId, String username, String password, TimestampedToken token) {
-        db.execute(sql -> {
+    public AuthInfo setPassword(OperatorSessionData session,
+                            String clientId,
+                            String username,
+                            String password,
+                            TimestampedToken token) {
+        return db.execute(sql -> {
             boolean isResetValid = passwordReset.preparePasswordReset(sql, clientId, username, token);
             if (isResetValid) {
                 setPassword(sql, clientId, username, password);
-                return null;
+                return approveAuthAttempt(session, new OperatorPK(clientId, username));
             } else {
                 throw new AuthenticationFailed();
             }
@@ -225,6 +222,17 @@ public class OperatorService {
         } else {
             throw new AuthenticationFailed();
         }
+    }
+
+    private AuthInfo approveAuthAttempt(OperatorSessionData session, OperatorPK operator) {
+        Token sessionToken = new Token();
+        sessionTokenStore.put(sessionToken, operator);
+        session.setAuth(sessionToken, operator);
+        recordAuthAttempt(operator, true);
+        return new AuthInfo(operator,
+                sessionToken,
+                Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                verticalConfigManager.getClientSideConfig(operator.clientId));
     }
 
     private OperatorInfo getOperatorInfo(String clientId, String username) {
@@ -259,7 +267,7 @@ public class OperatorService {
                                     Optional<String> emailAddress,
                                     Optional<OperatorPK> onboarder) {
         TimestampedToken token = passwordReset.generateResetToken(sql, clientId, username);
-
+        
         String actualEmailAddress = emailAddress.or(() ->
                 findOperator(sql, clientId, username).map(o -> o.email))
                 .orElseThrow(() -> new NotFound("operator"));
@@ -274,10 +282,10 @@ public class OperatorService {
         emailSender.send(actualEmailAddress, message);
     }
 
-    private void recordAuthAttempt(String clientId, String username, boolean successful) {
+    private void recordAuthAttempt(OperatorPK operator, boolean successful) {
         db.execute(sql -> sql.insertInto(OPERATOR_LOGIN_ATTEMPT)
-                .set(OPERATOR_LOGIN_ATTEMPT.CLIENT_ID, clientId)
-                .set(OPERATOR_LOGIN_ATTEMPT.USERNAME, username)
+                .set(OPERATOR_LOGIN_ATTEMPT.CLIENT_ID, operator.clientId)
+                .set(OPERATOR_LOGIN_ATTEMPT.USERNAME, operator.username)
                 .set(OPERATOR_LOGIN_ATTEMPT.SUCCESSFUL, successful)
                 .execute());
     }
