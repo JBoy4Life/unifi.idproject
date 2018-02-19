@@ -5,7 +5,7 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.operator.OperatorPK;
+import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT;

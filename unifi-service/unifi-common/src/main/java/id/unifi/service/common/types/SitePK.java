@@ -1,12 +1,12 @@
-package id.unifi.service.common;
+package id.unifi.service.common.types;
 
 import java.util.Objects;
 
-public class FullSiteId {
+public class SitePK {
     public final String clientId;
     public final String siteId;
 
-    public FullSiteId(String clientId, String siteId) {
+    public SitePK(String clientId, String siteId) {
         this.clientId = clientId;
         this.siteId = siteId;
     }
@@ -14,7 +14,7 @@ public class FullSiteId {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FullSiteId that = (FullSiteId) o;
+        SitePK that = (SitePK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(siteId, that.siteId);
     }
@@ -24,7 +24,7 @@ public class FullSiteId {
     }
 
     public String toString() {
-        return "FullSiteId{" +
+        return "SitePK{" +
                 "clientId='" + clientId + '\'' +
                 ", siteId='" + siteId + '\'' +
                 '}';

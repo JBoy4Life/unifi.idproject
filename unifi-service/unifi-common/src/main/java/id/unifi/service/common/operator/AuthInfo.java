@@ -2,6 +2,7 @@ package id.unifi.service.common.operator;
 
 import id.unifi.service.common.api.VerticalConfigForApi;
 import id.unifi.service.common.security.Token;
+import id.unifi.service.common.types.OperatorPK;
 
 import java.time.Instant;
 import java.util.Map;

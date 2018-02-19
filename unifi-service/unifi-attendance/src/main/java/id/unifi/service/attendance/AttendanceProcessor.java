@@ -16,10 +16,10 @@ import id.unifi.service.common.detection.AntennaKey;
 import id.unifi.service.common.detection.ClientDetectable;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.Detection;
+import id.unifi.service.common.types.ZonePK;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Keys.*;
 import static id.unifi.service.core.db.Tables.*;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.*;
@@ -54,9 +54,9 @@ public class AttendanceProcessor {
     private final Thread processingThread;
     private final Database db;
     private Map<ClientDetectable, String> detectableHolders;
-    private Map<AntennaKey, ZoneKey> antennaZones;
-    private Set<AssignmentKey> contactSchedules;
-    private Map<ZoneKey, ZoneBlocks> zoneBlocks;
+    private Map<AntennaKey, ZonePK> antennaZones;
+    private Set<AssignmentPK> contactSchedules;
+    private Map<ZonePK, ZoneBlocks> zoneBlocks;
     private long lastRefreshMillis;
 
     private static final Query insertAttendanceQuery = DSL.insertInto(ATTENDANCE_,
@@ -102,7 +102,7 @@ public class AttendanceProcessor {
 
     private void processAttendance(List<Detection> detections) {
         log.debug("Processing {} detections", detections.size());
-        Set<AttendanceKey> attendances = detections.stream().flatMap(detection -> {
+        Set<AttendancePK> attendances = detections.stream().flatMap(detection -> {
             String clientId = detection.detectable.clientId;
 
             String clientReference = detectableHolders.get(detection.detectable);
@@ -112,25 +112,25 @@ public class AttendanceProcessor {
             }
 
             AntennaKey antennaKey = new AntennaKey(clientId, detection.readerSn, detection.portNumber);
-            ZoneKey zoneKey = antennaZones.get(antennaKey);
-            if (zoneKey == null) {
+            ZonePK zonePK = antennaZones.get(antennaKey);
+            if (zonePK == null) {
                 log.trace("Skipping unassigned {}", antennaKey);
                 return Stream.empty();
             }
 
-            ZoneBlocks blocks = zoneBlocks.get(zoneKey);
+            ZoneBlocks blocks = zoneBlocks.get(zonePK);
             if (blocks == null) {
-                log.trace("No blocks in {}", zoneKey);
+                log.trace("No blocks in {}", zonePK);
                 return Stream.empty();
             }
 
             Instant detectionStartTime = detection.detectionTime.minus(blocks.maxBlockDuration);
             SortedMap<Instant, Block> subMap = blocks.blocks.subMap(detectionStartTime, true, detection.detectionTime, true);
             return subMap.values().stream()
-                    .filter(b -> contactSchedules.contains(new AssignmentKey(clientId, clientReference, b.scheduleId)) &&
+                    .filter(b -> contactSchedules.contains(new AssignmentPK(clientId, clientReference, b.scheduleId)) &&
                             !detection.detectionTime.isBefore(b.detectionStartTime) &&
                             detection.detectionTime.isBefore(b.detectionEndTime))
-                    .map(b -> new AttendanceKey(clientId, clientReference, b.scheduleId, b.blockId));
+                    .map(b -> new AttendancePK(clientId, clientReference, b.scheduleId, b.blockId));
         }).collect(toSet());
 
         Map<AntennaKey, Instant> newProcessingStates = detections.stream()
@@ -143,7 +143,7 @@ public class AttendanceProcessor {
             db.execute(sql -> {
                 if (!attendances.isEmpty()) {
                     BatchBindStep batch = sql.batch(insertAttendanceQuery);
-                    for (AttendanceKey attendance : attendances) {
+                    for (AttendancePK attendance : attendances) {
                         batch.bind(attendance.clientId, attendance.clientReference, attendance.scheduleId, attendance.blockId);
                     }
 
@@ -234,23 +234,23 @@ public class AttendanceProcessor {
                 .stream()
                 .collect(toMap(
                         a -> new AntennaKey(a.getClientId(), a.getReaderSn(), a.getPortNumber()),
-                        a -> new ZoneKey(a.getClientId(), a.getSiteId(), a.getZoneId())
+                        a -> new ZonePK(a.getClientId(), a.getSiteId(), a.getZoneId())
                 ));
 
         contactSchedules = sql
                 .selectFrom(Tables.ASSIGNMENT)
                 .stream()
-                .map(r -> new AssignmentKey(r.getClientId(), r.getClientReference(), r.getScheduleId()))
+                .map(r -> new AssignmentPK(r.getClientId(), r.getClientReference(), r.getScheduleId()))
                 .collect(toSet());
 
-        Map<ZoneKey, TreeMap<Instant, Block>> rawBlocksByZone = sql
+        Map<ZonePK, TreeMap<Instant, Block>> rawBlocksByZone = sql
                 .select(BLOCK.CLIENT_ID, BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID,
                         BLOCK_ZONE.SITE_ID, BLOCK_ZONE.ZONE_ID,
                         BLOCK_TIME.START_TIME,
                         BLOCK_TIME.END_TIME)
                 .from(BLOCK.join(BLOCK_TIME).onKey().join(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
                 .stream()
-                .collect(groupingBy(r -> new ZoneKey(r.value1(), r.value4(), r.value5()),
+                .collect(groupingBy(r -> new ZonePK(r.value1(), r.value4(), r.value5()),
                         mapping(r -> new Block(instantFromUtcLocal(r.value6()).minus(DETECTION_BEFORE_BLOCK_START),
                                         instantFromUtcLocal(r.value7()).plus(DETECTION_AFTER_BLOCK_END),
                                         r.value2(),

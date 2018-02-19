@@ -1,13 +1,13 @@
-package id.unifi.service.attendance;
+package id.unifi.service.common.types;
 
 import java.util.Objects;
 
-public final class ZoneKey {
+public final class ZonePK {
     public final String clientId;
     public final String siteId;
     public final String zoneId;
 
-    public ZoneKey(String clientId, String siteId, String zoneId) {
+    public ZonePK(String clientId, String siteId, String zoneId) {
         this.clientId = clientId;
         this.siteId = siteId;
         this.zoneId = zoneId;
@@ -16,10 +16,10 @@ public final class ZoneKey {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ZoneKey zoneKey = (ZoneKey) o;
-        return Objects.equals(clientId, zoneKey.clientId) &&
-                Objects.equals(siteId, zoneKey.siteId) &&
-                Objects.equals(zoneId, zoneKey.zoneId);
+        ZonePK zonePK = (ZonePK) o;
+        return Objects.equals(clientId, zonePK.clientId) &&
+                Objects.equals(siteId, zonePK.siteId) &&
+                Objects.equals(zoneId, zonePK.zoneId);
     }
 
     public int hashCode() {

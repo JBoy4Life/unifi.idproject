@@ -12,7 +12,7 @@ import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.AuthInfo;
-import id.unifi.service.common.operator.OperatorPK;
+import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.Token;

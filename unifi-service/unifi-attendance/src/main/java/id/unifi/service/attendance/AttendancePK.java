@@ -2,13 +2,13 @@ package id.unifi.service.attendance;
 
 import java.util.Objects;
 
-public final class AttendanceKey {
+public final class AttendancePK {
     public final String clientId;
     public final String clientReference;
     public final String scheduleId;
     public final String blockId;
 
-    public AttendanceKey(String clientId, String clientReference, String scheduleId, String blockId) {
+    public AttendancePK(String clientId, String clientReference, String scheduleId, String blockId) {
         this.clientId = clientId;
         this.clientReference = clientReference;
         this.scheduleId = scheduleId;
@@ -18,7 +18,7 @@ public final class AttendanceKey {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AttendanceKey that = (AttendanceKey) o;
+        AttendancePK that = (AttendancePK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientReference, that.clientReference) &&
                 Objects.equals(scheduleId, that.scheduleId) &&
@@ -30,7 +30,7 @@ public final class AttendanceKey {
     }
 
     public String toString() {
-        return "AttendanceKey{" +
+        return "AttendancePK{" +
                 "clientId='" + clientId + '\'' +
                 ", clientReference='" + clientReference + '\'' +
                 ", scheduleId='" + scheduleId + '\'' +
