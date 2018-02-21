@@ -98,6 +98,7 @@ const reducer = (state = initialState, action = {}) => {
     case `${SET_PASSWORD}_FULFILLED`:
       return {
         ...state,
+        currentUser: action.payload.payload,
         setPasswordStatus: API_SUCCESS
       }
 
