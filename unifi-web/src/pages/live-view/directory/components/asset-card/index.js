@@ -1,18 +1,19 @@
 import React from 'react'
-import fp from 'lodash/fp'
+import PropTypes from 'prop-types'
+import cx from 'classnames'
 import moment from 'moment'
 
 import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'asset-card'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
+const bemM = (suffix) => `${COMPONENT_CSS_CLASSNAME}--${suffix}`
 
 const formatTime = (value) => moment.utc(value).format('LTS')
 
-const AssetCard = ({ item, itemsPerRow }) => (
+const AssetCard = ({ item, viewMode }) => (
   <div
-    className={COMPONENT_CSS_CLASSNAME}
-    style={{ width: `${100 / (itemsPerRow || 1)}%` }}
+    className={cx(COMPONENT_CSS_CLASSNAME, bemM(viewMode))}
   >
     <div
       className={bemE('image')}
@@ -22,9 +23,13 @@ const AssetCard = ({ item, itemsPerRow }) => (
       <div className={bemE('field')}>{item.client.name}</div>
       <div className={bemE('field')}>ID {item.clientReference}</div>
       <div className={bemE('field')}>{formatTime(item.detectionTime)}</div>
-      <div className={bemE('field')}>{item.zone.name}</div>
     </div>
   </div>
 )
+
+AssetCard.propTypes = {
+  item: PropTypes.object,
+  viewMode: PropTypes.string
+}
 
 export default AssetCard

@@ -29,27 +29,8 @@ class LiveViewContainer extends Component {
     return (
       <PageContainer>
         <PageContent>
-          <PageContent.Sidebar>
-            <LinkedSideNavigation menus={menus} />
-          </PageContent.Sidebar>
           <PageContent.Main>
-            <Switch>
-              <Route
-                exact
-                path={ROUTES.LIVE_VIEW}
-                component={Dashboard}
-              />
-              <Route
-                exact
-                path={ROUTES.LIVE_VIEW_FLOOR_VIEW}
-                component={FloorView}
-              />
-              <Route
-                exact
-                path={ROUTES.LIVE_VIEW_DIRECTORY}
-                component={DirectoryView}
-              />
-            </Switch>
+            <DirectoryView />
           </PageContent.Main>
         </PageContent>
       </PageContainer>

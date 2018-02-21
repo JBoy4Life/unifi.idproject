@@ -1,8 +1,33 @@
 .asset-card {
-  width: 175px;
   padding: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
+
+  &--large {
+    width: 50%;
+    @media (min-width: 600px) {
+      width: 33.33%;
+    }
+    @media (min-width: 992px) {
+      width: 25%;
+    }
+    @media (min-width: 1200px) {
+      width: 20%;
+    }
+  }
+
+  &--small {
+    width: 33.33%;
+    @media (min-width: 600px) {
+      width: 25%;
+    }
+    @media (min-width: 992px) {
+      width: 20%;
+    }
+    @media (min-width: 1200px) {
+      width: 16.66%;
+    }
+  }
 
   &__meta {
     padding-top: 8px;

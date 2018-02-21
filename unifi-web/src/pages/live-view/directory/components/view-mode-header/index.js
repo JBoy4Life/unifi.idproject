@@ -1,81 +1,59 @@
-import React from 'react'
+import React, { Component } from 'react'
 import cx from 'classnames'
 import PropTypes from 'prop-types'
-import { Col, Icon, Radio, Row, Select, Slider } from 'elements'
-
+import MdCropDin from 'react-icons/lib/md/crop-din'
+import TiThLargeOutline from 'react-icons/lib/ti/th-large-outline'
+import { Col, Row } from 'elements'
+import { PageContentUnderTitle } from 'components'
 import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'directory-view-header'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
-const Option = Select.Option
-
-const marks = {
-  2: '2',
-  3: '3',
-  4: '4',
-  5: '5',
-  6: '6',
-  7: '7',
-  8: '8',
-};
-
-const tipFormatter = (value) => `${value} items per row`
-
 const handleFilterOption = (input, option) => {
   return option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
 }
 
-const ViewModeHeader = props => (
-  <div className={COMPONENT_CSS_CLASSNAME}>
-    <Row gutter={16}>
-      <Col sm={12} className={bemE('col')}>
-        {props.grouping === 'zones' &&
-          <Select
-            showSearch
-            value={props.zoneId}
-            style={{ width: '100%' }}
-            placeholder="Select a zone"
-            optionFilterProp="children"
-            onChange={props.onZoneChange}
-            filterOption={handleFilterOption}
-          >
-            {props.zones.map((zone, index) => (
-              <Option value={zone.zoneId} key={index}>{zone.name}</Option>
-            ))}
-          </Select>
-        }
-      </Col>
-      <Col sm={6} className={bemE('col')}>
-        {props.viewMode === 'grid' &&
-          <Slider
-            min={2} max={8}
-            marks={marks}
-            tipFormatter={tipFormatter}
-            onChange={props.onItemsPerRowChange}
-            value={props.itemsPerRow}
-          />
-        }
-      </Col>
-      <Col sm={6} className={cx(bemE('col'), bemE('mode'))}>
-        <Radio.Group onChange={props.onViewModeChange} value={props.viewMode || 'list'}>
-          <Radio.Button value="list"><Icon type="bars" /></Radio.Button>
-          <Radio.Button value="grid"><Icon type="appstore-o" /></Radio.Button>
-        </Radio.Group>
-      </Col>
-    </Row>
-  </div>
+const ToolButton = ({ children, selected, onClick }) => (
+  <span
+    tabIndex={0}
+    className={cx(bemE('button'), { [bemE('button--selected')]: selected })}
+    onClick={onClick}
+  >
+    {children}
+  </span>
 )
 
-ViewModeHeader.propTypes = {
-  grouping: PropTypes.string,
-  itemsPerRow: PropTypes.number,
-  onViewModeChange: PropTypes.func,
-  onItemsPerRowChange: PropTypes.func,
-  onZoneChange: PropTypes.func,
-  resultCount: PropTypes.number,
-  zoneId: PropTypes.string,
-  viewMode: PropTypes.string,
-  zones: PropTypes.array
-}
+class ViewModeHeader extends Component {
+  static propTypes = {
+    onViewModeChange: PropTypes.func,
+    resultCount: PropTypes.number,
+    viewMode: PropTypes.string
+  }
+
+  handleViewModeChange = (mode) => () => {
+    this.props.onViewModeChange(mode)
+  }
+
+  render() {
+    const { onViewModeChange, resultCount, viewMode } = this.props
+    return (
+      <div className={COMPONENT_CSS_CLASSNAME}>
+        <Row gutter={16}>
+          <Col xs={12}>
+            {resultCount > 0 && <PageContentUnderTitle>Showing {resultCount} contacts</PageContentUnderTitle>}
+          </Col>
+          <Col xs={12} className={bemE('mode')}>
+            <ToolButton selected={viewMode === 'large'} onClick={this.handleViewModeChange('large')}>
+              <MdCropDin />
+            </ToolButton>
+            <ToolButton selected={viewMode === 'small'} onClick={this.handleViewModeChange('small')}>
+              <TiThLargeOutline />
+            </ToolButton>
+          </Col>
+        </Row>
+      </div>
+    )
+  }
+} 
 
 export default ViewModeHeader
