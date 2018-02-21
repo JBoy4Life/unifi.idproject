@@ -195,9 +195,12 @@ test-club	025	uhf-epc	R25
 
 COPY operator (client_id, username, name, email, active) FROM stdin;
 test-club	test	Test Club Tester	test@example.com	t
+test-club	alice	Alice	alice@example.com	f
+test-club	bob	Bob	bob@example.com	t
 \.
 
 
 COPY operator_password (client_id, username, password_hash, algorithm) FROM stdin;
 test-club	test	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt
+test-club	alice	\\x7363720c00040001096b58f4701504702636a4667f808c2f69e21b47c8067972e54db533800e77f835453b3bcdf613451254c03ec42b6923	scrypt
 \.

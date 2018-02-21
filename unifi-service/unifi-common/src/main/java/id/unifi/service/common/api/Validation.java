@@ -7,7 +7,9 @@ import id.unifi.service.common.api.errors.ValidationFailure.ValidationError;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -46,7 +48,7 @@ public class Validation {
         return null;
     }
 
-    public static @Nullable  Issue shortString(String value) {
+    public static @Nullable Issue shortString(String value) {
         if (value.length() > SHORT_STRING_MAX_LENGTH) return Issue.TOO_LONG;
         return null;
     }
@@ -55,6 +57,10 @@ public class Validation {
         if (value.length() > SHORT_STRING_MAX_LENGTH) return Issue.TOO_LONG;
         if (!value.contains("@")) return Issue.BAD_FORMAT;
         return null;
+    }
+
+    public static @Nullable Issue atLeastOnePresent(Object... values) {
+        return Arrays.stream(values).noneMatch(Objects::nonNull) ? Issue.MISSING : null;
     }
 
     public static class ValidationDef {

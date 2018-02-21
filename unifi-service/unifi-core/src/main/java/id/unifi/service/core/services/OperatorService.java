@@ -12,35 +12,54 @@ import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.AuthInfo;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
+import id.unifi.service.common.security.SecretHashing;
+import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
-import id.unifi.service.common.operator.OperatorSessionData;
+import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
-import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
+import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
 import id.unifi.service.core.operator.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
-import id.unifi.service.common.security.SecretHashing;
-import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
+import static java.util.stream.Collectors.toMap;
 import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.SelectField;
+import org.jooq.TableField;
 import org.jooq.impl.DSL;
+import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.selectFrom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @ApiService("operator")
 public class OperatorService {
     private static final Logger log = LoggerFactory.getLogger(OperatorService.class);
+    private static final Field<Boolean> OPERATOR_HAS_PASSWORD = field(exists(
+            selectFrom(OPERATOR_PASSWORD)
+                    .where(OPERATOR_PASSWORD.CLIENT_ID.eq(OPERATOR.CLIENT_ID))
+                    .and(OPERATOR_PASSWORD.USERNAME.eq(OPERATOR.USERNAME))))
+            .as("operator_has_password");
+    private static final SelectField<?>[] OPERATOR_FIELDS = {
+            OPERATOR.CLIENT_ID, OPERATOR.USERNAME, OPERATOR.NAME, OPERATOR.EMAIL, OPERATOR.ACTIVE, OPERATOR_HAS_PASSWORD
+    };
 
     private final Database db;
     private final PasswordReset passwordReset;
@@ -109,6 +128,39 @@ public class OperatorService {
     }
 
     @ApiOperation
+    public void editOperator(OperatorSessionData session,
+                             String clientId,
+                             String username,
+                             @Nullable String name,
+                             @Nullable String email,
+                             @Nullable Boolean active) {
+        authorize(session, clientId);
+        validateAll(
+                v("name|email|active", atLeastOnePresent(name, email, active)),
+                v("name", name == null ? null : shortString(name)),
+                v("email", email == null ? null : email(email))
+        );
+
+        Map<? extends TableField<OperatorRecord, ?>, ?> collect = Stream.of(
+                Map.entry(OPERATOR.NAME, Optional.ofNullable(name)),
+                Map.entry(OPERATOR.EMAIL, Optional.ofNullable(email)),
+                Map.entry(OPERATOR.ACTIVE, Optional.ofNullable(active)))
+                .flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v)))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        int rowsUpdated = db.execute(sql -> sql
+                .update(OPERATOR)
+                .set(collect)
+                .where(OPERATOR.CLIENT_ID.eq(clientId))
+                .and(OPERATOR.USERNAME.eq(username))
+                .execute());
+
+        if (rowsUpdated == 0) {
+            throw new NotFound("operator");
+        }
+    }
+
+    @ApiOperation
     public AuthInfo authPassword(OperatorSessionData session, String clientId, String username, String password) {
         validateAll(
                 v(shortId(clientId), AuthenticationFailed::new),
@@ -150,10 +202,15 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public List<OperatorInfo> listOperators(OperatorSessionData session, String clientId) {
+    public List<OperatorInfo> listOperators(OperatorSessionData session,
+                                            String clientId,
+                                            @Nullable Boolean includeInactive) {
         authorize(session, clientId);
-        return db.execute(sql -> sql.selectFrom(OPERATOR)
+        boolean includeInactiveBool = Boolean.TRUE.equals(includeInactive);
+        return db.execute(sql -> sql.select(OPERATOR_FIELDS)
+                .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
+                .and(includeInactiveBool ? DSL.trueCondition() : OPERATOR.ACTIVE.isTrue())
                 .fetch(OperatorService::operatorFromRecord));
     }
 
@@ -164,18 +221,17 @@ public class OperatorService {
     }
 
     @ApiOperation
-    public void inviteOperator(OperatorSessionData session, String clientId, String username) {
-        OperatorPK operator = authorize(session);
-        db.execute(sql -> {
-            requestPasswordSet(sql, clientId, username, Optional.empty(), Optional.of(operator));
-            return null;
-        });
-    }
+    public void requestPasswordReset(OperatorSessionData session, String clientId, String username) {
+        Optional<OperatorPK> onboarder;
+        if (session.getOperator() != null) { // Authorized invitation or reset request for someone password
+            OperatorPK operator = authorize(session, clientId);
+            onboarder = Optional.of(operator);
+        } else { // Reset request for my own password
+            onboarder = Optional.empty();
+        }
 
-    @ApiOperation
-    public void requestPasswordReset(String clientId, String username) {
         db.execute(sql -> {
-            requestPasswordSet(sql, clientId, username, Optional.empty(), Optional.empty());
+            requestPasswordSet(sql, clientId, username, Optional.empty(), onboarder);
             return null;
         });
     }
@@ -196,10 +252,10 @@ public class OperatorService {
 
     @ApiOperation
     public AuthInfo setPassword(OperatorSessionData session,
-                            String clientId,
-                            String username,
-                            String password,
-                            TimestampedToken token) {
+                                String clientId,
+                                String username,
+                                String password,
+                                TimestampedToken token) {
         return db.execute(sql -> {
             boolean isResetValid = passwordReset.preparePasswordReset(sql, clientId, username, token);
             if (isResetValid) {
@@ -236,14 +292,21 @@ public class OperatorService {
     }
 
     private OperatorInfo getOperatorInfo(String clientId, String username) {
-        return db.execute(sql -> sql.selectFrom(OPERATOR)
+        return db.execute(sql -> sql.select(OPERATOR_FIELDS)
+                .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
                 .fetchOne(OperatorService::operatorFromRecord));
     }
 
-    private static OperatorInfo operatorFromRecord(OperatorRecord r) {
-        return new OperatorInfo(r.getClientId(), r.getUsername(), r.getName(), r.getEmail(), r.getActive());
+    private static OperatorInfo operatorFromRecord(Record r) {
+        return new OperatorInfo(
+                r.get(OPERATOR.CLIENT_ID),
+                r.get(OPERATOR.USERNAME),
+                r.get(OPERATOR.NAME),
+                r.get(OPERATOR.EMAIL),
+                r.get(OPERATOR.ACTIVE),
+                r.get(OPERATOR_HAS_PASSWORD));
     }
 
     private void setPassword(DSLContext sql, String clientId, String username, String password) {
@@ -309,7 +372,8 @@ public class OperatorService {
     }
 
     private static Optional<OperatorInfo> findOperator(DSLContext sql, String clientId, String username) {
-        return sql.selectFrom(OPERATOR)
+        return sql.select(OPERATOR_FIELDS)
+                .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
                 .fetchOptional(OperatorService::operatorFromRecord);
@@ -320,7 +384,7 @@ public class OperatorService {
         return encodedHash.map(hash -> SecretHashing.check(password, hash)).orElse(false);
     }
 
-    public class PasswordResetInfo {
+    public static class PasswordResetInfo {
         public final Instant expiryDate;
         public final OperatorInfo operator;
 

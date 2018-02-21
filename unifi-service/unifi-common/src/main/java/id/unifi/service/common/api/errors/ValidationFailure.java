@@ -17,7 +17,7 @@ public class ValidationFailure extends CoreMarshallableError {
     }
 
     public enum Issue {
-        TOO_SHORT, TOO_LONG, BAD_FORMAT;
+        MISSING, TOO_SHORT, TOO_LONG, BAD_FORMAT;
 
         private final String stringName;
 
