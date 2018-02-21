@@ -9,14 +9,14 @@ import AssetCard from '../asset-card'
 
 const COMPONENT_CSS_CLASSNAME = 'asset-grid'
 
-const AssetGrid = ({ items, itemsPerRow }) => (
+const AssetGrid = ({ items, viewMode }) => (
   <div className={COMPONENT_CSS_CLASSNAME}>
     {fp.compose(
       fp.map(item => (
         <AssetCard
           item={item}
           key={item.clientReference}
-          itemsPerRow={itemsPerRow}
+          viewMode={viewMode}
         />
       )),
       fp.sortBy('timestamp')
@@ -26,7 +26,7 @@ const AssetGrid = ({ items, itemsPerRow }) => (
 
 AssetGrid.propTypes = {
   items: PropTypes.array,
-  itemsPerRow: PropTypes.number
+  viewMode: PropTypes.string
 }
 
 export default AssetGrid
