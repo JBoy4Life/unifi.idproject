@@ -2,6 +2,7 @@ import Sitemap from './sitemap'
 import NotFound from './not-found'
 import MyAccount from './my-account'
 import Login from './login'
+import ForgotPassword from './forgot-password'
 import ResetPassword from './reset-password'
 import Discovery from './discovery'
 
@@ -20,6 +21,7 @@ export {
   NotFound,
   MyAccount,
   Login,
+  ForgotPassword,
   ResetPassword,
   Discovery,
 

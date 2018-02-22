@@ -8,37 +8,27 @@ import withClientId from 'hocs/with-client-id'
 import { API_FAIL, API_SUCCESS } from 'redux/api/request'
 import { Col, Row } from 'elements'
 import { formSubmit } from 'utils/form'
-import { getPasswordResetInfo, setPassword } from 'redux/user/actions'
-import { noop } from 'utils/helpers'
+import { cancelPasswordRequest } from 'redux/user/actions'
 import { PageContainer, ResetPasswordForm } from 'smart-components'
 import { PageContent } from 'components'
-import { passwordResetInfoSelector, setPasswordStatusSelector } from 'redux/user/selectors'
+import { cancelPasswordRequestStatus } from 'redux/user/selectors'
 import './index.scss'
 
 const COMPONENT_CSS_CLASS = 'reset-password'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASS}__${suffix}`
 
-class ResetPassword extends Component {
+class CancelPasswordRequest extends Component {
   static propTypes = {
-    getPasswordResetInfo: PropTypes.func,
+    cancelPasswordRequest: PropTypes.func.isRequired,
+    history: PropTypes.object.isRequired,
     match: PropTypes.object,
-    passwordResetInfo: PropTypes.object,
-    setPassword: PropTypes.func,
-    setPasswordStatus: PropTypes.string,
+    cancelPasswordRequestStatus: PropTypes.string,
     clientId: PropTypes.string
   }
 
   componentDidMount() {
     const { getPasswordResetInfo, clientId, match: { params: { username, token } } } = this.props
     getPasswordResetInfo({ clientId, username, token })
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const { history } = this.props
-    if (this.props.setPasswordStatus !== nextProps.setPasswordStatus &&
-      nextProps.setPasswordStatus === API_SUCCESS) {
-      history.push('/')
-    }
   }
 
   handleResetPasswordFormSubmit = (data) => {
@@ -99,4 +89,4 @@ export const actions = {
 export default compose(
   withClientId,
   connect(selector, actions)
-)(ResetPassword)
+)(CancelPasswordRequest)

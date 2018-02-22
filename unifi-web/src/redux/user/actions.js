@@ -6,7 +6,8 @@ import {
   USER_REAUTHENTICATE,
   USER_SET_INITIALIZED,
   PASSWORD_RESET_INFO_FETCH,
-  SET_PASSWORD
+  SET_PASSWORD,
+  REQUEST_PASSWORD_RESET
 } from './types'
 import {clientId} from "../../index"
 
@@ -78,6 +79,23 @@ export const setPassword = ({ clientId, username, password, token }) => {
   return {
     socketRequest: pack.content,
     type: SET_PASSWORD
+  }
+
+}
+
+export const requestPasswordReset = ({ clientId, username, formSubmit }) => {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion:  '1.0.0',
+    messageType: 'core.operator.request-password-reset',
+    payload: { clientId, username }
+  })
+
+  return {
+    socketRequest: pack.content,
+    type: REQUEST_PASSWORD_RESET,
+    formSubmit
   }
 
 }

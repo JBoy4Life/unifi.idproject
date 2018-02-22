@@ -37,3 +37,13 @@ export const setPasswordStatusSelector = fp.compose(
   fp.get('setPasswordStatus'),
   getReducer
 )
+
+export const requestPasswordResetStatusSelector = fp.compose(
+  fp.get('requestPasswordResetStatus'),
+  getReducer
+)
+
+export const cancelPasswordResetStatusSelector = fp.compose(
+  fp.get('cancelPasswordResetStatus'),
+  getReducer
+)
