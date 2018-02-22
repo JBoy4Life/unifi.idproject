@@ -62,7 +62,7 @@ public class OperatorEmailRenderer {
         String encodedToken = base64.encodeToString(token.encoded());
         Map<String, Object> context = Map.of(
                 "setPasswordUrl", String.format("%s/reset-password/%s/%s", baseUrl, username, encodedToken),
-                "cancelUrl", String.format("%s/password-reset-cancel/%s/%s", baseUrl, username, encodedToken)
+                "cancelUrl", String.format("%s/cancel-password-reset/%s/%s", baseUrl, username, encodedToken)
         );
 
         String htmlBody = htmlPasswordResetRequestedTemplate.execute(context);

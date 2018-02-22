@@ -7,6 +7,7 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
+import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD_RESET;
 import static id.unifi.service.common.security.SecretHashing.SCRYPT_FORMAT_NAME;
@@ -88,7 +89,7 @@ public class PasswordReset {
             tokenHash.ifPresent(t -> sql.deleteFrom(OPERATOR_PASSWORD_RESET) // TODO: archive
                     .where(OPERATOR_PASSWORD_RESET.CLIENT_ID.eq(clientId))
                     .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))
-                    .and(OPERATOR_PASSWORD_RESET.TOKEN_HASH.eq(t.hash)));
+                    .execute());
             return null;
         });
     }
@@ -101,6 +102,7 @@ public class PasswordReset {
                 .from(OPERATOR_PASSWORD_RESET)
                 .where(OPERATOR_PASSWORD_RESET.CLIENT_ID.eq(clientId))
                 .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))
+                .and(OPERATOR_PASSWORD_RESET.SINCE.eq(utcLocalFromInstant(token.timestamp)))
                 .and(OPERATOR_PASSWORD_RESET.EXPIRY_DATE.gt(currentLocalDateTime()))
                 .fetchOptional()
                 .filter(p -> SecretHashing.check(token.token.raw, p.value1()))

@@ -268,6 +268,13 @@ public class OperatorService {
     }
 
     @ApiOperation
+    public void cancelPasswordReset(String clientId,
+                                    String username,
+                                    TimestampedToken token) {
+        passwordReset.cancel(clientId, username, token);
+    }
+
+    @ApiOperation
     public void changePassword(OperatorSessionData session, String currentPassword, String password) {
         OperatorPK operator = authorize(session);
         if (passwordMatches(operator.clientId, operator.username, currentPassword)) {
