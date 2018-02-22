@@ -100,6 +100,10 @@ test-club	R22	contact	Paul Sheedy	t
 test-club	R23	contact	Tim Swift	t
 test-club	R24	contact	Alex Dyce	t
 test-club	R25	contact	Amal Adour	t
+test-club	R26	contact	Blurry Mysteron 1	t
+test-club	R27	contact	Blurry Mysteron 2	t
+test-club	R28	contact	Blurry Mysteron 3	t
+test-club	R29	contact	Blurry Mysteron 4	t
 \.
 
 
@@ -130,6 +134,10 @@ test-club	R22	contact
 test-club	R23	contact
 test-club	R24	contact
 test-club	R25	contact
+test-club	R26	contact
+test-club	R27	contact
+test-club	R28	contact
+test-club	R29	contact
 \.
 
 
