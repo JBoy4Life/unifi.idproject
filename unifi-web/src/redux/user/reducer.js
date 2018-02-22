@@ -10,7 +10,7 @@ import {
   CANCEL_PASSWORD_RESET,
   PASSWORD_RESET_INFO_FETCH
 } from './types'
-import { API_SUCCESS, API_FAIL } from 'redux/api/request'
+import { API_SUCCESS, API_FAIL, API_PENDING } from 'redux/api/request'
 
 const initialState = {
   isLoggingIn: false,
@@ -128,6 +128,12 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         cancelPasswordResetStatus: API_SUCCESS
+      }
+
+    case `${CANCEL_PASSWORD_RESET}_PENDING`:
+      return {
+        ...state,
+        cancelPasswordResetStatus: API_PENDING
       }
 
     case `${CANCEL_PASSWORD_RESET}_REJECTED`:
