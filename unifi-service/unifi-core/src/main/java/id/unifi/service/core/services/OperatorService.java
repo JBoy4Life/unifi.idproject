@@ -337,14 +337,15 @@ public class OperatorService {
                                     Optional<String> emailAddress,
                                     Optional<OperatorPK> onboarder) {
         TimestampedToken token = passwordReset.generateResetToken(sql, clientId, username);
-        
+
         String actualEmailAddress = emailAddress.or(() ->
                 findOperator(sql, clientId, username).map(o -> o.email))
                 .orElseThrow(() -> new NotFound("operator"));
 
         EmailSenderProvider.EmailMessage message;
         if (onboarder.isPresent()) {
-            message = emailRenderer.renderInvitation(clientId, username, token, onboarder.get());
+            OperatorInfo onboarderInfo = getOperatorInfo(onboarder.get().clientId, onboarder.get().username);
+            message = emailRenderer.renderInvitation(clientId, username, token, onboarderInfo);
         } else {
             message = emailRenderer.renderPasswordResetInstructions(clientId, username, token);
         }

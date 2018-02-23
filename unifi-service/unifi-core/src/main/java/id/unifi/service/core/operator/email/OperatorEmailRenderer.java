@@ -3,9 +3,9 @@ package id.unifi.service.core.operator.email;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 import com.statemachinesystems.envy.Default;
-import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.TimestampedToken;
+import id.unifi.service.core.operator.OperatorInfo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
@@ -42,7 +42,7 @@ public class OperatorEmailRenderer {
     public EmailSenderProvider.EmailMessage renderInvitation(String clientId,
                                                              String username,
                                                              TimestampedToken token,
-                                                             OperatorPK onboarder) {
+                                                             OperatorInfo onboarder) {
         Map<String, Object> context = Map.of(
                 "clientId", clientId,
                 "username", username,
