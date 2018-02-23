@@ -1,6 +1,7 @@
 package id.unifi.service.common.detection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import com.google.common.base.Converter;
@@ -21,6 +22,7 @@ public enum DetectableType {
         return valueOf(inputConverter.convert(type));
     }
 
+    @JsonValue
     public String toString() {
         return stringName;
     }

@@ -8,13 +8,14 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
+import static id.unifi.service.core.QueryUtils.filterCondition;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import org.jooq.Condition;
 import org.jooq.Record;
 import org.jooq.Table;
-import static org.jooq.impl.DSL.trueCondition;
+import static org.jooq.impl.DSL.and;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -39,26 +40,16 @@ public class DetectableService {
 
         Table<? extends Record> tables = calculateTableJoin(filter, with);
 
-        Condition assignedFilter = filter.assigned
-                .map(assigned -> assigned
-                        ? ASSIGNMENT.CLIENT_REFERENCE.isNotNull()
-                        : ASSIGNMENT.CLIENT_REFERENCE.isNull())
-                .orElse(trueCondition());
-
-        Condition typeFilter = filter.detectableType
-                .map(type -> DETECTABLE.DETECTABLE_TYPE.eq(type.toString()))
-                .orElse(trueCondition());
-
-        Condition activeFilter = filter.active
-                .map(DETECTABLE.ACTIVE::eq)
-                .orElse(trueCondition());
+        Condition typeFilter = filterCondition(filter.detectableType, t -> DETECTABLE.DETECTABLE_TYPE.eq(t.toString()));
+        Condition activeFilter = filterCondition(filter.active, DETECTABLE.ACTIVE::eq);
+        Condition assignmentFilter = filterCondition(filter.assignment, ASSIGNMENT.CLIENT_REFERENCE::eq);
+        Condition assignedFilter = filterCondition(filter.assigned, assigned ->
+                assigned ? ASSIGNMENT.CLIENT_REFERENCE.isNotNull() : ASSIGNMENT.CLIENT_REFERENCE.isNull());
 
         return db.execute(sql -> sql
                 .selectFrom(tables)
                 .where(DETECTABLE.CLIENT_ID.eq(clientId))
-                .and(assignedFilter)
-                .and(typeFilter)
-                .and(activeFilter)
+                .and(and(assignedFilter, assignmentFilter, typeFilter, activeFilter))
                 .fetch(r -> new DetectableInfo(
                         clientId,
                         r.get(DETECTABLE.DETECTABLE_ID),
@@ -70,7 +61,7 @@ public class DetectableService {
     private static Table<? extends Record> calculateTableJoin(ListFilter filter, @Nullable Set<String> with) {
         if (with == null) with = Set.of();
         Table<? extends Record> tables = DETECTABLE;
-        if (with.contains("assignment") || filter.assigned.isPresent()) {
+        if (with.contains("assignment") || filter.assigned.isPresent() || filter.assignment.isPresent()) {
             tables = tables.leftJoin(ASSIGNMENT).onKey();
         }
         return tables;
@@ -84,19 +75,22 @@ public class DetectableService {
 
     public static class ListFilter {
         private final Optional<Boolean> assigned;
+        private final Optional<String> assignment;
         private final Optional<DetectableType> detectableType;
         private final Optional<Boolean> active;
 
         public ListFilter(Optional<Boolean> assigned,
+                          Optional<String> assignment,
                           Optional<DetectableType> detectableType,
                           Optional<Boolean> active) {
             this.assigned = assigned;
+            this.assignment = assignment;
             this.detectableType = detectableType;
             this.active = active;
         }
 
         static ListFilter empty() {
-            return new ListFilter(Optional.empty(), Optional.empty(), Optional.empty());
+            return new ListFilter(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         }
     }
 
