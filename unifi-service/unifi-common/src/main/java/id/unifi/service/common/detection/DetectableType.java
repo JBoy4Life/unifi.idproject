@@ -17,8 +17,8 @@ public enum DetectableType {
     }
 
     @JsonCreator
-    public static DetectableType fromString(String status) {
-        return valueOf(inputConverter.convert(status));
+    public static DetectableType fromString(String type) {
+        return valueOf(inputConverter.convert(type));
     }
 
     public String toString() {
