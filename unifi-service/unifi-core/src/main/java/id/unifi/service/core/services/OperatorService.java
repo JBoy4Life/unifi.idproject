@@ -1,5 +1,6 @@
 package id.unifi.service.core.services;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.statemachinesystems.envy.Default;
 import static id.unifi.service.common.api.Validation.*;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
@@ -38,6 +39,7 @@ import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.trueCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -204,13 +206,13 @@ public class OperatorService {
     @ApiOperation
     public List<OperatorInfo> listOperators(OperatorSessionData session,
                                             String clientId,
-                                            @Nullable Boolean includeInactive) {
+                                            @Nullable ListFilter filter) {
         authorize(session, clientId);
-        boolean includeInactiveBool = Boolean.TRUE.equals(includeInactive);
+        ListFilter effectiveFilter = filter != null ? filter : ListFilter.empty();
         return db.execute(sql -> sql.select(OPERATOR_FIELDS)
                 .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
-                .and(includeInactiveBool ? DSL.trueCondition() : OPERATOR.ACTIVE.isTrue())
+                .and(effectiveFilter.active.map(OPERATOR.ACTIVE::eq).orElse(trueCondition()))
                 .fetch(OperatorService::operatorFromRecord));
     }
 
@@ -399,6 +401,19 @@ public class OperatorService {
         public PasswordResetInfo(Instant expiryDate, OperatorInfo operator) {
             this.expiryDate = expiryDate;
             this.operator = operator;
+        }
+    }
+
+    public static class ListFilter {
+        Optional<Boolean> active;
+
+        @JsonCreator(mode = JsonCreator.Mode.PROPERTIES) // TODO: shouldn't have to specify mode(?)
+        public ListFilter(Optional<Boolean> active) {
+            this.active = active;
+        }
+
+        static ListFilter empty() {
+            return new ListFilter(Optional.empty());
         }
     }
 }
