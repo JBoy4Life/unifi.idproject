@@ -20,6 +20,7 @@ import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.types.OperatorPK;
+import static id.unifi.service.core.QueryUtils.filterCondition;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
@@ -30,6 +31,7 @@ import id.unifi.service.core.operator.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import static java.util.stream.Collectors.toMap;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -39,7 +41,6 @@ import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.selectFrom;
-import static org.jooq.impl.DSL.trueCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -208,12 +209,13 @@ public class OperatorService {
                                             String clientId,
                                             @Nullable ListFilter filter) {
         authorize(session, clientId);
-        ListFilter effectiveFilter = filter != null ? filter : ListFilter.empty();
-        return db.execute(sql -> sql.select(OPERATOR_FIELDS)
+        if (filter == null) filter = ListFilter.empty();
+        Condition filterCondition = filterCondition(filter.active, OPERATOR.ACTIVE::eq);
+        return db.execute((DSLContext sql) -> sql.select(OPERATOR_FIELDS)
                 .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
-                .and(effectiveFilter.active.map(OPERATOR.ACTIVE::eq).orElse(trueCondition()))
-                .fetch(OperatorService::operatorFromRecord));
+                .and(filterCondition))
+                .fetch(OperatorService::operatorFromRecord);
     }
 
     @ApiOperation

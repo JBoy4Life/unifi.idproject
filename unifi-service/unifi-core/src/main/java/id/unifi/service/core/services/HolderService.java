@@ -10,6 +10,7 @@ import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
+import static id.unifi.service.core.QueryUtils.filterCondition;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER;
@@ -21,7 +22,6 @@ import org.jooq.Record1;
 import org.jooq.Table;
 import static org.jooq.impl.DSL.and;
 import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.value;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
@@ -56,8 +56,8 @@ public class HolderService {
 
         if (filter == null) filter = ListFilter.empty();
         Condition filterCondition = and(
-                filter.holderType.map(HOLDER.HOLDER_TYPE::eq).orElse(trueCondition()),
-                filter.active.map(HOLDER.ACTIVE::eq).orElse(trueCondition()));
+                filterCondition(filter.holderType, HOLDER.HOLDER_TYPE::eq),
+                filterCondition(filter.active, HOLDER.ACTIVE::eq));
 
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
                 .where(HOLDER.CLIENT_ID.eq(clientId))

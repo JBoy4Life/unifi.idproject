@@ -39,17 +39,16 @@ public class DetectableService {
         if (filter == null) filter = ListFilter.empty();
 
         Table<? extends Record> tables = calculateTableJoin(filter, with);
-
-        Condition typeFilter = filterCondition(filter.detectableType, t -> DETECTABLE.DETECTABLE_TYPE.eq(t.toString()));
-        Condition activeFilter = filterCondition(filter.active, DETECTABLE.ACTIVE::eq);
-        Condition assignmentFilter = filterCondition(filter.assignment, ASSIGNMENT.CLIENT_REFERENCE::eq);
-        Condition assignedFilter = filterCondition(filter.assigned, assigned ->
-                assigned ? ASSIGNMENT.CLIENT_REFERENCE.isNotNull() : ASSIGNMENT.CLIENT_REFERENCE.isNull());
-
+        Condition filterCondition = and(
+                filterCondition(filter.detectableType, t -> DETECTABLE.DETECTABLE_TYPE.eq(t.toString())),
+                filterCondition(filter.active, DETECTABLE.ACTIVE::eq),
+                filterCondition(filter.assignment, ASSIGNMENT.CLIENT_REFERENCE::eq),
+                filterCondition(filter.assigned, assigned ->
+                        assigned ? ASSIGNMENT.CLIENT_REFERENCE.isNotNull() : ASSIGNMENT.CLIENT_REFERENCE.isNull()));
         return db.execute(sql -> sql
                 .selectFrom(tables)
                 .where(DETECTABLE.CLIENT_ID.eq(clientId))
-                .and(and(assignedFilter, assignmentFilter, typeFilter, activeFilter))
+                .and(filterCondition)
                 .fetch(r -> new DetectableInfo(
                         clientId,
                         r.get(DETECTABLE.DETECTABLE_ID),
