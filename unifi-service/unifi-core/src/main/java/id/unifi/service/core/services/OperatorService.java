@@ -233,7 +233,8 @@ public class OperatorService {
         }
 
         db.execute(sql -> {
-            requestPasswordSet(sql, clientId, username, Optional.empty(), onboarder);
+            if (isOperatorActive(sql, clientId, username))
+                requestPasswordSet(sql, clientId, username, Optional.empty(), onboarder);
             return null;
         });
     }
@@ -306,6 +307,13 @@ public class OperatorService {
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
                 .fetchOne(OperatorService::operatorFromRecord));
+    }
+
+    private static boolean isOperatorActive(DSLContext sql, String clientId, String username) {
+        return sql.fetchExists(selectFrom(OPERATOR)
+                .where(OPERATOR.CLIENT_ID.eq(clientId))
+                .and(OPERATOR.USERNAME.eq(username))
+                .and(OPERATOR.ACTIVE));
     }
 
     private static OperatorInfo operatorFromRecord(Record r) {
