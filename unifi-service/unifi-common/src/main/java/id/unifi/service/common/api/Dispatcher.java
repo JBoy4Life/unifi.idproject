@@ -1,24 +1,14 @@
 package id.unifi.service.common.api;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.Base64Variants;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.BinaryNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.google.common.net.HostAndPort;
+import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.api.errors.InternalServerError;
 import id.unifi.service.common.api.errors.InvalidParameterFormat;
 import id.unifi.service.common.api.errors.MarshallableError;
@@ -27,7 +17,6 @@ import id.unifi.service.common.security.Token;
 import id.unifi.service.common.util.HexEncoded;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,18 +38,7 @@ public class Dispatcher<S> {
     private static final Random random = new SecureRandom();
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
-    private static final SimpleModule customSerializationModule;
 
-    static {
-        customSerializationModule = new SimpleModule();
-        customSerializationModule.addSerializer(HostAndPort.class, new JsonSerializer<>() {
-            public void serialize(HostAndPort value, JsonGenerator gen, SerializerProvider ss) throws IOException {
-                gen.writeString(value.toString());
-            }
-        });
-    }
-
-    private final Map<Protocol, ObjectMapper> objectMappers;
     private final ServiceRegistry serviceRegistry;
     private final Class<S> sessionDataType;
     private final Function<Session, S> sessionDataCreator;
@@ -85,18 +63,13 @@ public class Dispatcher<S> {
         this.sessionDataCreator = sessionDataCreator;
         this.sessionDataStore = new ConcurrentHashMap<>();
 
-        this.objectMappers = Map.of(
-                Protocol.JSON, configureObjectMapper(new ObjectMapper(new MappingJsonFactory())),
-                Protocol.MSGPACK, configureObjectMapper(new ObjectMapper(new MessagePackFactory()))
-        );
-
         this.sessionListeners = new CopyOnWriteArraySet<>();
         this.messageListeners = new ConcurrentHashMap<>();
     }
 
     public void dispatch(Session session, MessageStream stream, Protocol protocol, Channel returnChannel) {
         log.trace("Dispatching {} request in {}", protocol, session);
-        ObjectMapper mapper = objectMappers.get(protocol);
+        ObjectMapper mapper = getObjectMapper(protocol);
         Message message = null;
         try {
             message = parseMessage(stream, mapper);
@@ -134,7 +107,7 @@ public class Dispatcher<S> {
                         String messageType,
                         Map<String, Object> params) throws IOException {
         log.debug("Requesting using {} in {}", protocol, session);
-        ObjectMapper mapper = objectMappers.get(protocol);
+        ObjectMapper mapper = getObjectMapper(protocol);
 
         JsonNode payload = mapper.valueToTree(params);
         Message message = new Message(
@@ -179,9 +152,6 @@ public class Dispatcher<S> {
         sessionListeners.add(listener);
     }
 
-    public ObjectMapper getObjectMapper(Protocol protocol) {
-        return objectMappers.get(protocol); // TODO: factor out mappers
-    }
     private void processRequest(Session session,
                                 Channel returnChannel,
                                 ObjectMapper mapper,
@@ -280,15 +250,6 @@ public class Dispatcher<S> {
                 message.correlationId,
                 e.getProtocolMessageType(),
                 mapper.valueToTree(e));
-    }
-
-    private static ObjectMapper configureObjectMapper(ObjectMapper mapper) {
-        return mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES))
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule())
-                .registerModule(customSerializationModule)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
 
     private static Message parseMessage(MessageStream stream, ObjectMapper mapper) throws IOException {

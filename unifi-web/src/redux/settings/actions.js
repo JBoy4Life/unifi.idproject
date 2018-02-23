@@ -61,7 +61,8 @@ export const getHolder = (clientId, clientReference) => {
     messageType: 'core.holder.get-holder',
     payload: {
       clientId,
-      clientReference
+      clientReference,
+      with: ['metadata'],
     }
   });
 

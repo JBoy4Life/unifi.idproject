@@ -17,6 +17,7 @@ import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
 import id.unifi.service.common.api.Protocol;
+import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
@@ -300,7 +301,7 @@ public class CoreService {
                 agentDispatcher,
                 Set.of(Protocol.MSGPACK));
         agentServer.start();
-        return agentDispatcher.getObjectMapper(Protocol.MSGPACK);
+        return getObjectMapper(Protocol.MSGPACK);
     }
 
     private static void startApiService(HostAndPort apiEndpoint, ComponentHolder componentHolder) throws Exception {

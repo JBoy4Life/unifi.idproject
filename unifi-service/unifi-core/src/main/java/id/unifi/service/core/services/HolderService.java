@@ -1,8 +1,8 @@
 package id.unifi.service.core.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.core.type.TypeReference;
+import id.unifi.service.common.api.Protocol;
+import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
@@ -11,12 +11,15 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
 import static id.unifi.service.core.db.Core.CORE;
+import static id.unifi.service.core.db.Keys.HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
+import org.jooq.Condition;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Table;
+import static org.jooq.impl.DSL.and;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.value;
@@ -29,12 +32,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 @ApiService("holder")
 public class HolderService {
     private static final Logger log = LoggerFactory.getLogger(HolderService.class);
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
+
     private final Database db;
 
     public HolderService(DatabaseProvider dbProvider) {
@@ -47,33 +53,28 @@ public class HolderService {
                                         @Nullable ListFilter filter,
                                         @Nullable Set<String> with) {
         authorize(session, clientId);
-        ListFilter effectiveFilter = filter != null ? filter : ListFilter.empty();
-        Set<String> effectiveWith = with != null ? with : Set.of();
-        Table<? extends Record> tables =
-                effectiveWith.contains("image") ? HOLDER.leftJoin(HOLDER_IMAGE).onKey() : HOLDER;
-        return db.execute(sql -> sql.selectFrom(tables)
+
+        if (filter == null) filter = ListFilter.empty();
+        Condition filterCondition = and(
+                filter.holderType.map(HOLDER.HOLDER_TYPE::eq).orElse(trueCondition()),
+                filter.active.map(HOLDER.ACTIVE::eq).orElse(trueCondition()));
+
+        return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
                 .where(HOLDER.CLIENT_ID.eq(clientId))
-                .and(effectiveFilter.holderType.map(HOLDER.HOLDER_TYPE::eq).orElse(trueCondition()))
-                .and(effectiveFilter.active.map(HOLDER.ACTIVE::eq).orElse(trueCondition()))
+                .and(filterCondition)
                 .fetch(HolderService::recordToInfo));
     }
 
     @ApiOperation
-    public HolderInfoWithMetadata getHolder(OperatorSessionData session,
-                                            ObjectMapper mapper /* FIXME! */,
-                                            String clientId,
-                                            String clientReference) {
+    public HolderInfo getHolder(OperatorSessionData session,
+                                String clientId,
+                                String clientReference,
+                                @Nullable Set<String> with) {
         authorize(session, clientId);
-        return db.execute(sql -> sql.selectFrom(HOLDER.leftJoin(HOLDER_METADATA).onKey())
+        return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
                 .where(HOLDER.CLIENT_ID.eq(clientId))
                 .and(HOLDER.CLIENT_REFERENCE.eq(clientReference))
-                .fetchOne(r -> new HolderInfoWithMetadata(
-                        r.get(HOLDER.CLIENT_REFERENCE),
-                        r.get(HOLDER.NAME),
-                        r.get(HOLDER.HOLDER_TYPE),
-                        r.get(HOLDER.ACTIVE),
-                        r.get(HOLDER_METADATA.METADATA),
-                        mapper)));
+                .fetchOne(HolderService::recordToInfo));
     }
 
     @ApiOperation
@@ -93,7 +94,8 @@ public class HolderService {
                 r.get(HOLDER.NAME),
                 r.get(HOLDER.HOLDER_TYPE),
                 r.get(HOLDER.ACTIVE),
-                r.field(HOLDER_IMAGE.IMAGE) == null ? null : imageWithType(r.get(HOLDER_IMAGE.IMAGE)));
+                r.field(HOLDER_IMAGE.IMAGE) == null ? null : imageWithType(r.get(HOLDER_IMAGE.IMAGE)),
+                r.field(HOLDER_METADATA.METADATA) == null ? null : extractMetadata(r.get(HOLDER_METADATA.METADATA)));
     }
 
     private static ImageWithType imageWithType(@Nullable byte[] data) {
@@ -113,10 +115,41 @@ public class HolderService {
         return new ImageWithType(mimeType, data);
     }
 
+    private static Table<? extends Record> calculateTableJoin(@Nullable Set<String> with) {
+        if (with == null) with = Set.of();
+
+        Table<? extends Record> tables = HOLDER;
+        if (with.contains("image")) {
+            tables = HOLDER.leftJoin(HOLDER_IMAGE).onKey();
+        }
+        if (with.contains("metadata")) {
+            tables = tables.leftJoin(HOLDER_METADATA).onKey(HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER);
+        }
+
+        return tables;
+    }
+
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
         return Optional.ofNullable(sessionData.getOperator())
                 .filter(op -> op.clientId.equals(clientId))
                 .orElseThrow(Unauthorized::new);
+    }
+
+    @Nullable
+    private static Map<String, Object> extractMetadata(Object metadata) {
+        if (metadata == null) return null;
+
+        if (!(metadata instanceof PGobject) || !((PGobject) metadata).getType().equals("jsonb")) {
+            throw new IllegalArgumentException("Unexpected metadata type: " + metadata);
+        }
+
+        String metadataString = ((PGobject) metadata).getValue();
+
+        try {
+            return getObjectMapper(Protocol.JSON).readValue(metadataString, MAP_TYPE_REFERENCE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class HolderInfo {
@@ -125,13 +158,20 @@ public class HolderService {
         public final String holderType;
         public final boolean active;
         public final ImageWithType image;
+        public final Map<String, Object> metadata;
 
-        public HolderInfo(String clientReference, String name, String holderType, boolean active, ImageWithType image) {
+        public HolderInfo(String clientReference,
+                          String name,
+                          String holderType,
+                          boolean active,
+                          @Nullable ImageWithType image,
+                          @Nullable Map<String, Object> metadata) {
             this.clientReference = clientReference;
             this.name = name;
             this.holderType = holderType;
             this.active = active;
             this.image = image;
+            this.metadata = metadata;
         }
     }
 
@@ -142,42 +182,6 @@ public class HolderService {
         public ImageWithType(String mimeType, byte[] data) {
             this.mimeType = mimeType;
             this.data = data;
-        }
-    }
-
-    public class HolderInfoWithMetadata {
-        public final String clientReference;
-        public final String name;
-        public final String holderType;
-        public final boolean active;
-        public final JsonNode metadata;
-
-        public HolderInfoWithMetadata(String clientReference,
-                                      String name,
-                                      String holderType,
-                                      boolean active,
-                                      Object metadata,
-                                      ObjectMapper mapper) {
-            this.clientReference = clientReference;
-            this.name = name;
-            this.holderType = holderType;
-            this.active = active;
-
-            if (metadata == null) {
-                this.metadata = NullNode.getInstance();
-            } else {
-                if (!(metadata instanceof PGobject) || !((PGobject) metadata).getType().equals("jsonb")) {
-                    throw new IllegalArgumentException("Unexpected metadata type: " + metadata);
-                }
-
-                String metadataString = ((PGobject) metadata).getValue();
-
-                try {
-                    this.metadata = mapper.readTree(metadataString);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
         }
     }
 
