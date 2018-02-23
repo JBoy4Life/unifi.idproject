@@ -8,17 +8,17 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
+import id.unifi.service.common.types.OperatorPK;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
-import static java.lang.Boolean.TRUE;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Table;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.value;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @ApiService("holder")
 public class HolderService {
@@ -41,11 +42,19 @@ public class HolderService {
     }
 
     @ApiOperation
-    public List<HolderInfo> listHolders(OperatorSessionData session, String clientId, @Nullable Boolean withImages) {
+    public List<HolderInfo> listHolders(OperatorSessionData session,
+                                        String clientId,
+                                        @Nullable ListFilter filter,
+                                        @Nullable Set<String> with) {
         authorize(session, clientId);
-        Table<? extends Record> tables = TRUE.equals(withImages) ? HOLDER.leftJoin(HOLDER_IMAGE).onKey() : HOLDER;
+        ListFilter effectiveFilter = filter != null ? filter : ListFilter.empty();
+        Set<String> effectiveWith = with != null ? with : Set.of();
+        Table<? extends Record> tables =
+                effectiveWith.contains("image") ? HOLDER.leftJoin(HOLDER_IMAGE).onKey() : HOLDER;
         return db.execute(sql -> sql.selectFrom(tables)
                 .where(HOLDER.CLIENT_ID.eq(clientId))
+                .and(effectiveFilter.holderType.map(HOLDER.HOLDER_TYPE::eq).orElse(trueCondition()))
+                .and(effectiveFilter.active.map(HOLDER.ACTIVE::eq).orElse(trueCondition()))
                 .fetch(HolderService::recordToInfo));
     }
 
@@ -87,7 +96,8 @@ public class HolderService {
                 r.field(HOLDER_IMAGE.IMAGE) == null ? null : imageWithType(r.get(HOLDER_IMAGE.IMAGE)));
     }
 
-    private static ImageWithType imageWithType(byte[] data) {
+    private static ImageWithType imageWithType(@Nullable byte[] data) {
+        if (data == null) return null;
         String mimeType;
         try {
             mimeType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(data));
@@ -168,6 +178,20 @@ public class HolderService {
                     throw new RuntimeException(e);
                 }
             }
+        }
+    }
+
+    public static class ListFilter {
+        public final Optional<String> holderType;
+        public final Optional<Boolean> active;
+
+        public ListFilter(Optional<String> holderType, Optional<Boolean> active) {
+            this.holderType = holderType;
+            this.active = active;
+        }
+
+        static ListFilter empty() {
+            return new ListFilter(Optional.empty(), Optional.empty());
         }
     }
 }

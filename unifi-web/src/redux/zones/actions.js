@@ -26,7 +26,7 @@ export const listHolder = (clientId = 'deloitte') => {
     protocolVersion: '1.0.0',
     releaseVersion: '1.0.0',
     messageType: 'core.holder.list-holders',
-    payload: { clientId, withImages: true },
+    payload: { clientId, with: ['image'] },
   })
 
   return {
