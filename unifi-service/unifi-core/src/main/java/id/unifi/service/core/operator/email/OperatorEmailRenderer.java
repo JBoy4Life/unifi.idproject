@@ -47,12 +47,12 @@ public class OperatorEmailRenderer {
                 "clientId", clientId,
                 "username", username,
                 "onboarder", onboarder,
-                "setPasswordUrl", String.format("%s/reset-password/%s/%s",
+                "setPasswordUrl", String.format("%s/accept-invitation/%s/%s",
                         baseUrlForClient(clientId), username, base64.encodeToString(token.encoded()))
         );
 
         String htmlBody = htmlInvitationTemplate.execute(context);
-        return new EmailSenderProvider.EmailMessage("Invitation to join ???", htmlBody);
+        return new EmailSenderProvider.EmailMessage("Invitation to join unifi.id", htmlBody);
     }
 
     public EmailSenderProvider.EmailMessage renderPasswordResetInstructions(String clientId,
