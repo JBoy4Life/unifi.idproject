@@ -36,7 +36,7 @@ class ForgotPasswordForm extends Component {
           <Fragment>
             <p className={bemE('text-success')}>
               A password reset link has been sent to the email address on file. If you do not receive it in
-              10 to 15 minutes, please make sure you entered the correct email address.
+              10 to 15 minutes, please make sure you entered the correct username.
             </p>
             <div>
               <Button type="default" onClick={this.handleSignIn}>Back to Sign in</Button>
