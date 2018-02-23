@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Field, reduxForm } from 'redux-form'
+import { Link } from 'react-router-dom'
 
 import { TextField /* CheckboxField */ } from 'components'
 import { Alert, Button } from 'elements'
@@ -29,6 +30,7 @@ class LoginForm extends Component {
           htmlType="password"
           id="password"
           component={TextField}
+          extra={<Link to="/forgot-password">I've forgotten my password</Link>}
         />
         {/* <Field
           name="rememberme"

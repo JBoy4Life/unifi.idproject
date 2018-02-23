@@ -6,9 +6,11 @@ import {
   USER_REAUTHENTICATE,
   USER_SET_INITIALIZED,
   SET_PASSWORD,
+  REQUEST_PASSWORD_RESET,
+  CANCEL_PASSWORD_RESET,
   PASSWORD_RESET_INFO_FETCH
 } from './types'
-import { API_SUCCESS, API_FAIL } from 'redux/api/request'
+import { API_SUCCESS, API_FAIL, API_PENDING } from 'redux/api/request'
 
 const initialState = {
   isLoggingIn: false,
@@ -18,7 +20,9 @@ const initialState = {
     status: 'INIT',
     payload: null
   },
-  setPasswordStatus: 'INIT'
+  setPasswordStatus: 'INIT',
+  requestPasswordResetStatus: 'INIT',
+  cancelPasswordResetStatus: 'INIT'
 }
 
 const reducer = (state = initialState, action = {}) => {
@@ -106,6 +110,36 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         setPasswordStatus: API_FAIL
+      }
+
+    case `${REQUEST_PASSWORD_RESET}_FULFILLED`:
+      return {
+        ...state,
+        requestPasswordResetStatus: API_SUCCESS
+      }
+
+    case `${REQUEST_PASSWORD_RESET}_REJECTED`:
+      return {
+        ...state,
+        requestPasswordResetStatus: API_FAIL
+      }
+
+    case `${CANCEL_PASSWORD_RESET}_FULFILLED`:
+      return {
+        ...state,
+        cancelPasswordResetStatus: API_SUCCESS
+      }
+
+    case `${CANCEL_PASSWORD_RESET}_PENDING`:
+      return {
+        ...state,
+        cancelPasswordResetStatus: API_PENDING
+      }
+
+    case `${CANCEL_PASSWORD_RESET}_REJECTED`:
+      return {
+        ...state,
+        cancelPasswordResetStatus: API_FAIL
       }
 
     default:

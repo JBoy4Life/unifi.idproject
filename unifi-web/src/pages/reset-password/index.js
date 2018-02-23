@@ -4,12 +4,12 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
+import * as ROUTES from 'utils/routes'
 import withClientId from 'hocs/with-client-id'
 import { API_FAIL, API_SUCCESS } from 'redux/api/request'
 import { Col, Row } from 'elements'
 import { formSubmit } from 'utils/form'
 import { getPasswordResetInfo, setPassword } from 'redux/user/actions'
-import { noop } from 'utils/helpers'
 import { PageContainer, ResetPasswordForm } from 'smart-components'
 import { PageContent } from 'components'
 import { passwordResetInfoSelector, setPasswordStatusSelector } from 'redux/user/selectors'
@@ -25,7 +25,7 @@ class ResetPassword extends Component {
     passwordResetInfo: PropTypes.object,
     setPassword: PropTypes.func,
     setPasswordStatus: PropTypes.string,
-    withClientId: PropTypes.string
+    clientId: PropTypes.string
   }
 
   componentDidMount() {
@@ -52,34 +52,32 @@ class ResetPassword extends Component {
   }
 
   render() {
-    const { passwordResetInfo } = this.props
+    const { match, passwordResetInfo } = this.props
+
     return (
       <PageContainer>
         <PageContent>
-          <div>
-            {API_SUCCESS === passwordResetInfo.status && (
-              <Fragment>
-                <Row>
-                  <Col xs={24} sm={{ offset: 4}}>
-                    <h1 className={bemE('title')}>
-                      Welcome, {passwordResetInfo.operator.name || passwordResetInfo.operator.username}
-                    </h1>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col xs={24} sm={{ span: 8, offset: 4 }}>
-                      <div>
-                        <h2 className={bemE('body')}>Please choose a password.</h2>
-                        <ResetPasswordForm onSubmit={this.handleResetPasswordFormSubmit} />
-                      </div>
-                  </Col>
-                </Row>
-              </Fragment>
-            )}
-            {API_FAIL === passwordResetInfo.status && (
-              <h1 className={bemE('body')}>Invalid username or token.</h1>
-            )}
-          </div>
+          {API_SUCCESS === passwordResetInfo.status && (
+            <Row>
+              <Col xs={24} sm={{ offset: 4, span: 16 }} md={{ offset: 6, span: 12 }} xl={{ offset: 7, span: 10 }}>
+                {match.path === ROUTES.ACCEPT_INVITATION ? (
+                  <Fragment>
+                    <h1 className={bemE('title')}>Welcome</h1>
+                    <p className={bemE('body')}>To join unifi.id please create a password.</p>
+                  </Fragment>
+                ) : (
+                  <Fragment>
+                    <h1 className={bemE('title')}>Welcome</h1>
+                    <p className={bemE('body')}>Please enter a password.</p>
+                  </Fragment>
+                )}
+                <ResetPasswordForm onSubmit={this.handleResetPasswordFormSubmit} />
+              </Col>
+            </Row>
+          )}
+          {API_FAIL === passwordResetInfo.status && (
+            <h1 className={bemE('title')}>Invalid username or token.</h1>
+          )}
         </PageContent>
       </PageContainer>
     )

@@ -1,7 +1,11 @@
 export const SITEMAP = '/sitemap'
 export const MY_ACCOUNT = '/my-account'
 export const LOGIN = '/login'
+export const ACCEPT_INVITATION = '/accept-invitation/:username/:token'
+export const CANCEL_PASSWORD_RESET = '/cancel-password-reset/:username/:token'
+export const FORGOT_PASSWORD = '/forgot-password'
 export const RESET_PASSWORD = '/reset-password/:username/:token'
+
 export const DIRECTORY = '/directory'
 export const EVACUATION = '/evacuation'
 export const EVACUATION_DIRECTORY_VIEW = '/evacuation/directory'
