@@ -17,7 +17,7 @@ Request format:
 {
     "protocolVersion": "1.0.0",
     "releaseVersion": "1.0.0",
-    "correlationId": "<base64-encoded-id>",
+    "correlationId": <byte-sequence>,
     "messageType": "<module>.<service>.<operation>",
     "payload": {
         "param1": "value1",
@@ -33,7 +33,7 @@ Response format:
 {
     "protocolVersion": "1.0.0",
     "releaseVersion": "1.0.0",
-    "correlationId": "<base64-encoded-id>",
+    "correlationId": <byte-sequence>,
     "messageType": "<module>.<service>.<operation>-result",
     "payload": ...
 }
@@ -54,11 +54,11 @@ The flow is as follows:
 
 Subscriptions are dropped on disconnection, so clients need to resubscribe after reconnection if appropriate.
 
-== Listing options
+== List/get options
 
-Some `*.*.list-*` message types support the following functionality:
+Some `*.*.list-*` and `*.*.get-*` message types support the following functionality:
 
-=== Filter
+=== Filter (list only)
 
 To restrict the set of results with equality conditions include the `"filter"` name in the payload object containing an object, whose names are item properties, and values are the values to restrict these properties to, e.g.:
 
@@ -79,7 +79,7 @@ To specify what associated data to include include the `"with"` name in the payl
 ----
 "payload": {
     ...,
-    "with": ["detectable", ...]
+    "with": ["detectable", "image", ...]
 }
 ----
 
