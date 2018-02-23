@@ -54,8 +54,38 @@ The flow is as follows:
 
 Subscriptions are dropped on disconnection, so clients need to resubscribe after reconnection if appropriate.
 
+== Listing options
 
-== Clients (currently unauthenticated)
+Some `*.*.list-*` message types support the following functionality:
+
+=== Filter
+
+To restrict the set of results with equality conditions include the `"filter"` name in the payload object containing an object, whose names are item properties, and values are the values to restrict these properties to, e.g.:
+
+----
+"payload": {
+    ...,
+    "filter": {
+        "active": true,
+        ...
+    }
+}
+----
+
+=== With
+
+To specify what associated data to include include the `"with"` name in the payload object containing an array of entity types to include, e.g.:
+
+----
+"payload": {
+    ...,
+    "with": ["detectable", ...]
+}
+----
+
+TODO: Update API spec below. Out of sync with reality!
+
+== Clients
 
 === List clients
 
