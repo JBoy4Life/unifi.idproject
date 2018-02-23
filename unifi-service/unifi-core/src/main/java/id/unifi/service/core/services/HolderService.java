@@ -5,6 +5,7 @@ import id.unifi.service.common.api.Protocol;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
@@ -17,11 +18,13 @@ import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import org.jooq.Condition;
+import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Table;
 import static org.jooq.impl.DSL.and;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.value;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
@@ -87,6 +90,47 @@ public class HolderService {
                 .fetch(Record1::value1));
     }
 
+    @ApiOperation
+    public void setImage(OperatorSessionData session, String clientId, String clientReference, byte[] image) {
+        authorize(session, clientId);
+
+        // TODO: validate image format
+
+        db.execute(sql -> {
+            if (!holderExists(clientId, clientReference, sql)) throw new NotFound("holder");
+
+            int rowsUpdated = sql.insertInto(HOLDER_IMAGE)
+                    .set(HOLDER_IMAGE.CLIENT_ID, clientId)
+                    .set(HOLDER_IMAGE.CLIENT_REFERENCE, clientReference)
+                    .set(HOLDER_IMAGE.IMAGE, image)
+                    .onConflict()
+                    .doUpdate()
+                    .set(HOLDER_IMAGE.IMAGE, image)
+                    .execute();
+
+            if (rowsUpdated == 0) throw new NotFound("holder");
+            return null;
+        });
+    }
+
+    @ApiOperation
+    public void clearImage(OperatorSessionData session, String clientId, String clientReference) {
+        authorize(session, clientId);
+        db.execute(sql -> {
+            if (!holderExists(clientId, clientReference, sql)) throw new NotFound("holder");
+            sql.deleteFrom(HOLDER_IMAGE)
+                    .where(HOLDER_IMAGE.CLIENT_ID.eq(clientId))
+                    .and(HOLDER_IMAGE.CLIENT_REFERENCE.eq(clientReference))
+                    .execute();
+            return null;
+        });
+    }
+
+    private static boolean holderExists(String clientId, String clientReference, DSLContext sql) {
+        return sql.fetchExists(selectFrom(HOLDER)
+                .where(HOLDER.CLIENT_ID.eq(clientId))
+                .and(HOLDER.CLIENT_REFERENCE.eq(clientReference)));
+    }
 
     private static HolderInfo recordToInfo(Record r) {
         return new HolderInfo(
