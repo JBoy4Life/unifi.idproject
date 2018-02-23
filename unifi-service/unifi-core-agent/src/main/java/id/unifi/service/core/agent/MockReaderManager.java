@@ -67,6 +67,7 @@ public class MockReaderManager implements ReaderManager {
         DetectableRecord[] detectables = serviceDb.execute(sql -> sql
                 .selectFrom(DETECTABLE)
                 .where(DETECTABLE.CLIENT_ID.eq(clientId))
+                .and(DETECTABLE.DETECTABLE_TYPE.eq(DetectableType.UHF_EPC.toString()))
                 .fetchArray());
 
         while (true) {
