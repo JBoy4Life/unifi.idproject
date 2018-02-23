@@ -40,6 +40,7 @@ export default ({ history }) => (
   <Router history={history}>
     <Switch>
       <CrumbRoute exact path={ROUTES.LOGIN} title="Login" component={Login} />
+      <CrumbRoute exact path={ROUTES.ACCEPT_INVITATION} title="Accept Invitation" component={ResetPassword} />
       <CrumbRoute exact path={ROUTES.FORGOT_PASSWORD} title="Forgot Password" component={ForgotPassword} />
       <CrumbRoute exact path={ROUTES.CANCEL_PASSWORD_RESET} title="Cancel Password Request" component={CancelPasswordReset} />
       <CrumbRoute exact path={ROUTES.RESET_PASSWORD} title="Reset Password" component={ResetPassword} />
