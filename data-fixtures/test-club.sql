@@ -44,32 +44,32 @@ test-club	1001	3	test-site	e
 
 
 COPY detectable (client_id, detectable_id, detectable_type, description, active) FROM stdin;
-test-club	000	uhf-epc		t
-test-club	001	uhf-epc		t
-test-club	002	uhf-epc		t
-test-club	003	uhf-epc		t
-test-club	004	uhf-epc		t
-test-club	005	uhf-epc		t
-test-club	006	uhf-epc		t
-test-club	007	uhf-epc		t
-test-club	008	uhf-epc		t
-test-club	009	uhf-epc		t
-test-club	010	uhf-epc		t
-test-club	011	uhf-epc		t
-test-club	012	uhf-epc		t
-test-club	013	uhf-epc		t
-test-club	014	uhf-epc		t
-test-club	015	uhf-epc		t
-test-club	016	uhf-epc		t
-test-club	017	uhf-epc		t
-test-club	018	uhf-epc		t
-test-club	019	uhf-epc		t
-test-club	020	uhf-epc		t
-test-club	021	uhf-epc		t
-test-club	022	uhf-epc		t
-test-club	023	uhf-epc		t
-test-club	024	uhf-epc		t
-test-club	025	uhf-epc		t
+test-club	000	uhf-epc	guest pass	t
+test-club	001	uhf-epc	guest pass	t
+test-club	002	uhf-epc	VIP pass	t
+test-club	003	uhf-epc	member pass	t
+test-club	004	uhf-epc	member pass	t
+test-club	005	uhf-epc	member pass	t
+test-club	006	uhf-epc	VIP pass	t
+test-club	007	uhf-epc	guest pass	t
+test-club	008	uhf-epc	member pass	t
+test-club	009	uhf-epc	VIP pass	t
+test-club	010	uhf-epc	VIP pass	t
+test-club	011	uhf-epc	member pass	t
+test-club	012	uhf-epc	VIP pass	t
+test-club	013	uhf-epc	member pass	t
+test-club	014	uhf-epc	member pass	t
+test-club	015	uhf-epc	member pass	t
+test-club	016	uhf-epc	member pass	t
+test-club	017	uhf-epc	member pass	t
+test-club	018	uhf-epc	VIP pass	t
+test-club	019	uhf-epc	member pass	t
+test-club	020	uhf-epc	member pass	t
+test-club	021	uhf-epc	member pass	t
+test-club	022	uhf-epc	VIP pass	t
+test-club	023	uhf-epc	member pass	t
+test-club	024	uhf-epc	member pass	t
+test-club	025	uhf-epc	VIP pass	t
 \.
 
 
