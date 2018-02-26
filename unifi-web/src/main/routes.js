@@ -9,7 +9,7 @@ import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
   Discovery, LiveView, SiteManager, Users, Navigation,
   ClientRegistry, Attendance, ForgotPassword, ResetPassword,
-  CancelPasswordReset
+  CancelPasswordReset, ChangePassword
 } from '../pages'
 
 const ProtectedRoutes = userIsAuthenticatedRedir(() => (
@@ -41,6 +41,7 @@ export default ({ history }) => (
     <Switch>
       <CrumbRoute exact path={ROUTES.LOGIN} title="Login" component={Login} />
       <CrumbRoute exact path={ROUTES.ACCEPT_INVITATION} title="Accept Invitation" component={ResetPassword} />
+      <CrumbRoute exact path={ROUTES.CHANGE_PASSWORD} title="Change Password" component={ChangePassword} />
       <CrumbRoute exact path={ROUTES.FORGOT_PASSWORD} title="Forgot Password" component={ForgotPassword} />
       <CrumbRoute exact path={ROUTES.CANCEL_PASSWORD_RESET} title="Cancel Password Request" component={CancelPasswordReset} />
       <CrumbRoute exact path={ROUTES.RESET_PASSWORD} title="Reset Password" component={ResetPassword} />

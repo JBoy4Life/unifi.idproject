@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import cn from 'classnames'
+import { withRouter } from 'react-router'
 
 import logo from 'assets/images/ucl-logo.svg'
 import { Collapse, Dropdown, Menu, Icon } from 'elements'
@@ -9,7 +10,7 @@ import './index.scss'
 const COMPONENT_CSS_CLASS = 'ident-bar'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASS}__${suffix}`
 
-export default class IdentBar extends Component {
+class IdentBar extends Component {
   constructor(props) {
     super(props)
 
@@ -27,9 +28,11 @@ export default class IdentBar extends Component {
   }
 
   handleMenuItemClick = ({ key }) => {
-    const { onLogout } = this.props
+    const { history, onLogout } = this.props
     if (key === 'logout') {
       onLogout()
+    } else {
+      history.push(`/${key}`)
     }
   }
 
@@ -73,7 +76,7 @@ export default class IdentBar extends Component {
               })}
               selectedKeys={[]}
             >
-              <Menu.Item key="my-account">My Account</Menu.Item>
+              <Menu.Item key="change-password">Change my password</Menu.Item>
               <Menu.Divider />
               <Menu.Item key="logout">Log out</Menu.Item>
             </Menu>
@@ -83,3 +86,5 @@ export default class IdentBar extends Component {
     )
   }
 }
+
+export default withRouter(IdentBar)

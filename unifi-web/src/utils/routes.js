@@ -3,6 +3,7 @@ export const MY_ACCOUNT = '/my-account'
 export const LOGIN = '/login'
 export const ACCEPT_INVITATION = '/accept-invitation/:username/:token'
 export const CANCEL_PASSWORD_RESET = '/cancel-password-reset/:username/:token'
+export const CHANGE_PASSWORD = '/change-password'
 export const FORGOT_PASSWORD = '/forgot-password'
 export const RESET_PASSWORD = '/reset-password/:username/:token'
 

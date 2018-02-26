@@ -3,8 +3,7 @@ import { logoutRequest } from 'redux/user/actions'
 const authMiddleware = store => next => action => {
   const { payload } = action
   if (payload && (
-    payload.messageType === 'core.error.unauthorized' ||
-    payload.messageType === 'core.error.authentication-failed'
+    payload.messageType === 'core.error.unauthorized'
   )) {
     store.dispatch(logoutRequest())
   }
