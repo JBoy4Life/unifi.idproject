@@ -11,6 +11,9 @@ import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.core.QueryUtils;
+import id.unifi.service.core.QueryUtils.ImageWithType;
+import static id.unifi.service.core.QueryUtils.fieldValueOpt;
 import static id.unifi.service.core.QueryUtils.filterCondition;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER;
@@ -31,9 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -138,25 +139,8 @@ public class HolderService {
                 r.get(HOLDER.NAME),
                 r.get(HOLDER.HOLDER_TYPE),
                 r.get(HOLDER.ACTIVE),
-                r.field(HOLDER_IMAGE.IMAGE) == null ? null : imageWithType(r.get(HOLDER_IMAGE.IMAGE)),
-                r.field(HOLDER_METADATA.METADATA) == null ? null : extractMetadata(r.get(HOLDER_METADATA.METADATA)));
-    }
-
-    private static ImageWithType imageWithType(@Nullable byte[] data) {
-        if (data == null) return null;
-        String mimeType;
-        try {
-            mimeType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(data));
-        } catch (IOException ignored) {
-            return null;
-        }
-
-        if (mimeType == null || !mimeType.startsWith("image/")) {
-            log.warn("Ignoring image of unrecognizable type: {}", mimeType);
-            return null;
-        }
-
-        return new ImageWithType(mimeType, data);
+                fieldValueOpt(r, HOLDER_IMAGE.IMAGE).map(QueryUtils::imageWithType),
+                fieldValueOpt(r, HOLDER_METADATA.METADATA).map(HolderService::extractMetadata));
     }
 
     private static Table<? extends Record> calculateTableJoin(@Nullable Set<String> with) {
@@ -164,7 +148,7 @@ public class HolderService {
 
         Table<? extends Record> tables = HOLDER;
         if (with.contains("image")) {
-            tables = HOLDER.leftJoin(HOLDER_IMAGE).onKey();
+            tables = tables.leftJoin(HOLDER_IMAGE).onKey();
         }
         if (with.contains("metadata")) {
             tables = tables.leftJoin(HOLDER_METADATA).onKey(HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER);
@@ -201,31 +185,21 @@ public class HolderService {
         public final String name;
         public final String holderType;
         public final boolean active;
-        public final ImageWithType image;
-        public final Map<String, Object> metadata;
+        public final Optional<ImageWithType> image;
+        public final Optional<Map<String, Object>> metadata;
 
         public HolderInfo(String clientReference,
                           String name,
                           String holderType,
                           boolean active,
-                          @Nullable ImageWithType image,
-                          @Nullable Map<String, Object> metadata) {
+                          Optional<ImageWithType> image,
+                          Optional<Map<String, Object>> metadata) {
             this.clientReference = clientReference;
             this.name = name;
             this.holderType = holderType;
             this.active = active;
             this.image = image;
             this.metadata = metadata;
-        }
-    }
-
-    public static class ImageWithType {
-        public final String mimeType;
-        public final byte[] data;
-
-        public ImageWithType(String mimeType, byte[] data) {
-            this.mimeType = mimeType;
-            this.data = data;
         }
     }
 

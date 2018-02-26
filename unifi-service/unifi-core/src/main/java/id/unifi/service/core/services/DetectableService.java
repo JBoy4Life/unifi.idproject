@@ -8,6 +8,7 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
+import static id.unifi.service.core.QueryUtils.fieldValueOpt;
 import static id.unifi.service.core.QueryUtils.filterCondition;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
@@ -54,7 +55,7 @@ public class DetectableService {
                         r.get(DETECTABLE.DETECTABLE_ID),
                         DetectableType.fromString(r.get(DETECTABLE.DETECTABLE_TYPE)),
                         r.get(DETECTABLE.DESCRIPTION),
-                        r.field(ASSIGNMENT.CLIENT_REFERENCE) == null ? null : r.get(ASSIGNMENT.CLIENT_REFERENCE))));
+                        fieldValueOpt(r, ASSIGNMENT.CLIENT_REFERENCE))));
     }
 
     private static Table<? extends Record> calculateTableJoin(ListFilter filter, @Nullable Set<String> with) {
@@ -98,13 +99,13 @@ public class DetectableService {
         public final String detectableId;
         public final DetectableType detectableType;
         public final String description;
-        public final String assignment;
+        public final Optional<String> assignment;
 
         public DetectableInfo(String clientId,
                               String detectableId,
                               DetectableType detectableType,
                               String description,
-                              @Nullable String assignment) {
+                              Optional<String> assignment) {
             this.clientId = clientId;
             this.detectableId = detectableId;
             this.detectableType = detectableType;
