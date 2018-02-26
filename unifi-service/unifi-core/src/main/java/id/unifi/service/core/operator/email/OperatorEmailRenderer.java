@@ -6,21 +6,22 @@ import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.core.operator.OperatorInfo;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Base64;
 import java.util.Map;
+import java.util.function.Function;
 
 public class OperatorEmailRenderer {
     private final String baseUrlFormat;
     private final Template htmlInvitationTemplate;
     private final Template htmlPasswordResetRequestedTemplate;
     private final Base64.Encoder base64;
+    private final Template textInvitationTemplate;
+    private final Template textPasswordResetRequestedTemplate;
 
     private interface Config {
         @Default("local.unifi.id:3000")
@@ -32,49 +33,57 @@ public class OperatorEmailRenderer {
 
     public OperatorEmailRenderer(Config config) {
         this.baseUrlFormat = String.format("%s://%%s.%s", config.webServerScheme(), config.webServerTopDomain());
-
-        Mustache.Compiler htmlCompiler = Mustache.compiler().escapeHTML(true).defaultValue("???");
+        Function<String, Mustache.TemplateLoader> loaderByFormat = format -> name -> {
+            String filename = String.format("%s.%s.mustache", name, format);
+            InputStream stream = OperatorEmailRenderer.class.getResourceAsStream(filename);
+            if (stream == null) throw new RuntimeException("Mustache template " + filename + " not found");
+            return new BufferedReader(new InputStreamReader(stream));
+        };
+        Mustache.Compiler htmlCompiler = Mustache.compiler().withLoader(loaderByFormat.apply("html")).escapeHTML(true);
+        Mustache.Compiler textCompiler = Mustache.compiler().withLoader(loaderByFormat.apply("txt")).escapeHTML(false);
         this.htmlInvitationTemplate = compileTemplate(htmlCompiler, "invitation");
+        this.textInvitationTemplate = compileTemplate(textCompiler, "invitation");
         this.htmlPasswordResetRequestedTemplate = compileTemplate(htmlCompiler, "password-reset-requested");
+        this.textPasswordResetRequestedTemplate = compileTemplate(textCompiler, "password-reset-requested");
         this.base64 = Base64.getUrlEncoder();
     }
 
-    public EmailSenderProvider.EmailMessage renderInvitation(String clientId,
-                                                             String username,
+    public EmailSenderProvider.EmailMessage renderInvitation(OperatorInfo operator,
                                                              TimestampedToken token,
                                                              OperatorInfo onboarder) {
         Map<String, Object> context = Map.of(
-                "clientId", clientId,
-                "username", username,
+                "operator", operator,
                 "onboarder", onboarder,
                 "setPasswordUrl", String.format("%s/accept-invitation/%s/%s",
-                        baseUrlForClient(clientId), username, base64.encodeToString(token.encoded()))
+                        baseUrlForClient(operator.clientId), operator.username, base64.encodeToString(token.encoded())),
+                "expiryTime", "24 hours" // TODO: use actual expiry time
         );
 
         String htmlBody = htmlInvitationTemplate.execute(context);
-        return new EmailSenderProvider.EmailMessage("Invitation to join unifi.id", htmlBody);
+        String textBody = textInvitationTemplate.execute(context);
+        return new EmailSenderProvider.EmailMessage("Invitation to join unifi.id", htmlBody, textBody);
     }
 
-    public EmailSenderProvider.EmailMessage renderPasswordResetInstructions(String clientId,
-                                                                            String username,
+    public EmailSenderProvider.EmailMessage renderPasswordResetInstructions(OperatorInfo operator,
                                                                             TimestampedToken token) {
-        String baseUrl = baseUrlForClient(clientId);
+        String baseUrl = baseUrlForClient(operator.clientId);
         String encodedToken = base64.encodeToString(token.encoded());
         Map<String, Object> context = Map.of(
-                "setPasswordUrl", String.format("%s/reset-password/%s/%s", baseUrl, username, encodedToken),
-                "cancelUrl", String.format("%s/cancel-password-reset/%s/%s", baseUrl, username, encodedToken)
+                "operator", operator,
+                "setPasswordUrl", String.format("%s/reset-password/%s/%s", baseUrl, operator.username, encodedToken),
+                "cancelUrl", String.format("%s/cancel-password-reset/%s/%s", baseUrl, operator.username, encodedToken),
+                "expiryTime", "24 hours" // TODO: use actual expiry time
         );
 
         String htmlBody = htmlPasswordResetRequestedTemplate.execute(context);
-        return new EmailSenderProvider.EmailMessage("Password reset", htmlBody);
+        String textBody = textPasswordResetRequestedTemplate.execute(context);
+        return new EmailSenderProvider.EmailMessage("Password reset", htmlBody, textBody);
     }
 
     private static Template compileTemplate(Mustache.Compiler htmlCompiler, String templateName) {
-        InputStream resourceStream =
-                OperatorEmailRenderer.class.getResourceAsStream(templateName + ".mustache");
-        try (Reader reader = new BufferedReader(new InputStreamReader(resourceStream, UTF_8))) {
+        try (Reader reader = htmlCompiler.loader.getTemplate(templateName)) {
             return htmlCompiler.compile(reader);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

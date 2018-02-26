@@ -124,7 +124,7 @@ public class OperatorService {
             }
 
             if (invite) {
-                requestPasswordSet(sql, clientId, username, Optional.of(email), Optional.of(onboarder));
+                requestPasswordSet(sql, clientId, username, Optional.of(onboarder));
             }
             return null;
         });
@@ -236,7 +236,7 @@ public class OperatorService {
 
         db.execute(sql -> {
             if (isOperatorActive(sql, clientId, username))
-                requestPasswordSet(sql, clientId, username, Optional.empty(), onboarder);
+                requestPasswordSet(sql, clientId, username, onboarder);
             return null;
         });
     }
@@ -346,23 +346,21 @@ public class OperatorService {
     private void requestPasswordSet(DSLContext sql,
                                     String clientId,
                                     String username,
-                                    Optional<String> emailAddress,
                                     Optional<OperatorPK> onboarder) {
         TimestampedToken token = passwordReset.generateResetToken(sql, clientId, username);
 
-        String actualEmailAddress = emailAddress.or(() ->
-                findOperator(sql, clientId, username).map(o -> o.email))
-                .orElseThrow(() -> new NotFound("operator"));
+        OperatorInfo operatorInfo = getOperatorInfo(clientId, username);
+        if (operatorInfo == null) throw new NotFound("operator");
 
         EmailSenderProvider.EmailMessage message;
         if (onboarder.isPresent()) {
             OperatorInfo onboarderInfo = getOperatorInfo(onboarder.get().clientId, onboarder.get().username);
-            message = emailRenderer.renderInvitation(clientId, username, token, onboarderInfo);
+            message = emailRenderer.renderInvitation(operatorInfo, token, onboarderInfo);
         } else {
-            message = emailRenderer.renderPasswordResetInstructions(clientId, username, token);
+            message = emailRenderer.renderPasswordResetInstructions(operatorInfo, token);
         }
 
-        emailSender.send(actualEmailAddress, message);
+        emailSender.send(operatorInfo.email, message);
     }
 
     private void recordAuthAttempt(OperatorPK operator, boolean successful) {

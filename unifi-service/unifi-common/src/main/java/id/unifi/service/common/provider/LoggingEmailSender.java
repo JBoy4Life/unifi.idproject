@@ -7,6 +7,6 @@ public class LoggingEmailSender implements EmailSenderProvider {
     private static Logger log = LoggerFactory.getLogger(LoggingEmailSender.class);
 
     public void send(String address, EmailMessage message) {
-        log.info("Would send an email to " + address + ": " + message.subject + "\n" + message.htmlBody);
+        log.info("Would send an email to " + address + ": " + message.subject + "\n" + message.textBody);
     }
 }
