@@ -288,7 +288,7 @@ public class OperatorService {
                 return null;
             });
         } else {
-            throw new AuthenticationFailed();
+            throw new AuthenticationFailed("Current password isn't valid");
         }
     }
 
