@@ -62,12 +62,12 @@ class ResetPassword extends Component {
               <Col xs={24} sm={{ offset: 4, span: 16 }} md={{ offset: 6, span: 12 }} xl={{ offset: 7, span: 10 }}>
                 {match.path === ROUTES.ACCEPT_INVITATION ? (
                   <Fragment>
-                    <h1 className={bemE('title')}>Welcome</h1>
+                    <h1 className={bemE('title')}>Welcome, {passwordResetInfo.operator.name}</h1>
                     <p className={bemE('body')}>To join unifi.id please create a password.</p>
                   </Fragment>
                 ) : (
                   <Fragment>
-                    <h1 className={bemE('title')}>Welcome</h1>
+                    <h1 className={bemE('title')}>Reset password</h1>
                     <p className={bemE('body')}>Please enter a password.</p>
                   </Fragment>
                 )}
