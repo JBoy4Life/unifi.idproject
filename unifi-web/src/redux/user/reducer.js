@@ -6,6 +6,7 @@ import {
   USER_REAUTHENTICATE,
   USER_SET_INITIALIZED,
   SET_PASSWORD,
+  CHANGE_PASSWORD,
   REQUEST_PASSWORD_RESET,
   CANCEL_PASSWORD_RESET,
   PASSWORD_RESET_INFO_FETCH
@@ -21,6 +22,7 @@ const initialState = {
     payload: null
   },
   setPasswordStatus: 'INIT',
+  changePasswordStatus: 'INIT',
   requestPasswordResetStatus: 'INIT',
   cancelPasswordResetStatus: 'INIT'
 }
@@ -78,6 +80,7 @@ const reducer = (state = initialState, action = {}) => {
     case `${USER_REAUTHENTICATE}_REJECTED`:
       return {
         ...state,
+        currentUser: null,
         initialising: false,
       }
 
@@ -110,6 +113,24 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         setPasswordStatus: API_FAIL
+      }
+
+    case `${CHANGE_PASSWORD}_FULFILLED`:
+      return {
+        ...state,
+        changePasswordStatus: API_SUCCESS
+      }
+
+    case `${CHANGE_PASSWORD}_PENDING`:
+      return {
+        ...state,
+        changePasswordStatus: API_PENDING
+      }
+
+    case `${CHANGE_PASSWORD}_REJECTED`:
+      return {
+        ...state,
+        changePasswordStatus: API_FAIL
       }
 
     case `${REQUEST_PASSWORD_RESET}_FULFILLED`:

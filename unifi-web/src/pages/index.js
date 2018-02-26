@@ -3,6 +3,7 @@ import NotFound from './not-found'
 import MyAccount from './my-account'
 import Login from './login'
 import CancelPasswordReset from './cancel-password-reset'
+import ChangePassword from './change-password'
 import ForgotPassword from './forgot-password'
 import ResetPassword from './reset-password'
 import Discovery from './discovery'
@@ -23,6 +24,7 @@ export {
   MyAccount,
   Login,
   CancelPasswordReset,
+  ChangePassword,
   ForgotPassword,
   ResetPassword,
   Discovery,

@@ -1,4 +1,5 @@
 import LoginForm from './login-form'
+import ChangePasswordForm from './change-password-form'
 import ClientRegisterForm from './client-register-form'
 import ForgotPasswordForm from './forgot-password-form'
 import NotificationForm from './notification-form'
@@ -15,6 +16,7 @@ import SiteWizardDetailsForm from './site-wizard-details-form'
 
 export {
   LoginForm,
+  ChangePasswordForm,
   ClientRegisterForm,
   ForgotPasswordForm,
   NotificationForm,
