@@ -2,19 +2,27 @@ package id.unifi.service.core.services;
 
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
+import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.core.QueryUtils;
+import id.unifi.service.core.QueryUtils.ImageWithType;
+import static id.unifi.service.core.QueryUtils.fieldValueOpt;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT;
-import static java.util.stream.Collectors.toList;
+import static id.unifi.service.core.db.Tables.CLIENT_IMAGE;
+import org.jooq.Record;
+import org.jooq.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @ApiService("client")
 public class ClientService {
@@ -27,40 +35,60 @@ public class ClientService {
     }
 
     @ApiOperation
-    public List<Client> listClients() {
+    public List<ClientInfo> listClients(OperatorSessionData session, @Nullable Set<String> with) {
         log.info("Listing clients");
-        return db.execute(sql -> sql.selectFrom(CLIENT).fetch().stream()
-                .map(c -> new Client(c.getClientId(), c.getDisplayName()))
-                .collect(toList()));
+        authorize(session);
+        return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
+                .fetch(ClientService::clientInfoFromRecord));
     }
 
     @ApiOperation
-    public Client getClient(OperatorSessionData session, String clientId) {
-        authorize(session, clientId);
-        return db.execute(sql -> sql.selectFrom(CLIENT)
-                .where()
-                .fetchOne(r -> new Client(r.getClientId(), r.getDisplayName())));
+    public ClientInfo getClient(String clientId, @Nullable Set<String> with) {
+        return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
+                .where(CLIENT.CLIENT_ID.eq(clientId))
+                .fetchOptional(ClientService::clientInfoFromRecord))
+                .orElseThrow(() -> new NotFound("client"));
     }
 
-    private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
+    private static Table<? extends Record> calculateTableJoin(@Nullable Set<String> with) {
+        if (with == null) with = Set.of();
+
+        Table<? extends Record> tables = CLIENT;
+        if (with.contains("image")) {
+            tables = tables.leftJoin(CLIENT_IMAGE).onKey();
+        }
+
+        return tables;
+    }
+
+    private static ClientInfo clientInfoFromRecord(Record r) {
+        return new ClientInfo(
+                r.get(CLIENT.CLIENT_ID),
+                r.get(CLIENT.DISPLAY_NAME),
+                fieldValueOpt(r, CLIENT_IMAGE.IMAGE).flatMap(QueryUtils::imageWithType));
+    }
+
+    private static OperatorPK authorize(OperatorSessionData sessionData) {
         return Optional.ofNullable(sessionData.getOperator())
-                .filter(op -> op.clientId.equals(clientId))
                 .orElseThrow(Unauthorized::new);
     }
 
-    public static class Client {
+    public static class ClientInfo {
         public final String clientId;
         public final String displayName;
+        public final Optional<ImageWithType> image;
 
-        Client(String clientId, String displayName) {
+        ClientInfo(String clientId, String displayName, Optional<ImageWithType> image) {
             this.clientId = clientId;
             this.displayName = displayName;
+            this.image = image;
         }
 
         public String toString() {
-            return "Client{" +
+            return "ClientInfo{" +
                     "clientId='" + clientId + '\'' +
                     ", displayName='" + displayName + '\'' +
+                    ", image=" + image +
                     '}';
         }
     }

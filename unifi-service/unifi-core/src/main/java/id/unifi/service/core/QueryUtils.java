@@ -7,7 +7,6 @@ import static org.jooq.impl.DSL.trueCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
@@ -25,21 +24,22 @@ public class QueryUtils {
         return r.field(tableField) == null ? Optional.empty() : Optional.ofNullable(r.get(tableField));
     }
 
-    public static ImageWithType imageWithType(@Nullable byte[] data) {
-        if (data == null) return null;
+    public static Optional<ImageWithType> imageWithType(byte[] data) {
         String mimeType;
         try {
             mimeType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(data));
         } catch (IOException ignored) {
-            return null;
+            return Optional.empty();
         }
+
+        if ("application/xml".equals(mimeType)) mimeType = "image/svg+xml";
 
         if (mimeType == null || !mimeType.startsWith("image/")) {
             log.warn("Ignoring image of unrecognizable type: {}", mimeType);
-            return null;
+            return Optional.empty();
         }
 
-        return new ImageWithType(mimeType, data);
+        return Optional.of(new ImageWithType(mimeType, data));
     }
 
     public static class ImageWithType {

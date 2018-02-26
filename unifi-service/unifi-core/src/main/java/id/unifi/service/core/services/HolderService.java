@@ -139,7 +139,7 @@ public class HolderService {
                 r.get(HOLDER.NAME),
                 r.get(HOLDER.HOLDER_TYPE),
                 r.get(HOLDER.ACTIVE),
-                fieldValueOpt(r, HOLDER_IMAGE.IMAGE).map(QueryUtils::imageWithType),
+                fieldValueOpt(r, HOLDER_IMAGE.IMAGE).flatMap(QueryUtils::imageWithType),
                 fieldValueOpt(r, HOLDER_METADATA.METADATA).map(HolderService::extractMetadata));
     }
 
