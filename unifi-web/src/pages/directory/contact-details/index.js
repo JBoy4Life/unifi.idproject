@@ -17,7 +17,7 @@ import './index.scss'
 
 const holderSelector = (state, props) => 
   fp.compose(
-    fp.find({ clientReference: props.match.params.holderId }),
+    fp.find({ clientReference: props.match.params.clientReference }),
     holdersSelector
   )(state)
 
@@ -27,7 +27,7 @@ const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 class ContactDetails extends Component {
   componentDidMount() {
     const { clientId, listDetectables, match } = this.props
-    listDetectables(clientId, { assignment: match.params.holderId })
+    listDetectables(clientId, { assignment: match.params.clientReference })
   }
 
   render() {

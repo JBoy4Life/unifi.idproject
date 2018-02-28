@@ -36,7 +36,7 @@ class Directory extends Component {
               />
               <Route
                 exact
-                path={ROUTES.DIRECTORY_CONTACT_DETAIL}
+                path={ROUTES.DIRECTORY_HOLDER_DETAIL}
                 component={ContactDetails}
               />
             </Switch>

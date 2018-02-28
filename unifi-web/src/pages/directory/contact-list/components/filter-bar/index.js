@@ -60,7 +60,7 @@ class FilterBar extends Component {
           />
         </Col>
         <Col xs={12} md={7}>
-          <Link to={ROUTES.DIRECTORY_NEW_CONTACT}>
+          <Link to={ROUTES.DIRECTORY_NEW_HOLDER}>
             <Icon type="plus-circle-o" /> Add Contact
           </Link>
         </Col>

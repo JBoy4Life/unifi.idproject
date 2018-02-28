@@ -20,7 +20,7 @@ const ListView = ({ holders }) => (
         {holders.map((holder) => (
           <tr key={holder.clientReference}>
             <td>
-              <Link to={ROUTES.DIRECTORY_CONTACT_DETAIL.replace(':holderId', holder.clientReference)}>
+              <Link to={ROUTES.DIRECTORY_HOLDER_DETAIL.replace(':clientReference', holder.clientReference)}>
                 {holder.name}
               </Link>
             </td>
