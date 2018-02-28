@@ -13,7 +13,11 @@ const TileView = ({ holders, viewMode }) => (
   <HolderGrid viewMode={viewMode}>
     {holders.map(item => (
       <GridItem image={item.image} key={item.clientReference}>
-        <GridItem.Field>{item.name}</GridItem.Field>
+        <GridItem.Field>
+          <Link to={ROUTES.DIRECTORY_HOLDER_DETAIL.replace(':clientReference', item.clientReference)}>
+            {item.name}
+          </Link>
+        </GridItem.Field>
         <GridItem.Field>ID {item.clientReference}</GridItem.Field>
       </GridItem>
     ))}
