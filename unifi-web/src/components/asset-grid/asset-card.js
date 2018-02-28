@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import cx from 'classnames'
 
-import defaultAvatar from './default-avatar.png'
+import { Avatar } from 'elements'
 import './asset-card.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'asset-card'
@@ -12,14 +12,7 @@ const AssetCard = ({ image, children }) => (
   <div
     className={cx(COMPONENT_CSS_CLASSNAME)}
   >
-    <div
-      className={bemE('image')}
-      style={{
-        backgroundImage: image
-        ? `url(data:${image.type};base64,${image.data})`
-        : `url(${defaultAvatar})`
-      }}
-    />
+    <Avatar image={image} className={bemE('image')} />
     <div className={bemE('text')}>
       {children}
     </div>

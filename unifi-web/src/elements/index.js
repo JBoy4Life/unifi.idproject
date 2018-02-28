@@ -11,6 +11,7 @@ import Modal from './modal'
 import Radio from './radio'
 
 import Alert from './alert'
+import Avatar from './avatar'
 
 import Tabs from './tabs'
 import Collapse from './collapse'
@@ -46,6 +47,7 @@ import Slider from './slider'
 export {
   Aux,
   Alert,
+  Avatar,
 
   Menu,
   Dropdown,
