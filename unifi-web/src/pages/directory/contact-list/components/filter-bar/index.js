@@ -60,9 +60,9 @@ class FilterBar extends Component {
           />
         </Col>
         <Col xs={12} md={7}>
-          <Link to={ROUTES.DIRECTORY_NEW_HOLDER}>
+          {/*<Link to={ROUTES.DIRECTORY_NEW_HOLDER}>
             <Icon type="plus-circle-o" /> Add Contact
-          </Link>
+          </Link>*/}
         </Col>
         <Col xs={12} md={7} className="text-right">
           <Checkbox
