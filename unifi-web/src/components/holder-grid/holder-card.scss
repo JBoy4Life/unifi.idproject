@@ -1,6 +1,6 @@
 @import 'src/styles/variables';
 
-.asset-card {
+.holder-card {
   padding: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
@@ -16,8 +16,8 @@
   }
 }
 
-.asset-grid--large {
-  .asset-card {
+.holder-grid--large {
+  .holder-card {
     width: 50%;
     @media (min-width: 600px) {
       width: 33.33%;
@@ -31,8 +31,8 @@
   }
 }
 
-.asset-grid--small {
-  .asset-card {
+.holder-grid--small {
+  .holder-card {
     width: 33.33%;
     @media (min-width: 600px) {
       width: 25%;

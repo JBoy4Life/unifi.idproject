@@ -3,12 +3,12 @@ import PropTypes from 'prop-types'
 import cx from 'classnames'
 
 import { Avatar } from 'elements'
-import './asset-card.scss'
+import './holder-card.scss'
 
-const COMPONENT_CSS_CLASSNAME = 'asset-card'
+const COMPONENT_CSS_CLASSNAME = 'holder-card'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 
-const AssetCard = ({ image, children }) => (
+const HolderCard = ({ image, children }) => (
   <div
     className={cx(COMPONENT_CSS_CLASSNAME)}
   >
@@ -23,11 +23,11 @@ const Field = ({ children }) => (
   <div className={bemE('field')}>{children}</div>
 )
 
-AssetCard.Field = Field
+HolderCard.Field = Field
 
-AssetCard.propTypes = {
+HolderCard.propTypes = {
   children: PropTypes.node,
   image: PropTypes.object
 }
 
-export default AssetCard
+export default HolderCard

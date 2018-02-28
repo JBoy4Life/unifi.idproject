@@ -21,7 +21,7 @@ import NetworkReaderDetailsCard from './network-reader-details-card'
 
 import LiveSiteFloorView from './live-site-floor-view'
 
-import AssetGrid from './asset-grid'
+import HolderGrid from './holder-grid'
 
 import CrumbRoute from './crumb-route'
 
@@ -44,7 +44,7 @@ export {
   NetworkReaderDetailsCard,
   LiveSiteFloorView,
 
-  AssetGrid,
+  HolderGrid,
 
   CrumbRoute
 }

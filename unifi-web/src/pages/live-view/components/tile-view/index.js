@@ -2,14 +2,14 @@ import React, { Component } from 'react'
 import moment from 'moment'
 
 import * as ROUTES from 'utils/routes'
-import { AssetGrid } from 'components'
+import { HolderGrid } from 'components'
 
-const GridItem = AssetGrid.Item
+const GridItem = HolderGrid.Item
 
 const formatTime = (value) => moment.utc(value).format('LTS')
 
 const TileView = ({ items, viewMode }) => (
-  <AssetGrid viewMode={viewMode}>
+  <HolderGrid viewMode={viewMode}>
     {items.map(item => (
       <GridItem image={item.client.image} key={item.clientReference}>
         <GridItem.Field>{item.client.name}</GridItem.Field>
@@ -17,7 +17,7 @@ const TileView = ({ items, viewMode }) => (
         <GridItem.Field>{formatTime(item.detectionTime)}</GridItem.Field>
       </GridItem>
     ))}
-  </AssetGrid>
+  </HolderGrid>
 )
 
 export default TileView
