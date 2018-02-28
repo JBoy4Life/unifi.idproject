@@ -1,9 +1,67 @@
 import React, { Component } from 'react'
+import fp from 'lodash/fp'
+import PropTypes from 'prop-types'
+import { compose } from 'redux'
+import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
+import { Link } from 'react-router-dom'
 
-export default class ContactDetails extends Component {
+import * as ROUTES from 'utils/routes'
+import { Avatar, Col, Row } from 'elements'
+import { detectablesListSelector } from 'redux/detectable/selectors'
+import { holdersSelector } from 'redux/holders/selectors'
+import { listDetectables } from 'redux/detectable/actions'
+import { PageContentTitle } from 'components'
+import { withClientId } from 'hocs'
+import './index.scss'
+
+const holderSelector = (state, props) => 
+  fp.compose(
+    fp.find({ clientReference: props.match.params.holderId }),
+    holdersSelector
+  )(state)
+
+const COMPONENT_CSS_CLASSNAME = 'directory-details'
+const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
+
+class ContactDetails extends Component {
+  componentDidMount() {
+    const { clientId, listDetectables, match } = this.props
+    listDetectables(clientId, { assignment: match.params.holderId })
+  }
+
   render() {
-    return (
-      <div>Details</div>
-    )
+    const { holder, detectablesList } = this.props
+    return holder ? (
+      <Row>
+        <Col xs={24} md={8}>
+          <p><Link to={ROUTES.DIRECTORY}>&laquo; Back</Link></p>
+          <PageContentTitle>{holder.name}</PageContentTitle>
+          <p>ID number: {holder.clientReference}</p>
+          <Avatar image={holder.image} className={bemE('avatar')} />
+          <h3 className={bemE('dt-title')}>Detectables</h3>
+          {detectablesList.map(item => (
+            <div className={bemE('dt-item')} key={item.detectableId}>
+              <div className={bemE('dt-type')}>{item.detectableType}: {item.detectableId}</div>
+              <div>{item.description}</div>
+            </div>
+          ))}
+        </Col>
+      </Row>
+    ) : null
   }
 }
+
+export const selector = createStructuredSelector({
+  detectablesList: detectablesListSelector,
+  holder: holderSelector
+})
+
+export const actions = {
+  listDetectables
+}
+
+export default compose(
+  withClientId,
+  connect(selector, actions),
+)(ContactDetails)

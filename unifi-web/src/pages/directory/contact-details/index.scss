@@ -1,0 +1,18 @@
+.directory-details {
+  &__avatar {
+    margin: 30px 0;
+  }
+
+  &__dt-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  &__dt-item {
+    margin-bottom: 20px;
+  }
+
+  &__dt-type {
+    text-transform: uppercase;
+  }
+}

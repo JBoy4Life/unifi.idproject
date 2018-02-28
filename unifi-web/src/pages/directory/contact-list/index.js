@@ -15,8 +15,6 @@ import ViewModeHeader from './components/view-mode-header'
 import { Col, Row, TextInput } from 'elements'
 import { holdersSelector } from 'redux/holders/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
-import { listHolders } from 'redux/holders/actions'
-import { withClientId } from 'hocs'
 
 const predicate = (criteria) => (item) => {
   if (criteria.search) {
@@ -30,17 +28,10 @@ const predicate = (criteria) => (item) => {
 
 class ContactList extends Component {
   static propTypes = {
-    clientId: PropTypes.string.isRequired,
     history: PropTypes.object.isRequired,
     holders: PropTypes.array.isRequired,
-    listHolders: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired
   };
-
-  componentDidMount() {
-    const { clientId, listHolders } = this.props
-    listHolders(clientId, ['image', 'detectable-type'])
-  }
 
   setURLHref = (params) => {
     const { history } = this.props
@@ -85,12 +76,7 @@ export const selector = createStructuredSelector({
   holders: holdersSelector
 })
 
-export const actions = {
-  listHolders
-}
-
 export default compose(
   withRouter,
-  withClientId,
-  connect(selector, actions),
+  connect(selector),
 )(ContactList)

@@ -1,13 +1,28 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { compose } from 'redux'
+import { connect } from 'react-redux'
 import { Route, Switch /*, Redirect*/ } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
 import ContactDetails from './contact-details'
 import ContactList from './contact-list'
+import { listHolders } from 'redux/holders/actions'
 import { PageContent } from 'components'
 import { PageContainer } from 'smart-components'
+import { withClientId } from 'hocs'
 
-export default class Directory extends Component {
+class Directory extends Component {
+  static propTypes = {
+    clientId: PropTypes.string.isRequired,
+    listHolders: PropTypes.func.isRequired
+  };
+
+  componentDidMount() {
+    const { clientId, listHolders } = this.props
+    listHolders(clientId, ['image', 'detectable-type'])
+  }
+
   render() {
     return (
       <PageContainer>
@@ -15,6 +30,7 @@ export default class Directory extends Component {
           <PageContent.Main>
             <Switch>
               <Route
+                exact
                 path={ROUTES.DIRECTORY}
                 component={ContactList}
               />
@@ -30,3 +46,12 @@ export default class Directory extends Component {
     )
   }
 }
+
+export const actions = {
+  listHolders
+}
+
+export default compose(
+  withClientId,
+  connect(null, actions),
+)(Directory)

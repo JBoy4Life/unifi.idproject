@@ -17,7 +17,7 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
     <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
 
     <CrumbRoute exact path={ROUTES.MY_ACCOUNT} title="My Account" component={MyAccount} />
-    <CrumbRoute exact path={ROUTES.DIRECTORY} title="Directory" component={Directory} />
+    <CrumbRoute path={ROUTES.DIRECTORY} title="Directory" component={Directory} />
 
     <CrumbRoute exact path={ROUTES.CHANGE_PASSWORD} title="Change Password" component={ChangePassword} />
 
