@@ -35,7 +35,7 @@ class ContactDetails extends Component {
     return holder ? (
       <Row>
         <Col xs={24} md={8}>
-          <p><Link to={ROUTES.DIRECTORY}>&laquo; Back</Link></p>
+          <p className={bemE('back')}><Link to={ROUTES.DIRECTORY}>&laquo; Back</Link></p>
           <PageContentTitle>{holder.name}</PageContentTitle>
           <p>ID number: {holder.clientReference}</p>
           <Avatar image={holder.image} className={bemE('avatar')} />
