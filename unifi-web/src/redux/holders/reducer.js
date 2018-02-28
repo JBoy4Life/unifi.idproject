@@ -2,9 +2,7 @@ import unionBy from 'lodash/unionBy'
 
 import {
   HOLDER_GET_FETCH,
-  HOLDERS_LIST_FETCH,
-  PROGRAMMES_LIST_FETCH,
-  SITES_LIST_FETCH
+  HOLDERS_LIST_FETCH
 } from './types'
 
 const initialState = {
