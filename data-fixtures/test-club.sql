@@ -20,8 +20,8 @@ test-club	test-site	Test Site	4 Privet Drive, Little Whingeing, Surrey
 
 
 COPY reader (client_id, site_id, reader_sn, endpoint) FROM stdin;
-test-club	test-site	1000	127.0.0.1:5084
-test-club	test-site	1001	127.0.0.1:5085
+test-club	test-site	37017090614	192.168.42.167:5084
+test-club	test-site	1001	127.0.0.1:5084
 \.
 
 
@@ -35,8 +35,8 @@ test-club	test-site	e	Zone E
 
 
 COPY antenna (client_id, reader_sn, port_number, site_id, zone_id) FROM stdin;
-test-club	1000	1	test-site	a
-test-club	1000	2	test-site	b
+test-club	37017090614	1	test-site	a
+test-club	1001	4	test-site	b
 test-club	1001	1	test-site	c
 test-club	1001	2	test-site	d
 test-club	1001	3	test-site	e
@@ -45,9 +45,9 @@ test-club	1001	3	test-site	e
 
 COPY detectable (client_id, detectable_id, detectable_type, description, active) FROM stdin;
 test-club	000	uhf-epc	guest pass	t
-test-club	001	uhf-epc	guest pass	t
-test-club	002	uhf-epc	VIP pass	t
-test-club	003	uhf-epc	member pass	t
+test-club	27957000	uhf-epc	guest pass	t
+test-club	111100000000000000000000	uhf-epc	VIP pass	t
+test-club	888800000762000000000000	uhf-epc	member pass	t
 test-club	004	uhf-epc	member pass	t
 test-club	005	uhf-epc	member pass	t
 test-club	006	uhf-epc	VIP pass	t
@@ -173,9 +173,9 @@ test-club	R25	\\xffd8ffe000104a46494600010100000100010000fffe003b43524541544f523
 
 COPY assignment (client_id, detectable_id, detectable_type, client_reference) FROM stdin;
 test-club	000	uhf-epc	R00
-test-club	001	uhf-epc	R01
-test-club	002	uhf-epc	R02
-test-club	003	uhf-epc	R03
+test-club	27957000	uhf-epc	R01
+test-club	888800000762000000000000	uhf-epc	R02
+test-club	111100000000000000000000	uhf-epc	R03
 test-club	004	uhf-epc	R04
 test-club	005	uhf-epc	R05
 test-club	006	uhf-epc	R06
