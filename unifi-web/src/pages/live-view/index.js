@@ -7,7 +7,7 @@ import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
-import AssetGrid from './components/asset-grid'
+import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import ZoneFilter from './components/zone-filter'
 import { getDiscoveredList } from './utils/helpers'
@@ -167,7 +167,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-              <AssetGrid items={zoneItems} viewMode={view} />
+              <TileView items={zoneItems} viewMode={view} />
             </div>
           </PageContent.Main>
         </PageContent>
