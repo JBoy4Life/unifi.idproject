@@ -4,7 +4,7 @@ import { Field, reduxForm } from 'redux-form'
 
 import { TextField /* CheckboxField */ } from 'components'
 import { Alert, Button } from 'elements'
-            
+
 import validate from './validate'
 
 class ResetPasswordForm extends Component {

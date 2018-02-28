@@ -7,7 +7,6 @@ export const CHANGE_PASSWORD = '/change-password'
 export const FORGOT_PASSWORD = '/forgot-password'
 export const RESET_PASSWORD = '/reset-password/:username/:token'
 
-export const DIRECTORY = '/directory'
 export const EVACUATION = '/evacuation'
 export const EVACUATION_DIRECTORY_VIEW = '/evacuation/directory'
 export const EVACUATION_FLOOR_VIEW = '/evacuation/floor'
@@ -34,5 +33,9 @@ export const ATTENDANCE_SCHEDULES_DETAIL = '/attendance/schedules/:scheduleId';
 export const ATTENDANCE_SCHEDULES_BLOCK_DRILLDOWN = '/attendance/schedules/:scheduleId/:clientReference';
 export const ATTENDANCE_REPORTS = '/attendance/reports';
 export const ATTENDANCE_CUSTOM_REPORTS = '/attendance/custom-reports';
+
+export const DIRECTORY = '/directory'
+export const DIRECTORY_CONTACT_DETAIL = '/directory/:holderId'
+export const DIRECTORY_NEW_CONTACT = '/directory/new'
 
 export default null

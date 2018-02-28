@@ -6,7 +6,7 @@ import CancelPasswordReset from './cancel-password-reset'
 import ChangePassword from './change-password'
 import ForgotPassword from './forgot-password'
 import ResetPassword from './reset-password'
-import Discovery from './discovery'
+import Directory from './directory'
 
 import Attendance from './attendance'
 import Evacuation from './evacuation'
@@ -27,7 +27,7 @@ export {
   ChangePassword,
   ForgotPassword,
   ResetPassword,
-  Discovery,
+  Directory,
 
   Attendance,
   Evacuation,

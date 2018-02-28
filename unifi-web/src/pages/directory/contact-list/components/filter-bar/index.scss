@@ -1,0 +1,11 @@
+.directory-filter-bar {
+  margin-bottom: 20px;
+
+  &__responsive-mb {
+    margin-bottom: 20px;
+
+    @media (min-width: 768px) {
+      margin-bottom: 0;
+    }
+  }
+}

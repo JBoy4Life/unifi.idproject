@@ -7,7 +7,7 @@ import * as ROUTES from 'utils/routes'
 
 import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
-  Discovery, LiveView, SiteManager, Users, Navigation,
+  Directory, LiveView, SiteManager, Users, Navigation,
   ClientRegistry, Attendance, ForgotPassword, ResetPassword,
   CancelPasswordReset, ChangePassword
 } from '../pages'
@@ -17,7 +17,7 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
     <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
 
     <CrumbRoute exact path={ROUTES.MY_ACCOUNT} title="My Account" component={MyAccount} />
-    <CrumbRoute exact path={ROUTES.DIRECTORY} title="Discovery" component={Discovery} />
+    <CrumbRoute exact path={ROUTES.DIRECTORY} title="Directory" component={Directory} />
 
     <CrumbRoute exact path={ROUTES.CHANGE_PASSWORD} title="Change Password" component={ChangePassword} />
 

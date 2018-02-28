@@ -21,9 +21,9 @@ export default class TopNavigation extends Component {
           {/*Sitemap*/}
         {/*</Menu.Item>*/}
 
-        {/*<Menu.Item key="/directory">*/}
-          {/*Directory*/}
-        {/*</Menu.Item>*/}
+        <Menu.Item key="/directory">
+          Directory
+        </Menu.Item>
 
         {liveViewEnabled && <Menu.Item key="/live-view">
           Live View
