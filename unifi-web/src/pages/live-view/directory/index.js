@@ -1,11 +1,20 @@
 import React, { PureComponent } from 'react'
-import moment from 'moment'
 import fp from 'lodash/fp'
-
+import moment from 'moment'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
+
+import * as ROUTES from 'utils/routes'
+import AssetGrid from './components/asset-grid'
+import ViewModeHeader from './components/view-mode-header'
+import ZoneFilter from './components/zone-filter'
+import { getDiscoveredList } from './utils/helpers'
+import { PageContentTitle, PageContentUnderTitle } from 'components'
+import { parseQueryString, jsonToQueryString } from 'utils/helpers'
+import { withClientId } from 'hocs'
+import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
 
 import {
   actions as zonesActions,
@@ -17,16 +26,10 @@ import {
   selectors as settingsSelectors
 } from 'redux/settings'
 
-import * as ROUTES from 'utils/routes'
-
-import { PageContentTitle, PageContentUnderTitle } from 'components'
-import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-import { withClientId } from 'hocs'
-import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
-
-import ZoneFilter from './components/zone-filter'
-import ViewModeHeader from './components/view-mode-header'
-import AssetGrid from './components/asset-grid'
+import {
+  actions as holdersActions,
+  selectors as holdersSelectors
+} from 'redux/holders'
 
 import './index.scss'
 
@@ -54,12 +57,12 @@ class DirectoryView extends PureComponent {
   }
 
   componentDidMount() {
-    const { listSites, listZones, listHolder, listenToSubscriptions, clientId } = this.props
+    const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
     listSites(clientId)
       .then((result) => {
         const { siteId } = this.props
         listZones(clientId, siteId)
-        listHolder(clientId, siteId)
+        listHolders(clientId, ['image'])
         listenToSubscriptions(clientId, siteId)
       })
       .catch(err => console.error(err))
@@ -173,7 +176,7 @@ class DirectoryView extends PureComponent {
 }
 
 export const selector = createStructuredSelector({
-  discoveredList: zoneSelectors.getDiscoveredList,
+  discoveredList: getDiscoveredList,
   siteId: settingsSelectors.siteIdSelector,
   liveDiscoveryUpdate: compose(
     fp.get('liveDiscoveryUpdate'),
@@ -184,6 +187,7 @@ export const selector = createStructuredSelector({
 
 export const actions = {
   ...zonesActions,
+  listHolders: holdersActions.listHolders,
   listSites: settingsActions.listSites
 }
 

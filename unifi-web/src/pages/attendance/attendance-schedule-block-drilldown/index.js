@@ -36,8 +36,8 @@ import {
   getProcessedCount
 } from 'pages/attendance/helpers'
 
-import { getHolder } from 'redux/settings/actions'
-import { holdersMetaSelector } from 'redux/settings/selectors'
+import { getHolder } from 'redux/holders/actions'
+import { holdersMetaSelector } from 'redux/holders/selectors'
 
 const absenceLabels = {
   'present': "Present",
