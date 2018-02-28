@@ -49,6 +49,12 @@ export const jsonToQueryString = (obj) => {
   return pairs.length ? `?${pairs.join('&')}` : ''
 }
 
+export const referenceMap = (array, targetkey) =>
+  Array.isArray(array) ? array.reduce((acc, item) => {
+    acc[item[targetkey]] = item
+    return acc
+  }, {}) : {}
+
 export const sortSchedules = fp.sortBy((item) =>
   fp.compose(
     (str) => trimStart(str, '- '),

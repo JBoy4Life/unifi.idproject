@@ -7,14 +7,7 @@ export const zonesInfoSelector = fp.compose(
   getReducer
 )
 
-export const getDiscoveredList = (state) => {
-  const liveZones = getReducer(state)
-
-  const { holdersInfo, liveDiscovery, zonesInfo } = liveZones
-  return liveDiscovery.map((discovery, idx) => ({
-    ...discovery,
-    client: holdersInfo[discovery.clientReference],
-    zone: zonesInfo[discovery.zoneId],
-    key: idx,
-  }))
-}
+export const liveDiscoverySelector = fp.compose(
+  fp.get('liveDiscovery'),
+  getReducer
+)
