@@ -7,7 +7,7 @@ import { Col, Row } from 'elements'
 import { PageContentUnderTitle } from 'components'
 import './index.scss'
 
-const COMPONENT_CSS_CLASSNAME = 'directory-view-header'
+const COMPONENT_CSS_CLASSNAME = 'live-view-header'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 const handleFilterOption = (input, option) => {
   return option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
