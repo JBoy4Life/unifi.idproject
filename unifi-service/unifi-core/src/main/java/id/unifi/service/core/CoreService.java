@@ -140,7 +140,7 @@ public class CoreService {
             while (true) {
                 if (detectionQueue.size() < 200) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         log.info("Detection processing thread interrupted, stopping");
                         return;

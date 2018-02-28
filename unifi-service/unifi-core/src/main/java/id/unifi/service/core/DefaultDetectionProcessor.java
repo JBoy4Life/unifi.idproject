@@ -1,34 +1,29 @@
 package id.unifi.service.core;
 
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import id.unifi.service.common.api.MessageListener;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.common.detection.ClientDetectable;
 import id.unifi.service.common.detection.Detection;
-import id.unifi.service.common.detection.RawDetectionReport;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
-import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
-import id.unifi.service.core.db.tables.records.AntennaRecord;
+import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.site.ResolvedDetection;
-import static java.util.Collections.list;
 import static java.util.Collections.newSetFromMap;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 import org.eclipse.jetty.websocket.api.Session;
-import org.jooq.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class DefaultDetectionProcessor implements DetectionProcessor {
@@ -38,14 +33,19 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
 
     private final Database db;
     private final LoadingCache<String, Set<ListenerWithSession>> detectionListeners;
+    private final Cache<ClientDetectable, Boolean> recentDetectables; // FIXME
 
     public DefaultDetectionProcessor(DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE);
         this.detectionListeners = CacheBuilder.newBuilder()
                 .build(CacheLoader.from((String k) -> newSetFromMap(new HashMap<ListenerWithSession, Boolean>())));
+        this.recentDetectables = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.SECONDS).build();
     }
 
     public void process(Detection detection) {
+        if (recentDetectables.getIfPresent(detection.detectable) != null) return; // FIXME
+        recentDetectables.put(detection.detectable, true);
+
         String clientId = detection.detectable.clientId;
         Set<ListenerWithSession> listeners = detectionListeners.getIfPresent(clientId);
         if (listeners == null || listeners.isEmpty()) {
