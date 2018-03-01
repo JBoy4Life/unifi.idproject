@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
-import filter from 'lodash/filter'
-import pick from 'lodash/pick'
+import fp from 'lodash/fp'
 import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
@@ -71,7 +70,7 @@ class ContactList extends Component {
       ...params,
       search: this.state.search || params.search
     }
-    const filteredHolders = filter(holders, predicate(criteria))
+    const filteredHolders = fp.filter(predicate(criteria))(holders)
 
     return (
       <div>
@@ -90,7 +89,10 @@ class ContactList extends Component {
 }
 
 export const selector = createStructuredSelector({
-  holders: holdersSelector
+  holders: fp.compose(
+    fp.sortBy('name'),
+    holdersSelector
+  )
 })
 
 export default compose(
