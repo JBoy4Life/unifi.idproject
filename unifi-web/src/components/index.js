@@ -21,6 +21,8 @@ import NetworkReaderDetailsCard from './network-reader-details-card'
 
 import LiveSiteFloorView from './live-site-floor-view'
 
+import HolderGrid from './holder-grid'
+
 import CrumbRoute from './crumb-route'
 
 export {
@@ -41,6 +43,8 @@ export {
   EvacuationProgressBar,
   NetworkReaderDetailsCard,
   LiveSiteFloorView,
+
+  HolderGrid,
 
   CrumbRoute
 }

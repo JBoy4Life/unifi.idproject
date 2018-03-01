@@ -1,9 +1,23 @@
-.asset-card {
+@import 'src/styles/variables';
+
+.holder-card {
   padding: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
+  
+  &__text {
+    padding: 8px;
+    border: 1px solid $unifi-line-color;
+    border-top: none;
+  }
 
-  &--large {
+  &__image {
+    border: 1px solid $unifi-line-color;
+  }
+}
+
+.holder-grid--large {
+  .holder-card {
     width: 50%;
     @media (min-width: 600px) {
       width: 33.33%;
@@ -15,8 +29,10 @@
       width: 20%;
     }
   }
+}
 
-  &--small {
+.holder-grid--small {
+  .holder-card {
     width: 33.33%;
     @media (min-width: 600px) {
       width: 25%;
@@ -27,16 +43,5 @@
     @media (min-width: 1200px) {
       width: 16.66%;
     }
-  }
-
-  &__meta {
-    padding-top: 8px;
-  }
-
-  &__image {
-    width: 100%;
-    padding-top: 100%;
-    background-color: #ddd;
-    background-size: cover;
   }
 }
