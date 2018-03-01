@@ -2,54 +2,105 @@ $bootstrap_script = <<BOOTSTRAP
 #!/bin/sh
 set -eu
 
-# Add unoffocial Oracle JDK repo
-apt-get -y install software-properties-common dirmngr
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
-add-apt-repository "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main"
-echo "oracle-java9-installer shared/accepted-oracle-license-v1-1 select true" |\
-  debconf-set-selections
-
-# Install everything
-apt-get -y update
-apt-get -y upgrade
-apt-get -y install oracle-java9-installer oracle-java9-set-default \
-                   oracle-java9-unlimited-jce-policy postgresql redis-server \
-                   git maven net-tools cfengine3 nginx rabbitmq-server
-
 # Sorry.
-apt-get -y install curl
-curl -sL https://deb.nodesource.com/setup_8.x | bash -
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-apt-get update && apt-get -y install yarn
-
-# Set up DB
-for hba_file in /etc/postgresql/*/main/pg_hba.conf; do
-  echo "local all all trust\nhost all all 0.0.0.0/0 trust" > "$hba_file"
-done
-sudo systemctl reload postgresql
-sudo -u postgres createuser -s vagrant || true
-sudo -u vagrant dropdb --if-exists unifi
-sudo -u vagrant createdb unifi
+# apt-get -y install curl
+# curl -sL https://deb.nodesource.com/setup_8.x | bash -
+# curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+# echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+# apt-get update && apt-get -y install yarn
 
 sudo -u vagrant ln -sf /vagrant ~vagrant/unifi.id
 BOOTSTRAP
 
 $post_up_msg = <<MSG
-unifi.id services development VM
-================================
+= unifi.id local development environment
 
-Now run `vagrant ssh` to get into the VM, then:
+There are five node roles available:
 
-    cd unifi.id/unifi-service
-    mvn clean install
+* policy-server: hosts CFEngine configuration.
+* app: serves web application and other resources.
+* services: backend services.
+* db: transactional database.
+* agent: on-premises agent.
+
+You may `vagrant ssh <role>` to access any of these.
+
+Note that all configuration is done via CFEngine. To change what is
+installed on a particular node:
+
+. Edit `deployment/services/autorun/unifi.cf` in the project folder.
+. `vagrant ssh policy-server`
+. `cp /vagrant/**/unifi.cf /var/cfengine/masterfiles/service/autorun/unifi.cf`
+. `cd /var/cfengine/inputs`
+. `cf-agent -Kf failsafe.cf`
+. Log out.
+
+   All other nodes will pick up the new policy and apply it within a few
+   minutes, but if you want to force it:
+
+. `vagrant ssh <role>`
+. `cd /var/cfengine/inputs`
+. `cf-agent -Kf failsafe.cf && cf-agent -v -D unifi_role_<role> -Kf promises.cf`
+.  Repeat until 100% of promises are kept.
+
 MSG
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "debian/contrib-stretch64" # contrib includes vbox guest additions
-  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
-  config.vm.hostname = "unifi-services.box"
-  config.vm.provision :shell, :inline => $bootstrap_script
-  config.vm.network "public_network"
+
+  config.vm.box = "generic/debian9"
+  config.vm.synced_folder ".", "/vagrant"
   config.vm.post_up_message = $post_up_msg
+
+  config.vm.define "policy-server" do |ps|
+    ps.vm.provision :shell, :inline => $bootstrap_script
+    ps.vm.provision "cfengine" do |cf|
+        cf.am_policy_hub = true
+        cf.policy_server_address = "10.0.80.10"
+        cf.files_path = "deployment"
+    end
+    ps.vm.hostname = "a.policy-server.local.unifi.id"
+    ps.vm.network "private_network", ip: "10.0.80.10"
+    ps.vm.network "public_network"
+  end
+
+  config.vm.define "app" do |app|
+    app.vm.provision :shell, :inline => $bootstrap_script
+    app.vm.provision "cfengine" do |cf|
+        cf.policy_server_address = "10.0.80.10"
+    end
+    app.vm.hostname = "a.app.local.unifi.id"
+    app.vm.network "private_network", ip: "10.0.80.11"
+    app.vm.network "public_network"
+  end
+
+  config.vm.define "services" do |services|
+    services.vm.provision :shell, :inline => $bootstrap_script
+    services.vm.provision "cfengine" do |cf|
+        cf.policy_server_address = "10.0.80.10"
+    end
+    services.vm.hostname = "a.services.local.unifi.id"
+    services.vm.network "private_network", ip: "10.0.80.12"
+    services.vm.network "public_network"
+  end
+
+  config.vm.define "db" do |db|
+    db.vm.provision :shell, :inline => $bootstrap_script
+    db.vm.provision "cfengine" do |cf|
+        cf.policy_server_address = "10.0.80.10"
+    end
+    db.vm.hostname = "a.db.local.unifi.id"
+    db.vm.network "private_network", ip: "10.0.80.13"
+    db.vm.network "public_network"
+  end
+
+  config.vm.define "agent" do |agent|
+    agent.vm.provision :shell, :inline => $bootstrap_script
+    agent.vm.provision "cfengine" do |cf|
+        cf.policy_server_address = "10.0.80.10"
+    end
+    agent.vm.hostname = "a.agent.local.unifi.id"
+    agent.vm.network "private_network", ip: "10.0.80.14"
+    agent.vm.network "public_network"
+  end
+
 end

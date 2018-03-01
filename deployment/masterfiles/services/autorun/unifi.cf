@@ -1,0 +1,221 @@
+bundle common unifi {
+  vars:
+    any::
+      "hostname"
+          string => execresult("/bin/hostname -f", "noshell");
+      "parts"
+          slist => splitstring("$(hostname)", "\\.", "3");
+      "unifi_env"
+          string => nth("parts", 2);
+      "unifi_role"
+          string => nth("parts", 1);
+      "unifi_nodeid"
+          string => nth("parts", 0);
+  classes:
+    any::
+      "unifi_env_$(unifi_env)"
+          expression => "any";
+      "unifi_role_$(unifi_role)"
+          expression => "any";
+      "unifi_nodeid_$(unifi_nodeid)"
+          expression => "any";
+  reports:
+    any::
+      "Detected hostname: $(hostname)";
+      "Detected parts: $(parts)";
+      "Detected unifi.id environment: $(unifi_env).";
+      "Detected unifi.id role: $(unifi_role).";
+      "Detected unifi.id node ID: $(unifi_nodeid).";
+}
+
+bundle agent unifi_role {
+  meta:
+    "tags" slist => {
+        "autorun"
+    };
+  methods:
+    any::
+      "unifi_baseline";
+    unifi_role_app::
+      "unifi_role_app";
+    unifi_role_services::
+      "unifi_role_services";
+    unifi_role_db::
+      "unifi_role_db";
+}
+
+bundle agent unifi_baseline {
+  vars:
+    any::
+      "baseline_packages"
+          slist => {
+              "ack",
+              "curl",
+              "git",
+              "net-tools",
+              "vim"
+          };
+
+  packages:
+    any::
+      "$(baseline_packages)"
+          policy => "present",
+          package_module => apt_get;
+}
+
+bundle agent unifi_role_app {
+  methods:
+      "yarn";
+}
+
+bundle agent unifi_role_services {
+  methods:
+      "oracle_java_jdk";
+  packages:
+      "maven"
+          policy => "present",
+          package_module => apt_get;
+}
+
+bundle agent unifi_role_db {
+  methods:
+      "postgresql";
+}
+
+bundle agent oracle_java_jdk {
+  vars:
+      "prereq_packages"
+          slist => {
+              "software-properties-common",
+              "dirmngr",
+              "debconf-utils"
+          };
+      "java_packages" 
+          slist => {
+              "oracle-java9-installer",
+              "oracle-java9-set-default",
+              "oracle-java9-unlimited-jce-policy"
+          };
+      "keyserver"
+          string => "keyserver.ubuntu.com";
+      "key_fp"
+          string => "7B2C 3B08 89BF 5709 A105  D03A C251 8248 EEA1 4886";
+      "repository_url"
+          string => "http://ppa.launchpad.net/webupd8team/java/ubuntu";
+      "ubuntu_version"
+          string => "xenial main";
+  classes:
+      "apt_key_added"
+          expression => returnszero("/usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+      "apt_repo_added"
+          expression => returnszero("/bin/fgrep \"deb $(repository_url) $(ubuntu_version)\" /etc/apt/sources.list", "noshell");
+      "oracle_licence_accepted"
+          expression => returnszero("/usr/bin/debconf-get-selections | /bin/fgrep accepted-oracle-license | /bin/fgrep true", "useshell");
+  files:
+      "/etc/apt/sources.list.d/oracle-java.list"
+          create => true,
+          edit_line => oracle_java_apt,
+          classes => if_repaired("sources_list_changed");
+  commands:
+    !apt_key_added::
+      "/usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(key_fp)\"";
+    !apt_repo_added::
+      "/usr/bin/add-apt-repository \"deb $(repository_url) $(ubuntu_version)\" && apt-get update"
+          contain => useshell;
+    !oracle_licence_accepted::
+      "/bin/echo"
+          arglist => {
+              "\"oracle-java9-installer shared/accepted-oracle-license-v1-1 select true\"",
+              "|",
+              "debconf-set-selections"
+          },
+          contain => useshell;
+    sources_list_changed::
+      "/usr/bin/apt-get update";
+  packages: 
+      "$(prereq_packages)"
+          policy => "present",
+          package_module => apt_get;
+      "$(java_packages)"
+          policy => "present",
+          package_module => apt_get;
+}
+
+bundle agent postgresql {
+  vars:
+    unifi_env_local::
+      "dbuser" string => "vagrant";
+      "dbname" string => "unifi";
+  classes:
+      "dbuser_added"
+          expression => returnszero("/usr/bin/sudo -u $(dbuser) /usr/bin/psql -c \"SELECT;\" template1", "noshell");
+      "database_created"
+          expression => returnszero("/usr/bin/sudo -u $(dbuser) /usr/bin/psql -c \"SELECT;\" $(dbname)", "noshell");
+  commands:
+    !dbuser_added::
+      "/usr/bin/createuser -s $(dbuser)"
+          contain => exec_owner("postgres");
+    !database_created::
+      "/usr/bin/createdb $(dbname)"
+          contain => exec_owner("$(dbuser)");
+  files:
+      "/etc/postgresql/.*/main/pg_hba.conf"
+          edit_line => pg_hba,
+          classes => if_repaired("pg_hba_changed");
+  packages:
+      "postgresql"
+          policy => "present",
+          package_module => apt_get;
+  services:
+    pg_hba_changed::
+      "postgresql"
+          service_policy => reload;
+}
+
+body contain useshell {
+  useshell => "useshell";
+}
+
+body contain exec_owner(uid) {
+  exec_owner => "$(uid)";
+}
+
+bundle edit_line pg_hba {
+  insert_lines:
+      "# Unifi.id
+local all all trust
+host all all 0.0.0.0/0 trust"
+          location => pg_hba_location;
+}
+
+body location pg_hba_location {
+  select_line_matching => "# TYPE .*";
+  before_after => "after";
+}
+
+bundle agent yarn {
+  vars:
+      "key_fp"
+          string => "72EC F46A 56B4 AD39 C907  BBB7 1646 B01B 86E5 0310";
+  classes:
+      "nodesource_repo_added"
+          expression => fileexists("/etc/apt/sources.list.d/nodesource.list");
+      "apt_key_added"
+          expression => returnszero("/usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+      "yarn_repo_added"
+          expression => fileexists("/etc/apt/sources.list.d/yarn.list");
+  commands:
+    !nodesource_repo_added::
+      "/usr/bin/curl -sL https://deb.nodesource.com/setup_8.x | /bin/bash -"
+          contain => useshell;
+    !apt_key_added::
+      "/usr/bin/curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/apt-key add -"
+          contain => useshell;
+    !yarn_repo_added::
+      "(/bin/echo \"deb https://dl.yarnpkg.com/debian/ stable main\" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list) && apt-get update"
+          contain => useshell;
+  packages:
+      "yarn"
+          policy => "present",
+          package_module => apt_get;
+}
