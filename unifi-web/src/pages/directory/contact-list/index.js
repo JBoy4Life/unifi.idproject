@@ -18,7 +18,7 @@ import { jsonToQueryString, parseQueryString } from 'utils/helpers'
 
 const predicate = (criteria) => (item) => {
   if (criteria.search) {
-    return item.name.includes(criteria.search)
+    return item.name.toUpperCase().includes(criteria.search.toUpperCase())
   }
   if (!criteria.showAll) {
     return item.active
@@ -32,6 +32,13 @@ class ContactList extends Component {
     holders: PropTypes.array.isRequired,
     location: PropTypes.object.isRequired
   };
+
+  constructor(props) {
+    super(props)
+    this.state = {
+      search: null
+    }
+  }
 
   setURLHref = (params) => {
     const { history } = this.props
@@ -50,15 +57,25 @@ class ContactList extends Component {
     this.setURLHref(params)
   };
 
+  handleSearchChange = (e) => {
+    this.setState({
+      search: e.target.value
+    })
+  }
+
   render() {
     const { holders, location } = this.props
     const params = parseQueryString(location.search)
     const { view = 'list' } = params
-    const filteredHolders = filter(holders, predicate(params))
+    const criteria = {
+      ...params,
+      search: this.state.search || params.search
+    }
+    const filteredHolders = filter(holders, predicate(criteria))
 
     return (
       <div>
-        <FilterBar setURLHref={this.setURLHref} />
+        <FilterBar setURLHref={this.setURLHref} onSearchChange={this.handleSearchChange} />
         <ViewModeHeader
           onViewModeChange={this.handleViewModeChange}
           viewMode={view}

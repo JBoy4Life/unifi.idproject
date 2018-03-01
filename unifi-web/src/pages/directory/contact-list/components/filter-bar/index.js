@@ -14,6 +14,7 @@ class FilterBar extends Component {
   static propTypes = {
     history: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
+    onSearchChange: PropTypes.func,
     setURLHref: PropTypes.func.isRequired
   };
 
@@ -26,7 +27,7 @@ class FilterBar extends Component {
     setURLHref(params)
   };
 
-  handleSearch = (search) => {
+  handleSearchEnter = (search) => {
     const { location, setURLHref } = this.props
     const params = {
       ...parseQueryString(location.search),
@@ -45,7 +46,7 @@ class FilterBar extends Component {
   }
 
   render() {
-    const { location } = this.props
+    const { location, onSearchChange } = this.props
     const params = parseQueryString(location.search)
 
     return (
@@ -54,7 +55,8 @@ class FilterBar extends Component {
           <TextInput.Search
             defaultValue={params.search}
             placeholder="Search"
-            onSearch={this.handleSearch}
+            onChange={onSearchChange}
+            onSearch={this.handleSearchEnter}
             enterButton
             size="large"
           />
