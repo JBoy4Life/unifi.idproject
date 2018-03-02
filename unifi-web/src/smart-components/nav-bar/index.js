@@ -4,13 +4,14 @@ import { withRouter } from 'react-router'
 
 import logo from 'assets/images/ucl-logo.svg'
 import { Collapse, Dropdown, Menu, Icon } from 'elements'
+import { LinkedNavigationMenu } from '../'
 
 import './index.scss'
 
-const COMPONENT_CSS_CLASS = 'ident-bar'
+const COMPONENT_CSS_CLASS = 'nav-bar'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASS}__${suffix}`
 
-class IdentBar extends Component {
+class NavBar extends Component {
   constructor(props) {
     super(props)
 
@@ -56,6 +57,7 @@ class IdentBar extends Component {
     return (
       <div className={COMPONENT_CSS_CLASS}>
         <img className={bemE('logo')} src={logo} alt="logo" />
+        <LinkedNavigationMenu />
         {user && (
           <div className={bemE('user-content')}>
             <button
@@ -87,4 +89,4 @@ class IdentBar extends Component {
   }
 }
 
-export default withRouter(IdentBar)
+export default withRouter(NavBar)

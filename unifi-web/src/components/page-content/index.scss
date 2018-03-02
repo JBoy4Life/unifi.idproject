@@ -5,7 +5,7 @@
 }
 
 .page-content-layout {
-  padding-top: 50px;
+  padding: 50px 0;
   background-color: #fff;
   max-width: 1140px;
   margin: 0 auto;
@@ -19,6 +19,6 @@
 .page-content {
   padding: 15px;
   @media (min-width: 992px) {
-    padding: 24px;
+    padding: 0 50px;
   }
 }

@@ -7,8 +7,7 @@ import { withRouter } from 'react-router'
 
 import { actions as userActions, selectors as userSelectors } from 'redux/user'
 import { Breadcrumb, Layout, Aux } from 'elements'
-import { IdentBar } from 'components'
-import { LinkedNavigationMenu } from '../'
+import { NavBar } from '../'
 
 import './index.scss'
 
@@ -17,14 +16,11 @@ const { Header, Content } = Layout
 
 const renderHeader = props => (
   <Aux>
-    <Header className="header-ident">
-      <IdentBar
+    <Header className="header-nav">
+      <NavBar
         onLogout={props.logoutRequest}
         user={props.user}
       />
-    </Header>
-    <Header className="header-nav">
-      <LinkedNavigationMenu />
     </Header>
   </Aux>
 )
