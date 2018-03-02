@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import cn from 'classnames'
 import { withRouter } from 'react-router'
 
-import logo from 'assets/images/ucl-logo.svg'
+import logo from 'assets/images/unifi-logo.svg'
 import { Collapse, Dropdown, Menu, Icon } from 'elements'
 import { LinkedNavigationMenu } from '../'
 

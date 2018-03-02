@@ -6,7 +6,7 @@ import { createStructuredSelector } from 'reselect'
 
 import './index.scss'
 import logo from 'assets/images/ucl-logo-2.png'
-import unifilogo from 'assets/images/unifi-logo.png'
+import unifilogo from 'assets/images/unifi-logo.svg'
 import { actions as userActions } from 'redux/user'
 import { formSubmit } from 'utils/form'
 import { noop } from 'utils/helpers'
