@@ -35,6 +35,7 @@ import Steps from './steps'
 
 import { Row, Col } from './grid-row'
 import Layout from './layout'
+import SubmitRow from './submit-row'
 
 import DatePicker from './date-picker'
 import SingleFilePicker from './single-file-picker'
@@ -68,6 +69,7 @@ export {
   Icon,
 
   Row, Col,
+  SubmitRow,
   Layout,
 
   CircularProgressBar,

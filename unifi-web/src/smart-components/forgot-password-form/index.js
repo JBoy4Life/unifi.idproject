@@ -1,9 +1,11 @@
 import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
+import { compose } from 'redux'
 import { Field, reduxForm } from 'redux-form'
+import { withRouter } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
-import { Alert, Button } from 'elements'
+import { Alert, Button, Col, Row, SubmitRow } from 'elements'
 import { TextField } from 'components'
 import './index.scss'
 
@@ -56,10 +58,16 @@ class ForgotPasswordForm extends Component {
               validate={[isRequired]}
               component={TextField}
             />
-            <div>
-              <Button htmlType="submit" type="primary">Submit</Button>{' '}
-              <Button type="default" onClick={this.handleCancel}>Cancel</Button>
-            </div>
+            <SubmitRow>
+              <Row type="flex" gutter={20}>
+                <Col>
+                  <Button htmlType="submit" type="primary" wide>Submit</Button>
+                </Col>
+                <Col>
+                  <Button wide onClick={this.handleCancel}>Cancel</Button>
+                </Col>
+              </Row>
+            </SubmitRow>
           </Fragment>
         )}
       </form>

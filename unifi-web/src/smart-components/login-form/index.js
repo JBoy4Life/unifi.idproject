@@ -4,7 +4,7 @@ import { Field, reduxForm } from 'redux-form'
 import { Link } from 'react-router-dom'
 
 import { TextField /* CheckboxField */ } from 'components'
-import { Alert, Button } from 'elements'
+import { Alert, Button, SubmitRow } from 'elements'
             
 import validate from './validate'
 
@@ -38,7 +38,9 @@ class LoginForm extends Component {
           id="remember"
           component={CheckboxField}
         /> */}
-        <Button htmlType="submit" type="primary">Log In</Button>
+        <SubmitRow>
+          <Button htmlType="submit" type="primary" wide>Log In</Button>
+        </SubmitRow>
       </form>
     )
   }

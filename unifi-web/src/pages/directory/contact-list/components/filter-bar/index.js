@@ -58,7 +58,6 @@ class FilterBar extends Component {
             onChange={onSearchChange}
             onSearch={this.handleSearchEnter}
             enterButton
-            size="large"
           />
         </Col>
         <Col xs={12} md={7}>
@@ -70,6 +69,7 @@ class FilterBar extends Component {
           <Checkbox
             onChange={this.handleActiveChange}
             checked={Boolean(params.showAll)}
+            className={bemE('ticker')}
           >
             Show deactivated
           </Checkbox>

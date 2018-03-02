@@ -27,7 +27,8 @@ class ViewModeHeader extends Component {
   static propTypes = {
     onViewModeChange: PropTypes.func,
     resultCount: PropTypes.number,
-    viewMode: PropTypes.string
+    viewMode: PropTypes.string,
+    zoneId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
   }
 
   handleViewModeChange = (mode) => () => {
@@ -35,12 +36,14 @@ class ViewModeHeader extends Component {
   }
 
   render() {
-    const { onViewModeChange, resultCount, viewMode } = this.props
-    return (
+    const { onViewModeChange, resultCount, viewMode, zoneId } = this.props
+    const zoneIsSelected = Boolean(zoneId)
+
+    return zoneIsSelected ? (
       <div className={COMPONENT_CSS_CLASSNAME}>
-        <Row gutter={16}>
+        <Row gutter={16} type="flex" align="middle">
           <Col xs={12}>
-            {resultCount > 0 && <PageContentUnderTitle>Showing {resultCount} contacts</PageContentUnderTitle>}
+            <PageContentUnderTitle>Showing {resultCount} contacts</PageContentUnderTitle>
           </Col>
           <Col xs={12} className={bemE('mode')}>
             <ToolButton selected={viewMode === 'large'} onClick={this.handleViewModeChange('large')}>
@@ -52,7 +55,7 @@ class ViewModeHeader extends Component {
           </Col>
         </Row>
       </div>
-    )
+    ) : null
   }
 } 
 

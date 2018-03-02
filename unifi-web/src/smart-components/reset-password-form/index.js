@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Field, reduxForm } from 'redux-form'
 
 import { TextField /* CheckboxField */ } from 'components'
-import { Alert, Button } from 'elements'
+import { Alert, Button, SubmitRow } from 'elements'
 
 import validate from './validate'
 
@@ -31,7 +31,9 @@ class ResetPasswordForm extends Component {
           id="confirmPassword"
           component={TextField}
         />
-        <Button htmlType="submit" type="primary">Submit</Button>
+        <SubmitRow>
+          <Button htmlType="submit" type="primary" wide>Submit</Button>
+        </SubmitRow>
       </form>
     )
   }
