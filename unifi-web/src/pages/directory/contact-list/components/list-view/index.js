@@ -5,36 +5,35 @@ import { createStructuredSelector } from 'reselect'
 import { Link, withRouter } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
+import { Table } from 'elements'
+
+const columns = [
+  {
+    title: 'Name',
+    dataIndex: 'name',
+    key: 'name',
+    render: (name, row) => (
+      <Link to={ROUTES.DIRECTORY_HOLDER_DETAIL.replace(':clientReference', row.clientReference)}>
+        {name}
+      </Link>
+    ),
+    sorter: (a, b) => a.name.localeCompare(b.name)
+  },
+  {
+    title: 'ID',
+    dataIndex: 'clientReference',
+    key: 'clientReference',
+  },
+  {
+    title: 'Status',
+    dataIndex: 'active',
+    key: 'active',
+    render: active => active ? 'Active' : 'Deactivated',
+  }
+]
 
 const ListView = ({ holders }) => (
-  <div>
-    <table className="unifi-table">
-      <thead>
-        <tr>
-          <th width="70%">Name</th>
-          <th width="15%">ID</th>
-          <th width="15%">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {holders.map((holder) => (
-          <tr key={holder.clientReference}>
-            <td>
-              <Link to={ROUTES.DIRECTORY_HOLDER_DETAIL.replace(':clientReference', holder.clientReference)}>
-                {holder.name}
-              </Link>
-            </td>
-            <td>
-              {holder.clientReference}
-            </td>
-            <td>
-              {holder.active ? 'Active' : 'Deactivated'}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+  <Table dataSource={holders} columns={columns} pagination={false} rowKey="clientReference" />
 )
 
 export default ListView

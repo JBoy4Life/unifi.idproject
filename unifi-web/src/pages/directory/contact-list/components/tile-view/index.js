@@ -18,7 +18,7 @@ const TileView = ({ holders, viewMode }) => (
             {item.name}
           </Link>
         </GridItem.Field>
-        <GridItem.Field>ID {item.clientReference}</GridItem.Field>
+        <GridItem.Field>ID: {item.clientReference}</GridItem.Field>
       </GridItem>
     ))}
   </HolderGrid>
