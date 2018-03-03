@@ -1,12 +1,19 @@
+@import 'src/styles/variables';
+
 .page-sidebar {
   width: 200px;
   z-index: 1;
-  background: #fff
+  background: #fff;
+  transform: translateX(-$unifi-container-gutter-sm);
+
+  @media (min-width: 992px) {
+    transform: translateX(-$unifi-container-gutter);
+  }
 }
 
 .page-content-layout {
-  padding-top: 50px;
-  padding-bottom: 50px;
+  padding-top: $unifi-container-gutter;
+  padding-bottom: $unifi-container-gutter;
   background-color: #fff;
 
   @media (min-width: 992px) {

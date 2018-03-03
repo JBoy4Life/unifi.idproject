@@ -10,13 +10,13 @@
   }
 
   .main-content-container {
-    margin-top: $nav-bar-height;
+    margin-top: $unifi-nav-bar-height;
     display: flex;
   }
 
   .header-nav {
     z-index: 6;
-    height: $nav-bar-height;
+    height: $unifi-nav-bar-height;
     background-color: $unifi-top-header-1;
   }
 }

@@ -1,9 +1,11 @@
+@import 'src/styles/variables';
+
 .container {
   max-width: 1140px;
   margin: 0 auto;
-  padding: 0 15px;
+  padding: 0 $unifi-container-gutter-sm;
 
   @media (min-width: 992px) {
-    padding: 0 50px;
+    padding: 0 $unifi-container-gutter;
   }
 }
