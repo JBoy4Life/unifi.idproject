@@ -1,15 +1,22 @@
 @import "src/styles/variables";
 
 .nav-bar {
-  display: flex;
   height: $nav-bar-height;
   background-color: rgba(53, 62, 72, 1);
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
 
-  img {
+  &__container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: space-between;
+  }
+
+  &__logo {
     height: 20px;
+    margin-right: 20px;
+    @media (min-width: 992px) {
+      margin-right: 70px;
+    }
   }
 
   &__user-content {

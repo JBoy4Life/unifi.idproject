@@ -3,7 +3,7 @@ import cn from 'classnames'
 import { withRouter } from 'react-router'
 
 import logo from 'assets/images/unifi-logo.svg'
-import { Collapse, Dropdown, Menu, Icon } from 'elements'
+import { Collapse, Container, Dropdown, Menu, Icon } from 'elements'
 import { LinkedNavigationMenu } from '../'
 
 import './index.scss'
@@ -56,34 +56,36 @@ class NavBar extends Component {
 
     return (
       <div className={COMPONENT_CSS_CLASS}>
-        <img className={bemE('logo')} src={logo} alt="logo" />
-        <LinkedNavigationMenu />
-        {user && (
-          <div className={bemE('user-content')}>
-            <button
-              className={cn(bemE('menu-toggle'), {
-                [bemE('menu-toggle--open')]: menuOpen
-              })}
-              onClick={this.toggleMenuOpen}
-            >
-              <span className={bemE('username')}>
-                {user.operator.username}
-              </span>
-              <Icon type={menuOpen ? 'caret-up' : 'caret-down'} className={bemE('caret')} />
-            </button>
-            <Menu
-              onClick={this.handleMenuItemClick}
-              className={cn(bemE('menu'), {
-                [bemE('menu--open')]: menuOpen
-              })}
-              selectedKeys={[]}
-            >
-              <Menu.Item key="change-password">Change my password</Menu.Item>
-              <Menu.Divider />
-              <Menu.Item key="logout">Log out</Menu.Item>
-            </Menu>
-          </div>
-        )}
+        <Container className={bemE('container')}>
+          <img className={bemE('logo')} src={logo} alt="logo" />
+          <LinkedNavigationMenu />
+          {user && (
+            <div className={bemE('user-content')}>
+              <button
+                className={cn(bemE('menu-toggle'), {
+                  [bemE('menu-toggle--open')]: menuOpen
+                })}
+                onClick={this.toggleMenuOpen}
+              >
+                <span className={bemE('username')}>
+                  {user.operator.username}
+                </span>
+                <Icon type={menuOpen ? 'caret-up' : 'caret-down'} className={bemE('caret')} />
+              </button>
+              <Menu
+                onClick={this.handleMenuItemClick}
+                className={cn(bemE('menu'), {
+                  [bemE('menu--open')]: menuOpen
+                })}
+                selectedKeys={[]}
+              >
+                <Menu.Item key="change-password">Change my password</Menu.Item>
+                <Menu.Divider />
+                <Menu.Item key="logout">Log out</Menu.Item>
+              </Menu>
+            </div>
+          )}
+        </Container>
       </div>
     )
   }

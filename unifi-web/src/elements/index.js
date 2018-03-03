@@ -33,6 +33,7 @@ import FormItem from './form-item'
 
 import Steps from './steps'
 
+import Container from './container'
 import { Row, Col } from './grid-row'
 import Layout from './layout'
 import SubmitRow from './submit-row'
@@ -68,6 +69,7 @@ export {
   Button,
   Icon,
 
+  Container,
   Row, Col,
   SubmitRow,
   Layout,

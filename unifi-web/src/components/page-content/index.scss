@@ -5,20 +5,12 @@
 }
 
 .page-content-layout {
-  padding: 50px 0;
+  padding-top: 50px;
+  padding-bottom: 50px;
   background-color: #fff;
-  max-width: 1140px;
-  margin: 0 auto;
 
   @media (min-width: 992px) {
     border-left: 1px solid #c6d0d5;
     border-right: 1px solid #c6d0d5;
-  }
-}
-
-.page-content {
-  padding: 15px;
-  @media (min-width: 992px) {
-    padding: 0 50px;
   }
 }

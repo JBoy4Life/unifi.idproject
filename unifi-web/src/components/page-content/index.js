@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { /* Breadcrumbs, */ Layout, Aux } from 'elements'
+import { /* Breadcrumbs, */ Container, Layout, Aux } from 'elements'
 
 import './index.scss'
 
@@ -12,7 +12,7 @@ export const Sidebar = ({ children }) => (<Aux>{children}</Aux>)
 export const Main = ({ children }) => (<Aux>{children}</Aux>)
 
 const PageContent = ({ children }) => (
-  <Layout className="page-content-layout">
+  <Container className="page-content-layout" tag={Layout}>
     {React.Children.map(children, (child) => {
       if (!child) {
         return child
@@ -22,13 +22,13 @@ const PageContent = ({ children }) => (
       }
 
       return (
-        <Content className="page-content">
+        <Content>
           {/*<Breadcrumbs className="page-content__crumbs" />*/}
           {child}
         </Content>
       )
     })}
-  </Layout>
+  </Container>
 )
 
 PageContent.Main = Main
