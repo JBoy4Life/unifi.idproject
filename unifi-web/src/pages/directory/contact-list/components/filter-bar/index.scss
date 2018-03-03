@@ -1,6 +1,10 @@
 .directory-filter-bar {
   margin-bottom: 20px;
 
+  &__ticker {
+    vertical-align: middle;
+  }
+
   &__responsive-mb {
     margin-bottom: 20px;
 

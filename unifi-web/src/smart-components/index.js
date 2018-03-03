@@ -7,7 +7,9 @@ import ResetPasswordForm from './reset-password-form'
 
 import LinkedNavigationMenu from './linked-top-navigation'
 import LinkedSideNavigation from './linked-side-navigation'
+import NavBar from './nav-bar'
 import PageContainer from './page-container'
+import UserActions from './user-actions'
 
 import EvacuationTable from './evacuation-status-table'
 import SiteCreationWizard from './site-creation-wizard'
@@ -25,6 +27,8 @@ export {
   PageContainer,
   LinkedNavigationMenu,
   LinkedSideNavigation,
+  NavBar,
+  UserActions,
   EvacuationTable,
 
   SiteCreationWizard,

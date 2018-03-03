@@ -1,7 +1,12 @@
 .change-password {
+  &__back {
+    margin-bottom: 20px;
+  }
+
   &__title {
     margin-top: 15px;
   }
+
   &__body {
     margin-bottom: 20px;
   }

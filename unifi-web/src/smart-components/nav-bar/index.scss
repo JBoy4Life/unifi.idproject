@@ -1,0 +1,71 @@
+@import "src/styles/variables";
+
+.nav-bar {
+  background-color: rgba(53, 62, 72, 1);
+
+  &__container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: space-between;
+    height: $unifi-nav-bar-height;
+  }
+
+  &__logo {
+    height: 20px;
+    margin-right: 20px;
+    @media (min-width: 992px) {
+      margin-right: 70px;
+    }
+  }
+
+  &__user-content {
+    height: 100%;
+    color: #fff;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 200px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, .2) !important;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+
+    &--open {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
+  &__menu-toggle {
+    line-height: $unifi-nav-bar-height;
+    padding: 0 5px 0 15px;
+    height: 100%;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+
+    &, &:hover, &:focus {
+      color: #fff;
+      text-decoration: none;
+      outline: none;
+    }
+
+    &--open {
+      background-color: rgba(0, 0, 0, .3);
+    }
+  }
+
+  &__caret {
+    margin-left: 5px;
+    vertical-align: middle;
+    font-size: 10px !important;
+  }
+}

@@ -6,26 +6,17 @@
     position: fixed;
     width: 100%;
     z-index: 5;
+    padding: 0;
   }
 
   .main-content-container {
-    @media (min-width: 992px) {
-      padding: 0 50px;
-    }
-    margin-top: 84px;
+    margin-top: $unifi-nav-bar-height;
     display: flex;
   }
 
-  .header-ident {
-    z-index: 6;
-    height: $ident-bar-height;
-    background-color: rgba(53, 62, 72, 1);
-  }
-
   .header-nav {
-    background-color: rgba(64, 76, 88, 1);
-    margin-top: 40px;
-    height: 44px;
-    line-height: 44px;
+    z-index: 6;
+    height: $unifi-nav-bar-height;
+    background-color: $unifi-top-header-1;
   }
 }

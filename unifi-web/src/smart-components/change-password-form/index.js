@@ -1,15 +1,22 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { compose } from 'redux'
 import { Field, reduxForm } from 'redux-form'
+import { withRouter } from 'react-router'
 
 import { TextField /* CheckboxField */ } from 'components'
-import { Alert, Button } from 'elements'
+import { Alert, Button, Col, Row, SubmitRow } from 'elements'
             
 import validate from './validate'
 
 class ChangePasswordForm extends Component {
   static propTypes = {
     onSubmit: PropTypes.func,
+  }
+
+  handleCancel = () => {
+    const { history } = this.props
+    history.push('/')
   }
 
   render() {
@@ -38,13 +45,25 @@ class ChangePasswordForm extends Component {
           id="confirmPassword"
           component={TextField}
         />
-        <Button htmlType="submit" type="primary">Submit</Button>
+        <SubmitRow>
+          <Row type="flex" gutter={20}>
+            <Col>
+              <Button htmlType="submit" type="primary" wide>Submit</Button>
+            </Col>
+            <Col>
+              <Button wide onClick={this.handleCancel}>Cancel</Button>
+            </Col>
+          </Row>
+        </SubmitRow>
       </form>
     )
   }
 }
 
-export default reduxForm({
-  form: 'changePassword',
-  validate,
-})(ChangePasswordForm)
+export default compose(
+  withRouter,
+  reduxForm({
+    form: 'changePassword',
+    validate,
+  })
+)(ChangePasswordForm)

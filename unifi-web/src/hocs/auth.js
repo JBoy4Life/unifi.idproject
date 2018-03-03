@@ -1,5 +1,6 @@
 import React from 'react'
 import get from 'lodash/get'
+import connectedAuthWrapper from 'redux-auth-wrapper/connectedAuthWrapper'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
@@ -16,6 +17,8 @@ const userIsAuthenticatedDefaults = {
   authenticatingSelector: isLoggingIn,
   wrapperDisplayName: 'UserIsAuthenticated'
 }
+
+export const userIsAuthenticated = connectedAuthWrapper(userIsAuthenticatedDefaults)
 
 export const userIsAuthenticatedRedir = connectedRouterRedirect({
   ...userIsAuthenticatedDefaults,

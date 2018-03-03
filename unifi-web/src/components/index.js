@@ -1,4 +1,3 @@
-import IdentBar from './ident-bar'
 import TopNavigation from './top-navigation'
 import SideNavigation from './side-navigation'
 
@@ -23,10 +22,7 @@ import LiveSiteFloorView from './live-site-floor-view'
 
 import HolderGrid from './holder-grid'
 
-import CrumbRoute from './crumb-route'
-
 export {
-  IdentBar,
   TopNavigation,
   SideNavigation,
   PageContent,
@@ -44,9 +40,7 @@ export {
   NetworkReaderDetailsCard,
   LiveSiteFloorView,
 
-  HolderGrid,
-
-  CrumbRoute
+  HolderGrid
 }
 
 export default null

@@ -164,10 +164,11 @@ class LiveView extends PureComponent {
               <ViewModeHeader
                 onViewModeChange={this.handleViewModeChange}
                 viewMode={view}
+                zoneId={zoneId}
                 resultCount={zoneItems.length}
               />
 
-              <TileView items={zoneItems} viewMode={view} />
+              <TileView items={zoneItems} viewMode={view || 'large'} />
             </div>
           </PageContent.Main>
         </PageContent>

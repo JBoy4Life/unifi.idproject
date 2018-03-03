@@ -6,11 +6,12 @@ import { createStructuredSelector } from 'reselect'
 
 import './index.scss'
 import logo from 'assets/images/ucl-logo-2.png'
-import unifilogo from 'assets/images/unifi-logo.png'
+import unifilogo from 'assets/images/unifi-logo.svg'
 import { actions as userActions } from 'redux/user'
 import { formSubmit } from 'utils/form'
 import { noop } from 'utils/helpers'
 import { PageContainer, LoginForm } from 'smart-components'
+import { PageContent } from 'components'
 import { userIsNotAuthenticatedRedir } from 'hocs/auth'
 
 class LoginContainer extends Component {
@@ -28,13 +29,17 @@ class LoginContainer extends Component {
 
   render() {
     return (
-      <PageContainer noHeader className="login-page">
-        <div className="login-form-wrapper">
-          <img className="logo" src={logo} alt="logo" />
-          <div className="login-form-container">
-            <LoginForm onSubmit={this.handleLoginFormSubmit} />
-          </div>
-        </div>
+      <PageContainer className="login-page">
+        <PageContent>
+          <PageContent.Main>
+            <div className="login-form-wrapper">
+              <img className="logo" src={logo} alt="logo" />
+              <div className="login-form-container">
+                <LoginForm onSubmit={this.handleLoginFormSubmit} />
+              </div>
+            </div>
+          </PageContent.Main>
+        </PageContent>
       </PageContainer>
     )
   }

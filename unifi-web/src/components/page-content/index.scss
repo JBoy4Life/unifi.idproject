@@ -1,24 +1,23 @@
+@import 'src/styles/variables';
+
 .page-sidebar {
   width: 200px;
   z-index: 1;
-  background: #fff
+  background: #fff;
+  transform: translateX(-$unifi-container-gutter-sm);
+
+  @media (min-width: 992px) {
+    transform: translateX(-$unifi-container-gutter);
+  }
 }
 
 .page-content-layout {
-  padding-top: 50px;
+  padding-top: $unifi-container-gutter;
+  padding-bottom: $unifi-container-gutter;
   background-color: #fff;
-  max-width: 1140px;
-  margin: 0 auto;
 
   @media (min-width: 992px) {
     border-left: 1px solid #c6d0d5;
     border-right: 1px solid #c6d0d5;
-  }
-}
-
-.page-content {
-  padding: 15px;
-  @media (min-width: 992px) {
-    padding: 24px;
   }
 }

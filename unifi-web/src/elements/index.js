@@ -33,14 +33,13 @@ import FormItem from './form-item'
 
 import Steps from './steps'
 
+import Container from './container'
 import { Row, Col } from './grid-row'
 import Layout from './layout'
+import SubmitRow from './submit-row'
 
 import DatePicker from './date-picker'
 import SingleFilePicker from './single-file-picker'
-
-import Breadcrumb from './breadcrumb'
-import Breadcrumbs from './breadcrumbs'
 
 import Slider from './slider'
 
@@ -67,7 +66,9 @@ export {
   Button,
   Icon,
 
+  Container,
   Row, Col,
+  SubmitRow,
   Layout,
 
   CircularProgressBar,
@@ -81,9 +82,6 @@ export {
   SingleFilePicker,
   Tabs,
   Collapse,
-
-  Breadcrumb,
-  Breadcrumbs,
 
   Slider
 }

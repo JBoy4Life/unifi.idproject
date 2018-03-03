@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
+import { Link } from 'react-router-dom'
 
 import { API_SUCCESS } from 'redux/api/request'
 import { Col, Row } from 'elements'
@@ -40,12 +41,15 @@ class ChangePassword extends Component {
     return (
       <PageContainer>
         <PageContent>
-          <Row>
-            <Col xs={24} sm={14} md={12} xl={10}>
-              <h1 className={bemE('title')}>Change my password</h1>
-              <ChangePasswordForm onSubmit={this.handleChangePasswordFormSubmit} />
-            </Col>
-          </Row>
+          <PageContent.Main>
+            <p className={bemE('back')}><Link to="/">&laquo; Back</Link></p>
+            <Row>
+              <Col xs={24} sm={14} md={12} xl={10}>
+                <h1 className={bemE('title')}>Change my password</h1>
+                <ChangePasswordForm onSubmit={this.handleChangePasswordFormSubmit} />
+              </Col>
+            </Row>
+          </PageContent.Main>
         </PageContent>
       </PageContainer>
     )

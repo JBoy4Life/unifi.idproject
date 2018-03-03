@@ -1,13 +1,29 @@
+@import 'src/styles/variables';
+
 .top-navigation {
 
-  height: 41px;
-  line-height: 41px;
-  background-color: rgba(64, 76, 88, 1);
+  height: $unifi-nav-bar-height;
+  line-height: $unifi-nav-bar-height;
   border-bottom: 0;
+  flex: 1;
+
+  .ant-menu-item {
+    color: #fff;
+    font-size: 13px;
+  }
 
   .ant-menu-item-selected {
     background-color: inherit !important;
-    border-bottom: 3px solid rgba(29, 201, 146, 1) !important;
+    position: relative;
+
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      right: 20px;
+      border-bottom: 4px solid $unifi-primary-color !important;
+    }
   }
 
 }

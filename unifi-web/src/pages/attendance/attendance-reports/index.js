@@ -69,10 +69,10 @@ export class AttendanceReports extends Component {
     return (
       <div className={cx(COMPONENT_CSS_CLASSNAME, 'section-to-print')}>
         <Row type="flex" justify="center" align="middle">
-          <Col sm={18}>
+          <Col xs={24} sm={18}>
             <h1>Attendance Alert Report</h1>
           </Col>
-          <Col sm={6}>
+          <Col xs={24} sm={6}>
             <Select
               showSearch
               value={programme}
