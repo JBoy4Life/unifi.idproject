@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { /* Breadcrumbs, */ Container, Layout, Aux } from 'elements'
+import { Container, Layout, Aux } from 'elements'
 
 import './index.scss'
 
@@ -23,7 +23,6 @@ const PageContent = ({ children }) => (
 
       return (
         <Content>
-          {/*<Breadcrumbs className="page-content__crumbs" />*/}
           {child}
         </Content>
       )

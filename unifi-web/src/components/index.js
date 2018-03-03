@@ -22,8 +22,6 @@ import LiveSiteFloorView from './live-site-floor-view'
 
 import HolderGrid from './holder-grid'
 
-import CrumbRoute from './crumb-route'
-
 export {
   TopNavigation,
   SideNavigation,
@@ -42,9 +40,7 @@ export {
   NetworkReaderDetailsCard,
   LiveSiteFloorView,
 
-  HolderGrid,
-
-  CrumbRoute
+  HolderGrid
 }
 
 export default null

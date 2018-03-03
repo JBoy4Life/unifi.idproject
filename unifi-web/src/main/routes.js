@@ -1,6 +1,5 @@
 import React from 'react'
 import { Route, Router, Switch, Redirect } from 'react-router'
-import { CrumbRoute } from 'components'
 import { userIsAuthenticatedRedir, userIsNotAuthenticatedRedir } from 'hocs/auth'
 
 import * as ROUTES from 'utils/routes'
@@ -14,25 +13,25 @@ import {
 
 const ProtectedRoutes = userIsAuthenticatedRedir(() => (
   <Switch>
-    <CrumbRoute exact path={ROUTES.SITEMAP} title="Sitemap" component={Sitemap} />
+    <Route exact path={ROUTES.SITEMAP}component={Sitemap} />
 
-    <CrumbRoute exact path={ROUTES.MY_ACCOUNT} title="My Account" component={MyAccount} />
-    <CrumbRoute path={ROUTES.DIRECTORY} title="Directory" component={Directory} />
+    <Route exact path={ROUTES.MY_ACCOUNT}component={MyAccount} />
+    <Route path={ROUTES.DIRECTORY} component={Directory} />
 
-    <CrumbRoute exact path={ROUTES.CHANGE_PASSWORD} title="Change Password" component={ChangePassword} />
+    <Route exact path={ROUTES.CHANGE_PASSWORD}component={ChangePassword} />
 
-    <CrumbRoute path={ROUTES.EVACUATION} title="Evacuation" component={Evacuation} />
-    <CrumbRoute path={ROUTES.ATTENDANCE} title="Attendance" component={Attendance} />
+    <Route path={ROUTES.EVACUATION} component={Evacuation} />
+    <Route path={ROUTES.ATTENDANCE} component={Attendance} />
 
-    <CrumbRoute path={ROUTES.CLIENT_REGISTRY} title="client Registry" component={ClientRegistry} />
+    <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
 
-    <CrumbRoute path={ROUTES.LIVE_VIEW} title="Live View" component={LiveView} />
+    <Route path={ROUTES.LIVE_VIEW} component={LiveView} />
 
-    <CrumbRoute exact path={ROUTES.NAVIGATION} title="Navigation" component={Navigation} />
+    <Route exact path={ROUTES.NAVIGATION}component={Navigation} />
 
-    <CrumbRoute path={ROUTES.SITE_MANAGER} title="Site Manager" component={SiteManager} />
+    <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
 
-    <CrumbRoute exact path={ROUTES.USERS} title="Users" component={Users} />
+    <Route exact path={ROUTES.USERS}component={Users} />
 
     <Redirect from="/" to={ROUTES.ATTENDANCE} />
   </Switch>
@@ -41,11 +40,11 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
 export default ({ history }) => (
   <Router history={history}>
     <Switch>
-      <CrumbRoute exact path={ROUTES.LOGIN} title="Login" component={Login} />
-      <CrumbRoute exact path={ROUTES.ACCEPT_INVITATION} title="Accept Invitation" component={ResetPassword} />
-      <CrumbRoute exact path={ROUTES.FORGOT_PASSWORD} title="Forgot Password" component={ForgotPassword} />
-      <CrumbRoute exact path={ROUTES.CANCEL_PASSWORD_RESET} title="Cancel Password Request" component={CancelPasswordReset} />
-      <CrumbRoute exact path={ROUTES.RESET_PASSWORD} title="Reset Password" component={ResetPassword} />
+      <Route exact path={ROUTES.LOGIN} component={Login} />
+      <Route exact path={ROUTES.ACCEPT_INVITATION} component={ResetPassword} />
+      <Route exact path={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
+      <Route exact path={ROUTES.CANCEL_PASSWORD_RESET} component={CancelPasswordReset} />
+      <Route exact path={ROUTES.RESET_PASSWORD} component={ResetPassword} />
       <Route path="/" component={ProtectedRoutes} />
 
       <Route component={NotFound} />

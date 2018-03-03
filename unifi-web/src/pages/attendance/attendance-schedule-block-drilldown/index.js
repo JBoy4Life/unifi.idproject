@@ -13,7 +13,7 @@ import DialogBox from 'components/dialog-box'
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
 import SearchableSelectField from 'components/searchable-select-field'
 import withClientId from 'hocs/with-client-id'
-import { Button, Breadcrumb, Col, Row } from 'elements'
+import { Button, Col, Row } from 'elements'
 
 import {
   blockReportSelector,
@@ -175,16 +175,6 @@ export class AttendanceScheduleBlockDrilldown extends Component {
 
     return (
       <div className="attendanceScheduleBlockDrilldown section-to-print">
-        <Breadcrumb data={{
-          title: schedule ? schedule.name : '',
-          pathname: ROUTES.ATTENDANCE_SCHEDULES_DETAIL.replace(
-            ':scheduleId', schedule ? schedule.scheduleId : ':scheduleId'
-          )
-        }} />
-        <Breadcrumb data={{
-          title: committer ? committer.name : '',
-          pathname: location.pathname
-        }} />
         {this.state.editAttendanceVisible &&
           <DialogBox>
             <h1>Edit Attendance</h1>

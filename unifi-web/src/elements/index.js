@@ -41,9 +41,6 @@ import SubmitRow from './submit-row'
 import DatePicker from './date-picker'
 import SingleFilePicker from './single-file-picker'
 
-import Breadcrumb from './breadcrumb'
-import Breadcrumbs from './breadcrumbs'
-
 import Slider from './slider'
 
 export {
@@ -85,9 +82,6 @@ export {
   SingleFilePicker,
   Tabs,
   Collapse,
-
-  Breadcrumb,
-  Breadcrumbs,
 
   Slider
 }

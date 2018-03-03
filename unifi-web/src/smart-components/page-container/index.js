@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { withRouter } from 'react-router'
 
-import { Breadcrumb, Layout, Aux } from 'elements'
+import { Layout, Aux } from 'elements'
 import { NavBar } from '../'
 
 import './index.scss'
@@ -23,12 +23,6 @@ const PageContainer = (props) => {
   const { className = '', children, location } = props
   return (
     <Layout className={`${className} page-container`}>
-      {location.pathname !== '/' && (
-        <Breadcrumb data={{
-          title: 'Home',
-          pathname: '/'
-        }} />
-      )}
       {!props.noHeader && (
         <Aux>
           <Header className="header-nav">
