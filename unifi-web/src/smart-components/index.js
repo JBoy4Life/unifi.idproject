@@ -9,6 +9,7 @@ import LinkedNavigationMenu from './linked-top-navigation'
 import LinkedSideNavigation from './linked-side-navigation'
 import NavBar from './nav-bar'
 import PageContainer from './page-container'
+import UserActions from './user-actions'
 
 import EvacuationTable from './evacuation-status-table'
 import SiteCreationWizard from './site-creation-wizard'
@@ -27,6 +28,7 @@ export {
   LinkedNavigationMenu,
   LinkedSideNavigation,
   NavBar,
+  UserActions,
   EvacuationTable,
 
   SiteCreationWizard,

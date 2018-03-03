@@ -1,11 +1,8 @@
 import React from 'react'
-
+import PropTypes from 'prop-types'
 import { compose } from 'redux'
-import { connect } from 'react-redux'
-import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router'
 
-import { actions as userActions, selectors as userSelectors } from 'redux/user'
 import { Breadcrumb, Layout, Aux } from 'elements'
 import { NavBar } from '../'
 
@@ -14,13 +11,10 @@ import './index.scss'
 
 const { Header, Content } = Layout
 
-const renderHeader = props => (
+const renderHeader = () => (
   <Aux>
     <Header className="header-nav">
-      <NavBar
-        onLogout={props.logoutRequest}
-        user={props.user}
-      />
+      <NavBar />
     </Header>
   </Aux>
 )
@@ -35,7 +29,13 @@ const PageContainer = (props) => {
           pathname: '/'
         }} />
       )}
-      {props.noHeader ? '' : renderHeader(props)}
+      {!props.noHeader && (
+        <Aux>
+          <Header className="header-nav">
+            <NavBar />
+          </Header>
+        </Aux>
+      )}
       <Content className="main-content-container">
         {children}
       </Content>
@@ -43,15 +43,11 @@ const PageContainer = (props) => {
   )
 }
 
-const selector = createStructuredSelector({
-  user: userSelectors.currentUserSelector,
-})
-
-const actions = {
-  ...userActions
+PageContainer.propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string,
+  location: PropTypes.object.isRequired,
+  noHeader: PropTypes.bool
 }
 
-export default compose(
-  withRouter,
-  connect(selector, actions)
-)(PageContainer)
+export default withRouter(PageContainer)

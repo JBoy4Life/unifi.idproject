@@ -1,31 +1,11 @@
 @import "src/styles/variables";
 
-.nav-bar {
-  background-color: rgba(53, 62, 72, 1);
-
-  &__container {
-    display: flex;
-    align-items: center;
-    position: relative;
-    justify-content: space-between;
-    height: $nav-bar-height;
-  }
-
-  &__logo {
-    height: 20px;
-    margin-right: 20px;
-    @media (min-width: 992px) {
-      margin-right: 70px;
-    }
-  }
-
-  &__user-content {
-    height: 100%;
-    color: #fff;
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
+.user-actions {
+  height: 100%;
+  color: #fff;
+  position: relative;
+  display: flex;
+  align-items: center;
 
   &__menu {
     position: absolute;
@@ -33,6 +13,7 @@
     right: 0;
     width: 200px;
     box-shadow: 0 5px 10px rgba(0, 0, 0, .2) !important;
+    border: 1px solid $unifi-line-color;
     visibility: hidden;
     opacity: 0;
     transition: all 0.3s ease;
@@ -51,6 +32,7 @@
     cursor: pointer;
     background-color: transparent;
     border: none;
+    position: relative;
 
     &, &:hover, &:focus {
       color: #fff;
@@ -61,11 +43,27 @@
     &--open {
       background-color: rgba(0, 0, 0, .3);
     }
+
+    &--active {
+      &:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-bottom: 4px solid $unifi-primary-color !important;
+      }
+    }
   }
 
   &__caret {
     margin-left: 5px;
     vertical-align: middle;
     font-size: 10px !important;
+  }
+
+  .ant-menu-item {
+    margin: 2px 0 !important;
+    font-size: 14px;
   }
 }

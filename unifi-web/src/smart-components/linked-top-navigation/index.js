@@ -6,6 +6,7 @@ import { withRouter } from 'react-router-dom'
 
 import { verticalConfigSelector } from 'redux/user/selectors'
 import { TopNavigation } from 'components'
+import { userIsAuthenticated } from 'hocs/auth'
 
 class LinkedTopNavigation extends Component {
   handleMenuNavigation = target => this.props.history.push(target.key)
@@ -28,6 +29,7 @@ const selector = createStructuredSelector({
 })
 
 export default compose(
+  userIsAuthenticated,
   withRouter,
   connect(selector)
 )(LinkedTopNavigation)
