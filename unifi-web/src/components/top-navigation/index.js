@@ -6,14 +6,15 @@ import './index.scss'
 
 export default class TopNavigation extends Component {
   render() {
-    const { verticalConfig } = this.props;
+    const { onMenuClick, selectedKeys, verticalConfig } = this.props;
     const liveViewEnabled = get(verticalConfig, 'core.liveViewEnabled', false)
     const attendanceEnabled = Boolean(get(verticalConfig, 'attendance', false))
+
     return (
       <Menu
         className="top-navigation"
-        onClick={this.props.onMenuClick}
-        selectedKeys={this.props.selectedKeys}
+        onClick={onMenuClick}
+        selectedKeys={selectedKeys}
         mode="horizontal"
         theme="dark"
       >
@@ -45,7 +46,7 @@ export default class TopNavigation extends Component {
           {/*Evacuation*/}
         {/*</Menu.Item>*/}
 
-        {attendanceEnabled && <Menu.Item key="/attendance/schedules">
+        {attendanceEnabled && <Menu.Item key="/attendance">
           Attendance
         </Menu.Item>}
 
