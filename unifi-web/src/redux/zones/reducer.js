@@ -1,4 +1,5 @@
 import moment from 'moment'
+import find from 'lodash/find'
 import unionBy from 'lodash/unionBy'
 import {
   ZONE_ENTITIES_SUBSCRIBE,
@@ -20,6 +21,22 @@ const filterOutInactiveEntities = (liveDiscovery) =>
     return moment().diff(moment(item.detectionTime)) < ZONE_ENTITIES_INACTIVE_THRESHOLD
   })
 
+const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries) =>
+  unionBy(
+    newDiscoveries.map(item => {
+      const foundItem = find(currentDiscoveries, { clientReference: item.clientReference })
+      return foundItem && item.zoneId === foundItem.zoneId ? {
+        ...item,
+        firstDetectionTime: foundItem.firstDetectionTime
+      } : {
+        ...item,
+        firstDetectionTime: item.detectionTime
+      }
+    }),
+    currentDiscoveries,
+    'clientReference'
+  )
+
 const reducer = (state = initialState, action = {}) => {
   switch (action.type) {
     case `${ZONE_LIST_FETCH}_FULFILLED`:
@@ -32,11 +49,7 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         liveDiscoveryUpdate: new Date().getTime(),
-        liveDiscovery: unionBy(
-          action.data.payload,
-          state.liveDiscovery,
-          'clientReference'
-        ),
+        liveDiscovery: mergeDiscoveryUpdate(state.liveDiscovery, action.data.payload)
       }
 
     case ZONE_ENTITIES_CLEAR_INACTIVE:
