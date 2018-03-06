@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Switch /*, Redirect*/ } from 'react-router'
+import { Route, Switch, Redirect } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
@@ -57,6 +57,7 @@ const Attendance = () => (
       </PageContent.Sidebar>
       <PageContent.Main>
         <Switch>
+          <Redirect exact from={ROUTES.ATTENDANCE} to={ROUTES.ATTENDANCE_SCHEDULES} />
           <Route
             path={ROUTES.ATTENDANCE_SCHEDULES}
             component={ModulesRoutes}

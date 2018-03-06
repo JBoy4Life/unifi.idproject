@@ -4,11 +4,14 @@
   padding: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
-  
+  display: flex;
+  flex-direction: column;
+
   &__text {
     padding: 8px;
     border: 1px solid $unifi-line-color;
     border-top: none;
+    flex: 1;
   }
 
   &__image {
