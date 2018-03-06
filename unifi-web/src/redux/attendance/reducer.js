@@ -9,6 +9,8 @@ import {
   OVERRIDE_ATTENDANCE
 } from './types'
 
+import { API_PENDING, API_SUCCESS, API_FAIL } from '../api/request'
+
 const initialState = {
   scheduleStats: [],
   schedules: [],
@@ -20,7 +22,8 @@ const initialState = {
   contactScheduleReport: [],
   putAssignmentResult: {},
   overrideAttendanceResult: {},
-  lowAttendanceReport: {}
+  lowAttendanceReport: {},
+  lowAttendanceReportStatus: 'INIT'
 }
 
 const reducer = (state = initialState, action = {}) => {
@@ -66,10 +69,21 @@ const reducer = (state = initialState, action = {}) => {
         ...state,
         overrideAttendanceResult: action.payload
       }
+    case `${REPORT_LOW_ATTENDANCE_BY_METADATA}_PENDING`:
+      return {
+        ...state,
+        lowAttendanceReportStatus: API_PENDING
+      }
     case `${REPORT_LOW_ATTENDANCE_BY_METADATA}_FULFILLED`:
       return {
         ...state,
+        lowAttendanceReportStatus: API_SUCCESS,
         lowAttendanceReport: action.payload.payload
+      }
+    case `${REPORT_LOW_ATTENDANCE_BY_METADATA}_REJECTED`:
+      return {
+        ...state,
+        lowAttendanceReportStatus: API_FAIL
       }
     default:
       return state
