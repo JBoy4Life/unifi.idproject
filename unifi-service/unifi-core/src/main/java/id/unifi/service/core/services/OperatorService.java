@@ -2,6 +2,7 @@ package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.statemachinesystems.envy.Default;
+import id.unifi.service.common.api.Validation;
 import static id.unifi.service.common.api.Validation.*;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
@@ -50,6 +51,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @ApiService("operator")
@@ -63,6 +65,11 @@ public class OperatorService {
     private static final SelectField<?>[] OPERATOR_FIELDS = {
             OPERATOR.CLIENT_ID, OPERATOR.USERNAME, OPERATOR.NAME, OPERATOR.EMAIL, OPERATOR.ACTIVE, OPERATOR_HAS_PASSWORD
     };
+
+    private static final Map<? extends TableField<OperatorRecord, ?>, Function<FieldChanges, ?>> editables = Map.of(
+            OPERATOR.NAME, c -> c.name,
+            OPERATOR.EMAIL, c -> c.email,
+            OPERATOR.ACTIVE, c -> c.active);
 
     private final Database db;
     private final PasswordReset passwordReset;
@@ -134,21 +141,12 @@ public class OperatorService {
     public void editOperator(OperatorSessionData session,
                              String clientId,
                              String username,
-                             @Nullable String name,
-                             @Nullable String email,
-                             @Nullable Boolean active) {
+                             FieldChanges changes) {
         authorize(session, clientId);
-        validateAll(
-                v("name|email|active", atLeastOnePresent(name, email, active)),
-                v("name", name == null ? null : shortString(name)),
-                v("email", email == null ? null : email(email))
-        );
+        changes.validate();
 
-        Map<? extends TableField<OperatorRecord, ?>, ?> collect = Stream.of(
-                Map.entry(OPERATOR.NAME, Optional.ofNullable(name)),
-                Map.entry(OPERATOR.EMAIL, Optional.ofNullable(email)),
-                Map.entry(OPERATOR.ACTIVE, Optional.ofNullable(active)))
-                .flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v)))
+        Map<? extends TableField<OperatorRecord, ?>, ?> collect = editables.entrySet().stream()
+                .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         int rowsUpdated = db.execute(sql -> sql
@@ -422,6 +420,32 @@ public class OperatorService {
 
         static ListFilter empty() {
             return new ListFilter(Optional.empty());
+        }
+    }
+
+    // TODO: Figure out a way to make this immutable
+    public static class FieldChanges {
+        public String name;
+        public String email;
+        public Boolean active;
+
+        public FieldChanges() {}
+
+        // Need to validate outside the ctor, otherwise Jackson will rewrap as JsonMappingException
+        void validate() {
+            validateAll(
+                    v("name|email|active", atLeastOneNonNull(name, email, active)),
+                    v("name", name, Validation::shortString),
+                    v("email", email, Validation::email)
+            );
+        }
+
+        public String toString() {
+            return "FieldChanges{" +
+                    "name=" + name +
+                    ", email=" + email +
+                    ", active=" + active +
+                    '}';
         }
     }
 }

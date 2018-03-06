@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -37,6 +38,10 @@ public class Validation {
         return new ValidationDef(field, result, null);
     }
 
+    public static ValidationDef v(String field, @Nullable String value, Function<String, Issue> validator) {
+        return v(field, value == null ? null : validator.apply(value));
+    }
+
     public static ValidationDef v(@Nullable Issue result, Supplier<MarshallableError> immediateError) {
         return new ValidationDef(null, result, immediateError);
     }
@@ -59,7 +64,7 @@ public class Validation {
         return null;
     }
 
-    public static @Nullable Issue atLeastOnePresent(Object... values) {
+    public static @Nullable Issue atLeastOneNonNull(Object... values) {
         return Arrays.stream(values).noneMatch(Objects::nonNull) ? Issue.MISSING : null;
     }
 

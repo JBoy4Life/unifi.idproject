@@ -83,6 +83,22 @@ To specify what associated data to include include the `"with"` name in the payl
 }
 ----
 
+== Editing
+
+A request to edit a resource generally takes the following form:
+
+----
+"payload": {
+    ...clientId and other ID fields...,
+    "changes": {
+        "name": "My New Name",
+        "active": false,
+        "image": null, /* optional fields can be reset like this */
+        /* missing "email" key means it won't be changed */
+    }
+}
+----
+
 TODO: Update API spec below. Out of sync with reality!
 
 == Clients
