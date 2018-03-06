@@ -1,4 +1,6 @@
 .ar-results-list {
+  position: relative;
+
   &__browser {
     @media print {
       display: none !important;

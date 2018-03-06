@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
 import groupBy from 'lodash/groupBy'
 import fp from 'lodash/fp'
@@ -8,8 +8,9 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import ScheduleTable from '../schedule-table'
-import { Collapse } from 'elements'
-import { lowAttendanceReportSelector } from 'redux/attendance/selectors'
+import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
+import { Collapse, Spinner } from 'elements'
+import { lowAttendanceReportSelector, lowAttendanceReportStatusSelector } from 'redux/attendance/selectors'
 import { reportLowAttendanceByMetadata } from 'redux/attendance/actions'
 import { sortSchedules } from 'utils/helpers'
 
@@ -37,46 +38,53 @@ export class ResultsList extends Component {
     const { clientId, endDate, programme, reportLowAttendanceByMetadata, startDate } = this.props
     reportLowAttendanceByMetadata(clientId, {
       programme,
-      startTime: startDate ? moment.utc(startDate).startOf('day') : undefined,
-      endTime: endDate ? moment.utc(endDate).endOf('day') : undefined
+      startTime: startDate ? moment.utc(startDate).startOf('day').format() : undefined,
+      endTime: endDate ? moment.utc(endDate).endOf('day').format() : undefined
     })
   }
 
   render() {
-    const { holdersList, lowAttendanceReport, programme, schedules } = this.props
+    const { holdersList, lowAttendanceReport, lowAttendanceReportStatus, programme, schedules } = this.props
     const groupedAttendance = groupBy(lowAttendanceReport.attendance, (item) => item.scheduleId)
     const fsSchedules = filterAndSort(Object.keys(groupedAttendance))(schedules)
 
     return (
       <div className={COMPONENT_CSS_CLASSNAME}>
-        <Collapse bordered={false} className={bemE('browser')}>
-          {fsSchedules.map((schedule) => (
-            <Collapse.Panel header={schedule.name} key={schedule.scheduleId}>
-              <ScheduleTable
-                schedule={schedule}
-                report={groupedAttendance[schedule.scheduleId]}
-                holdersList={holdersList}
-              />
-            </Collapse.Panel>
-          ))}
-        </Collapse>
-        {fsSchedules.map((schedule) => (
-          <div className={bemE('print')} key={schedule.scheduleId}>
-            <h3 className={bemE('print-title')}>{schedule.name}</h3>
-            <ScheduleTable
-              schedule={schedule}
-              report={groupedAttendance[schedule.scheduleId]}
-              holdersList={holdersList}
-            />
-          </div>
-        ))}
+        {lowAttendanceReportStatus === API_PENDING && <Spinner size={36} />}
+        {lowAttendanceReportStatus === API_SUCCESS && (
+          <Fragment>
+            <Collapse bordered={false} className={bemE('browser')}>
+              {fsSchedules.map((schedule) => (
+                <Collapse.Panel header={schedule.name} key={schedule.scheduleId}>
+                  <ScheduleTable
+                    schedule={schedule}
+                    report={groupedAttendance[schedule.scheduleId]}
+                    holdersList={holdersList}
+                  />
+                </Collapse.Panel>
+              ))}
+            </Collapse>
+            {fsSchedules.map((schedule) => (
+              <div className={bemE('print')} key={schedule.scheduleId}>
+                <h3 className={bemE('print-title')}>{schedule.name}</h3>
+                <ScheduleTable
+                  schedule={schedule}
+                  report={groupedAttendance[schedule.scheduleId]}
+                  holdersList={holdersList}
+                />
+              </div>
+            ))}
+          </Fragment>
+        )}
+        {lowAttendanceReportStatus === API_FAIL && <h2>Failed to load data</h2>}
       </div>
     )
   }
 }
 
 const selector = createStructuredSelector({
-  lowAttendanceReport: lowAttendanceReportSelector
+  lowAttendanceReport: lowAttendanceReportSelector,
+  lowAttendanceReportStatus: lowAttendanceReportStatusSelector
 })
 
 const actions = {

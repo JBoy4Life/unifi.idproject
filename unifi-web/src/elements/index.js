@@ -42,6 +42,7 @@ import DatePicker from './date-picker'
 import SingleFilePicker from './single-file-picker'
 
 import Slider from './slider'
+import Spinner from './spinner'
 
 export {
   Aux,
@@ -83,7 +84,8 @@ export {
   Tabs,
   Collapse,
 
-  Slider
+  Slider,
+  Spinner
 }
 
 export default null

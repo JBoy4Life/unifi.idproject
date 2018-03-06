@@ -41,3 +41,8 @@ export const lowAttendanceReportSelector = fp.compose(
   fp.get('lowAttendanceReport'),
   getReducer
 )
+
+export const lowAttendanceReportStatusSelector = fp.compose(
+  fp.get('lowAttendanceReportStatus'),
+  getReducer
+)
