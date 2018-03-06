@@ -144,10 +144,9 @@ class LiveView extends PureComponent {
 
     const zoneItems = fp.compose(
       fp.reverse,
-      fp.sortBy('detectionTime'),
+      fp.sortBy('firstDetectionTime'),
       fp.filter(item => item.zone.zoneId === zoneId)
     )(discoveredList)
-    // console.log(filteredItems, zoneItems, zoneId)
 
     return (
       <PageContainer>
