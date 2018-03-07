@@ -29,8 +29,8 @@ public class GallagherDemo implements IFTMiddleware2 {
 
         registerLatch.await();
 
-        ftcApi.logCardEvent(
-                4, 1, ZonedDateTime.now(), false, 12345, 11111, "ES01", "ESI01",
+        ftcApi.logLongCardEvent2(4, 1, ZonedDateTime.now(), false,
+                1, "12345", 11111, "ES01", "ESI01",
                 "Card detected: Zone [Reception], #12345", "No details.");
 
         quitLatch.await();
