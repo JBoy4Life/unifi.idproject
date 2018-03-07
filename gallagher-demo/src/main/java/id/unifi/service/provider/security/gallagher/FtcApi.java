@@ -210,8 +210,8 @@ public class FtcApi implements IFTExternalEventInput2, Closeable {
         cb.addInParamAsString(systemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         cb.addInParamAsString(itemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         cb.addInParamAsInt(state, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
-        cb.addInParamAsBoolean(tampered, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
-        cb.addInParamAsBoolean(offline, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsInt(tampered ? 1 : 0, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsInt(offline ? 1 : 0, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
         cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         try {
             IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
