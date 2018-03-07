@@ -22,11 +22,7 @@ const menus = [
     key: '/attendance/reports',
     icon: 'bar-chart',
     label: 'Reports',
-  },
-  // {
-  //   key: '/attendance/custom-reports',
-  //   label: 'Custom Reports',
-  // }
+  }
 ]
 
 const ModulesRoutes = () => (

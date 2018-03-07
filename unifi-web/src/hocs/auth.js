@@ -37,21 +37,21 @@ const userIsNotAuthenticatedDefaults = {
 
 export const userIsNotAuthenticatedRedir = connectedRouterRedirect({
   ...userIsNotAuthenticatedDefaults,
-  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance', // TODO: replace with dashboard path
+  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || ROUTES.LIVE_VIEW, // TODO: replace with dashboard path
   allowRedirectBack: false
 })
 
 export const attendanceEnabledRedir = connectedRouterRedirect({
   authenticatedSelector: attendanceEnabledSelector,
   wrapperDisplayName: 'AttendanceEnabled',
-  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/live-view', // TODO: replace with dashboard path
+  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || ROUTES.LIVE_VIEW, // TODO: replace with dashboard path
   allowRedirectBack: false
 })
 
 export const liveViewEnabledRedir = connectedRouterRedirect({
   authenticatedSelector: liveViewEnabledSelector,
   wrapperDisplayName: 'LiveViewEnabled',
-  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance', // TODO: replace with dashboard path
+  redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || ROUTES.ATTENDANCE, // TODO: replace with dashboard path
   allowRedirectBack: false
 })
 

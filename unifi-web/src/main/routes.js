@@ -33,7 +33,7 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
 
     <Route exact path={ROUTES.USERS}component={Users} />
 
-    <Redirect exact from="/" to={ROUTES.ATTENDANCE} />
+    <Redirect exact from="/" to={ROUTES.LIVE_VIEW} />
   </Switch>
 ))
 
