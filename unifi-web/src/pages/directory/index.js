@@ -11,6 +11,7 @@ import { listHolders } from 'redux/holders/actions'
 import { PageContent } from 'components'
 import { PageContainer } from 'smart-components'
 import { withClientId } from 'hocs'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 
 class Directory extends Component {
   static propTypes = {
@@ -52,6 +53,7 @@ export const actions = {
 }
 
 export default compose(
+  userIsAuthenticatedRedir,
   withClientId,
   connect(null, actions),
 )(Directory)

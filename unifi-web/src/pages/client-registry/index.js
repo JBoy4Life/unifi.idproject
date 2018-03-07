@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { compose, bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
-import { Route, Switch /* Redirect */ } from 'react-router'
+import { Route, Switch } from 'react-router'
 import { withRouter } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
@@ -11,6 +11,7 @@ import ClientListing from './client-listing'
 import { actions as clientActions, selectors as clientSelectors } from 'redux/clients'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 
 const menus = [{
   key: ROUTES.CLIENT_REGISTRY,
@@ -92,6 +93,7 @@ export const actions = {
 }
 
 export default compose(
+  userIsAuthenticatedRedir,
   withRouter,
   connect(selector, actions),
 )(ClientRegistryContainer)

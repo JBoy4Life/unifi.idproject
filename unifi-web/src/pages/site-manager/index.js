@@ -12,6 +12,7 @@ import NetworkDiscovery from './network-discovery'
 import ActiveSite from './active-site'
 import SitePlan from './site-plan'
 import SiteCreation from './site-creation'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 
 import './index.scss'
 
@@ -28,7 +29,7 @@ const menus = [{
   label: 'Site plan',
 }]
 
-export default class ClientRegistryContainer extends Component {
+class SiteManager extends Component {
   handleCreateNewSiteClick = () => {
     Modal.confirm({
       title: 'Are you sure?',
@@ -93,3 +94,5 @@ export default class ClientRegistryContainer extends Component {
     )
   }
 }
+
+export default userIsAuthenticatedRedir(SiteManager)
