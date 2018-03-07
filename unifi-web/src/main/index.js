@@ -1,16 +1,20 @@
 import React, { Component } from 'react'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import Loading from 'components/loading'
 import Routes from './routes'
+import withClientId from 'hocs/with-client-id'
+import { getClient } from 'redux/clients/actions'
 import { getReducer as userSelector } from 'redux/user/selectors'
 import { reauthenticateRequest, setInitialized } from 'redux/user/actions'
 
 class Main extends Component {
   componentWillMount() {
-    const { reauthenticateRequest, setInitialized, user: { currentUser } } = this.props;
+    const { clientId, getClient, reauthenticateRequest, setInitialized, user: { currentUser } } = this.props;
     // Reauthenticate if we have a session.
+    getClient(clientId)
     if (currentUser && currentUser.token) {
       reauthenticateRequest(currentUser.token)
     } else {
@@ -33,9 +37,12 @@ const selector = createStructuredSelector({
 })
 
 const actions = {
+  getClient,
   reauthenticateRequest,
   setInitialized
 }
 
-export default connect(selector, actions)(Main)
-
+export default compose(
+  withClientId, 
+  connect(selector, actions)
+)(Main)

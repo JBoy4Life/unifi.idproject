@@ -1,20 +1,22 @@
-.login-form-wrapper {
-  max-width: 420px;
-  padding: 24px;
-  margin: 0 auto;
-  min-width: 260px;
-  flex: 1;
-  background-color: #fff;
-  align-self: flex-start;
-  border-radius: 5px;
+@import 'src/styles/variables.scss';
 
-  h1 {
-    margin-bottom: 16px;
+.login-page {
+  &__form {
+    max-width: 420px;
+    padding: 24px;
+    margin: 0 auto;
+    min-width: 260px;
+    flex: 1;
+    background-color: #fff;
+    align-self: flex-start;
+    border-radius: 5px;
   }
 
-  img.logo {
-    margin-bottom: 16px;
-    width: 75%;
+  &__title {
+    margin-bottom: 15 px;
   }
 
+  &__logo {
+    margin-bottom: 16px;
+  }
 }
