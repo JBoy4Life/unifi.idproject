@@ -1,40 +1,36 @@
 package id.unifi.service.demo.gallagher;
 
-import id.unifi.service.provider.security.gallagher.FTCAPI;
+import id.unifi.service.provider.security.gallagher.FtcApi;
 import id.unifi.service.provider.security.gallagher.IFTMiddleware2;
-import org.jinterop.dcom.core.JILocalCoClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.concurrent.CountDownLatch;
 
 public class GallagherDemo implements IFTMiddleware2 {
 
-    private FTCAPI ftcapi;
-    private static final Logger log = LoggerFactory.getLogger(GallagherDemo.class);
+    private FtcApi ftcApi;
     public static final CountDownLatch registerLatch = new CountDownLatch(1);
     private static final CountDownLatch quitLatch = new CountDownLatch(1);
 
-    public GallagherDemo(FTCAPI ftcapi) {
-        this.ftcapi = ftcapi;
+    public GallagherDemo(FtcApi ftcApi) {
+        this.ftcApi = ftcApi;
     }
 
     public static void main(String[] args) throws Exception {
 
         System.out.println("********* GALLAGHER DEMO *********");
 
-        FTCAPI ftcapi = new FTCAPI(
+        FtcApi ftcApi = new FtcApi(
                 "10.0.99.3",
                 "localhost",
                 "Administrator",
                 "TestPass123");
-        ftcapi.registerMiddleware(new GallagherDemo(ftcapi));
+        ftcApi.registerMiddleware(new GallagherDemo(ftcApi));
 
         registerLatch.await();
 
-        ftcapi.logCardEvent(
-                4, 1, new Date(), false, 12345, 11111, "ES01", "ESI01",
+        ftcApi.logCardEvent(
+                4, 1, ZonedDateTime.now(), false, 12345, 11111, "ES01", "ESI01",
                 "Card detected: Zone [Reception], #12345", "No details.");
 
         quitLatch.await();
@@ -43,7 +39,7 @@ public class GallagherDemo implements IFTMiddleware2 {
 
     @Override
     public void notifyItemRegistered(String systemId, String itemId, String config) {
-        ftcapi.notifyStatus(systemId, itemId, 1, false, false, "Unifi.id: Zone [Reception] is online.");
+        ftcApi.notifyStatus(systemId, itemId, 1, false, false, "Unifi.id: Zone [Reception] is online.");
         registerLatch.countDown();
     }
 

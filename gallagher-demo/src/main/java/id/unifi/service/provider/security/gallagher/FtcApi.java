@@ -5,19 +5,17 @@ import org.jinterop.dcom.core.*;
 import org.jinterop.dcom.impls.JIObjectFactory;
 
 import java.io.Closeable;
-import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
-public class FTCAPI implements IFTExternalEventInput2, Closeable {
+public class FtcApi implements IFTExternalEventInput2, Closeable {
 
     private final String UUID_FTEIAPI = "C56CA66E-FF0E-4581-B8F3-63F9725D2EC9";
     private final String UUID_IFTEXTERNALEVENTINPUT  = "304B34B7-69F0-4429-B96D-840431E1275C";
     private final String UUID_IFTEXTERNALEVENTINPUT2 = "C06D6E49-9FE5-4C1C-8CFE-AA9763CCDDAB";
-    private final IJIComObject ftceapi;
+    private final IJIComObject comServer;
 
-    public FTCAPI(
+    public FtcApi(
             String server,
             String domain,
             String username,
@@ -33,7 +31,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
                     JIClsid.valueOf(UUID_FTEIAPI),
                     server,
                     session);
-            this.ftceapi = comServer.createInstance();
+            this.comServer = comServer.createInstance();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -63,12 +61,12 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
         coClass.setSupportedEventInterfaces(supportedInterfaces);
 
         try {
-            final IJIComObject remoteMiddleware = ftceapi.queryInterface(
+            final IJIComObject remoteMiddleware = comServer.queryInterface(
                     UUID_IFTEXTERNALEVENTINPUT);
             JIObjectFactory.attachEventHandler(
                     remoteMiddleware,
                     IFTMiddleware2DcomBridge.CLSID,
-                    JIObjectFactory.buildObject(ftceapi.getAssociatedSession(), coClass));
+                    JIObjectFactory.buildObject(comServer.getAssociatedSession(), coClass));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -119,7 +117,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
     public void logEvent(
             int eventType,
             int eventId,
-            Date eventTime,
+            ZonedDateTime eventTime,
             boolean hasRestoral,
             String systemId,
             String itemId,
@@ -138,7 +136,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
         cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         cb.addInParamAsString(details, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         try {
-            IJIComObject eei2 = ftceapi.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
+            IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
             eei2.call(cb);
         } catch (JIException e) {
             throw new RuntimeException(e);
@@ -149,7 +147,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
     public void logCardEvent(
             int eventType,
             int eventId,
-            Date eventTime,
+            ZonedDateTime eventTime,
             boolean hasRestoral,
             int cardNumber,
             int facilityCode,
@@ -172,7 +170,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
         cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         cb.addInParamAsString(details, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         try {
-            IJIComObject eei2 = ftceapi.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
+            IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
             eei2.call(cb);
         } catch (JIException e) {
             throw new RuntimeException(e);
@@ -191,7 +189,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
         cb.addInParamAsString(systemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         cb.addInParamAsString(itemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         try {
-            IJIComObject eei2 = ftceapi.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
+            IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
             eei2.call(cb);
         } catch (JIException e) {
             throw new RuntimeException(e);
@@ -216,7 +214,7 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
         cb.addInParamAsBoolean(offline, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
         cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         try {
-            IJIComObject eei2 = ftceapi.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
+            IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
             eei2.call(cb);
         } catch (JIException e) {
             throw new RuntimeException(e);
@@ -228,10 +226,10 @@ public class FTCAPI implements IFTExternalEventInput2, Closeable {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         try {
-            if (ftceapi != null) {
-                ftceapi.release();
+            if (comServer != null) {
+                comServer.release();
             }
         } catch (JIException e) {
             // Eat it.
