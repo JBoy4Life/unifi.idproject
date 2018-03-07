@@ -1,20 +1,17 @@
 import React, { Component } from 'react'
-import { Route, Switch /* Redirect */ } from 'react-router'
-
 import { compose, bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
+import { createStructuredSelector } from 'reselect'
+import { Route, Switch } from 'react-router'
 import { withRouter } from 'react-router-dom'
 
-import { actions as clientActions, selectors as clientSelectors } from 'redux/clients'
-
-import * as ROUTES from '../../utils/routes'
-
-
-import { PageContent } from '../../components'
-import { PageContainer, LinkedSideNavigation } from '../../smart-components'
-
-import ClientListing from './client-listing'
+import * as ROUTES from 'utils/routes'
 import ClientAdd from './client-add'
+import ClientListing from './client-listing'
+import { actions as clientActions, selectors as clientSelectors } from 'redux/clients'
+import { PageContainer, LinkedSideNavigation } from 'smart-components'
+import { PageContent } from 'components'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 
 const menus = [{
   key: ROUTES.CLIENT_REGISTRY,
@@ -87,12 +84,16 @@ class ClientRegistryContainer extends Component {
   }
 }
 
-export const mapStateToProps = state => ({
-  clientList: clientSelectors.getClients(state),
-})
-export const mapDispatch = dispatch => bindActionCreators(clientActions, dispatch)
+export const selector = createStructuredSelector({
+  clientList: clientSelectors.clientsSelector,
+});
+
+export const actions = {
+  ...clientActions
+}
 
 export default compose(
+  userIsAuthenticatedRedir,
   withRouter,
-  connect(mapStateToProps, mapDispatch),
+  connect(selector, actions),
 )(ClientRegistryContainer)

@@ -15,6 +15,7 @@ import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
 
@@ -193,6 +194,7 @@ export const actions = {
 }
 
 export default compose(
+  userIsAuthenticatedRedir,
   liveViewEnabledRedir,
   withRouter,
   withClientId,

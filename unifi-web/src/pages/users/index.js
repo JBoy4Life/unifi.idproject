@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 
-import { PageContainer } from '../../smart-components'
+import { PageContainer } from 'smart-components'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 
-export default class SitemapContainer extends Component {
+class Users extends Component {
   render() {
     return (
       <PageContainer>
@@ -11,3 +12,5 @@ export default class SitemapContainer extends Component {
     )
   }
 }
+
+export default userIsAuthenticatedRedir(Users)

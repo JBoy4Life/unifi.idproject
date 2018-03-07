@@ -1,4 +1,5 @@
 import React from 'react'
+import { compose } from 'redux'
 import { Route, Switch, Redirect } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
@@ -10,7 +11,7 @@ import AttendanceReports from './attendance-reports'
 import AttendanceScheduleBlockDrilldown from './attendance-schedule-block-drilldown'
 import AttendanceScheduleDetail from './attendance-schedule-detail'
 import AttendanceSchedules from './attendance-schedules'
-import { attendanceEnabledRedir } from 'hocs/auth'
+import { attendanceEnabledRedir, userIsAuthenticatedRedir } from 'hocs/auth'
 
 const menus = [
   {
@@ -22,11 +23,7 @@ const menus = [
     key: '/attendance/reports',
     icon: 'bar-chart',
     label: 'Reports',
-  },
-  // {
-  //   key: '/attendance/custom-reports',
-  //   label: 'Custom Reports',
-  // }
+  }
 ]
 
 const ModulesRoutes = () => (
@@ -78,4 +75,7 @@ const Attendance = () => (
   </PageContainer>
 )
 
-export default attendanceEnabledRedir(Attendance)
+export default compose(
+  userIsAuthenticatedRedir,
+  attendanceEnabledRedir
+)(Attendance)

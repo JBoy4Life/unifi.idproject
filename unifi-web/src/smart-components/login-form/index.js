@@ -39,7 +39,7 @@ class LoginForm extends Component {
           component={CheckboxField}
         /> */}
         <SubmitRow>
-          <Button htmlType="submit" type="primary" wide>Log In</Button>
+          <Button htmlType="submit" type="primary" wide>Enter</Button>
         </SubmitRow>
       </form>
     )

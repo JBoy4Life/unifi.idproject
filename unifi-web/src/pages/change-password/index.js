@@ -13,6 +13,7 @@ import { changePassword } from 'redux/user/actions'
 import { PageContainer, ChangePasswordForm } from 'smart-components'
 import { PageContent } from 'components'
 import { changePasswordStatusSelector } from 'redux/user/selectors'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 import './index.scss'
 
 const COMPONENT_CSS_CLASS = 'change-password'
@@ -65,5 +66,6 @@ export const actions = {
 }
 
 export default compose(
+  userIsAuthenticatedRedir,
   connect(selector, actions)
 )(ChangePassword)

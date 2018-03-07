@@ -1,13 +1,16 @@
-import React, { Component } from 'react'
+import React from 'react'
 
-import { PageContainer } from '../../smart-components'
+import { PageContainer } from 'smart-components'
+import { PageContent } from 'components'
 
-export default class NotFoundContainer extends Component {
-  render() {
-    return (
-      <PageContainer>
+const NotFound = () => (
+  <PageContainer>
+    <PageContent>
+      <PageContent.Main>
         <h1>Not found</h1>
-      </PageContainer>
-    )
-  }
-}
+      </PageContent.Main>
+    </PageContent>
+  </PageContainer>
+)
+
+export default NotFound

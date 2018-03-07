@@ -1,14 +1,13 @@
 import React, { Component } from 'react'
 import { Route, Switch /* Redirect */ } from 'react-router'
 
-import * as ROUTES from '../../utils/routes'
-
-import { PageContent } from '../../components'
-import { PageContainer, LinkedSideNavigation } from '../../smart-components'
-
+import * as ROUTES from 'utils/routes'
 import EvacuationDashboard from './evacuation-dashboard'
 import EvacuationDirectory from './evacuation-directory'
 import EvacuationFloor from './evacuation-floor'
+import { PageContainer, LinkedSideNavigation } from 'smart-components'
+import { PageContent } from 'components'
+import { userIsAuthenticatedRedir } from 'hocs/auth'
 
 const menus = [{
   key: '/evacuation',
@@ -23,7 +22,7 @@ const menus = [{
   label: 'Floor View',
 }]
 
-export default class SitemapContainer extends Component {
+class EvaculationContainer extends Component {
   render() {
     return (
       <PageContainer>
@@ -56,3 +55,4 @@ export default class SitemapContainer extends Component {
   }
 }
 
+export default userIsAuthenticatedRedir(EvaculationContainer)
