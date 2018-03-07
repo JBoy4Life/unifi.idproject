@@ -8,11 +8,12 @@ import java.io.Closeable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
-public class FtcApi implements IFTExternalEventInput2, Closeable {
+public class FtcApi implements IFTExternalEventInput3, Closeable {
 
     private final String UUID_FTEIAPI = "C56CA66E-FF0E-4581-B8F3-63F9725D2EC9";
     private final String UUID_IFTEXTERNALEVENTINPUT  = "304B34B7-69F0-4429-B96D-840431E1275C";
     private final String UUID_IFTEXTERNALEVENTINPUT2 = "C06D6E49-9FE5-4C1C-8CFE-AA9763CCDDAB";
+    private final String UUID_IFTEXTERNALEVENTINPUT3 = "9FFF658F-2736-4CD2-ACDD-8622C969EFD0";
     private final IJIComObject comServer;
 
     public FtcApi(
@@ -110,7 +111,7 @@ public class FtcApi implements IFTExternalEventInput2, Closeable {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // IFTExternalEventInput2
+    // IFTExternalEventInput3
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -215,6 +216,79 @@ public class FtcApi implements IFTExternalEventInput2, Closeable {
         cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
         try {
             IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT2);
+            eei2.call(cb);
+        } catch (JIException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void logLongCardEvent(
+            int eventType,
+            int eventId,
+            ZonedDateTime eventTime,
+            boolean hasRestoral,
+            int cardIdSize,
+            byte[] cardId,
+            int facilityCode,
+            String systemId,
+            String itemId,
+            String message,
+            String details
+    ) {
+        throw new RuntimeException("Not implemented.");
+//        double timestamp = (new OleDate(eventTime)).toDouble();
+//        JICallBuilder cb = new JICallBuilder(true);
+//        cb.setOpnum(4);
+//        cb.addInParamAsInt(eventType, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+//        cb.addInParamAsInt(eventId, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+//        cb.addInParamAsDouble(timestamp, JIFlags.FLAG_NULL);
+//        cb.addInParamAsInt(hasRestoral ? 1 : 0, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+//        cb.addInParamAsInt(cardIdSize, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+//        cb.addInParamAsPointer(new JIPointer(cardId), JIFlags.FLAG_REPRESENTATION_STRING_LPCTSTR);
+//        cb.addInParamAsInt(facilityCode, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+//        cb.addInParamAsString(systemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+//        cb.addInParamAsString(itemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+//        cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+//        cb.addInParamAsString(details, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+//        try {
+//            IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT3);
+//            eei2.call(cb);
+//        } catch (JIException e) {
+//            throw new RuntimeException(e);
+//        }
+    }
+
+    @Override
+    public void logLongCardEvent2(
+            int eventType,
+            int eventId,
+            ZonedDateTime eventTime,
+            boolean hasRestoral,
+            int cardNumberFormatType,
+            String cardNumber,
+            int facilityCode,
+            String systemId,
+            String itemId,
+            String message,
+            String details
+    ) {
+        double timestamp = (new OleDate(eventTime)).toDouble();
+        JICallBuilder cb = new JICallBuilder(true);
+        cb.setOpnum(5);
+        cb.addInParamAsInt(eventType, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsInt(eventId, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsDouble(timestamp, JIFlags.FLAG_NULL);
+        cb.addInParamAsInt(hasRestoral ? 1 : 0, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsInt(cardNumberFormatType, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsString(cardNumber, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+        cb.addInParamAsInt(facilityCode, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
+        cb.addInParamAsString(systemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+        cb.addInParamAsString(itemId, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+        cb.addInParamAsString(message, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+        cb.addInParamAsString(details, JIFlags.FLAG_REPRESENTATION_STRING_BSTR);
+        try {
+            IJIComObject eei2 = comServer.queryInterface(UUID_IFTEXTERNALEVENTINPUT3);
             eei2.call(cb);
         } catch (JIException e) {
             throw new RuntimeException(e);
