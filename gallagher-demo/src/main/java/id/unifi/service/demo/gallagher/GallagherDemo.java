@@ -39,7 +39,7 @@ public class GallagherDemo implements IFTMiddleware2 {
 
     @Override
     public void notifyItemRegistered(String systemId, String itemId, String config) {
-        ftcApi.notifyStatus(systemId, itemId, 1, false, false, "Unifi.id: Zone [Reception] is online.");
+        ftcApi.notifyStatus("ES01", "ESI01", 1, false, false, "Unifi.id: Zone [Reception] is online.");
         registerLatch.countDown();
     }
 
