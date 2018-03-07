@@ -9,12 +9,12 @@ import './index.scss'
 import logo from 'assets/images/ucl-logo-2.png'
 import unifilogo from 'assets/images/unifi-logo.svg'
 import { actions as userActions } from 'redux/user'
+import { clientIsValidRedir, userIsNotAuthenticatedRedir } from 'hocs/auth'
 import { currentClientSelector } from 'redux/clients/selectors'
 import { formSubmit } from 'utils/form'
 import { noop } from 'utils/helpers'
 import { PageContainer, LoginForm } from 'smart-components'
 import { PageContent } from 'components'
-import { userIsNotAuthenticatedRedir } from 'hocs/auth'
 
 const COMPONENT_CSS_CLASSNAME = 'login-page'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
@@ -62,6 +62,7 @@ export const actions = {
 }
 
 export default compose(
+  clientIsValidRedir,
   userIsNotAuthenticatedRedir,
   connect(selector, actions)
 )(LoginContainer)

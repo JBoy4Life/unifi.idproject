@@ -18,7 +18,7 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
     <Route exact path={ROUTES.MY_ACCOUNT}component={MyAccount} />
     <Route path={ROUTES.DIRECTORY} component={Directory} />
 
-    <Route exact path={ROUTES.CHANGE_PASSWORD}component={ChangePassword} />
+    <Route exact path={ROUTES.CHANGE_PASSWORD} component={ChangePassword} />
 
     <Route path={ROUTES.EVACUATION} component={Evacuation} />
     <Route path={ROUTES.ATTENDANCE} component={Attendance} />
@@ -33,7 +33,7 @@ const ProtectedRoutes = userIsAuthenticatedRedir(() => (
 
     <Route exact path={ROUTES.USERS}component={Users} />
 
-    <Redirect from="/" to={ROUTES.ATTENDANCE} />
+    <Redirect exact from="/" to={ROUTES.ATTENDANCE} />
   </Switch>
 ))
 
@@ -45,6 +45,7 @@ export default ({ history }) => (
       <Route exact path={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
       <Route exact path={ROUTES.CANCEL_PASSWORD_RESET} component={CancelPasswordReset} />
       <Route exact path={ROUTES.RESET_PASSWORD} component={ResetPassword} />
+      <Route exact path={ROUTES.NOT_FOUND} component={NotFound} />
       <Route path="/" component={ProtectedRoutes} />
 
       <Route component={NotFound} />

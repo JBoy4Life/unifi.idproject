@@ -4,6 +4,9 @@ import connectedAuthWrapper from 'redux-auth-wrapper/connectedAuthWrapper'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
+import * as ROUTES from 'utils/routes'
+import { clientIsLoadingSelector, clientIsLoadedSelector } from 'redux/clients/selectors'
+import { Loading } from 'components'
 import { loginStatusSelector, currentUserSelector, attendanceEnabledSelector, liveViewEnabledSelector } from 'redux/user/selectors'
 
 const locationHelper = locationHelperBuilder({})
@@ -22,7 +25,7 @@ export const userIsAuthenticated = connectedAuthWrapper(userIsAuthenticatedDefau
 
 export const userIsAuthenticatedRedir = connectedRouterRedirect({
   ...userIsAuthenticatedDefaults,
-  AuthenticatingComponent: () => (<div>Logging in...</div>),
+  AuthenticatingComponent: () => (<Loading />),
   redirectPath: '/login'
 })
 
@@ -38,7 +41,6 @@ export const userIsNotAuthenticatedRedir = connectedRouterRedirect({
   allowRedirectBack: false
 })
 
-
 export const attendanceEnabledRedir = connectedRouterRedirect({
   authenticatedSelector: attendanceEnabledSelector,
   wrapperDisplayName: 'AttendanceEnabled',
@@ -50,5 +52,14 @@ export const liveViewEnabledRedir = connectedRouterRedirect({
   authenticatedSelector: liveViewEnabledSelector,
   wrapperDisplayName: 'LiveViewEnabled',
   redirectPath: (state, ownProps) => locationHelper.getRedirectQueryParam(ownProps) || '/attendance', // TODO: replace with dashboard path
+  allowRedirectBack: false
+})
+
+export const clientIsValidRedir = connectedRouterRedirect({
+  authenticatedSelector: clientIsLoadedSelector,
+  authenticatingSelector: clientIsLoadingSelector,
+  wrapperDisplayName: 'ClientIsValid',
+  AuthenticatingComponent: () => (<Loading />),
+  redirectPath: ROUTES.NOT_FOUND,
   allowRedirectBack: false
 })

@@ -1,4 +1,5 @@
 export const SITEMAP = '/sitemap'
+export const NOT_FOUND = '/404'
 export const MY_ACCOUNT = '/my-account'
 export const LOGIN = '/login'
 export const ACCEPT_INVITATION = '/accept-invitation/:username/:token'

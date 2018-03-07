@@ -20,6 +20,7 @@ import NetworkReaderDetailsCard from './network-reader-details-card'
 
 import LiveSiteFloorView from './live-site-floor-view'
 
+import Loading from './loading'
 import HolderGrid from './holder-grid'
 
 export {
@@ -40,6 +41,7 @@ export {
   NetworkReaderDetailsCard,
   LiveSiteFloorView,
 
+  Loading,
   HolderGrid
 }
 
