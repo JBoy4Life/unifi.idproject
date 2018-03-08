@@ -74,7 +74,7 @@ class UserActions extends Component {
           onClick={this.toggleMenuOpen}
         >
           <span className={bemE('username')}>
-            {user.operator.username}
+            {user.operator.name} ({user.operator.username})
           </span>
           <Icon type={menuOpen ? 'caret-up' : 'caret-down'} className={bemE('caret')} />
         </button>
