@@ -17,12 +17,12 @@ import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
 import static id.unifi.service.core.QueryUtils.fieldValueOpt;
 import static id.unifi.service.core.QueryUtils.filterCondition;
+import static id.unifi.service.core.QueryUtils.getUpdateQueryFieldMap;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.db.tables.records.AssignmentRecord;
 import id.unifi.service.core.db.tables.records.DetectableRecord;
-import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.InsertOnDuplicateStep;
@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 @ApiService("detectable")
 public class DetectableService {
@@ -135,16 +134,14 @@ public class DetectableService {
         authorize(session, clientId);
         changes.validate();
 
-        Map<? extends TableField<DetectableRecord, ?>, ?> collect = editables.entrySet().stream()
-                .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<? extends TableField<DetectableRecord, ?>, ?> fieldMap = getUpdateQueryFieldMap(editables, changes);
 
         db.execute(sql -> {
             int rowsUpdated = 0;
             if (changes.description != null || changes.active != null) {
                 rowsUpdated += sql
                         .update(DETECTABLE)
-                        .set(collect)
+                        .set(fieldMap)
                         .where(DETECTABLE.CLIENT_ID.eq(clientId))
                         .and(DETECTABLE.DETECTABLE_ID.eq(detectableId))
                         .and(DETECTABLE.DETECTABLE_TYPE.eq(detectableType.toString()))

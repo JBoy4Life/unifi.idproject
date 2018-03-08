@@ -20,18 +20,18 @@ import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
+import id.unifi.service.common.types.OperatorInfo;
 import id.unifi.service.common.types.OperatorPK;
 import static id.unifi.service.core.QueryUtils.filterCondition;
+import static id.unifi.service.core.QueryUtils.getUpdateQueryFieldMap;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
-import id.unifi.service.common.types.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
-import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 @ApiService("operator")
 public class OperatorService {
@@ -145,13 +144,11 @@ public class OperatorService {
         authorize(session, clientId);
         changes.validate();
 
-        Map<? extends TableField<OperatorRecord, ?>, ?> collect = editables.entrySet().stream()
-                .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<? extends TableField<OperatorRecord, ?>, ?> fieldMap = getUpdateQueryFieldMap(editables, changes);
 
         int rowsUpdated = db.execute(sql -> sql
                 .update(OPERATOR)
-                .set(collect)
+                .set(fieldMap)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
                 .execute());

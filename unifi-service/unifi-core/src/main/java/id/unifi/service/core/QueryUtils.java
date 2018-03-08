@@ -1,5 +1,6 @@
 package id.unifi.service.core;
 
+import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
 import org.jooq.Record;
 import org.jooq.TableField;
@@ -10,8 +11,10 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class QueryUtils {
     private static final Logger log = LoggerFactory.getLogger(QueryUtils.class);
@@ -40,6 +43,14 @@ public class QueryUtils {
         }
 
         return Optional.of(new ImageWithType(mimeType, data));
+    }
+
+    public static <R extends Record, C> Map<? extends TableField<R, ?>, ?> getUpdateQueryFieldMap(
+            Map<? extends TableField<R, ?>, Function<C, ?>> editables,
+            C changes) {
+        return editables.entrySet().stream()
+                .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public static class ImageWithType {
