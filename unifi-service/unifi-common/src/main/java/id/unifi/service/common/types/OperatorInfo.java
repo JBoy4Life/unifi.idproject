@@ -1,4 +1,4 @@
-package id.unifi.service.core.operator;
+package id.unifi.service.common.types;
 
 public class OperatorInfo {
     public final String clientId;

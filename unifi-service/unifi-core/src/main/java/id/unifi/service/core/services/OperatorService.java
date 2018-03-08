@@ -28,7 +28,7 @@ import static id.unifi.service.core.db.Tables.OPERATOR;
 import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
-import id.unifi.service.core.operator.OperatorInfo;
+import id.unifi.service.common.types.OperatorInfo;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import static java.util.stream.Collectors.toMap;
@@ -183,7 +183,7 @@ public class OperatorService {
         Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
-            return new AuthInfo(operator.get(),
+            return new AuthInfo(getOperatorInfo(operator.get().clientId, operator.get().username),
                     sessionToken,
                     Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
                     verticalConfigManager.getClientSideConfig(operator.get().clientId));
@@ -295,7 +295,7 @@ public class OperatorService {
         sessionTokenStore.put(sessionToken, operator);
         session.setAuth(sessionToken, operator);
         recordAuthAttempt(operator, true);
-        return new AuthInfo(operator,
+        return new AuthInfo(getOperatorInfo(operator.clientId, operator.username),
                 sessionToken,
                 Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
                 verticalConfigManager.getClientSideConfig(operator.clientId));
