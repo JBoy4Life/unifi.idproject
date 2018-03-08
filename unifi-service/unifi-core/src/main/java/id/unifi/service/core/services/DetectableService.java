@@ -117,14 +117,6 @@ public class DetectableService {
         });
     }
 
-    private InsertOnDuplicateStep<AssignmentRecord> insertIntoAssignmentQuery(DSLContext sql, String clientId, String detectableId, DetectableType detectableType, @Nullable String assignment) {
-        return sql.insertInto(ASSIGNMENT)
-                .set(ASSIGNMENT.CLIENT_ID, clientId)
-                .set(ASSIGNMENT.CLIENT_REFERENCE, assignment)
-                .set(ASSIGNMENT.DETECTABLE_ID, detectableId)
-                .set(ASSIGNMENT.DETECTABLE_TYPE, detectableType.toString());
-    }
-
     @ApiOperation
     public void editDetectable(OperatorSessionData session,
                                String clientId,
@@ -176,6 +168,18 @@ public class DetectableService {
 
             return null;
         });
+    }
+
+    private static InsertOnDuplicateStep<AssignmentRecord> insertIntoAssignmentQuery(DSLContext sql,
+                                                                                     String clientId,
+                                                                                     String detectableId,
+                                                                                     DetectableType detectableType,
+                                                                                     @Nullable String assignment) {
+        return sql.insertInto(ASSIGNMENT)
+                .set(ASSIGNMENT.CLIENT_ID, clientId)
+                .set(ASSIGNMENT.CLIENT_REFERENCE, assignment)
+                .set(ASSIGNMENT.DETECTABLE_ID, detectableId)
+                .set(ASSIGNMENT.DETECTABLE_TYPE, detectableType.toString());
     }
 
     private static Table<? extends Record> calculateTableJoin(ListFilter filter, @Nullable Set<String> with) {
