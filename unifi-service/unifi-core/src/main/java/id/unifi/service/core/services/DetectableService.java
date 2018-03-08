@@ -1,7 +1,14 @@
 package id.unifi.service.core.services;
 
+import id.unifi.service.common.api.Validation;
+import static id.unifi.service.common.api.Validation.atLeastOneNonNull;
+import static id.unifi.service.common.api.Validation.shortString;
+import static id.unifi.service.common.api.Validation.v;
+import static id.unifi.service.common.api.Validation.validateAll;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.AlreadyExists;
+import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
@@ -13,24 +20,44 @@ import static id.unifi.service.core.QueryUtils.filterCondition;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
+import id.unifi.service.core.db.tables.records.AssignmentRecord;
+import id.unifi.service.core.db.tables.records.DetectableRecord;
+import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
+import org.jooq.DSLContext;
+import org.jooq.InsertOnDuplicateStep;
 import org.jooq.Record;
 import org.jooq.Table;
+import org.jooq.TableField;
 import static org.jooq.impl.DSL.and;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 @ApiService("detectable")
 public class DetectableService {
     private final Database db;
 
+    private static final Map<? extends TableField<DetectableRecord, ?>, Function<FieldChanges, ?>> editables = Map.of(
+            DETECTABLE.DESCRIPTION, c -> c.description,
+            DETECTABLE.ACTIVE, c -> c.active);
+
     public DetectableService(DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE);
     }
 
+    @ApiOperation
+    public DetectableType[] listDetectableTypes() {
+        return DetectableType.values();
+    }
+    
     @ApiOperation
     public List<DetectableInfo> listDetectables(OperatorSessionData session,
                                                 String clientId,
@@ -56,6 +83,102 @@ public class DetectableService {
                         DetectableType.fromString(r.get(DETECTABLE.DETECTABLE_TYPE)),
                         r.get(DETECTABLE.DESCRIPTION),
                         fieldValueOpt(r, ASSIGNMENT.CLIENT_REFERENCE))));
+    }
+
+    @ApiOperation
+    public void addDetectable(OperatorSessionData session,
+                              String clientId,
+                              String detectableId,
+                              DetectableType detectableType,
+                              String description,
+                              @Nullable Boolean active,
+                              @Nullable String assignment) {
+        authorize(session, clientId);
+
+        db.execute(sql -> {
+            try {
+                sql.insertInto(DETECTABLE)
+                        .set(DETECTABLE.CLIENT_ID, clientId)
+                        .set(DETECTABLE.DETECTABLE_ID, detectableId)
+                        .set(DETECTABLE.DETECTABLE_TYPE, detectableType.toString())
+                        .set(DETECTABLE.DESCRIPTION, description)
+                        .set(DETECTABLE.ACTIVE, active != null ? active : true)
+                        .execute();
+                if (assignment != null) {
+                    try {
+                        insertIntoAssignmentQuery(sql, clientId, detectableId, detectableType, assignment).execute();
+                    } catch (DataIntegrityViolationException e) {
+                        throw new NotFound("holder");
+                    }
+                }
+            } catch (DuplicateKeyException e) {
+                throw new AlreadyExists("detectable");
+            }
+            return null;
+        });
+    }
+
+    private InsertOnDuplicateStep<AssignmentRecord> insertIntoAssignmentQuery(DSLContext sql, String clientId, String detectableId, DetectableType detectableType, @Nullable String assignment) {
+        return sql.insertInto(ASSIGNMENT)
+                .set(ASSIGNMENT.CLIENT_ID, clientId)
+                .set(ASSIGNMENT.CLIENT_REFERENCE, assignment)
+                .set(ASSIGNMENT.DETECTABLE_ID, detectableId)
+                .set(ASSIGNMENT.DETECTABLE_TYPE, detectableType.toString());
+    }
+
+    @ApiOperation
+    public void editDetectable(OperatorSessionData session,
+                               String clientId,
+                               String detectableId,
+                               DetectableType detectableType,
+                               FieldChanges changes) {
+        authorize(session, clientId);
+        changes.validate();
+
+        Map<? extends TableField<DetectableRecord, ?>, ?> collect = editables.entrySet().stream()
+                .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        db.execute(sql -> {
+            int rowsUpdated = 0;
+            if (changes.description != null || changes.active != null) {
+                rowsUpdated += sql
+                        .update(DETECTABLE)
+                        .set(collect)
+                        .where(DETECTABLE.CLIENT_ID.eq(clientId))
+                        .and(DETECTABLE.DETECTABLE_ID.eq(detectableId))
+                        .and(DETECTABLE.DETECTABLE_TYPE.eq(detectableType.toString()))
+                        .execute();
+            }
+
+            if (changes.assignment != null) {
+                if (changes.assignment.isPresent()) {
+                    String assignment = changes.assignment.get();
+                    try {
+                        rowsUpdated += insertIntoAssignmentQuery(sql, clientId, detectableId, detectableType, assignment)
+                                .onConflict()
+                                .doUpdate()
+                                .set(ASSIGNMENT.CLIENT_REFERENCE, assignment)
+                                .execute();
+                    } catch (DataIntegrityViolationException e) {
+                        throw new NotFound("holder");
+                    }
+                } else {
+                    rowsUpdated++; // We silently ignore non-existent detectables and holders here for simplicity
+                    sql.deleteFrom(ASSIGNMENT)
+                            .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
+                            .and(ASSIGNMENT.DETECTABLE_ID.eq(detectableId))
+                            .and(ASSIGNMENT.DETECTABLE_TYPE.eq(detectableType.toString()))
+                            .execute();
+                }
+            }
+
+            if (rowsUpdated == 0) {
+                throw new NotFound("detectable");
+            }
+
+            return null;
+        });
     }
 
     private static Table<? extends Record> calculateTableJoin(ListFilter filter, @Nullable Set<String> with) {
@@ -111,6 +234,23 @@ public class DetectableService {
             this.detectableType = detectableType;
             this.description = description;
             this.assignment = assignment;
+        }
+    }
+
+    public static class FieldChanges {
+        public String description;
+        public Boolean active;
+        public Optional<String> assignment;
+
+        public FieldChanges() {}
+
+        void validate() {
+            validateAll(
+                    v("description|active|assignment", atLeastOneNonNull(description, assignment)),
+                    v("description", description, Validation::shortString),
+                    v("assignment",
+                            assignment == null || !assignment.isPresent() ? null : shortString(assignment.get()))
+            );
         }
     }
 }
