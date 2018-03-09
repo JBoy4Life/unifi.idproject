@@ -1,5 +1,6 @@
-package id.unifi.service.core;
+package id.unifi.service.common.util;
 
+import id.unifi.service.common.api.errors.ValidationFailure;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
 import org.jooq.Record;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -42,7 +44,12 @@ public class QueryUtils {
             return Optional.empty();
         }
 
-        return Optional.of(new ImageWithType(mimeType, data));
+        return Optional.of(new ImageWithType(data, mimeType));
+    }
+
+    public static Optional<ImageWithType> validateImageFormat(Optional<byte[]> image) {
+        return image.map(im -> QueryUtils.imageWithType(im).orElseThrow(() -> new ValidationFailure(
+                List.of(new ValidationFailure.ValidationError("image", ValidationFailure.Issue.BAD_FORMAT)))));
     }
 
     public static <R extends Record, C> Map<? extends TableField<R, ?>, ?> getUpdateQueryFieldMap(
@@ -57,7 +64,7 @@ public class QueryUtils {
         public final String mimeType;
         public final byte[] data;
 
-        public ImageWithType(String mimeType, byte[] data) {
+        public ImageWithType(byte[] data, String mimeType) {
             this.mimeType = mimeType;
             this.data = data;
         }

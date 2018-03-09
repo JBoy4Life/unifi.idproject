@@ -1,6 +1,7 @@
 CREATE TABLE core.client_image(
   client_id        CITEXT NOT NULL,
   image            BYTEA NOT NULL,
+  mime_type        VARCHAR(64) NOT NULL,
 
   PRIMARY KEY (client_id),
   CONSTRAINT fk_client_image_to_client

@@ -8,12 +8,12 @@ import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
-import id.unifi.service.core.QueryUtils;
-import id.unifi.service.core.QueryUtils.ImageWithType;
-import static id.unifi.service.core.QueryUtils.fieldValueOpt;
+import id.unifi.service.common.util.QueryUtils.ImageWithType;
+import static id.unifi.service.common.util.QueryUtils.fieldValueOpt;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT;
 import static id.unifi.service.core.db.Tables.CLIENT_IMAGE;
+import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ public class ClientService {
         return new ClientInfo(
                 r.get(CLIENT.CLIENT_ID),
                 r.get(CLIENT.DISPLAY_NAME),
-                fieldValueOpt(r, CLIENT_IMAGE.IMAGE).flatMap(QueryUtils::imageWithType));
+                fieldValueOpt(r, CLIENT_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))));
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData) {

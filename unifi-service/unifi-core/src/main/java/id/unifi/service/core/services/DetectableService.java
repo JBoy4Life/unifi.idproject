@@ -15,9 +15,9 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.OperatorPK;
-import static id.unifi.service.core.QueryUtils.fieldValueOpt;
-import static id.unifi.service.core.QueryUtils.filterCondition;
-import static id.unifi.service.core.QueryUtils.getUpdateQueryFieldMap;
+import static id.unifi.service.common.util.QueryUtils.fieldValueOpt;
+import static id.unifi.service.common.util.QueryUtils.filterCondition;
+import static id.unifi.service.common.util.QueryUtils.getUpdateQueryFieldMap;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
@@ -110,7 +110,7 @@ public class DetectableService {
                         throw new NotFound("holder");
                     }
                 }
-            } catch (DuplicateKeyException e) {
+              } catch (DuplicateKeyException e) {
                 throw new AlreadyExists("detectable");
             }
             return null;
@@ -130,7 +130,7 @@ public class DetectableService {
 
         db.execute(sql -> {
             int rowsUpdated = 0;
-            if (changes.description != null || changes.active != null) {
+            if (!fieldMap.isEmpty()) {
                 rowsUpdated += sql
                         .update(DETECTABLE)
                         .set(fieldMap)

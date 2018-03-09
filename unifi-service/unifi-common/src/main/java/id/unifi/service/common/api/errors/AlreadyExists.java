@@ -4,7 +4,7 @@ public class AlreadyExists extends CoreMarshallableError {
     public final String type;
 
     public AlreadyExists(String type) {
-        super("already-exists", "Entity already exists");
+        super("already-exists", type + " already exists");
         this.type = type;
     }
 }
