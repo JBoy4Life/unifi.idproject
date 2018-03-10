@@ -209,8 +209,8 @@ public class OperatorService {
         return db.execute((DSLContext sql) -> sql.select(OPERATOR_FIELDS)
                 .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
-                .and(filterCondition))
-                .fetch(OperatorService::operatorFromRecord);
+                .and(filterCondition)
+                .fetch(OperatorService::operatorFromRecord));
     }
 
     @ApiOperation
