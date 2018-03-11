@@ -61,6 +61,48 @@ bundle agent unifi_baseline {
       "$(baseline_packages)"
           policy => "present",
           package_module => apt_get;
+  
+  # Install/Configure some common tools
+  methods:
+    any::
+      # Install Chrony in place of traditional NTP client, recommended for performance (and backwards compatible with ntp.conf)
+      "chrony";
+
+}
+
+bundle agent chrony {
+  vars:
+    any::
+      "ntp_server_pool" string => "pool 1.uk.pool.ntp.org iburst";
+
+  packages:
+    any::
+      "chrony"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "chrony"
+      service_policy => "start";
+      
+  commands: 
+    restart_chrony:: 
+      "/bin/systemctl restart chrony" 
+         contain => in_shell_and_silent; 
+
+  files:
+    "/etc/chrony/chrony.conf"
+      comment => "Replace default Debian chrony/NTP Server",
+      create => "false",
+      edit_line => chrony_pool,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_chrony" );
+}
+
+bundle edit_line chrony_pool {
+    replace_patterns:
+        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_pool));
 }
 
 bundle agent unifi_role_app {
@@ -111,11 +153,11 @@ bundle agent oracle_java_jdk {
           expression => returnszero("/bin/fgrep \"deb $(repository_url) $(ubuntu_version)\" /etc/apt/sources.list", "noshell");
       "oracle_licence_accepted"
           expression => returnszero("/usr/bin/debconf-get-selections | /bin/fgrep accepted-oracle-license | /bin/fgrep true", "useshell");
-  files:
-      "/etc/apt/sources.list.d/oracle-java.list"
-          create => true,
-          edit_line => oracle_java_apt,
-          classes => if_repaired("sources_list_changed");
+#  files:
+#      "/etc/apt/sources.list.d/oracle-java.list"
+#          create => true,
+#          edit_line => oracle_java_apt,
+#          classes => if_repaired("sources_list_changed");
   commands:
     !apt_key_added::
       "/usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(key_fp)\"";

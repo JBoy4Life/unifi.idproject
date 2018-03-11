@@ -35,6 +35,11 @@ installed on a particular node:
 . `cf-agent -Kf failsafe.cf`
 . Log out.
 
+Alternatively:
+. Edit `deployment/services/autorun/unifi.cf` in the project folder.
+. `vagrant ssh policy-server`
+. `/vagrant/scripts/update_vagrant_policy_server.sh`
+
    All other nodes will pick up the new policy and apply it within a few
    minutes, but if you want to force it:
 
