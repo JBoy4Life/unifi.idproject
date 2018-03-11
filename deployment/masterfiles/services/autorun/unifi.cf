@@ -67,43 +67,9 @@ bundle agent unifi_baseline {
     any::
       # Install Chrony in place of traditional NTP client, recommended for performance (and backwards compatible with ntp.conf)
       "chrony";
-
+      "collectd";
 }
 
-bundle agent chrony {
-  vars:
-    any::
-      "ntp_server_pool" string => "pool 1.uk.pool.ntp.org iburst";
-
-  packages:
-    any::
-      "chrony"
-          policy => "present",
-          package_module => apt_get;
-
-  services:
-    "chrony"
-      service_policy => "start";
-      
-  commands: 
-    restart_chrony:: 
-      "/bin/systemctl restart chrony" 
-         contain => in_shell_and_silent; 
-
-  files:
-    "/etc/chrony/chrony.conf"
-      comment => "Replace default Debian chrony/NTP Server",
-      create => "false",
-      edit_line => chrony_pool,
-      perms => mo("644","root"),
-      action => if_elapsed("60"),
-      classes   => if_repaired( "restart_chrony" );
-}
-
-bundle edit_line chrony_pool {
-    replace_patterns:
-        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_pool));
-}
 
 bundle agent unifi_role_app {
   methods:
@@ -235,6 +201,8 @@ body location pg_hba_location {
   before_after => "after";
 }
 
+## Application Managment Bundles
+
 bundle agent yarn {
   vars:
       "key_fp"
@@ -260,4 +228,88 @@ bundle agent yarn {
       "yarn"
           policy => "present",
           package_module => apt_get;
+}
+
+bundle agent chrony {
+  vars:
+    any::
+      "ntp_server_pool" string => "pool 1.uk.pool.ntp.org iburst";
+
+  packages:
+    any::
+      "chrony"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "chrony"
+      service_policy => "start";
+      
+  commands: 
+    restart_chrony:: 
+      "/bin/systemctl restart chrony" 
+         contain => in_shell_and_silent; 
+
+  files:
+    "/etc/chrony/chrony.conf"
+      comment => "Replace default Debian chrony/NTP Server",
+      create => "false",
+      edit_line => chrony_pool,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_chrony" );
+}
+
+bundle edit_line chrony_pool {
+    replace_patterns:
+        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_pool));
+}
+
+bundle agent collectd {
+  packages:
+    any::
+      "collectd"
+        policy => "present",
+        package_module => apt_get;
+
+  commands: 
+    restart_collectd:: 
+      "/bin/systemctl restart collectd" 
+         contain => in_shell_and_silent; 
+
+  vars:
+      # TODO: This needs to be abstracted, store defaults in the upper/common bundle)
+      "masterfiles"       string => "/var/cfengine/masterfiles/";
+      "local_store_dir"   string => "/var/cfengine/local";
+      "collectd_conf_dir" string => "/etc/collectd";
+      "collectd_conf"     string => "collectd.conf";
+      "policy_server"     string => "10.0.80.10";
+
+      # Abstract these out to a new bundle just for this file
+      "librato_email" string => "test@unif.id";
+      "librato_password" string => "d*3u$!mALmP1p";
+
+  # The librato recommended config file is stripped down to a large extent, 
+  # copy the original and replace (potential refactor later, if there's extra collectd functionality we need)
+  files:
+    "$(local_store_dir)$(collectd_conf_dir)/collectd.conf.original"
+      comment => "Copy Original, before we start",
+      perms => mo("400","root"),
+      copy_from => local_cp("$(collectd_conf_dir)/collectd.conf"),
+      action => if_elapsed("60");
+
+    "$(local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
+      comment => "Copy librato/collectd template from policy server",
+      perms => mo("400","root"),
+      copy_from => remote_cp("$(masterfiles)/templates/collectd.conf.tmpl","$(policy_server)"),
+      action => if_elapsed("60");
+
+    "$(collectd_conf_dir)/collectd.conf"
+      comment => "Expand the variables on host",
+      create => "true",
+      edit_line => expand_template("$(local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"),
+      edit_defaults => empty,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_collectd" );
 }
