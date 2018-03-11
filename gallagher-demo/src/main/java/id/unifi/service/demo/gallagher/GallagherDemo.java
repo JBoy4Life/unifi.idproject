@@ -30,7 +30,7 @@ public class GallagherDemo implements IFTMiddleware2 {
         registerLatch.await();
 
         ftcApi.logLongCardEvent2(4, 1, ZonedDateTime.now(), false,
-                1, "12345", 11111, "ES01", "ESI01",
+                1, "12345", 11111, "unifi.id", "unifi.id.zone.reception",
                 "Card detected: Zone [Reception], #12345", "No details.");
 
         quitLatch.await();
@@ -39,7 +39,10 @@ public class GallagherDemo implements IFTMiddleware2 {
 
     @Override
     public void notifyItemRegistered(String systemId, String itemId, String config) {
-        ftcApi.notifyStatus("ES01", "ESI01", 1, false, false, "Unifi.id: Zone [Reception] is online.");
+        ftcApi.notifyStatus("unifi.id", "unifi.id.zone.reception",
+                1, false, false, "Unifi.id: Zone [Reception] is online.");
+        ftcApi.notifyStatus("unifi.id", "unifi.id.zone.f1",
+                1, false, true, "Unifi.id: Zone [Floor 1] is offline.");
         registerLatch.countDown();
     }
 
