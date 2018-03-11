@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import cx from 'classnames'
 
-import defaultAvatar from './default-avatar.png'
+import defaultAvatar from './default-avatar.svg'
 import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'avatar'
