@@ -18,10 +18,6 @@ export default class TopNavigation extends Component {
         mode="horizontal"
         theme="dark"
       >
-        {/*<Menu.Item key="/">*/}
-          {/*Sitemap*/}
-        {/*</Menu.Item>*/}
-
         <Menu.Item key="/directory">
           Directory
         </Menu.Item>
@@ -29,6 +25,18 @@ export default class TopNavigation extends Component {
         {liveViewEnabled && <Menu.Item key="/live-view">
           Live View
         </Menu.Item>}
+
+        {attendanceEnabled && <Menu.Item key="/attendance">
+          Attendance
+        </Menu.Item>}
+
+        <Menu.Item key="/operators">
+          Operators
+        </Menu.Item>
+
+        {/*<Menu.Item key="/">*/}
+          {/*Sitemap*/}
+        {/*</Menu.Item>*/}
 
         {/*<Menu.Item key="/navigation">*/}
           {/*Navigation*/}
@@ -38,17 +46,9 @@ export default class TopNavigation extends Component {
           {/*Site manager*/}
         {/*</Menu.Item>*/}
 
-        {/*<Menu.Item key="/users">*/}
-          {/*Users*/}
-        {/*</Menu.Item>*/}
-
         {/*<Menu.Item key="/evacuation">*/}
           {/*Evacuation*/}
         {/*</Menu.Item>*/}
-
-        {attendanceEnabled && <Menu.Item key="/attendance">
-          Attendance
-        </Menu.Item>}
 
       </Menu>
     )
