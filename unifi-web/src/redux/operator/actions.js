@@ -1,7 +1,8 @@
 import { WSPackage } from '../../lib/ws'
 
 import {
-  OPERATORS_LIST_FETCH,
+  OPERATOR_LIST,
+  OPERATOR_GET,
   OPERATOR_UPDATE
 } from './types'
 
@@ -15,13 +16,27 @@ export const listOperators = ({ clientId, filter }) => {
   })
 
   return {
-    type: OPERATORS_LIST_FETCH,
+    type: OPERATOR_LIST,
     socketRequest: pack.content
   }
 }
 
 
-export const updateOperator = ({ clientId, name, email, active }) => {
+export const getOperator = ({ clientId, username }) => {
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion: '1.0.0',
+    messageType: 'core.operator.get-operator',
+    payload: { clientId, username }
+  })
+
+  return {
+    type: OPERATOR_GET,
+    socketRequest: pack.content
+  }
+}
+
+export const updateOperator = ({ clientId, username, changes, formSubmit }) => {
 
   const pack = new WSPackage({
     protocolVersion: '1.0.0',
@@ -29,15 +44,15 @@ export const updateOperator = ({ clientId, name, email, active }) => {
     messageType: 'core.operator.edit-operator',
     payload: {
       clientId,
-      name,
-      email,
-      active
+      username,
+      changes
     }
   });
 
   return {
     type: OPERATOR_UPDATE,
-    socketRequest: pack.content
+    socketRequest: pack.content,
+    formSubmit
   };
 }
 

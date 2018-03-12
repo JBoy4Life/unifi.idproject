@@ -12,6 +12,8 @@ import FilterBar from './components/filter-bar'
 import { Col, Row, TextInput } from 'elements'
 import { operatorListSelector } from 'redux/operator/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
+import { listOperators } from 'redux/operator/actions'
+import { withClientId } from 'hocs'
 
 const predicate = (criteria) => (item) => {
   if (criteria.search) {
@@ -26,8 +28,9 @@ const predicate = (criteria) => (item) => {
 class OperatorList extends Component {
   static propTypes = {
     history: PropTypes.object.isRequired,
-    operators: PropTypes.array.isRequired,
-    location: PropTypes.object.isRequired
+    listOperators: PropTypes.func.isRequired,
+    location: PropTypes.object.isRequired,
+    operators: PropTypes.array.isRequired
   };
 
   constructor(props) {
@@ -35,6 +38,11 @@ class OperatorList extends Component {
     this.state = {
       search: null
     }
+  }
+
+  componentDidMount() {
+    const { clientId, listOperators } = this.props
+    listOperators({ clientId })
   }
 
   setURLHref = (params) => {
@@ -85,7 +93,12 @@ export const selector = createStructuredSelector({
   )
 })
 
+export const actions = {
+  listOperators
+}
+
 export default compose(
   withRouter,
-  connect(selector),
+  withClientId,
+  connect(selector, actions),
 )(OperatorList)

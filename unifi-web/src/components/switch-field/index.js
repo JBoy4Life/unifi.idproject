@@ -8,10 +8,10 @@ const SwitchField = ({
   meta: { touched, error },
   disabled,
 }) => {
-  const hasErorr = touched && error
+  const hasError = touched && error
   const validationsProps = {}
 
-  if (hasErorr) {
+  if (hasError) {
     validationsProps.validationSttus = 'error'
     validationsProps.help = error
   }
@@ -24,6 +24,7 @@ const SwitchField = ({
       <Switch
         id={id}
         {...input}
+        checked={typeof input.checked === 'undefined' ? Boolean(input.value) : input.checked}
         disabled={disabled}
         className={className}
       />
