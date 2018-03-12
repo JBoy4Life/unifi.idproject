@@ -7,10 +7,11 @@ import { createStructuredSelector } from 'reselect'
 import { Link, withRouter } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
-import { Col, Row } from 'elements'
+import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
+import { Col, Row, Spinner } from 'elements'
 import { formSubmit } from 'utils/form'
 import { getOperator, updateOperator } from 'redux/operator/actions'
-import { operatorDetailsSelector } from 'redux/operator/selectors'
+import { operatorDetailsSelector, operatorDetailsStatusSelector } from 'redux/operator/selectors'
 import { OperatorForm } from 'smart-components'
 import { PageContentTitle } from 'components'
 import { withClientId } from 'hocs'
@@ -27,6 +28,7 @@ class OperatorEdit extends Component {
     match: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired,
     operator: PropTypes.object,
+    operatorDetailsStatus: PropTypes.string.isRequired,
     updateOperator: PropTypes.func.isRequired
   };
 
@@ -48,7 +50,7 @@ class OperatorEdit extends Component {
   };
 
   render() {
-    const { operator } = this.props
+    const { operator, operatorDetailsStatus } = this.props
     const initialValues = operator ? {
       ...operator,
       inactive: !operator.active
@@ -58,8 +60,10 @@ class OperatorEdit extends Component {
       <Row>
         <Col xs={24} sm={12} md={10}>
           <p className={bemE('back')}><Link to={ROUTES.OPERATORS}>&laquo; Back</Link></p>
-          {operator && <PageContentTitle>Edit an operator</PageContentTitle>}
-          <OperatorForm initialValues={initialValues} onSubmit={this.handleSubmit} />
+          <PageContentTitle>Edit an operator</PageContentTitle>
+          {API_PENDING === operatorDetailsStatus && <Spinner />}
+          {API_SUCCESS === operatorDetailsStatus && <OperatorForm initialValues={initialValues} onSubmit={this.handleSubmit} />}
+          {API_FAIL === operatorDetailsStatus && <h2>Operator username is invalid</h2>}
         </Col>
       </Row>
     )
@@ -67,7 +71,8 @@ class OperatorEdit extends Component {
 }
 
 export const selector = createStructuredSelector({
-  operator: operatorDetailsSelector
+  operator: operatorDetailsSelector,
+  operatorDetailsStatus: operatorDetailsStatusSelector
 })
 
 export const actions = {

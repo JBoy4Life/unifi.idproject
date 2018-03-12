@@ -7,7 +7,17 @@ export const operatorListSelector = fp.compose(
   getReducer
 )
 
+export const operatorListStatusSelector = fp.compose(
+  fp.get('operatorListStatus'),
+  getReducer
+)
+
 export const operatorDetailsSelector = fp.compose(
   fp.get('operatorDetails'),
+  getReducer
+)
+
+export const operatorDetailsStatusSelector = fp.compose(
+  fp.get('operatorDetailsStatus'),
   getReducer
 )

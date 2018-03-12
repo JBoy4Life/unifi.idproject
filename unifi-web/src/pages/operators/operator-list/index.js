@@ -9,8 +9,9 @@ import { Link, withRouter } from 'react-router-dom'
 import * as ROUTES from 'utils/routes'
 import ListView from './components/list-view'
 import FilterBar from './components/filter-bar'
-import { Col, Row, TextInput } from 'elements'
-import { operatorListSelector } from 'redux/operator/selectors'
+import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
+import { Col, Row, Spinner, TextInput } from 'elements'
+import { operatorListSelector, operatorListStatusSelector } from 'redux/operator/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
 import { listOperators } from 'redux/operator/actions'
 import { withClientId } from 'hocs'
@@ -30,7 +31,8 @@ class OperatorList extends Component {
     history: PropTypes.object.isRequired,
     listOperators: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired,
-    operators: PropTypes.array.isRequired
+    operatorList: PropTypes.array.isRequired,
+    operatorListStatus: PropTypes.string.isRequired
   };
 
   constructor(props) {
@@ -69,28 +71,31 @@ class OperatorList extends Component {
   }
 
   render() {
-    const { operators, location } = this.props
+    const { operatorList, operatorListStatus, location } = this.props
     const params = parseQueryString(location.search)
     const { view = 'list' } = params
     const criteria = {
       ...params,
       search: this.state.search || params.search
     }
-    const filteredOperators = fp.filter(predicate(criteria))(operators)
+    const filteredOperators = fp.filter(predicate(criteria))(operatorList)
     return (
       <div>
         <FilterBar setURLHref={this.setURLHref} onSearchChange={this.handleSearchChange} />
-        <ListView operators={filteredOperators} />
+        {API_PENDING === operatorListStatus && <Spinner />}
+        {API_SUCCESS === operatorListStatus && <ListView operators={filteredOperators} />}
+        {API_FAIL === operatorListStatus && <h2>Failed to load operators</h2>}
       </div>
     )
   }
 }
 
 export const selector = createStructuredSelector({
-  operators: fp.compose(
+  operatorList: fp.compose(
     fp.sortBy('name'),
     operatorListSelector
-  )
+  ),
+  operatorListStatus: operatorListStatusSelector
 })
 
 export const actions = {
