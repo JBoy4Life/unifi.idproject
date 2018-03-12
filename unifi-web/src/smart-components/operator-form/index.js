@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import get from 'lodash'
+import get from 'lodash/get'
 import PropTypes from 'prop-types'
 import { compose } from 'redux'
 import { Field, reduxForm } from 'redux-form'
@@ -9,6 +9,10 @@ import * as ROUTES from 'utils/routes'
 import * as validate from './validate'
 import { Alert, Button, Col, Row, SubmitRow } from 'elements'
 import { SwitchField, TextField } from 'components'
+import './index.scss'
+
+const COMPONENT_CSS_CLASSNAME = 'operator-form'
+const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 
 class OperatorForm extends Component {
   static propTypes = {
@@ -26,9 +30,10 @@ class OperatorForm extends Component {
   render() {
     const { error, handleSubmit, initialValues } = this.props
     const usernameDisabled = Boolean(get(initialValues, 'email'))
+
     return (
-      <form onSubmit={handleSubmit}>
-        {error && <Alert message={error} type="error" />}
+      <form onSubmit={handleSubmit} className={COMPONENT_CSS_CLASSNAME}>
+        {error && <Alert message={error} type="error" className={bemE('error')} />}
         <Field
           name="name"
           label="Name"
@@ -54,15 +59,19 @@ class OperatorForm extends Component {
           component={TextField}
           validate={[validate.emailIsRequired]}
         />
-        <Field
-          name="inactive"
-          label="Deactivate Operator"
-          component={SwitchField}
-        />
+        {usernameDisabled && (
+          <Field
+            name="inactive"
+            label="Deactivate Operator"
+            component={SwitchField}
+          />
+        )}
         <SubmitRow>
           <Row type="flex" gutter={20}>
             <Col>
-              <Button htmlType="submit" type="primary" wide>Save</Button>
+              <Button htmlType="submit" type="primary" wide>
+                {usernameDisabled ? 'Save' : 'Send Invite'}
+              </Button>
             </Col>
             <Col>
               <Button wide onClick={this.handleCancel}>Cancel</Button>

@@ -3,7 +3,8 @@ import { WSPackage } from '../../lib/ws'
 import {
   OPERATOR_LIST,
   OPERATOR_GET,
-  OPERATOR_UPDATE
+  OPERATOR_UPDATE,
+  OPERATOR_REGISTER
 } from './types'
 
 
@@ -56,4 +57,25 @@ export const updateOperator = ({ clientId, username, changes, formSubmit }) => {
   };
 }
 
+export const registerOperator = ({ clientId, name, username, email, formSubmit }) => {
+
+  const pack = new WSPackage({
+    protocolVersion: '1.0.0',
+    releaseVersion: '1.0.0',
+    messageType: 'core.operator.register-operator',
+    payload: {
+      clientId,
+      email,
+      name,
+      username,
+      invite: true
+    }
+  });
+
+  return {
+    type: OPERATOR_REGISTER,
+    socketRequest: pack.content,
+    formSubmit
+  };
+}
 export default null
