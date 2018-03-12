@@ -18,7 +18,10 @@ import { withClientId } from 'hocs'
 
 const predicate = (criteria) => (item) => {
   if (criteria.search) {
-    return item.name.toUpperCase().includes(criteria.search.toUpperCase())
+    const ucSearch = criteria.search.toUpperCase()
+    return item.name.toUpperCase().includes(ucSearch) ||
+      item.username.toUpperCase().includes(ucSearch) ||
+      item.email.toUpperCase().includes(ucSearch)
   }
   if (!criteria.showAll) {
     return item.active
