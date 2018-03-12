@@ -1,16 +1,24 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link, withRouter } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
+import ResendInvite from '../resend-invite'
 import { PageContentUnderTitle } from 'components'
 import { Table } from 'elements'
 import './index.scss'
 
 const COMPONENT_CSS_CLASSNAME = 'operator-list-view'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
+
+const StatusInvited = ({ row }) => (
+  <Fragment>
+    <span className={bemE('status-invited')}>Invited</span>
+    <ResendInvite row={row} />
+  </Fragment>
+)
 
 const columns = [
   {
@@ -40,7 +48,12 @@ const columns = [
     title: 'Status',
     dataIndex: 'active',
     key: 'active',
-    render: active => active ? 'Active' : 'Deactivated',
+    render: (active, row) => active
+      ? row.hasPassword
+        ? 'Active'
+        : <StatusInvited row={row} />
+      : 'Deactivated',
+    width: '20%',
   }
 ]
 

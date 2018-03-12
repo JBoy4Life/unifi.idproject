@@ -141,6 +141,14 @@ table.unifi-table {
   text-align: right;
 }
 
+.text-primary {
+  color: $unifi-primary-color;
+}
+
+.text-danger {
+  color: $unifi-error;
+}
+
 #root .CircularProgressbar .CircularProgressbar-path {
   stroke-linecap: butt;
 }
