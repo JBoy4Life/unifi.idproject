@@ -1,5 +1,3 @@
-import Aux from './aux'
-
 import Menu from './menu'
 import Dropdown from './dropdown'
 
@@ -45,7 +43,6 @@ import Slider from './slider'
 import Spinner from './spinner'
 
 export {
-  Aux,
   Alert,
   Avatar,
 

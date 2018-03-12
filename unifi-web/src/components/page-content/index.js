@@ -1,15 +1,15 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 
-import { Container, Layout, Aux } from 'elements'
+import { Container, Layout } from 'elements'
 
 import './index.scss'
 
 
 const { Sider, Content } = Layout
 
-export const Sidebar = ({ children }) => (<Aux>{children}</Aux>)
+export const Sidebar = ({ children }) => (<Fragment>{children}</Fragment>)
 
-export const Main = ({ children }) => (<Aux>{children}</Aux>)
+export const Main = ({ children }) => (<Fragment>{children}</Fragment>)
 
 const PageContent = ({ children }) => (
   <Container className="page-content-layout" tag={Layout}>
