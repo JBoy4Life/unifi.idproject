@@ -1,0 +1,6 @@
+destination d_papertrail {
+    $(syslogng.papertrail_destination_proto)("$(syslogng.papertrail_destination_host)" port($(syslogng.papertrail_destination_port)));
+};
+
+# $(syslogng.system_log_source) is defaulted per OS/Distro, change if desired
+log { source($(syslogng.system_log_source)); destination(d_papertrail); };

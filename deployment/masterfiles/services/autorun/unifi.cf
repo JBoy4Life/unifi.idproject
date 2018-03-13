@@ -1,3 +1,32 @@
+# TODO: Abstract this into a policy file called unifi_environment.cf
+# Idea being that unifi_environment would differ for every install 
+bundle common unifi_environment {
+    vars:
+    # CFEngine Defaults 
+      "cfengine_masterfiles"       string => "/var/cfengine/masterfiles/";
+      "cfengine_local_store_dir"   string => "/var/cfengine/local";
+
+    # Network/Environment  
+      "hst_policy_server" string => "10.0.80.10";
+      "hst_app"           string => "10.0.80.11";
+      "hst_services"      string => "10.0.80.12";
+      "hst_db"            string => "10.0.80.13";
+      "hst_agent"         string => "10.0.80.14";
+      "hst_logs"          string => "10.0.80.15";
+
+    # Application Specific
+    ## Papertrail
+      "papertrail_destination_host" string => "log4.papertrail.com";
+      "papertrail_destination_port" int=> "32769";
+      "papertrail_destination_proto" string => "udp";
+    ## Librato
+      "librato_email" string => "test@unif.id";
+      "librato_password" string => "d*3u$!mALmP1p";
+    ## NTP
+      "ntp_server_type" string => "pool";
+      "ntp_server" string => "1.uk.pool.ntp.org";
+}
+
 bundle common unifi {
   vars:
     any::
@@ -68,6 +97,7 @@ bundle agent unifi_baseline {
       # Install Chrony in place of traditional NTP client, recommended for performance (and backwards compatible with ntp.conf)
       "chrony";
       "collectd";
+      "syslogng";
 }
 
 
@@ -231,9 +261,17 @@ bundle agent yarn {
 }
 
 bundle agent chrony {
+  defaults:
+    any::
+      "ntp_server_string" string => "pool 1.uk.pool.ntp.org iburst";
+      "ntp_server_type" string => "pool";
+      "ntp_server" string => "2.debian.pool.ntp.org";
+
   vars:
     any::
-      "ntp_server_pool" string => "pool 1.uk.pool.ntp.org iburst";
+      "ntp_server_type" string => "$(unifi_environment.ntp_server_type)";
+      "ntp_server" string => "$(unifi_environment.ntp_server)";
+      "ntp_server_string" string => "$(ntp_server_type) $(ntp_server) iburst";
 
   packages:
     any::
@@ -262,10 +300,61 @@ bundle agent chrony {
 
 bundle edit_line chrony_pool {
     replace_patterns:
-        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_pool));
+        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_string));
+}
+
+bundle agent syslogng {
+  vars:
+    any::
+      "syslogng_conf_dir" string => "/etc/syslog-ng";
+      "system_log_source" string => "s_sys";
+
+    # Included from environment
+      "papertrail_destination_host" string => "$(unifi_environment.papertrail_destination_host)";
+      "papertrail_destination_port" int => "$(unifi_environment.papertrail_destination_port)";
+      "papertrail_destination_proto" string => "$(unifi_environment.papertrail_destination_proto)";
+
+  packages:
+    any::
+      "syslog-ng"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "syslog-ng"
+      service_policy => "start";
+      
+  commands: 
+    restart_syslogng:: 
+      "/bin/systemctl restart syslog-ng" 
+         contain => in_shell_and_silent; 
+
+  files:
+    "$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"
+      comment => "Add papertrail integration",
+      perms => mo("400","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/syslog-ng/papertrail.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      action => if_elapsed("60");
+
+    "$(syslogng_conf_dir)/conf.d/papertrail.conf"
+      comment => "Expand the variables on host",
+      create => "true",
+      edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"),
+      edit_defaults => empty,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_syslogng" );
 }
 
 bundle agent collectd {
+  vars:
+      "collectd_conf_dir" string => "/etc/collectd";
+      "collectd_conf"     string => "collectd.conf";
+
+    # Included from environment
+      "librato_email" string => "$(unifi_environment.librato_email)";
+      "librato_password" string => "$(unifi_environment.librato_password)";
+
   packages:
     any::
       "collectd"
@@ -277,37 +366,19 @@ bundle agent collectd {
       "/bin/systemctl restart collectd" 
          contain => in_shell_and_silent; 
 
-  vars:
-      # TODO: This needs to be abstracted, store defaults in the upper/common bundle)
-      "masterfiles"       string => "/var/cfengine/masterfiles/";
-      "local_store_dir"   string => "/var/cfengine/local";
-      "collectd_conf_dir" string => "/etc/collectd";
-      "collectd_conf"     string => "collectd.conf";
-      "policy_server"     string => "10.0.80.10";
-
-      # Abstract these out to a new bundle just for this file
-      "librato_email" string => "test@unif.id";
-      "librato_password" string => "d*3u$!mALmP1p";
-
   # The librato recommended config file is stripped down to a large extent, 
   # copy the original and replace (potential refactor later, if there's extra collectd functionality we need)
   files:
-    "$(local_store_dir)$(collectd_conf_dir)/collectd.conf.original"
-      comment => "Copy Original, before we start",
-      perms => mo("400","root"),
-      copy_from => local_cp("$(collectd_conf_dir)/collectd.conf"),
-      action => if_elapsed("60");
-
-    "$(local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
+    "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
       comment => "Copy librato/collectd template from policy server",
       perms => mo("400","root"),
-      copy_from => remote_cp("$(masterfiles)/templates/collectd.conf.tmpl","$(policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
       action => if_elapsed("60");
 
     "$(collectd_conf_dir)/collectd.conf"
       comment => "Expand the variables on host",
       create => "true",
-      edit_line => expand_template("$(local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"),
+      edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"),
       edit_defaults => empty,
       perms => mo("644","root"),
       action => if_elapsed("60"),
