@@ -23,7 +23,9 @@ export const SITE_MANAGER_NETOWRK = '/site-manager/network'
 export const SITE_PLAN = '/site-manager/plan'
 export const SITE_CREATE = '/site-manager/create'
 
-export const USERS = '/users'
+export const OPERATORS = '/operators'
+export const OPERATOR_EDIT = '/operators/:username/edit'
+export const OPERATOR_INVITE = '/operators/invite'
 
 export const CLIENT_REGISTRY = '/clients'
 export const CLIENT_REGISTRY_ADD = '/clients/add'

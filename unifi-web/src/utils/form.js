@@ -1,4 +1,5 @@
 import { SubmissionError } from 'redux-form'
+import tr from 'config/string-resources'
 
 export const formSubmit = (actionCreator, payload) => {
   return (new Promise((resolve, reject) => {
@@ -10,9 +11,14 @@ export const formSubmit = (actionCreator, payload) => {
       }
     })
   })).catch(res => {
+    const { payload } = res
+    const fieldErrors = payload.errors ? payload.errors.reduce((acc, error) => {
+      acc[error.field] = tr(error.issue)
+      return acc
+    }, {}) : {}
     throw new SubmissionError({
-      _error: res.payload.message
-      // other field level errors will be added here.
+      _error: payload.message,
+      ...fieldErrors
     })
   })
 }

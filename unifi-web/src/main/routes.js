@@ -5,7 +5,7 @@ import * as ROUTES from 'utils/routes'
 
 import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
-  Directory, LiveView, SiteManager, Users, Navigation,
+  Directory, LiveView, SiteManager, Operators, Navigation,
   ClientRegistry, Attendance, ForgotPassword, ResetPassword,
   CancelPasswordReset, ChangePassword
 } from '../pages'
@@ -26,11 +26,11 @@ export default ({ history }) => (
       <Route exact path={ROUTES.SITEMAP}component={Sitemap} />
       <Route exact path={ROUTES.MY_ACCOUNT}component={MyAccount} />
       <Route exact path={ROUTES.NAVIGATION}component={Navigation} />
-      <Route exact path={ROUTES.USERS} component={Users} />
 
       <Route path={ROUTES.LIVE_VIEW} component={LiveView} />
       <Route path={ROUTES.ATTENDANCE} component={Attendance} />
       <Route path={ROUTES.DIRECTORY} component={Directory} />
+      <Route path={ROUTES.OPERATORS} component={Operators} />
 
       <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
       <Route path={ROUTES.EVACUATION} component={Evacuation} />

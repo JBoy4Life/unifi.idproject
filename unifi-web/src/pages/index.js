@@ -12,8 +12,8 @@ import Attendance from './attendance'
 import Evacuation from './evacuation'
 
 import LiveView from './live-view'
+import Operators from './operators'
 import SiteManager from './site-manager'
-import Users from './users'
 import Navigation from './navigation'
 
 import ClientRegistry from './client-registry'
@@ -33,8 +33,8 @@ export {
   Evacuation,
 
   LiveView,
+  Operators,
   SiteManager,
-  Users,
   Navigation,
 
   ClientRegistry,
