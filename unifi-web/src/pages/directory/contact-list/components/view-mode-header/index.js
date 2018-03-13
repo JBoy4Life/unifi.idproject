@@ -1,10 +1,7 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
 import PropTypes from 'prop-types'
-import MdCropDin from 'react-icons/lib/md/crop-din'
-import MdFormatListBulleted from 'react-icons/lib/md/format-list-bulleted'
-import TiThLargeOutline from 'react-icons/lib/ti/th-large-outline'
-import { Col, Row } from 'elements'
+import { Col, Icon, Row } from 'elements'
 import { PageContentUnderTitle } from 'components'
 import './index.scss'
 
@@ -45,13 +42,13 @@ class ViewModeHeader extends Component {
           </Col>
           <Col xs={12} className={bemE('mode')}>
             <ToolButton selected={viewMode === 'list'} onClick={this.handleViewModeChange('list')}>
-              <MdFormatListBulleted />
+              <Icon type="bars" />
             </ToolButton>
             <ToolButton selected={viewMode === 'large-tile'} onClick={this.handleViewModeChange('large-tile')}>
-              <MdCropDin />
+              <Icon type="laptop" />
             </ToolButton>
             <ToolButton selected={viewMode === 'small-tile'} onClick={this.handleViewModeChange('small-tile')}>
-              <TiThLargeOutline />
+              <Icon type="appstore-o" />
             </ToolButton>
           </Col>
         </Row>
