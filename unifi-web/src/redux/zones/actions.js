@@ -1,3 +1,4 @@
+import createAction from 'utils/create-ws-action'
 import { WSPackage } from '../../lib/ws'
 
 import {
@@ -6,33 +7,18 @@ import {
   ZONE_ENTITIES_CLEAR_INACTIVE
 } from './types'
 
-export const listZones = (clientId = 'deloitte', siteId = '1nss') => {
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion: '1.0.0',
-    messageType: 'core.site.list-zones',
-    payload: { clientId, siteId },
-  })
+export const listZones = createAction({
+  type: ZONE_LIST_FETCH,
+  messageType: 'core.site.list-zones',
+  fields: ['clientId', 'siteId']
+})
 
-  return {
-    socketRequest: pack.content,
-    type: ZONE_LIST_FETCH,
-  }
-}
-
-export const listenToSubscriptions = (clientId = 'deloitte', siteId = '1nss') => {
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion: '1.0.0',
-    messageType: 'core.site.subscribe-detections',
-    payload: { clientId, siteId },
-  })
-
-  return {
-    socketSubscribe: pack.content,
-    type: ZONE_ENTITIES_SUBSCRIBE,
-  }
-}
+export const listenToSubscriptions = createAction({
+  type: ZONE_ENTITIES_SUBSCRIBE,
+  messageType: 'core.site.subscribe-detections',
+  fields: ['clientId', 'siteId'],
+  subscribe: true
+})
 
 export const clearInactiveEntities = () => ({
   type: ZONE_ENTITIES_CLEAR_INACTIVE

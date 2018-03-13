@@ -35,9 +35,9 @@ export class AttendanceReports extends Component {
 
   componentWillMount() {
     const { clientId, listHolders, listProgrammes, listSchedules } = this.props
-    listHolders(clientId)
-    listProgrammes(clientId)
-    listSchedules(clientId)
+    listHolders({ clientId })
+    listProgrammes({ clientId })
+    listSchedules({ clientId })
   }
 
   handleProgrammeChange = (programme) => {

@@ -14,9 +14,9 @@ class Main extends Component {
   componentWillMount() {
     const { clientId, getClient, reauthenticateRequest, setInitialized, user: { currentUser } } = this.props;
     // Reauthenticate if we have a session.
-    getClient(clientId)
+    getClient({ clientId })
     if (currentUser && currentUser.token) {
-      reauthenticateRequest(currentUser.token)
+      reauthenticateRequest({ clientId, sessionToken: currentUser.token })
     } else {
       setInitialized()
     }

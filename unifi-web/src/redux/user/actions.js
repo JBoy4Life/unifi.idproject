@@ -1,4 +1,4 @@
-import { WSPackage } from '../../lib/ws'
+import createAction from 'utils/create-ws-action'
 
 import {
   USER_LOGOUT,
@@ -11,39 +11,18 @@ import {
   REQUEST_PASSWORD_RESET,
   CANCEL_PASSWORD_RESET
 } from './types'
-import {clientId} from "../../index"
 
-export const loginRequest = ({ username, password, /* remember */ formSubmit }) => {
+export const loginRequest = createAction({
+  type: USER_LOGIN,
+  messageType: 'core.operator.auth-password',
+  fields: ['username', 'password', 'clientId']
+})
 
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion: '1.0.0',
-    messageType: 'core.operator.auth-password',
-    payload: { username, password, clientId },
-  })
-
-  return {
-    socketRequest: pack.content,
-    type: USER_LOGIN,
-    formSubmit
-  }
-}
-
-export const reauthenticateRequest = (sessionToken) => {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType: 'core.operator.auth-token',
-    payload: { clientId, sessionToken }
-  })
-
-  return {
-    socketRequest: pack.content,
-    type: USER_REAUTHENTICATE
-  }
-
-}
+export const reauthenticateRequest = createAction({
+  type: USER_REAUTHENTICATE,
+  messageType: 'core.operator.auth-token',
+  fields: ['clientId', 'sessionToken']
+})
 
 export const logoutRequest = () => ({
   type: USER_LOGOUT
@@ -53,86 +32,34 @@ export const setInitialized = () => ({
   type: USER_SET_INITIALIZED
 })
 
-export const getPasswordResetInfo = ({ clientId, username, token }) => {
+export const getPasswordResetInfo = createAction({
+  type: PASSWORD_RESET_INFO_FETCH,
+  messageType: 'core.operator.get-password-reset',
+  fields: ['clientId', 'username', 'token']
+})
 
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType: 'core.operator.get-password-reset',
-    payload: { clientId, username, token }
-  })
+export const setPassword = createAction({
+  type: SET_PASSWORD,
+  messageType: 'core.operator.set-password',
+  fields: ['clientId', 'username', 'password', 'token']
+})
 
-  return {
-    socketRequest: pack.content,
-    type: PASSWORD_RESET_INFO_FETCH
-  }
+export const requestPasswordReset = createAction({
+  type: REQUEST_PASSWORD_RESET,
+  messageType: 'core.operator.request-password-reset',
+  fields: ['clientId', 'username']
+})
 
-}
+export const cancelPasswordReset = createAction({
+  type: CANCEL_PASSWORD_RESET,
+  messageType: 'core.operator.cancel-password-reset',
+  fields: ['clientId', 'username', 'token']
+})
 
-export const setPassword = ({ clientId, username, password, token }) => {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType: 'core.operator.set-password',
-    payload: { clientId, username, password, token }
-  })
-
-  return {
-    socketRequest: pack.content,
-    type: SET_PASSWORD
-  }
-
-}
-
-export const requestPasswordReset = ({ clientId, username, formSubmit }) => {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType: 'core.operator.request-password-reset',
-    payload: { clientId, username }
-  })
-
-  return {
-    socketRequest: pack.content,
-    type: REQUEST_PASSWORD_RESET,
-    formSubmit
-  }
-
-}
-
-export const cancelPasswordReset = ({ clientId, username, token }) => {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType: 'core.operator.cancel-password-reset',
-    payload: { clientId, username, token }
-  })
-
-  return {
-    socketRequest: pack.content,
-    type: CANCEL_PASSWORD_RESET
-  }
-
-}
-
-export const changePassword = ({ currentPassword, password, formSubmit }) => {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType: 'core.operator.change-password',
-    payload: { currentPassword, password }
-  })
-
-  return {
-    socketRequest: pack.content,
-    type: CHANGE_PASSWORD,
-    formSubmit
-  }
-
-}
+export const changePassword = createAction({
+  type: CHANGE_PASSWORD,
+  messageType: 'core.operator.change-password',
+  fields: ['currentPassword', 'password']
+})
 
 export default null

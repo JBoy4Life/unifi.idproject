@@ -59,12 +59,12 @@ class LiveView extends PureComponent {
 
   componentDidMount() {
     const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
-    listSites(clientId)
+    listSites({ clientId })
       .then((result) => {
         const { siteId } = this.props
-        listZones(clientId, siteId)
-        listHolders(clientId, ['image'])
-        listenToSubscriptions(clientId, siteId)
+        listZones({ clientId, siteId })
+        listHolders({ clientId, with: ['image'] })
+        listenToSubscriptions({ clientId, siteId })
       })
       .catch(err => console.error(err))
 

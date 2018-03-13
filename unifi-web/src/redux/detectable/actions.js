@@ -1,21 +1,14 @@
-import { WSPackage } from '../../lib/ws'
+import createAction from 'utils/create-ws-action'
 
 import { DETECTABLES_LIST_FETCH } from './types'
 
-
-export const listDetectables = (clientId, filter) => {
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion: '1.0.0',
-    messageType: 'core.detectable.list-detectables',
-    payload: { clientId, with: ['assignment'], filter }
-  })
-
-  return {
-    type: DETECTABLES_LIST_FETCH,
-    socketRequest: pack.content
+export const listDetectables = createAction({
+  type: DETECTABLES_LIST_FETCH,
+  messageType: 'core.detectable.list-detectables',
+  fields: ['clientId', 'filter', 'with'],
+  defaultParams: {
+    with: ['assignment']
   }
-}
-
+})
 
 export default null

@@ -21,7 +21,10 @@ class Directory extends Component {
 
   componentDidMount() {
     const { clientId, listHolders } = this.props
-    listHolders(clientId, ['image', 'detectable-type'])
+    listHolders({
+      clientId,
+      with: ['image', 'detectable-type']
+    })
   }
 
   render() {

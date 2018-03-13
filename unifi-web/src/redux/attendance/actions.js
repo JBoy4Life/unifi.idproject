@@ -1,5 +1,4 @@
-import { WSPackage } from '../../lib/ws'
-import { clientId } from "../../index";
+import createAction from 'utils/create-ws-action'
 
 import {
   LIST_SCHEDULE_STATS,
@@ -12,139 +11,56 @@ import {
   OVERRIDE_ATTENDANCE
 } from './types'
 
-export function listScheduleStats() {
+export const listScheduleStats = createAction({
+  type: LIST_SCHEDULE_STATS,
+  messageType: 'attendance.schedule.list-schedule-stats',
+  fields: ['clientId']
+})
 
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.list-schedule-stats',
-    payload:         { clientId }
-  });
+export const listSchedules = createAction({
+  type: LIST_SCHEDULES,
+  messageType: 'attendance.schedule.list-schedules',
+  fields: ['clientId']
+})
 
-  return {
-    type: LIST_SCHEDULE_STATS,
-    socketRequest: pack.content
-  };
+export const listBlocks = createAction({
+  type: LIST_BLOCKS,
+  messageType: 'attendance.schedule.list-blocks',
+  fields: ['clientId', 'scheduleId']
+})
 
-}
+export const getContactAttendanceForSchedule = createAction({
+  type: GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
+  messageType: 'attendance.schedule.get-contact-attendance-for-schedule',
+  fields: ['clientId', 'scheduleId']
+})
 
-export function listSchedules(clientId) {
+export const reportBlockAttendance = createAction({
+  type: REPORT_BLOCK_ATTENDANCE,
+  messageType: 'attendance.schedule.report-block-attendance',
+  fields: ['clientId', 'scheduleId', 'clientReference']
+})
 
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.list-schedules',
-    payload:         { clientId }
-  });
+export const reportContactScheduleAttendance = createAction({
+  type: REPORT_CONTACT_SCHEDULE_ATTENDANCE,
+  messageType: 'attendance.schedule.report-contact-schedule-attendance',
+  fields: ['clientId']
+})
 
-  return {
-    type: LIST_SCHEDULES,
-    socketRequest: pack.content
-  };
+export const overrideAttendance = createAction({
+  type: OVERRIDE_ATTENDANCE,
+  messageType: 'attendance.schedule.override-attendance',
+  fields: ['clientId', 'clientReference', 'scheduleId', 'blockId', 'status']
+})
 
-}
-
-export function listBlocks(scheduleId) {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.list-blocks',
-    payload:         { clientId, scheduleId }
-  });
-
-  return {
-    type: LIST_BLOCKS,
-    socketRequest: pack.content
-  };
-
-}
-
-export function getContactAttendanceForSchedule(scheduleId) {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.get-contact-attendance-for-schedule',
-    payload:         { clientId, scheduleId }
-  });
-
-  return {
-    type: GET_CONTACT_ATTENDANCE_FOR_SCHEDULE,
-    socketRequest: pack.content
-  };
-
-}
-
-export function reportBlockAttendance(scheduleId, clientReference) {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.report-block-attendance',
-    payload:         { clientId, scheduleId, clientReference }
-  });
-
-  return {
-    type: REPORT_BLOCK_ATTENDANCE,
-    socketRequest: pack.content
-  };
-
-}
-
-export function reportContactScheduleAttendance() {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.report-contact-schedule-attendance',
-    payload:         { clientId }
-  });
-
-  return {
-    type: REPORT_CONTACT_SCHEDULE_ATTENDANCE,
-    socketRequest: pack.content
-  };
-
-}
-
-export function overrideAttendance(clientReference, scheduleId, blockId, status) {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion:  '1.0.0',
-    messageType:     'attendance.schedule.override-attendance',
-    payload:         { clientId, clientReference, scheduleId, blockId, status }
-  });
-
-  return {
-    type: OVERRIDE_ATTENDANCE,
-    socketRequest: pack.content
-  };
-
-}
-
-export function reportLowAttendanceByMetadata(clientId, { programme, startTime, endTime }) {
-
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion: '1.0.0',
-    messageType: 'attendance.schedule.report-low-attendance-by-metadata',
-    payload: {
-      clientId,
-      metadataKey: 'programme',
-      metadataValue: programme,
-      startTime,
-      endTime,
-      attendanceThreshold: '0.90'
-    }
-  });
-
-  return {
-    type: REPORT_LOW_ATTENDANCE_BY_METADATA,
-    socketRequest: pack.content
-  };
-
-}
+export const reportLowAttendanceByMetadata = createAction({
+  type: REPORT_LOW_ATTENDANCE_BY_METADATA,
+  messageType: 'attendance.schedule.report-low-attendance-by-metadata',
+  fields: ['clientId', 'metadataKey', 'metadataValue', 'startTime', 'endTime', 'attendanceThreshold'],
+  defaultParams: {
+    metadataKey: 'programme',
+    attendanceThreshold: '0.90'
+  }
+})
 
 export default null

@@ -15,7 +15,6 @@ const initialState = {
 }
 
 const reducer = (state = initialState, action = {}) => {
-  // console.log(action.type, action)
   switch (action.type) {
     case `${CLIENT_CREATE}_PENDING`:
       return {

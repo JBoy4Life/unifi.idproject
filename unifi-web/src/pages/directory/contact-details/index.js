@@ -27,7 +27,7 @@ const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 class ContactDetails extends Component {
   componentDidMount() {
     const { clientId, listDetectables, match } = this.props
-    listDetectables(clientId, { assignment: match.params.clientReference })
+    listDetectables({ clientId, assignment: match.params.clientReference })
   }
 
   render() {
