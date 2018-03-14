@@ -20,19 +20,14 @@ import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
 
 import {
-  actions as zonesActions,
-  selectors as zoneSelectors,
-} from 'redux/zones'
-
-import {
-  actions as settingsActions,
-  selectors as settingsSelectors
-} from 'redux/settings'
+  actions as siteActions,
+  selectors as siteSelectors
+} from 'redux/modules/site'
 
 import {
   actions as holdersActions,
   selectors as holdersSelectors
-} from 'redux/holders'
+} from 'redux/modules/holder'
 
 const zonesSelector = fp.compose(
   (zonesInfo) => (
@@ -42,7 +37,7 @@ const zonesSelector = fp.compose(
       fp.keys
     )(zonesInfo)
   ),
-  zoneSelectors.zonesInfoSelector
+  siteSelectors.zonesInfoSelector
 )
 
 class LiveView extends PureComponent {
@@ -179,18 +174,18 @@ class LiveView extends PureComponent {
 
 export const selector = createStructuredSelector({
   discoveredList: getDiscoveredList,
-  siteId: settingsSelectors.siteIdSelector,
+  siteId: siteSelectors.siteIdSelector,
   liveDiscoveryUpdate: compose(
     fp.get('liveDiscoveryUpdate'),
-    zoneSelectors.getReducer
+    siteSelectors.getReducer
   ),
   zones: zonesSelector
 })
 
 export const actions = {
-  ...zonesActions,
+  ...siteActions,
   listHolders: holdersActions.listHolders,
-  listSites: settingsActions.listSites
+  listSites: siteActions.listSites
 }
 
 export default compose(

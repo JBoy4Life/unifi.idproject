@@ -2,7 +2,8 @@ import createAction from 'utils/create-ws-action'
 
 import {
   HOLDER_GET_FETCH,
-  HOLDERS_LIST_FETCH
+  HOLDERS_LIST_FETCH,
+  PROGRAMMES_LIST_FETCH
 } from './types'
 
 export const listHolders = createAction({
@@ -17,6 +18,15 @@ export const getHolder = createAction({
   fields: ['clientId', 'clientReference', 'with'],
   defaultParams: {
     with: ['metadata']
+  }
+})
+
+export const listProgrammes = createAction({
+  type: PROGRAMMES_LIST_FETCH,
+  messageType: 'core.holder.list-metadata-values',
+  fields: ['clientId', 'metadataKey'],
+  defaultParams: {
+    metadataKey: 'programme'
   }
 })
 

@@ -2,22 +2,20 @@
 import { reducer as form } from 'redux-form'
 
 import { reducer as attendance } from './attendance'
-import { reducer as clients } from './clients'
+import { reducer as client } from './client'
 import { reducer as detectable } from './detectable'
-import { reducer as holders } from './holders'
-import { reducer as liveZones } from './zones'
+import { reducer as holder } from './holder'
 import { reducer as operator } from './operator'
-import { reducer as settings } from './settings'
+import { reducer as site } from './site'
 import { reducer as user } from './user'
 
 export default {
   attendance,
-  clients,
+  client,
   detectable,
   form,
-  holders,
-  liveZones,
+  holder,
   operator,
-  settings,
+  site,
   user
 }

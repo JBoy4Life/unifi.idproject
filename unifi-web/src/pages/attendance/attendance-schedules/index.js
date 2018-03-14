@@ -4,10 +4,10 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
-import * as attendanceActions from 'redux/attendance/actions'
+import * as attendanceActions from 'redux/modules/attendance/actions'
 import AttendanceSchedule from './attendance-schedule'
 import { Button, Col, Row } from 'elements'
-import { scheduleStatsSelector } from 'redux/attendance/selectors'
+import { scheduleStatsSelector } from 'redux/modules/attendance/selectors'
 import { sortSchedules } from 'utils/helpers'
 import { withClientId } from 'hocs'
 

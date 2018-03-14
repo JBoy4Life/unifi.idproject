@@ -10,8 +10,8 @@ import { Col, Row } from 'elements'
 import { formSubmit } from 'utils/form'
 import { PageContainer, ForgotPasswordForm } from 'smart-components'
 import { PageContent } from 'components'
-import { requestPasswordReset } from 'redux/user/actions'
-import { requestPasswordResetStatusSelector } from 'redux/user/selectors'
+import { requestPasswordReset } from 'redux/modules/user/actions'
+import { requestPasswordResetStatusSelector } from 'redux/modules/user/selectors'
 
 class ForgotPassword extends Component {
   static propTypes = {

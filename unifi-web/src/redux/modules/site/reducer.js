@@ -1,17 +1,18 @@
 import moment from 'moment'
 import find from 'lodash/find'
 import unionBy from 'lodash/unionBy'
-import {
-  ZONE_ENTITIES_SUBSCRIBE,
-  ZONE_LIST_FETCH,
-  ZONE_ENTITIES_CLEAR_INACTIVE
-} from './types'
 
+import {
+  SITES_LIST_FETCH,
+  ZONE_ENTITIES_CLEAR_INACTIVE,
+  ZONE_ENTITIES_SUBSCRIBE,
+  ZONE_LIST_FETCH
+} from './types'
 import { ZONE_ENTITIES_INACTIVE_THRESHOLD } from 'config/constants'
 import { referenceMap } from 'utils/helpers'
 
 const initialState = {
-  holdersInfo: {},
+  sitesList: [],
   zonesInfo: {},
   liveDiscovery: [],
 }
@@ -39,6 +40,12 @@ const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries) =>
 
 const reducer = (state = initialState, action = {}) => {
   switch (action.type) {
+    case `${SITES_LIST_FETCH}_FULFILLED`:
+      return {
+        ...state,
+        sitesList: action.payload.payload
+      }
+
     case `${ZONE_LIST_FETCH}_FULFILLED`:
       return {
         ...state,
@@ -57,6 +64,7 @@ const reducer = (state = initialState, action = {}) => {
         ...state,
         liveDiscovery: filterOutInactiveEntities(state.liveDiscovery)
       }
+
     default:
       return state
   }

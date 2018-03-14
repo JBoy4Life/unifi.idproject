@@ -7,7 +7,7 @@ import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
-import { actions as userActions, selectors as userSelectors } from 'redux/user'
+import { actions as userActions, selectors as userSelectors } from 'redux/modules/user'
 import { Menu, Icon } from 'elements'
 import { userIsAuthenticated } from 'hocs/auth'
 import './index.scss'

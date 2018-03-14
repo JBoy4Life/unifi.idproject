@@ -12,7 +12,7 @@ import FilterBar from './components/filter-bar'
 import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import { Col, Row, TextInput } from 'elements'
-import { holdersSelector } from 'redux/holders/selectors'
+import { holdersSelector } from 'redux/modules/holder/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
 
 const predicate = (criteria) => (item) => {

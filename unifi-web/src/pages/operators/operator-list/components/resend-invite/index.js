@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
 
 import formSubmit from 'utils/form'
-import { requestPasswordReset } from 'redux/user/actions'
+import { requestPasswordReset } from 'redux/modules/user/actions'
 import { Spinner } from 'elements'
 import { withClientId } from 'hocs'
 import './index.scss'
