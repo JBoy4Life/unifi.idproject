@@ -8,13 +8,14 @@ import { createStructuredSelector } from 'reselect'
 import './index.scss'
 import logo from 'assets/images/ucl-logo-2.png'
 import unifilogo from 'assets/images/unifi-logo.svg'
-import { actions as userActions } from 'redux/user'
+import { actions as userActions } from 'redux/modules/user'
 import { clientIsValidRedir, userIsNotAuthenticatedRedir } from 'hocs/auth'
-import { currentClientSelector } from 'redux/clients/selectors'
+import { currentClientSelector } from 'redux/modules/client/selectors'
 import { formSubmit } from 'utils/form'
 import { noop } from 'utils/helpers'
 import { PageContainer, LoginForm } from 'smart-components'
 import { PageContent } from 'components'
+import { withClientId } from 'hocs'
 
 const COMPONENT_CSS_CLASSNAME = 'login-page'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
@@ -25,11 +26,16 @@ class LoginContainer extends Component {
   }
 
   static propTypes = {
+    clientId: PropTypes.string,
     loginRequest: PropTypes.func,
   }
 
   handleLoginFormSubmit = (data) => {
-    return formSubmit(this.props.loginRequest, data)
+    const { clientId, loginRequest } = this.props;
+    return formSubmit(loginRequest, {
+      ...data,
+      clientId
+    })
   }
 
   render() {
@@ -64,5 +70,6 @@ export const actions = {
 export default compose(
   clientIsValidRedir,
   userIsNotAuthenticatedRedir,
+  withClientId,
   connect(selector, actions)
 )(LoginContainer)

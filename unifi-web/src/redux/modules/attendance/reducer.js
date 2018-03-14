@@ -9,7 +9,7 @@ import {
   OVERRIDE_ATTENDANCE
 } from './types'
 
-import { API_PENDING, API_SUCCESS, API_FAIL } from '../api/request'
+import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
 
 const initialState = {
   scheduleStats: [],

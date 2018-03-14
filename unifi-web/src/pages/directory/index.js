@@ -7,7 +7,7 @@ import { Route, Switch /*, Redirect*/ } from 'react-router'
 import * as ROUTES from 'utils/routes'
 import ContactDetails from './contact-details'
 import ContactList from './contact-list'
-import { listHolders } from 'redux/holders/actions'
+import { listHolders } from 'redux/modules/holder/actions'
 import { PageContent } from 'components'
 import { PageContainer } from 'smart-components'
 import { withClientId } from 'hocs'
@@ -21,7 +21,10 @@ class Directory extends Component {
 
   componentDidMount() {
     const { clientId, listHolders } = this.props
-    listHolders(clientId, ['image', 'detectable-type'])
+    listHolders({
+      clientId,
+      with: ['image', 'detectable-type']
+    })
   }
 
   render() {

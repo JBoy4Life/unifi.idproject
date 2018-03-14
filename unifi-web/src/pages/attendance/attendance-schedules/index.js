@@ -1,17 +1,20 @@
 import React, { Component } from 'react'
 import fp from 'lodash/fp'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
-import * as attendanceActions from 'redux/attendance/actions'
+import * as attendanceActions from 'redux/modules/attendance/actions'
 import AttendanceSchedule from './attendance-schedule'
 import { Button, Col, Row } from 'elements'
-import { scheduleStatsSelector } from 'redux/attendance/selectors'
+import { scheduleStatsSelector } from 'redux/modules/attendance/selectors'
 import { sortSchedules } from 'utils/helpers'
+import { withClientId } from 'hocs'
 
 export class AttendanceSchedules extends Component {
   componentDidMount() {
-    this.props.listScheduleStatsRequest();
+    const { clientId } = this.props
+    this.props.listScheduleStatsRequest({ clientId });
   }
 
   handlePrint = () => {
@@ -57,4 +60,7 @@ export const actions = {
   listScheduleStatsRequest: attendanceActions.listScheduleStats
 }
 
-export default connect(selector, actions)(AttendanceSchedules);
+export default compose(
+  withClientId,
+  connect(selector, actions)
+)(AttendanceSchedules);

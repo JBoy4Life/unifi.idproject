@@ -1,8 +1,8 @@
 import fp from 'lodash/fp'
 
-import { API_PENDING, API_SUCCESS } from '../api/request'
+import { API_PENDING, API_SUCCESS } from 'redux/api/request'
 
-export const getReducer = fp.get('clients')
+export const getReducer = fp.get('client')
 
 export const clientsSelector = fp.compose(
   fp.get('clients'),

@@ -8,9 +8,9 @@ import { Link } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
 import { Avatar, Col, Row } from 'elements'
-import { detectablesListSelector } from 'redux/detectable/selectors'
-import { holdersSelector } from 'redux/holders/selectors'
-import { listDetectables } from 'redux/detectable/actions'
+import { detectablesListSelector } from 'redux/modules/detectable/selectors'
+import { holdersSelector } from 'redux/modules/holder/selectors'
+import { listDetectables } from 'redux/modules/detectable/actions'
 import { PageContentTitle } from 'components'
 import { withClientId } from 'hocs'
 import './index.scss'
@@ -27,7 +27,7 @@ const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 class ContactDetails extends Component {
   componentDidMount() {
     const { clientId, listDetectables, match } = this.props
-    listDetectables(clientId, { assignment: match.params.clientReference })
+    listDetectables({ clientId, assignment: match.params.clientReference })
   }
 
   render() {

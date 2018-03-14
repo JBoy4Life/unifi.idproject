@@ -2,23 +2,25 @@ import React, { Component } from 'react'
 import moment from 'moment'
 import fp from 'lodash/fp'
 import PropTypes from 'prop-types'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
 import EvacuationProgressBar from 'components/evacuation-progress-bar'
+import { withClientId } from 'hocs'
 
 import {
   getContactAttendanceForSchedule,
   listBlocks,
   listScheduleStats
-} from 'redux/attendance/actions'
+} from 'redux/modules/attendance/actions'
 
 import {
   blocksSelector,
   contactAttendanceSelector,
   scheduleStatsSelector
-} from 'redux/attendance/selectors'
+} from 'redux/modules/attendance/selectors'
 
 import ScheduleCalendar from './components/schedule-calendar'
 import CommittersList from './components/committers-list'
@@ -53,10 +55,10 @@ export class AttendanceScheduleDetail extends Component {
   }
 
   componentWillMount() {
-    const { scheduleId } = this.props.match.params
-    this.props.listScheduleStats(scheduleId)
-    this.props.listBlocks(scheduleId)
-    this.props.getContactAttendanceForSchedule(scheduleId)
+    const { clientId, match: { params: { scheduleId } } } = this.props
+    this.props.listScheduleStats({ clientId });
+    this.props.listBlocks({ clientId, scheduleId })
+    this.props.getContactAttendanceForSchedule({ clientId, scheduleId })
   }
 
   handleSwitchMode = (newMode) => (event) => {
@@ -135,4 +137,7 @@ const actions = {
   getContactAttendanceForSchedule
 }
 
-export default connect(selector, actions)(AttendanceScheduleDetail)
+export default compose(
+  connect(selector, actions),
+  withClientId
+)(AttendanceScheduleDetail)

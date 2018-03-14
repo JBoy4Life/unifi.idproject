@@ -11,9 +11,9 @@ import ListView from './components/list-view'
 import FilterBar from './components/filter-bar'
 import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
 import { Col, Row, Spinner, TextInput } from 'elements'
-import { operatorListSelector, operatorListStatusSelector } from 'redux/operator/selectors'
+import { operatorListSelector, operatorListStatusSelector } from 'redux/modules/operator/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
-import { listOperators } from 'redux/operator/actions'
+import { listOperators } from 'redux/modules/operator/actions'
 import { withClientId } from 'hocs'
 
 const predicate = (criteria) => (item) => {

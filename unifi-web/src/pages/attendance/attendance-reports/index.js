@@ -10,13 +10,11 @@ import { Link } from 'react-router-dom'
 import ResultsList from './components/results-list'
 import ReportFilterForm from './components/report-filter-form'
 import withClientId from 'hocs/with-client-id'
-import { holdersSelector } from 'redux/holders/selectors'
-import { listHolders } from 'redux/holders/actions'
-import { listProgrammes } from 'redux/settings/actions'
-import { listSchedules } from 'redux/attendance/actions'
+import { holdersSelector, programmesSelector } from 'redux/modules/holder/selectors'
+import { listHolders, listProgrammes } from 'redux/modules/holder/actions'
+import { listSchedules } from 'redux/modules/attendance/actions'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-import { programmesSelector } from 'redux/settings/selectors'
-import { schedulesSelector } from 'redux/attendance/selectors'
+import { schedulesSelector } from 'redux/modules/attendance/selectors'
 
 import { Col, Row, Select } from 'elements'
 
@@ -35,9 +33,9 @@ export class AttendanceReports extends Component {
 
   componentWillMount() {
     const { clientId, listHolders, listProgrammes, listSchedules } = this.props
-    listHolders(clientId)
-    listProgrammes(clientId)
-    listSchedules(clientId)
+    listHolders({ clientId })
+    listProgrammes({ clientId })
+    listSchedules({ clientId })
   }
 
   handleProgrammeChange = (programme) => {

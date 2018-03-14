@@ -24,7 +24,6 @@ const columns = [
   {
     title: 'Username',
     dataIndex: 'username',
-    key: 'username',
     render: (name, row) => (
       <Link to={ROUTES.OPERATOR_EDIT.replace(':username', row.username)}>
         {name}
@@ -35,19 +34,16 @@ const columns = [
   {
     title: 'Name',
     dataIndex: 'name',
-    key: 'name',
     sorter: (a, b) => a.name.localeCompare(b.name)
   },
   {
     title: 'Email Address',
     dataIndex: 'email',
-    key: 'email',
     sorter: (a, b) => a.email.localeCompare(b.email)
   },
   {
     title: 'Status',
     dataIndex: 'active',
-    key: 'active',
     render: (active, row) => active
       ? row.hasPassword
         ? 'Active'
@@ -64,7 +60,7 @@ const ListView = ({ operators }) => (
         Showing {operators.length} contacts
       </PageContentUnderTitle>
     )}
-    <Table dataSource={operators} columns={columns} pagination={false} rowKey="clientReference" />
+    <Table dataSource={operators} columns={columns} pagination={false} rowKey="username" />
   </div>
 )
 
