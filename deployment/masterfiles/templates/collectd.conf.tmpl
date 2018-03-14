@@ -17,10 +17,10 @@ LoadPlugin write_http
 
 #Librato configuration
 <Plugin "write_http">
-  <Node "Librato">
+  <Node "AppOptics">
     URL "https://collectd.librato.com/v1/measurements"
-    User "$(collectd.librato_email)"
-    Password "$(collectd.librato_password)"
+    User "$(collectd.appoptics_api_key)"
+    Password ""
     Format "JSON"
   </Node>
 </Plugin>

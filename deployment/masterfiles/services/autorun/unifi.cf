@@ -16,12 +16,11 @@ bundle common unifi_environment {
 
     # Application Specific
     ## Papertrail
-      "papertrail_destination_host" string => "log4.papertrail.com";
-      "papertrail_destination_port" int=> "32769";
+      "papertrail_destination_host" string => "logs4.papertrailapp.com";
+      "papertrail_destination_port" int=> "21561";
       "papertrail_destination_proto" string => "udp";
     ## Librato
-      "librato_email" string => "test@unif.id";
-      "librato_password" string => "d*3u$!mALmP1p";
+      "appoptics_api_key" string => "2d07d9a16da96aae7d699de96718b661064cb4d11ae2de90b69693fcb4972b08";
     ## NTP
       "ntp_server_type" string => "pool";
       "ntp_server" string => "1.uk.pool.ntp.org";
@@ -352,8 +351,7 @@ bundle agent collectd {
       "collectd_conf"     string => "collectd.conf";
 
     # Included from environment
-      "librato_email" string => "$(unifi_environment.librato_email)";
-      "librato_password" string => "$(unifi_environment.librato_password)";
+      "appoptics_api_key" string => "$(unifi_environment.appoptics_api_key)";
 
   packages:
     any::
