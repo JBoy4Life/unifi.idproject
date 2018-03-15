@@ -7,8 +7,8 @@ export const holdersSelector = fp.compose(
   getReducer
 )
 
-export const holdersMetaSelector = fp.compose(
-  fp.get('holdersMetaList'),
+export const holderDetailsSelector = fp.compose(
+  fp.get('holderDetails'),
   getReducer
 )
 

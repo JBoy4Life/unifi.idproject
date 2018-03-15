@@ -1,5 +1,3 @@
-import unionBy from 'lodash/unionBy'
-
 import {
   HOLDER_GET_FETCH,
   HOLDERS_LIST_FETCH,
@@ -8,7 +6,7 @@ import {
 
 const initialState = {
   holdersList: [],
-  holdersMetaList: [],
+  holderDetails: null,
   programmesList: []
 }
 
@@ -22,7 +20,7 @@ const reducer = (state = initialState, action = {}) => {
     case `${HOLDER_GET_FETCH}_FULFILLED`:
       return {
         ...state,
-        holdersMetaList: unionBy(state.holdersMetaList, [action.payload.payload], 'clientReference')
+        holderDetails: action.payload.payload
       }
     case `${PROGRAMMES_LIST_FETCH}_FULFILLED`:
       return {

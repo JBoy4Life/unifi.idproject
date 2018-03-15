@@ -37,7 +37,7 @@ import {
 } from 'pages/attendance/helpers'
 
 import { getHolder } from 'redux/modules/holder/actions'
-import { holdersMetaSelector } from 'redux/modules/holder/selectors'
+import { holderDetailsSelector } from 'redux/modules/holder/selectors'
 
 const absenceLabels = {
   'present': "Present",
@@ -70,13 +70,11 @@ const committerSelector = (state, props) =>
     contactAttendanceSelector
   )(state)
 
-const getHolderProgrammeSelector = (state, props) =>
-  fp.compose(
-    fp.get('metadata.programme'),
-    fp.defaultTo({}),
-    fp.find({ clientReference: props.match.params.clientReference }),
-    holdersMetaSelector
-  )(state)
+const getHolderProgrammeSelector = fp.compose(
+  fp.get('metadata.programme'),
+  fp.defaultTo({}),
+  holderDetailsSelector
+)
 
 export class AttendanceScheduleBlockDrilldown extends Component {
   static propTypes = {
@@ -119,7 +117,7 @@ export class AttendanceScheduleBlockDrilldown extends Component {
     this.props.listScheduleStats({ clientId })
     this.props.reportBlockAttendance({ clientId, scheduleId, clientReference })
     this.props.getContactAttendanceForSchedule({ clientId, scheduleId })
-    this.props.getHolder(clientId, clientReference)
+    this.props.getHolder({ clientId, clientReference })
   }
 
   handleEditAttendance = (blockId) => (event) => {
