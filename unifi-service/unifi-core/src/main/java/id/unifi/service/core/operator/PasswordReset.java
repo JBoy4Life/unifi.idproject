@@ -40,7 +40,7 @@ public class PasswordReset {
         SecretHashing.ScryptConfig hashing();
     }
 
-    public PasswordReset(@ApiConfigPrefix("operator.password.reset") Config config,
+    public PasswordReset(@ApiConfigPrefix("unifi.operator.password.reset") Config config,
                          DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE);
         this.tokenHashing = new SecretHashing(config.hashing());

@@ -11,6 +11,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
+import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.attendance.AttendanceProcessor;
 import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.common.api.ComponentHolder;
@@ -82,6 +83,7 @@ public class CoreService {
         HostAndPort endpoint();
     }
 
+    @Prefix("unifi")
     private interface Config {
         @Default("0.0.0.0:8000")
         HostAndPort apiServiceListenEndpoint();
