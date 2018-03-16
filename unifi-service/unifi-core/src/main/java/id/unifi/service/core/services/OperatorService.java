@@ -84,8 +84,8 @@ public class OperatorService {
         int sessionTokenValiditySeconds();
     }
 
-    public OperatorService(@ApiConfigPrefix("operator") Config config,
-                           @ApiConfigPrefix("operator.password.hashing") SecretHashing.ScryptConfig hashingConfig,
+    public OperatorService(@ApiConfigPrefix("unifi.operator") Config config,
+                           @ApiConfigPrefix("unifi.operator.password.hashing") SecretHashing.ScryptConfig hashingConfig,
                            DatabaseProvider dbProvider,
                            PasswordReset passwordReset,
                            OperatorEmailRenderer emailRenderer,
