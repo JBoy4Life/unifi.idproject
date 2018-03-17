@@ -73,7 +73,7 @@ import java.util.function.IntFunction;
 
 public class CoreService {
     static {
-        // Prefer IPv4, otherwise 0.0.0.0 get interpreted as IPv6 broadcast
+        // Prefer IPv4, otherwise 0.0.0.0 gets interpreted as IPv6 broadcast
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
