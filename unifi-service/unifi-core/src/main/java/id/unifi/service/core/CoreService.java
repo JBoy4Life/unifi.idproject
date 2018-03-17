@@ -72,6 +72,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.IntFunction;
 
 public class CoreService {
+    static {
+        // Prefer IPv4, otherwise 0.0.0.0 get interpreted as IPv6 broadcast
+        System.setProperty("java.net.preferIPv4Stack", "true");
+    }
+
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
 
     public static final String PENDING_RAW_DETECTIONS_QUEUE_NAME = "core.detection.pending-raw-detections";
