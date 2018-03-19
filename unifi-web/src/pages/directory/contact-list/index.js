@@ -7,13 +7,15 @@ import { createStructuredSelector } from 'reselect'
 import { Link, withRouter } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
-import ListView from './components/list-view'
 import FilterBar from './components/filter-bar'
+import ListView from './components/list-view'
 import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import { Col, Row, TextInput } from 'elements'
 import { holdersSelector } from 'redux/modules/holder/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
+import { listHolders } from 'redux/modules/holder/actions'
+import { withClientId } from 'hocs'
 
 const predicate = (criteria) => (item) => {
   if (criteria.search) {
@@ -37,6 +39,14 @@ class ContactList extends Component {
     this.state = {
       search: null
     }
+  }
+
+  componentDidMount() {
+    const { clientId, listHolders } = this.props
+    listHolders({
+      clientId,
+      with: ['image', 'detectable-type']
+    })
   }
 
   setURLHref = (params) => {
@@ -95,7 +105,12 @@ export const selector = createStructuredSelector({
   )
 })
 
+export const actions = {
+  listHolders
+}
+
 export default compose(
   withRouter,
-  connect(selector),
+  withClientId,
+  connect(selector, actions),
 )(ContactList)

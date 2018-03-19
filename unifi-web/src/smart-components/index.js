@@ -2,6 +2,7 @@ import LoginForm from './login-form'
 import ChangePasswordForm from './change-password-form'
 import ClientRegisterForm from './client-register-form'
 import ForgotPasswordForm from './forgot-password-form'
+import HolderForm from './holder-form'
 import NotificationForm from './notification-form'
 import OperatorForm from './operator-form'
 import ResetPasswordForm from './reset-password-form'
@@ -22,6 +23,7 @@ export {
   ChangePasswordForm,
   ClientRegisterForm,
   ForgotPasswordForm,
+  HolderForm,
   NotificationForm,
   OperatorForm,
   ResetPasswordForm,

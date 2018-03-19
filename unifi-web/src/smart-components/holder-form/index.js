@@ -8,13 +8,13 @@ import { withRouter } from 'react-router'
 import * as ROUTES from 'utils/routes' 
 import * as validate from './validate'
 import { Alert, Button, Col, Row, SubmitRow } from 'elements'
-import { SwitchField, TextField } from 'components'
+import { AvatarField, SwitchField, TextField } from 'components'
 import './index.scss'
 
-const COMPONENT_CSS_CLASSNAME = 'operator-form'
+const COMPONENT_CSS_CLASSNAME = 'holder-form'
 const bemE = (suffix) => `${COMPONENT_CSS_CLASSNAME}__${suffix}`
 
-class OperatorForm extends Component {
+class HolderForm extends Component {
   static propTypes = {
     handleSubmit: PropTypes.func,
     error: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
@@ -24,12 +24,17 @@ class OperatorForm extends Component {
 
   handleCancel = () => {
     const { history } = this.props
-    history.push(ROUTES.OPERATORS)
+    const clientReference = get(initialValues, 'clientReference')
+    history.push(
+      clientReference
+      ? ROUTES.DIRECTORY_HOLDER_DETAIL.replace(':clientReference', clientReference)
+      : ROUTES.DIRECTORY
+    )
   }
 
   render() {
     const { error, handleSubmit, initialValues } = this.props
-    const usernameDisabled = Boolean(get(initialValues, 'email'))
+    const editMode = Boolean(get(initialValues, 'clientReference'))
 
     return (
       <form onSubmit={handleSubmit} className={COMPONENT_CSS_CLASSNAME}>
@@ -38,31 +43,22 @@ class OperatorForm extends Component {
           name="name"
           label="Name"
           htmlType="text"
-          id="operatorName"
           validate={[validate.nameIsRequired]}
           component={TextField}
         />
-        <Field
-          name="username"
-          label="Username"
-          htmlType="text"
-          id="operatorUsername"
-          component={TextField}
-          validate={usernameDisabled ? undefined : [validate.usernameIsRequired]}
-          disabled={usernameDisabled}
-        />
-        <Field
-          name="email"
-          label="Email Address"
-          htmlType="email"
-          id="operatorEmail"
-          component={TextField}
-          validate={[validate.emailIsRequired]}
-        />
-        {usernameDisabled && (
+        <Row>
+          <Col xs={12}>
+            <Field
+              name="image"
+              label="Photo (optional)"
+              component={AvatarField}
+            />
+          </Col>
+        </Row>
+        {editMode && (
           <Field
             name="inactive"
-            label="Deactivate Operator"
+            label="Deactivate contact"
             component={SwitchField}
           />
         )}
@@ -70,7 +66,7 @@ class OperatorForm extends Component {
           <Row type="flex" gutter={20}>
             <Col>
               <Button htmlType="submit" type="primary" wide>
-                {usernameDisabled ? 'Save' : 'Send Invite'}
+                Save
               </Button>
             </Col>
             <Col>
@@ -86,7 +82,7 @@ class OperatorForm extends Component {
 export default compose(
   withRouter,
   reduxForm({
-    form: 'operatorForm',
+    form: 'holderForm',
     enableReinitialize: true
   })
-)(OperatorForm)
+)(HolderForm)

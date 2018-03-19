@@ -39,6 +39,7 @@ export const ATTENDANCE_CUSTOM_REPORTS = '/attendance/custom-reports';
 
 export const DIRECTORY = '/directory'
 export const DIRECTORY_HOLDER_DETAIL = '/directory/:clientReference'
-export const DIRECTORY_NEW_HOLDER = '/directory/new'
+export const DIRECTORY_HOLDER_NEW = '/directory/new'
+export const DIRECTORY_HOLDER_EDIT = '/directory/:clientReference/edit'
 
 export default null

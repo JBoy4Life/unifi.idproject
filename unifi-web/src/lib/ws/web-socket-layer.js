@@ -115,6 +115,7 @@ export default class WebSocketLayer {
     if (!this.isConnected) {
       await this.connected
     }
+    window.msgpack = msgpack
 
     // console.log('connected, sending')
     if (this.type === 'json') {
@@ -126,7 +127,7 @@ export default class WebSocketLayer {
         this.socket.send(encodedContent.buffer)
       }
     } else if (this.type === 'msgpack') {
-      this.socket.send(msgpack.encode(content))
+      this.socket.send(this.encodeJSON(content))
     } else {
       throw 'Unsupported message format'
     }

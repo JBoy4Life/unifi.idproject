@@ -2,6 +2,7 @@ import createAction from 'utils/create-ws-action'
 
 import {
   HOLDER_GET_FETCH,
+  HOLDER_UPDATE,
   HOLDERS_LIST_FETCH,
   PROGRAMMES_LIST_FETCH
 } from './types'
@@ -19,6 +20,12 @@ export const getHolder = createAction({
   defaultParams: {
     with: ['metadata']
   }
+})
+
+export const updateHolder = createAction({
+  type: HOLDER_UPDATE,
+  messageType: 'core.holder.edit-holder',
+  fields: ['clientId', 'clientReference', 'changes']
 })
 
 export const listProgrammes = createAction({

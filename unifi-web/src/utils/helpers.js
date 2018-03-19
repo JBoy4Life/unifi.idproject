@@ -7,11 +7,11 @@ export const sleep = time => new Promise(resolve => (
 
 export const noop = () => Promise.resolve()
 
-export const base64EncodeUint8Array = (buffer) => fp.compose(
-  btoa,
-  fp.join(''),
-  fp.map(char => String.fromCharCode(char))
-)(buffer)
+export const base64EncodeUint8Array = uint8Array =>
+  btoa(String.fromCharCode(...uint8Array))
+
+export const base64EncodeArrayBuffer = arrayBuffer =>
+  base64EncodeUint8Array(new Uint8Array(arrayBuffer))
 
 export const parseQueryString = string =>
   fp.compose(
@@ -25,7 +25,6 @@ export const parseQueryString = string =>
     (str) => (str ? str.split('&') : []),
     fp.replace('?', '')
   )(string)
-
 
 export const getQueryParams = (string) => {
   const {
