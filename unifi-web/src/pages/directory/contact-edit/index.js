@@ -46,10 +46,13 @@ class ContactEdit extends Component {
 
   handleSubmit = (values) => {
     const { clientId, history, updateHolder, match: { params: { clientReference } } } = this.props
+    const image = values.image ? getImageData(values.image.data) : null
     const changes = {
       name: values.name,
-      image: values.image ? getImageData(values.image.data) : null,
       active: !values.inactive
+    }
+    if (typeof image !== 'undefined') {
+      changes.image = image
     }
     return formSubmit(updateHolder, { clientId, clientReference, changes })
       .then(() => history.push(this.backUrl))

@@ -1,6 +1,7 @@
 import createAction from 'utils/create-ws-action'
 
 import {
+  HOLDER_ADD,
   HOLDER_GET_FETCH,
   HOLDER_UPDATE,
   HOLDERS_LIST_FETCH,
@@ -19,6 +20,15 @@ export const getHolder = createAction({
   fields: ['clientId', 'clientReference', 'with'],
   defaultParams: {
     with: ['metadata']
+  }
+})
+
+export const addHolder = createAction({
+  type: HOLDER_ADD,
+  messageType: 'core.holder.add-holder',
+  fields: ['clientId', 'clientReference', 'holderType', 'name', 'active', 'image'],
+  defaultParams: {
+    holderType: 'contact'
   }
 })
 

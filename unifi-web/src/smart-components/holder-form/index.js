@@ -23,7 +23,7 @@ class HolderForm extends Component {
   }
 
   handleCancel = () => {
-    const { history } = this.props
+    const { history, initialValues } = this.props
     const clientReference = get(initialValues, 'clientReference')
     history.push(
       clientReference
@@ -46,6 +46,15 @@ class HolderForm extends Component {
           validate={[validate.nameIsRequired]}
           component={TextField}
         />
+        {!editMode && (
+          <Field
+            name="clientReference"
+            label="ID number"
+            htmlType="text"
+            validate={[validate.clientReferenceIsRequired]}
+            component={TextField}
+          />
+        )}
         <Row>
           <Col xs={12}>
             <Field

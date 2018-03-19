@@ -7,7 +7,7 @@ import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
 import * as ROUTES from 'utils/routes'
-import { Avatar, Col, Icon, Row } from 'elements'
+import { Avatar, Col, Row } from 'elements'
 import { detectablesListSelector } from 'redux/modules/detectable/selectors'
 import { getHolder } from 'redux/modules/holder/actions'
 import { holderDetailsSelector } from 'redux/modules/holder/selectors'
@@ -39,7 +39,9 @@ class ContactDetails extends Component {
           <p className={bemE('back')}><Link to={ROUTES.DIRECTORY}>&laquo; Back</Link></p>
           <PageContentTitle>
             <Link to={editUrl} className={bemE('edit-link')}>
-              <Icon type="edit" />
+              <svg viewBox="0 0 14 16" version="1.1" width="36" height="36">
+                <path fill-rule="evenodd" fill="currentColor" d="M0 12v3h3l8-8-3-3-8 8zm3 2H1v-2h1v1h1v1zm10.3-9.3L12 6 9 3l1.3-1.3a.996.996 0 0 1 1.41 0l1.59 1.59c.39.39.39 1.02 0 1.41z" />
+              </svg>
             </Link>
             {holder.name}
           </PageContentTitle>

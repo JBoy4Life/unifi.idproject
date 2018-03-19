@@ -1,4 +1,5 @@
 import {
+  HOLDER_ADD,
   HOLDER_GET_FETCH,
   HOLDER_UPDATE,
   HOLDERS_LIST_FETCH,
@@ -38,6 +39,13 @@ const reducer = (state = initialState, action = {}) => {
       return {
         ...state,
         holderDetailsStatus: API_REJECTED
+      }
+
+    case `${HOLDER_ADD}_FULFILLED`:
+      return {
+        ...state,
+        holderDetails: action.payload.payload,
+        holderDetailsStatus: API_SUCCESS
       }
 
     case `${HOLDER_UPDATE}_FULFILLED`:

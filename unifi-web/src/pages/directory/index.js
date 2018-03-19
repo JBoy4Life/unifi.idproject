@@ -6,6 +6,7 @@ import * as ROUTES from 'utils/routes'
 import ContactDetails from './contact-details'
 import ContactEdit from './contact-edit'
 import ContactList from './contact-list'
+import ContactNew from './contact-new'
 import { PageContent } from 'components'
 import { PageContainer } from 'smart-components'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
@@ -21,6 +22,11 @@ class Directory extends Component {
                 exact
                 path={ROUTES.DIRECTORY}
                 component={ContactList}
+              />
+              <Route
+                exact
+                path={ROUTES.DIRECTORY_HOLDER_NEW}
+                component={ContactNew}
               />
               <Route
                 exact
