@@ -50,6 +50,11 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
   config.vm.hostname = "unifi-services.box"
   config.vm.provision :shell, :inline => $bootstrap_script
-  config.vm.network "public_network"
+
+  # Sometimes, bridging to the public network does not acquire an IPv4 address.
+  # Forwarding ports will always work.
+  config.vm.network "forwarded_port", guest: 3000, host: 3000 # unifi-web
+  config.vm.network "forwarded_port", guest: 8000, host: 8000 # unifi-service
+
   config.vm.post_up_message = $post_up_msg
 end
