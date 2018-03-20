@@ -7,8 +7,11 @@ export const sleep = time => new Promise(resolve => (
 
 export const noop = () => Promise.resolve()
 
-export const base64EncodeUint8Array = uint8Array =>
-  btoa(String.fromCharCode(...uint8Array))
+export const base64EncodeUint8Array = (unit8Array) => fp.compose(
+  btoa,
+  fp.join(''),
+  fp.map(char => String.fromCharCode(char))
+)(unit8Array)
 
 export const base64EncodeArrayBuffer = arrayBuffer =>
   base64EncodeUint8Array(new Uint8Array(arrayBuffer))
