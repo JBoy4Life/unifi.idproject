@@ -20,14 +20,14 @@ import {
   contactAttendanceSelector,
   overrideAttendanceResultSelector,
   scheduleStatsSelector
-} from 'redux/attendance/selectors'
+} from 'redux/modules/attendance/selectors'
 
 import {
   getContactAttendanceForSchedule,
   listScheduleStats,
   overrideAttendance,
   reportBlockAttendance
-} from 'redux/attendance/actions'
+} from 'redux/modules/attendance/actions'
 
 import { 
   getAttendanceRate,
@@ -36,8 +36,8 @@ import {
   getProcessedCount
 } from 'pages/attendance/helpers'
 
-import { getHolder } from 'redux/holders/actions'
-import { holdersMetaSelector } from 'redux/holders/selectors'
+import { getHolder } from 'redux/modules/holder/actions'
+import { holderDetailsSelector } from 'redux/modules/holder/selectors'
 
 const absenceLabels = {
   'present': "Present",
@@ -70,13 +70,11 @@ const committerSelector = (state, props) =>
     contactAttendanceSelector
   )(state)
 
-const getHolderProgrammeSelector = (state, props) =>
-  fp.compose(
-    fp.get('metadata.programme'),
-    fp.defaultTo({}),
-    fp.find({ clientReference: props.match.params.clientReference }),
-    holdersMetaSelector
-  )(state)
+const getHolderProgrammeSelector = fp.compose(
+  fp.get('metadata.programme'),
+  fp.defaultTo({}),
+  holderDetailsSelector
+)
 
 export class AttendanceScheduleBlockDrilldown extends Component {
   static propTypes = {
@@ -116,10 +114,10 @@ export class AttendanceScheduleBlockDrilldown extends Component {
 
   loadData(clientReference, scheduleId) {
     const { clientId } = this.props
-    this.props.listScheduleStats(scheduleId)
-    this.props.reportBlockAttendance(scheduleId, clientReference)
-    this.props.getContactAttendanceForSchedule(scheduleId)
-    this.props.getHolder(clientId, clientReference)
+    this.props.listScheduleStats({ clientId })
+    this.props.reportBlockAttendance({ clientId, scheduleId, clientReference })
+    this.props.getContactAttendanceForSchedule({ clientId, scheduleId })
+    this.props.getHolder({ clientId, clientReference })
   }
 
   handleEditAttendance = (blockId) => (event) => {
@@ -137,11 +135,17 @@ export class AttendanceScheduleBlockDrilldown extends Component {
   }
 
   handleEditAttendanceSave = () => {
-    this.props.overrideAttendance(
-      this.props.match.params.clientReference,
-      this.props.match.params.scheduleId,
-      this.state.editAttendanceBlockId,
-      this.state.editAttendanceSelectedStatus)
+    const { clientId, match: { params: { clientReference, scheduleId } } } = this.props
+    const { editAttendanceBlockId, editAttendanceSelectedStatus } = this.state
+
+    this.props.overrideAttendance({
+      clientId,
+      clientReference,
+      scheduleId, 
+      blockId: editAttendanceBlockId,
+      status: editAttendanceSelectedStatus
+    })
+
     this.setState({
       editAttendanceVisible: false
     })

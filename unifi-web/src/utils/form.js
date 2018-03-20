@@ -3,12 +3,9 @@ import tr from 'config/string-resources'
 
 export const formSubmit = (actionCreator, payload) => {
   return (new Promise((resolve, reject) => {
-    actionCreator({
-      ...payload,
-      formSubmit: {
-        onSuccess: resolve,
-        onFail: reject
-      }
+    actionCreator(payload, {
+      onSuccess: resolve,
+      onFail: reject
     })
   })).catch(res => {
     const { payload } = res

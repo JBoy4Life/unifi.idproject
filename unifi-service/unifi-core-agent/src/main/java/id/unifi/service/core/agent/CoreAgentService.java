@@ -31,10 +31,8 @@ public class CoreAgentService {
 
     @Prefix("unifi")
     interface Config {
-        @Default("ucl-som")
         String clientId();
 
-        @Default("level38")
         String siteId();
 
         @Default("ws://localhost:8001/agents/msgpack")

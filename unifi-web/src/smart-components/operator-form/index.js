@@ -86,7 +86,7 @@ class OperatorForm extends Component {
 export default compose(
   withRouter,
   reduxForm({
-    form: 'changePassword',
+    form: 'operatorForm',
     enableReinitialize: true
   })
 )(OperatorForm)

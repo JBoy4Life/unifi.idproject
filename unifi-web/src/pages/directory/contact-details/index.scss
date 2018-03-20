@@ -1,3 +1,5 @@
+@import 'src/styles/variables';
+
 .directory-details {
   &__back {
     margin-bottom: 20px;
@@ -21,5 +23,13 @@
 
   &__dt-type {
     text-transform: uppercase;
+  }
+
+  &__edit-link {
+    float: right;
+    color: $unifi-secondary-color;
+    &:hover, &:focus {
+      color: $unifi-type-color;
+    }
   }
 }

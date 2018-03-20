@@ -1,5 +1,5 @@
-import { liveDiscoverySelector, zonesInfoSelector } from 'redux/zones/selectors'
-import { holdersSelector } from 'redux/holders/selectors'
+import { liveDiscoverySelector, zonesInfoSelector } from 'redux/modules/site/selectors'
+import { holdersSelector } from 'redux/modules/holder/selectors'
 import { referenceMap } from 'utils/helpers'
 
 export const groupItems = (items, grouping) => {

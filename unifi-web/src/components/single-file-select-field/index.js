@@ -6,10 +6,10 @@ const SingleFilePickerField = ({
   meta: { touched, error },
   disabled,
 }) => {
-  const hasErorr = touched && error
+  const hasError = touched && error
   const validationsProps = {}
 
-  if (hasErorr) {
+  if (hasError) {
     validationsProps.validateStatus = 'error'
     validationsProps.help = error
     // validationsProps.hasFeedback = true

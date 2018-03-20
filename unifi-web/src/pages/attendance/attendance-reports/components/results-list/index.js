@@ -10,8 +10,8 @@ import { createStructuredSelector } from 'reselect'
 import ScheduleTable from '../schedule-table'
 import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
 import { Collapse, Spinner } from 'elements'
-import { lowAttendanceReportSelector, lowAttendanceReportStatusSelector } from 'redux/attendance/selectors'
-import { reportLowAttendanceByMetadata } from 'redux/attendance/actions'
+import { lowAttendanceReportSelector, lowAttendanceReportStatusSelector } from 'redux/modules/attendance/selectors'
+import { reportLowAttendanceByMetadata } from 'redux/modules/attendance/actions'
 import { sortSchedules } from 'utils/helpers'
 
 import './index.scss'
@@ -36,8 +36,9 @@ export class ResultsList extends Component {
 
   componentWillMount() {
     const { clientId, endDate, programme, reportLowAttendanceByMetadata, startDate } = this.props
-    reportLowAttendanceByMetadata(clientId, {
-      programme,
+    reportLowAttendanceByMetadata({
+      clientId,
+      metadataValue: programme,
       startTime: startDate ? moment.utc(startDate).startOf('day').format() : undefined,
       endTime: endDate ? moment.utc(endDate).endOf('day').format() : undefined
     })

@@ -6,10 +6,10 @@ const TextField = ({
   meta: { touched, error },
   disabled, extra
 }) => {
-  const hasErorr = touched && error
+  const hasError = touched && error
   const validationsProps = {}
 
-  if (hasErorr) {
+  if (hasError) {
     validationsProps.validateStatus = 'error'
     validationsProps.help = error
     // validationsProps.hasFeedback = true
