@@ -1,32 +1,17 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { compose } from 'redux'
-import { connect } from 'react-redux'
-import { Route, Switch /*, Redirect*/ } from 'react-router'
+import { Route, Switch } from 'react-router'
 
 import * as ROUTES from 'utils/routes'
 import ContactDetails from './contact-details'
+import ContactEdit from './contact-edit'
 import ContactList from './contact-list'
-import { listHolders } from 'redux/modules/holder/actions'
+import ContactNew from './contact-new'
 import { PageContent } from 'components'
 import { PageContainer } from 'smart-components'
-import { withClientId } from 'hocs'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 
 class Directory extends Component {
-  static propTypes = {
-    clientId: PropTypes.string.isRequired,
-    listHolders: PropTypes.func.isRequired
-  };
-
-  componentDidMount() {
-    const { clientId, listHolders } = this.props
-    listHolders({
-      clientId,
-      with: ['image', 'detectable-type']
-    })
-  }
-
   render() {
     return (
       <PageContainer>
@@ -40,8 +25,18 @@ class Directory extends Component {
               />
               <Route
                 exact
+                path={ROUTES.DIRECTORY_HOLDER_NEW}
+                component={ContactNew}
+              />
+              <Route
+                exact
                 path={ROUTES.DIRECTORY_HOLDER_DETAIL}
                 component={ContactDetails}
+              />
+              <Route
+                exact
+                path={ROUTES.DIRECTORY_HOLDER_EDIT}
+                component={ContactEdit}
               />
             </Switch>
           </PageContent.Main>
@@ -51,12 +46,4 @@ class Directory extends Component {
   }
 }
 
-export const actions = {
-  listHolders
-}
-
-export default compose(
-  userIsAuthenticatedRedir,
-  withClientId,
-  connect(null, actions),
-)(Directory)
+export default userIsAuthenticatedRedir(Directory)

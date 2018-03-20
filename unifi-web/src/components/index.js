@@ -5,6 +5,7 @@ import PageContent from './page-content'
 import PageContentTitle from './page-content-title'
 import PageContentUnderTitle from './page-content-under-title'
 
+import AvatarField from './avatar-field'
 import CheckboxField from './checkbox-field'
 import DateRangeField from './date-range-field'
 import SelectField from './select-field'
@@ -30,6 +31,7 @@ export {
   PageContentTitle,
   PageContentUnderTitle,
 
+  AvatarField,
   CheckboxField,
   DateRangeField,
   SelectField,

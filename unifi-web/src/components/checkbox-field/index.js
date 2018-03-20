@@ -6,10 +6,10 @@ const CheckboxField = ({
   meta: { touched, error },
   disabled,
 }) => {
-  const hasErorr = touched && error
+  const hasError = touched && error
   const validationsProps = {}
 
-  if (hasErorr) {
+  if (hasError) {
     validationsProps.validationSttus = 'error'
     validationsProps.help = error
   }
