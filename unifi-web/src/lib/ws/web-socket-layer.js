@@ -58,7 +58,7 @@ export default class WebSocketLayer {
     this.socket.removeEventListener(message, callback)
   }
 
-  encodeJSON(json) {
+  encodeMessage(json) {
     return msgpack.encode(json, { codec: binarryCodec })
   }
 
@@ -105,7 +105,7 @@ export default class WebSocketLayer {
     if (typeof content !== 'object') {
       throw new Error('Only JSON objects are supported for sending via socket layer')
     }
-    // const encodedContent = this.encodeJSON(content)
+    // const encodedContent = this.encodeMessage(content)
     // console.log(content)
     // console.log('sending encoded', encodedContent)
     // console.log('buffer data view', encodedContent.buffer)
@@ -123,11 +123,11 @@ export default class WebSocketLayer {
         // console.log('sending', JSON.stringify(content))
         this.socket.send(JSON.stringify(content))
       } else {
-        const encodedContent = this.encodeJSON(content)
+        const encodedContent = this.encodeMessage(content)
         this.socket.send(encodedContent.buffer)
       }
     } else if (this.type === 'msgpack') {
-      this.socket.send(this.encodeJSON(content))
+      this.socket.send(this.encodeMessage(content))
     } else {
       throw 'Unsupported message format'
     }
