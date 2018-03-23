@@ -4,7 +4,7 @@ import connectedAuthWrapper from 'redux-auth-wrapper/connectedAuthWrapper'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { clientIsLoadingSelector, clientIsLoadedSelector } from 'redux/modules/client/selectors'
 import { Loading } from 'components'
 import { loginStatusSelector, currentUserSelector, attendanceEnabledSelector, liveViewEnabledSelector } from 'redux/modules/user/selectors'

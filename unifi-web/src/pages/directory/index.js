@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Route, Switch } from 'react-router'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import ContactDetails from './contact-details'
 import ContactEdit from './contact-edit'
 import ContactList from './contact-list'

@@ -6,7 +6,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import ZoneFilter from './components/zone-filter'

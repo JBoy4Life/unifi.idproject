@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 
-import * as ROUTES from '../../utils/routes'
+import * as ROUTES from 'config/routes'
 import { PageContent } from '../../components'
 import { PageContainer } from '../../smart-components'
 

@@ -4,7 +4,7 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import withClientId from 'hocs/with-client-id'
 import { API_FAIL, API_SUCCESS } from 'redux/api/request'
 import { Col, Row } from 'elements'

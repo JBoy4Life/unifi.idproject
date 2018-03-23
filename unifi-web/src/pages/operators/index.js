@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Route, Switch } from 'react-router'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import OperatorEdit from './operator-edit'
 import OperatorList from './operator-list'
 import OperatorInvite from './operator-invite'

@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link, withRouter } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import ResendInvite from '../resend-invite'
 import { PageContentUnderTitle } from 'components'
 import { Table } from 'elements'

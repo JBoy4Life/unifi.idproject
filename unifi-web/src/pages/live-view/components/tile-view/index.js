@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import moment from 'moment'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { HolderGrid } from 'components'
 
 const GridItem = HolderGrid.Item

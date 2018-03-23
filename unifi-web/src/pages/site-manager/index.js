@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Route, Switch /* Redirect */ } from 'react-router'
 
-import * as ROUTES from '../../utils/routes'
+import * as ROUTES from 'config/routes'
 
 import { PageContent } from '../../components'
 import { PageContainer, LinkedSideNavigation } from '../../smart-components'

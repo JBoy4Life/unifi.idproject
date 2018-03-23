@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Route, Switch /* Redirect */ } from 'react-router'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import EvacuationDashboard from './evacuation-dashboard'
 import EvacuationDirectory from './evacuation-directory'
 import EvacuationFloor from './evacuation-floor'

@@ -2,7 +2,7 @@ import React from 'react'
 import { compose } from 'redux'
 import { Route, Switch, Redirect } from 'react-router'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 

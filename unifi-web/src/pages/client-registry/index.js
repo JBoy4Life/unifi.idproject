@@ -5,7 +5,7 @@ import { createStructuredSelector } from 'reselect'
 import { Route, Switch } from 'react-router'
 import { withRouter } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import ClientAdd from './client-add'
 import ClientListing from './client-listing'
 import { actions as clientActions, selectors as clientSelectors } from 'redux/modules/client'

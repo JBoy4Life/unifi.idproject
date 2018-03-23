@@ -5,7 +5,7 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { Col, Row } from 'elements'
 import { formSubmit } from 'utils/form'
 import { getOperator, registerOperator } from 'redux/modules/operator/actions'

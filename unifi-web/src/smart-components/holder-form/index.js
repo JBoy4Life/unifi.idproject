@@ -5,7 +5,7 @@ import { compose } from 'redux'
 import { Field, reduxForm } from 'redux-form'
 import { withRouter } from 'react-router'
 
-import * as ROUTES from 'utils/routes' 
+import * as ROUTES from 'config/routes' 
 import * as validate from './validate'
 import { Alert, Button, Col, Row, SubmitRow } from 'elements'
 import { AvatarField, SwitchField, TextField } from 'components'

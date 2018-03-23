@@ -1,7 +1,7 @@
 import React from 'react'
 import { Route, Router, Switch, Redirect } from 'react-router'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 
 import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,

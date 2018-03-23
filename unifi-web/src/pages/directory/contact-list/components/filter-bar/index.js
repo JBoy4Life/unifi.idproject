@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Link, withRouter } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { Checkbox, Col, Icon, Row, TextInput } from 'elements'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
 import './index.scss'

@@ -6,7 +6,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link, withRouter } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
 import { Col, Row, Spinner } from 'elements'
 import { formSubmit } from 'utils/form'

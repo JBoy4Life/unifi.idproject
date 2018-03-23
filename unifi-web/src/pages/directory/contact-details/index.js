@@ -6,7 +6,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Link } from 'react-router-dom'
 
-import * as ROUTES from 'utils/routes'
+import * as ROUTES from 'config/routes'
 import { Avatar, Col, Row } from 'elements'
 import { detectablesListSelector } from 'redux/modules/detectable/selectors'
 import { getHolder } from 'redux/modules/holder/actions'
