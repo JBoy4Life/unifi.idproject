@@ -22,24 +22,26 @@ import java.util.function.Consumer;
 public class MockReaderManager implements ReaderManager {
     private static final Logger log = LoggerFactory.getLogger(MockReaderManager.class);
 
-    private final DatabaseProvider dbProvider;
+    private final ReaderConfigPersistence persistence;
     private final String clientId;
     private final String siteId;
     private final Consumer<RawDetectionReport> detectionConsumer;
     private volatile Thread detectionThread;
     private volatile AntennaKey[] antennae;
 
-    public MockReaderManager(DatabaseProvider dbProvider,
+    public MockReaderManager(ReaderConfigPersistence persistence,
                              String clientId,
                              String siteId,
                              Consumer<RawDetectionReport> detectionConsumer) {
-        this.dbProvider = dbProvider;
+        this.persistence = persistence;
         this.clientId = clientId;
         this.siteId = siteId;
         this.detectionConsumer = detectionConsumer;
+        configure(persistence.readConfig());
     }
 
     public synchronized void configure(List<ReaderConfig> readers) {
+        log.info("Received reader config: {}", readers);
         if (detectionThread != null) {
             detectionThread.interrupt();
             try {
@@ -53,6 +55,7 @@ public class MockReaderManager implements ReaderManager {
                 .flatMap(r -> Arrays.stream(r.enabledAntennae).mapToObj(n -> new AntennaKey(clientId, r.readerSn, n)))
                 .toArray(AntennaKey[]::new);
         if (antennae.length > 0) {
+            persistence.writeConfig(readers);
             log.info("Generating mock detections for {} antennae", antennae.length);
             detectionThread = new Thread(this::mockDetections);
             detectionThread.start();
@@ -63,12 +66,17 @@ public class MockReaderManager implements ReaderManager {
 
     private void mockDetections() {
         Random random = new Random();
+        DatabaseProvider dbProvider = new DatabaseProvider();
         Database serviceDb = dbProvider.bySchema(CORE);
         DetectableRecord[] detectables = serviceDb.execute(sql -> sql
                 .selectFrom(DETECTABLE)
                 .where(DETECTABLE.CLIENT_ID.eq(clientId))
                 .and(DETECTABLE.DETECTABLE_TYPE.eq(DetectableType.UHF_EPC.toString()))
                 .fetchArray());
+
+        if (detectables.length == 0) {
+            throw new RuntimeException("No detectables found in the database");
+        }
 
         while (true) {
             int count = random.nextInt(10);
