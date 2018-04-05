@@ -14,7 +14,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +21,9 @@ public class ReaderConfigDatabasePersistence implements ReaderConfigPersistence 
     private final Database db;
     private final List<ReaderConfig> alternativeConfig;
 
-    public ReaderConfigDatabasePersistence(DatabaseProvider dbProvider,
-                                           @Nullable List<ReaderConfig> alternativeConfig) {
+    public ReaderConfigDatabasePersistence(DatabaseProvider dbProvider, List<ReaderConfig> alternativeConfig) {
         this.db = dbProvider.bySchema(CORE_AGENT);
-        this.alternativeConfig = alternativeConfig != null ? alternativeConfig : List.of();
+        this.alternativeConfig = alternativeConfig;
     }
 
     public List<ReaderConfig> readConfig() {

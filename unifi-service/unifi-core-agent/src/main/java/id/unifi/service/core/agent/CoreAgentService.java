@@ -9,7 +9,6 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.provider.rfid.RfidProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -47,7 +45,7 @@ public class CoreAgentService {
         @Default("false")
         boolean standaloneMode();
 
-        @Nullable
+        @Default("")
         ReaderConfigs readers();
 
         @Nullable
@@ -88,11 +86,9 @@ public class CoreAgentService {
             });
         };
 
-        List<ReaderConfig> readers = config.readers() != null ? config.readers().readers : null;
-
         ReaderConfigPersistence persistence = config.standaloneMode()
-                ? new ReaderConfigNoopPersistence(readers)
-                : new ReaderConfigDatabasePersistence(new DatabaseProvider(), readers);
+                ? new ReaderConfigNoopPersistence(config.readers().readers)
+                : new ReaderConfigDatabasePersistence(new DatabaseProvider(), config.readers().readers);
 
         ReaderManager readerManager = config.mockDetections()
                 ? new MockReaderManager(persistence, config.clientId(), config.siteId(), detectionConsumer)
