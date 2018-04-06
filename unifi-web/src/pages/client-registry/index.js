@@ -8,7 +8,8 @@ import { withRouter } from 'react-router-dom'
 import * as ROUTES from 'config/routes'
 import ClientAdd from './client-add'
 import ClientListing from './client-listing'
-import { actions as clientActions, selectors as clientSelectors } from 'redux/modules/client'
+import { clientsSelector } from 'redux/selectors'
+import { listClients } from 'redux/modules/model/client'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
@@ -85,11 +86,11 @@ class ClientRegistryContainer extends Component {
 }
 
 export const selector = createStructuredSelector({
-  clientList: clientSelectors.clientsSelector,
+  clientList: clientsSelector,
 });
 
 export const actions = {
-  ...clientActions
+  listClients
 }
 
 export default compose(

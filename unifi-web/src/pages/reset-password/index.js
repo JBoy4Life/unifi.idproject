@@ -6,13 +6,17 @@ import { createStructuredSelector } from 'reselect'
 
 import * as ROUTES from 'config/routes'
 import withClientId from 'hocs/with-client-id'
-import { API_FAIL, API_SUCCESS } from 'redux/api/request'
+import { API_FAIL, API_PENDING, API_SUCCESS } from 'redux/api/constants'
 import { Col, Row } from 'elements'
 import { formSubmit } from 'utils/form'
-import { getPasswordResetInfo, setPassword } from 'redux/modules/user/actions'
+import { getPasswordResetInfo, setPassword } from 'redux/modules/user'
 import { PageContainer, ResetPasswordForm } from 'smart-components'
 import { PageContent } from 'components'
-import { passwordResetInfoSelector, setPasswordStatusSelector } from 'redux/modules/user/selectors'
+import {
+  passwordResetInfoSelector,
+  passwordResetInfoStatusSelector,
+  setPasswordStatusSelector
+} from 'redux/selectors'
 import './index.scss'
 
 const COMPONENT_CSS_CLASS = 'reset-password'
@@ -23,6 +27,7 @@ class ResetPassword extends Component {
     getPasswordResetInfo: PropTypes.func,
     match: PropTypes.object,
     passwordResetInfo: PropTypes.object,
+    passwordResetInfoStatus: PropTypes.string,
     setPassword: PropTypes.func,
     setPasswordStatus: PropTypes.string,
     clientId: PropTypes.string
@@ -52,12 +57,12 @@ class ResetPassword extends Component {
   }
 
   render() {
-    const { match, passwordResetInfo } = this.props
+    const { match, passwordResetInfo, passwordResetInfoStatus } = this.props
 
     return (
       <PageContainer>
         <PageContent>
-          {API_SUCCESS === passwordResetInfo.status && (
+          {API_SUCCESS === passwordResetInfoStatus && passwordResetInfo && (
             <Row>
               <Col xs={24} sm={{ offset: 4, span: 16 }} md={{ offset: 6, span: 12 }} xl={{ offset: 7, span: 10 }}>
                 {match.path === ROUTES.ACCEPT_INVITATION ? (
@@ -75,7 +80,7 @@ class ResetPassword extends Component {
               </Col>
             </Row>
           )}
-          {API_FAIL === passwordResetInfo.status && (
+          {API_PENDING !== passwordResetInfoStatus && !passwordResetInfo && (
             <h1 className={bemE('title')}>Invalid username or token.</h1>
           )}
         </PageContent>
@@ -86,6 +91,7 @@ class ResetPassword extends Component {
 
 export const selector = createStructuredSelector({
   passwordResetInfo: passwordResetInfoSelector,
+  passwordResetInfoStatus: passwordResetInfoStatusSelector,
   setPasswordStatus: setPasswordStatusSelector
 })
 

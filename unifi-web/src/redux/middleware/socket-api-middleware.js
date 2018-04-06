@@ -6,35 +6,78 @@
  *
  * @param {Object} socketClient - implementor of the socket client
  */
+
+import {
+  API_FAIL,
+  API_PENDING,
+  API_SUCCESS,
+  API_SUBSCRIBE_UPDATE
+} from 'redux/api/constants'
+
 const socketApiMiddleware = socketClient => store => next => (action) => {
   if (action.socketRequest) {
+    const metaFields = {
+      actionType: action.type,
+      formSubmit: action.socketRequest.formSubmit,
+      messageType: action.socketRequest.messageType,
+      selectorKey: action.selectorKey
+    }
+
+    store.dispatch({
+      type: API_PENDING,
+      payload: metaFields
+    })
+
     const promiseResource = new Promise((resolve, reject) => {
       socketClient.request(action.socketRequest, { json: true })
         .then(res => {
-          const payload = {
+          const data = {
             ...res,
             formSubmit: action.formSubmit
           }
           res.messageType.startsWith('core.error')
-          ? reject(payload)
-          : resolve(payload)
+          ? reject(data)
+          : resolve(data)
         })
         .catch(ex => reject(ex))
     })
 
-    store.dispatch({
-      type: action.type,
-      payload: promiseResource
-    }).catch(() => {})
-
+    promiseResource
+      .then(res => {
+        const payload = {
+          data: res.payload,
+          ...metaFields
+        }
+        store.dispatch({
+          type: API_SUCCESS,
+          payload: action.payloadOnSuccess ? action.payloadOnSuccess(payload, store.getState) : payload
+        })
+      })
+      .catch(ex => {
+        const payload = {
+          data: ex.payload,
+          ...metaFields
+        }
+        store.dispatch({
+          type: API_FAIL,
+          payload: action.payloadOnFail ? action.payloadOnFail(payload, store.getState) : payload
+        })
+      })
     return promiseResource
   }
 
   if (action.socketSubscribe) {
     socketClient.subscribe(action.socketSubscribe, { json: true }, (data) => {
+      const payload = {
+        data: data.payload,
+        actionType: action.type,
+        messageType: action.socketSubscribe.messageType,
+        selectorKey: action.selectorKey
+      }
+
       store.dispatch({
-        type: `${action.type}_UPDATE`,
-        data,
+        type: API_SUBSCRIBE_UPDATE,
+        payload: action.payloadOnSuccess ? action.payloadOnSuccess(payload, store.getState) : payload
       })
     })
   }

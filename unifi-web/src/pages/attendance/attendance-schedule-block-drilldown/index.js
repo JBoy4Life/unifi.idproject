@@ -20,14 +20,14 @@ import {
   contactAttendanceSelector,
   overrideAttendanceResultSelector,
   scheduleStatsSelector
-} from 'redux/modules/attendance/selectors'
+} from 'redux/selectors'
 
 import {
   getContactAttendanceForSchedule,
   listScheduleStats,
   overrideAttendance,
   reportBlockAttendance
-} from 'redux/modules/attendance/actions'
+} from 'redux/modules/model/attendance'
 
 import { 
   getAttendanceRate,
@@ -36,8 +36,8 @@ import {
   getProcessedCount
 } from 'pages/attendance/helpers'
 
-import { getHolder } from 'redux/modules/holder/actions'
-import { holderDetailsSelector } from 'redux/modules/holder/selectors'
+import { getHolder } from 'redux/modules/model/holder'
+import { holderDetailsSelector } from 'redux/selectors'
 
 const absenceLabels = {
   'present': "Present",
