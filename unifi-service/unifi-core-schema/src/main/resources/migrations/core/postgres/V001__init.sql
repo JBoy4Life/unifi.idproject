@@ -266,7 +266,8 @@ CREATE TABLE core.holder_image(
   CONSTRAINT fk_holder_image_to_holder
     FOREIGN KEY (client_id, client_reference)
     REFERENCES core.holder,
-  CHECK (LENGTH(image) <= 1048576)
+  CHECK (LENGTH(image) <= 1048576),
+  CHECK (mime_type IN ('image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'))
 );
 
 CREATE TABLE core.client_config(
@@ -303,5 +304,6 @@ CREATE TABLE core.client_image(
   CONSTRAINT fk_client_image_to_client
   FOREIGN KEY (client_id)
   REFERENCES core.client,
-  CHECK (LENGTH(image) <= 1048576)
+  CHECK (LENGTH(image) <= 1048576),
+  CHECK (mime_type IN ('image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'))
 );
