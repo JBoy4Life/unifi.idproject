@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 @ApiService("detection")
@@ -47,7 +46,7 @@ public class DetectionService {
     public void processRawDetections(AgentSessionData session, ObjectMapper mapper, List<RawDetectionReport> reports) {
         log.trace("Got reports: {}", reports);
         RawSiteDetectionReports siteReport =
-                new RawSiteDetectionReports(session.getClientId(), session.getSiteId(), reports);
+                new RawSiteDetectionReports(session.getAgent().clientId, reports);
 
         byte[] marshalledReport;
         try {

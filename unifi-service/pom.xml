@@ -18,6 +18,7 @@
         <module>unifi-provider-rfid</module>
         <module>unifi-attendance</module>
         <module>unifi-attendance-schema</module>
+        <module>scrypt-bin</module>
         <module>octane-sdk</module>
     </modules>
 

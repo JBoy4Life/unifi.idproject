@@ -28,7 +28,6 @@ import id.unifi.service.common.detection.ClientDetectable;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.detection.RawSiteDetectionReports;
-import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
@@ -36,15 +35,12 @@ import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import id.unifi.service.common.version.VersionInfo;
+import id.unifi.service.core.agents.IdentityService;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
-import static id.unifi.service.core.db.Tables.READER;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
-import id.unifi.service.core.db.tables.records.AntennaRecord;
 import id.unifi.service.core.db.tables.records.RfidDetectionRecord;
 import static java.net.InetSocketAddress.createUnresolved;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import org.eclipse.jetty.websocket.api.Session;
 import org.jooq.BatchBindStep;
@@ -257,49 +253,20 @@ public class CoreService {
 
     private static ObjectMapper startAgentService(ComponentHolder componentHolder,
                                                   HostAndPort agentEndpoint) throws Exception {
-        Database db = componentHolder.get(DatabaseProvider.class).bySchema(CORE);
         ServiceRegistry agentRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agents"), componentHolder);
         Dispatcher<AgentSessionData> agentDispatcher =
-                new Dispatcher<>(agentRegistry, AgentSessionData.class, AgentSessionData::new);
+                new Dispatcher<>(agentRegistry, AgentSessionData.class, s -> new AgentSessionData());
+        componentHolder.get(IdentityService.class).setAgentDispatcher(agentDispatcher); // FIXME: break circular dependency
         agentDispatcher.addSessionListener(new Dispatcher.SessionListener<>() {
-            public void onSessionCreated(Session session, AgentSessionData sessionData) {
-                log.info("Agent session created for {}:{}", sessionData.getClientId(), sessionData.getSiteId());
-                List<ReaderConfig> readerConfigs = db.execute(sql -> {
-                    Map<String, List<AntennaRecord>> antennae = sql.selectFrom(ANTENNA)
-                            .where(ANTENNA.CLIENT_ID.eq(sessionData.getClientId()))
-                            .and(ANTENNA.SITE_ID.eq(sessionData.getSiteId()))
-                            .and(ANTENNA.ACTIVE)
-                            .stream()
-                            .collect(groupingBy(AntennaRecord::getReaderSn));
-                    return sql.selectFrom(READER)
-                            .where(READER.CLIENT_ID.eq(sessionData.getClientId()))
-                            .and(READER.SITE_ID.eq(sessionData.getSiteId()))
-                            .stream()
-                            .map(r -> new ReaderConfig(
-                                    r.getReaderSn(),
-                                    HostAndPort.fromString(r.getEndpoint()),
-                                    antennae.get(r.getReaderSn()).stream().mapToInt(AntennaRecord::getPortNumber).toArray()))
-                            .collect(toList());
-                });
-                try {
-                    agentDispatcher.request(
-                            session,
-                            Protocol.MSGPACK,
-                            "core.config.set-reader-config",
-                            Map.of("readers", readerConfigs));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            public void onSessionCreated(Session session, AgentSessionData data) {
+                log.info("New agent session: {}", session);
             }
 
             public void onSessionDropped(Session session) {
                 log.info("Session dropped: {}", session);
             }
         });
-
-        //AgentHandler agentHandler = new AgentHandler(dbProvider, agentDispatcher, detectionProcessor);
-        //agentDispatcher.addSessionListener(agentHandler);
 
         InetSocketAddress agentServerSocket = createUnresolved(agentEndpoint.getHost(), agentEndpoint.getPort());
         HttpServer agentServer = new HttpServer(

@@ -5,6 +5,7 @@ import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
+import id.unifi.service.common.api.errors.AuthenticationFailed;
 import id.unifi.service.common.detection.RawDetectionReport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketException;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,14 +33,20 @@ public class CoreClient {
     private final Thread sendThread;
     private final URI serviceUri;
     private final String clientId;
-    private final String siteId;
+    private final String agentId;
     private final AtomicReference<Session> sessionRef;
+    private CountDownLatch authenticated;
     private final Thread connectThread;
+    private final byte[] password;
 
-    CoreClient(URI serviceUri, String clientId, String siteId, ComponentHolder componentHolder) {
+    CoreClient(URI serviceUri, String clientId, String agentId, byte[] password, ComponentHolder componentHolder) {
         this.serviceUri = serviceUri;
         this.clientId = clientId;
-        this.siteId = siteId;
+        this.agentId = agentId;
+        this.password = password;
+
+        pendingReports = new ArrayBlockingQueue<>(100_000);
+        sessionRef = new AtomicReference<>();
 
         ServiceRegistry registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agent.services"),
@@ -47,8 +55,15 @@ public class CoreClient {
         dispatcher.putMessageListener("core.detection.process-raw-detections-result", Void.class,
                 (s, o) -> log.debug("Confirmed detection"));
 
-        pendingReports = new ArrayBlockingQueue<>(100_000);
-        sessionRef = new AtomicReference<>();
+        dispatcher.putMessageListener("core.identity.auth-password-result", Void.class, (s, o) -> {
+            sessionRef.set(s);
+            authenticated.countDown();
+        });
+
+        dispatcher.putMessageListener("core.error.authentication-failed", AuthenticationFailed.class, (s, e) -> {
+            sessionRef.set(null);
+            authenticated.countDown();
+        });
 
         connectThread = new Thread(this::maintainConnection);
         connectThread.start();
@@ -100,15 +115,23 @@ public class CoreClient {
                 WebSocketClient client = new WebSocketClient();
                 client.start();
                 ClientUpgradeRequest request = new ClientUpgradeRequest();
-                request.setHeader("x-client-id", clientId);
-                request.setHeader("x-site-id", siteId);
                 WebSocketDelegate delegate = new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
                 Future<Session> sessionFuture = client.connect(delegate, serviceUri, request);
                 log.info("Waiting for connection to service");
                 Session session;
                 session = sessionFuture.get();
-                sessionRef.set(session);
-                log.info("Connection to service established ({})", serviceUri);
+
+                log.info("Connection to service established ({}), authenticating", serviceUri);
+                authenticated = new CountDownLatch(1);
+                dispatcher.request(session, Protocol.MSGPACK, "core.identity.auth-password",
+                        Map.of("clientId", clientId, "agentId", agentId, "password", password));
+
+                authenticated.await();
+                if (sessionRef.get() == null) {
+                    // Authentication failed; FIXME: build a proper client
+                    log.error("Agent authentication failed");
+                    session.close();
+                }
                 int closeCode = delegate.awaitClose();
                 log.info("Connection closed (WebSocket code {})", closeCode);
             } catch (Exception e) {

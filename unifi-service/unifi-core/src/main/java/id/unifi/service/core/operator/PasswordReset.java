@@ -4,6 +4,7 @@ import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.common.security.ScryptConfig;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
@@ -37,7 +38,7 @@ public class PasswordReset {
         @Default("864000")
         long validitySeconds();
 
-        SecretHashing.ScryptConfig hashing();
+        ScryptConfig hashing();
     }
 
     public PasswordReset(@ApiConfigPrefix("unifi.operator.password.reset") Config config,

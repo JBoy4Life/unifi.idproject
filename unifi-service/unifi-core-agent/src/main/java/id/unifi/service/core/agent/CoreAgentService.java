@@ -9,6 +9,7 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.core.agent.config.HexByteArrayValueParser;
 import id.unifi.service.provider.rfid.RfidProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,11 @@ public class CoreAgentService {
     interface Config {
         String clientId();
 
-        String siteId();
+        @Default("default")
+        String agentId();
+
+        @Default("")
+        byte[] agentPassword();
 
         @Default("ws://localhost:8001/agents/msgpack")
         URI serviceUri();
@@ -91,13 +96,13 @@ public class CoreAgentService {
                 : new ReaderConfigDatabasePersistence(new DatabaseProvider(), config.readers().readers);
 
         ReaderManager readerManager = config.mockDetections()
-                ? new MockReaderManager(persistence, config.clientId(), config.siteId(), detectionConsumer)
+                ? new MockReaderManager(persistence, config.clientId(), detectionConsumer)
                 : new DefaultReaderManager(persistence, new RfidProvider(detectionConsumer),
-                config.standaloneMode() ? Duration.ZERO : Duration.ofSeconds(5));
+                config.standaloneMode() ? Duration.ZERO : Duration.ofSeconds(10));
 
         if (!config.standaloneMode()) {
             ComponentHolder componentHolder = new ComponentHolder(Map.of(ReaderManager.class, readerManager));
-            client.set(new CoreClient(config.serviceUri(), config.clientId(), config.siteId(), componentHolder));
+            client.set(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
         } else {
             log.info("Running in standalone mode as requested. Not connecting to a server.");
         }
@@ -105,7 +110,7 @@ public class CoreAgentService {
 
     private static Config getConfig() {
         Config config = Envy.configure(Config.class, UnifiConfigSource.get(),
-                HostAndPortValueParser.instance, ReaderConfigsValueParser.instance);
+                HostAndPortValueParser.instance, ReaderConfigsValueParser.instance, HexByteArrayValueParser.instance);
 
         if (config.standaloneMode() && config.readers() == null)
             throw new IllegalArgumentException("UNIFI_READERS must be specified in standalone mode.");

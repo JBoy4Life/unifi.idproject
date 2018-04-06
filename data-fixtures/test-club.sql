@@ -18,10 +18,17 @@ COPY site (client_id, site_id, description, address) FROM stdin;
 test-club	test-site	Test Site	4 Privet Drive, Little Whingeing, Surrey
 \.
 
+COPY agent (client_id, agent_id) FROM stdin;
+test-club	default
+\.
 
-COPY reader (client_id, site_id, reader_sn, endpoint) FROM stdin;
-test-club	test-site	37017090614	192.168.42.167:5084
-test-club	test-site	1001	127.0.0.1:5084
+COPY agent_password (client_id, agent_id, password_hash, algorithm) FROM stdin;
+test-club	default	\\x7363720800020001632651f10bbf2b3d4cfcdbcb2fe3a6af9371e8c4d88d89c85eb3d1ac8ca2b048ab3753c15b02156b332b77565e73eff1	scrypt
+\.
+
+COPY reader (client_id, site_id, reader_sn, agent_id, endpoint) FROM stdin;
+test-club	test-site	37017090614	default	192.168.42.167:5084
+test-club	test-site	1001	default	127.0.0.1:5084
 \.
 
 

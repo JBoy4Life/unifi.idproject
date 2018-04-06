@@ -52,7 +52,7 @@ psql -d unifi
 dropdb --if-exists unifi && createdb unifi && mvn flyway:migrate -pl unifi-core-schema,unifi-attendance-schema
 
 # Start agent in mock detection mode (readers must exist in the core DB)
-mvn exec:java -pl unifi-core-agent -Dunifi.mock.detections=true
+mvn exec:java -pl unifi-core-agent -Dunifi.mock.detections=true -Dunifi.client.id=test-club
 
 # Use JSON API from command line
 ws ws://<vm ip>:8000/service/json # using https://github.com/hashrocket/ws

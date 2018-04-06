@@ -24,18 +24,15 @@ public class MockReaderManager implements ReaderManager {
 
     private final ReaderConfigPersistence persistence;
     private final String clientId;
-    private final String siteId;
     private final Consumer<RawDetectionReport> detectionConsumer;
     private volatile Thread detectionThread;
     private volatile AntennaKey[] antennae;
 
     public MockReaderManager(ReaderConfigPersistence persistence,
                              String clientId,
-                             String siteId,
                              Consumer<RawDetectionReport> detectionConsumer) {
         this.persistence = persistence;
         this.clientId = clientId;
-        this.siteId = siteId;
         this.detectionConsumer = detectionConsumer;
         configure(persistence.readConfig());
     }

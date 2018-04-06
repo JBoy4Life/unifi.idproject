@@ -17,6 +17,7 @@ import id.unifi.service.common.operator.AuthInfo;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
+import id.unifi.service.common.security.ScryptConfig;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
@@ -85,7 +86,7 @@ public class OperatorService {
     }
 
     public OperatorService(@ApiConfigPrefix("unifi.operator") Config config,
-                           @ApiConfigPrefix("unifi.operator.password.hashing") SecretHashing.ScryptConfig hashingConfig,
+                           @ApiConfigPrefix("unifi.operator.password.hashing") ScryptConfig hashingConfig,
                            DatabaseProvider dbProvider,
                            PasswordReset passwordReset,
                            OperatorEmailRenderer emailRenderer,

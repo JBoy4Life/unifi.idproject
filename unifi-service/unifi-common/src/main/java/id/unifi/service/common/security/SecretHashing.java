@@ -1,7 +1,6 @@
 package id.unifi.service.common.security;
 
 import com.lambdaworks.crypto.SCrypt;
-import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.util.HexEncoded;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import org.slf4j.Logger;
@@ -125,17 +124,6 @@ public class SecretHashing {
 
     public static String toString(byte[] encodedHash) {
         return parse(encodedHash).map(ScryptHash::toString).orElse("<none>");
-    }
-
-    public interface ScryptConfig {
-        @Default("12")
-        byte scryptLogN();
-
-        @Default("4")
-        short scryptR();
-
-        @Default("1")
-        short scryptP();
     }
 
     public byte[] hash(String password) {
