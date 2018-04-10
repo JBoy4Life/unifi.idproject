@@ -1,0 +1,5 @@
+#!/bin/bash
+
+systemctl enable unifi-core.service
+systemctl start unifi-core.service
+

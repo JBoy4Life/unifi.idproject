@@ -58,6 +58,27 @@ mvn exec:java -pl unifi-core-agent -Dunifi.mock.detections=true -Dunifi.client.i
 ws ws://<vm ip>:8000/service/json # using https://github.com/hashrocket/ws
 ----
 
+On the Build Node/CI Server (or a server with the debian build tools installed:
+
+`apt-get install build-essential fakeroot devscripts`
+
+We can build the debian packages ready for deployment:
+
+----
+vagrant up
+vagrant ssh
+cd unifi.id/unifi-service
+mvn clean install
+
+mvn exec:java -pl unifi-core
+
+./build-deb.sh unifi-core 1.0.2 unifi-core/target/unifi-core-0.1-SNAPSHOT-jar-with-dependencies.jar
+./build-deb.sh unifi-core-agent 1.0.2 unifi-core-agent/target/unifi-core-agent-0.1-SNAPSHOT-jar-with-dependencies.jar
+
+# Produces unifi-core-1.0.2.deb and unifi-core-agent-1.0.2.deb, ready for install
+dpkg -i unifi-core-1.0.2.deb
+----
+
 === Schema generation
 
 The `unifi-*-schema` modules requires a local postgres instance with a

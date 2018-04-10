@@ -1,0 +1,5 @@
+#!/bin/bash
+
+systemctl stop unifi-core-agent.service
+systemctl disable unifi-core-agent.service
+systemctl reset-failed
