@@ -8,10 +8,10 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import ScheduleTable from '../schedule-table'
-import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/request'
+import { API_PENDING, API_SUCCESS, API_FAIL } from 'redux/api/constants'
 import { Collapse, Spinner } from 'elements'
-import { lowAttendanceReportSelector, lowAttendanceReportStatusSelector } from 'redux/modules/attendance/selectors'
-import { reportLowAttendanceByMetadata } from 'redux/modules/attendance/actions'
+import { lowAttendanceReportSelector, lowAttendanceReportStatusSelector } from 'redux/selectors'
+import { reportLowAttendanceByMetadata } from 'redux/modules/model/attendance'
 import { sortSchedules } from 'utils/helpers'
 
 import './index.scss'

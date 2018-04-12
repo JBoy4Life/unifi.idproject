@@ -5,9 +5,9 @@ import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 
 import * as ROUTES from 'config/routes'
-import { clientIsLoadingSelector, clientIsLoadedSelector } from 'redux/modules/client/selectors'
+import { clientIsLoadingSelector, clientIsLoadedSelector } from 'redux/selectors'
 import { Loading } from 'components'
-import { loginStatusSelector, currentUserSelector, attendanceEnabledSelector, liveViewEnabledSelector } from 'redux/modules/user/selectors'
+import { loginStatusSelector, currentUserSelector, attendanceEnabledSelector, liveViewEnabledSelector } from 'redux/selectors'
 
 const locationHelper = locationHelperBuilder({})
 

@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
 
-import { verticalConfigSelector } from 'redux/modules/user/selectors'
+import { verticalConfigSelector } from 'redux/selectors'
 import { TopNavigation } from 'components'
 import { userIsAuthenticated } from 'hocs/auth'
 

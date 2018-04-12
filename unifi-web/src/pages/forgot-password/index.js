@@ -5,13 +5,13 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import withClientId from 'hocs/with-client-id'
-import { API_FAIL, API_SUCCESS } from 'redux/api/request'
+import { API_FAIL, API_SUCCESS } from 'redux/api/constants'
 import { Col, Row } from 'elements'
 import { formSubmit } from 'utils/form'
 import { PageContainer, ForgotPasswordForm } from 'smart-components'
 import { PageContent } from 'components'
-import { requestPasswordReset } from 'redux/modules/user/actions'
-import { requestPasswordResetStatusSelector } from 'redux/modules/user/selectors'
+import { requestPasswordReset } from 'redux/modules/user'
+import { requestPasswordResetStatusSelector } from 'redux/selectors'
 
 class ForgotPassword extends Component {
   static propTypes = {

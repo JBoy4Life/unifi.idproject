@@ -12,9 +12,9 @@ import ListView from './components/list-view'
 import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import { Col, Row, TextInput } from 'elements'
-import { holdersSelector } from 'redux/modules/holder/selectors'
+import { holdersSelector } from 'redux/selectors'
 import { jsonToQueryString, parseQueryString } from 'utils/helpers'
-import { listHolders } from 'redux/modules/holder/actions'
+import { listHolders } from 'redux/modules/model/holder'
 import { withClientId } from 'hocs'
 
 const predicate = (criteria) => (item) => {

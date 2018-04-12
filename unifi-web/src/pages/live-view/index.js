@@ -11,23 +11,16 @@ import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import ZoneFilter from './components/zone-filter'
 import { getDiscoveredList } from './utils/helpers'
+import { listHolders } from 'redux/modules/model/holder'
+import { listSites, listZones, listenToSubscriptions } from 'redux/modules/model/site'
 import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
+import { siteIdSelector, zonesInfoSelector } from 'redux/selectors'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
-
-import {
-  actions as siteActions,
-  selectors as siteSelectors
-} from 'redux/modules/site'
-
-import {
-  actions as holdersActions,
-  selectors as holdersSelectors
-} from 'redux/modules/holder'
 
 const zonesSelector = fp.compose(
   (zonesInfo) => (
@@ -37,7 +30,7 @@ const zonesSelector = fp.compose(
       fp.keys
     )(zonesInfo)
   ),
-  siteSelectors.zonesInfoSelector
+  zonesInfoSelector
 )
 
 class LiveView extends PureComponent {
@@ -133,7 +126,6 @@ class LiveView extends PureComponent {
     const { itemsPerRow, queryParams: { view, zone: zoneId } } = this.state
 
     const {
-      liveDiscoveryUpdate,
       discoveredList,
       zones
     } = this.props
@@ -174,18 +166,15 @@ class LiveView extends PureComponent {
 
 export const selector = createStructuredSelector({
   discoveredList: getDiscoveredList,
-  siteId: siteSelectors.siteIdSelector,
-  liveDiscoveryUpdate: compose(
-    fp.get('liveDiscoveryUpdate'),
-    siteSelectors.getReducer
-  ),
+  siteId: siteIdSelector,
   zones: zonesSelector
 })
 
 export const actions = {
-  ...siteActions,
-  listHolders: holdersActions.listHolders,
-  listSites: siteActions.listSites
+  listHolders,
+  listSites,
+  listZones,
+  listenToSubscriptions
 }
 
 export default compose(

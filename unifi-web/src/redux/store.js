@@ -1,11 +1,11 @@
 import createHistory from 'history/createBrowserHistory'
-import promiseMiddleware from 'redux-promise-middleware'
+import thunk from 'redux-thunk';
 import { composeWithDevTools } from 'redux-devtools-extension'
 import { createStore, applyMiddleware, compose } from 'redux'
 import { persistStore, persistCombineReducers } from 'redux-persist'
 
 import persistConfig from 'config/persist'
-import reducers from './modules'
+import reducers from './reducers'
 import { authMiddleware, formSubmitMiddleware, socketApiMiddleware } from './middleware'
 
 export const history = createHistory()
@@ -16,7 +16,7 @@ export const configureStore = (wsClient) => {
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   const middlewares = [
-    promiseMiddleware(),
+    thunk,
     socketApiMiddleware(wsClient),
     authMiddleware,
     formSubmitMiddleware,

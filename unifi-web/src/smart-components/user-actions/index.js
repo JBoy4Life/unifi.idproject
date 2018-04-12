@@ -7,7 +7,8 @@ import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router'
 
 import * as ROUTES from 'config/routes'
-import { actions as userActions, selectors as userSelectors } from 'redux/modules/user'
+import { logoutRequest } from 'redux/modules/user'
+import { currentUserSelector } from 'redux/selectors'
 import { Menu, Icon } from 'elements'
 import { userIsAuthenticated } from 'hocs/auth'
 import './index.scss'
@@ -95,11 +96,11 @@ class UserActions extends Component {
 }
 
 const selector = createStructuredSelector({
-  user: userSelectors.currentUserSelector,
+  user: currentUserSelector,
 })
 
 const actions = {
-  ...userActions
+  logoutRequest
 }
 
 export default compose(

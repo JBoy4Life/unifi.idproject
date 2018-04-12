@@ -8,9 +8,9 @@ import { createStructuredSelector } from 'reselect'
 import './index.scss'
 import logo from 'assets/images/ucl-logo-2.png'
 import unifilogo from 'assets/images/unifi-logo.svg'
-import { actions as userActions } from 'redux/modules/user'
+import { loginRequest } from 'redux/modules/user'
 import { clientIsValidRedir, userIsNotAuthenticatedRedir } from 'hocs/auth'
-import { currentClientSelector } from 'redux/modules/client/selectors'
+import { currentClientSelector } from 'redux/selectors'
 import { formSubmit } from 'utils/form'
 import { noop } from 'utils/helpers'
 import { PageContainer, LoginForm } from 'smart-components'
@@ -64,7 +64,7 @@ const selector = createStructuredSelector({
 })
 
 export const actions = {
-  loginRequest: userActions.loginRequest,
+  loginRequest,
 }
 
 export default compose(
