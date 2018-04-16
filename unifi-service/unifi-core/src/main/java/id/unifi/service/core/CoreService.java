@@ -1,5 +1,7 @@
 package id.unifi.service.core;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
 import com.rabbitmq.client.AMQP;
@@ -33,6 +35,7 @@ import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
+import id.unifi.service.common.util.MetricUtils;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import id.unifi.service.common.version.VersionInfo;
 import id.unifi.service.core.agents.IdentityService;
@@ -107,11 +110,16 @@ public class CoreService {
 
         Config config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
 
+        MetricRegistry registry = new MetricRegistry();
+        JmxReporter jmxReporter = MetricUtils.createJmxReporter(registry);
+        jmxReporter.start();
+
         DatabaseProvider dbProvider = new DatabaseProvider();
         dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
         DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
 
         ComponentHolder componentHolder = new ComponentHolder(Map.of(
+                MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
                 MqConfig.class, config.mq(),
                 DetectionProcessor.class, detectionProcessor,
