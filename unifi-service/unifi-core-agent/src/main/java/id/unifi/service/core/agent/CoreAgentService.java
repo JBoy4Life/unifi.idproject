@@ -1,5 +1,7 @@
 package id.unifi.service.core.agent;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Nullable;
@@ -9,6 +11,7 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.util.MetricUtils;
 import id.unifi.service.core.agent.config.HexByteArrayValueParser;
 import id.unifi.service.provider.rfid.RfidProvider;
 import org.slf4j.Logger;
@@ -62,6 +65,10 @@ public class CoreAgentService {
 
         Config config = getConfig();
 
+        MetricRegistry registry = new MetricRegistry();
+        JmxReporter jmxReporter = MetricUtils.createJmxReporter(registry);
+        jmxReporter.start();
+
         Optional<BufferedWriter> logWriter = Optional.ofNullable(config.detectionLogFilePath()).flatMap(filePath -> {
             try {
                 Path path = Paths.get(filePath);
@@ -97,7 +104,7 @@ public class CoreAgentService {
 
         ReaderManager readerManager = config.mockDetections()
                 ? new MockReaderManager(persistence, config.clientId(), detectionConsumer)
-                : new DefaultReaderManager(persistence, new RfidProvider(detectionConsumer),
+                : new DefaultReaderManager(persistence, new RfidProvider(detectionConsumer, registry),
                 config.standaloneMode() ? Duration.ZERO : Duration.ofSeconds(10));
 
         if (!config.standaloneMode()) {

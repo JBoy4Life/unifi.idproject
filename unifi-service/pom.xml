@@ -50,6 +50,7 @@
         <logback.version>1.2.3</logback.version>
         <jmustache.version>1.14</jmustache.version>
         <scrypt.version>1.4.0</scrypt.version>
+        <metrics.version>4.1.0-rc0</metrics.version>
         <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.platform.version>1.0.1</junit.platform.version>
         <hamcrest.version>2.0.0.0</hamcrest.version>
@@ -86,6 +87,13 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-bom</artifactId>
                 <version>${jetty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-bom</artifactId>
+                <version>${metrics.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
