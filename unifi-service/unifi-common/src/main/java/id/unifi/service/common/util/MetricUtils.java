@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -19,7 +20,7 @@ public class MetricUtils {
 
     private static final Logger log = LoggerFactory.getLogger(MetricUtils.class);
     private static final Pattern unifiMetricName =
-            Pattern.compile("id\\.unifi\\.service\\.([^.]+)\\.([^.]+)\\.([^.]+)\\.([^.]+)");
+            Pattern.compile("id\\.unifi\\.service\\.([^.]+)\\.([^.]+)(?:\\.([^.]+)\\.([^.]+))?");
     private static final ObjectNameFactory defaultNameFactory = new DefaultObjectNameFactory();
     private static final CharMatcher invalidPropValueChars = CharMatcher.anyOf(",=:\"?*");
 
@@ -35,10 +36,14 @@ public class MetricUtils {
         Matcher m = unifiMetricName.matcher(name);
         try {
             if (m.matches()) {
-                Object[] escaped = IntStream.rangeClosed(1, 4)
-                        .mapToObj(i -> quotePropValue(m.group(i)))
+                Object[] escapedParts = IntStream.rangeClosed(1, 4)
+                        .mapToObj(m::group)
+                        .filter(Objects::nonNull)
+                        .map(MetricUtils::quotePropValue)
                         .toArray();
-                return new ObjectName(String.format("id.unifi.service.%s:type=%s,name=%s,metric=%s", escaped));
+                return escapedParts.length == 2
+                        ? new ObjectName(String.format("id.unifi.service.%s:metric=%s", escapedParts))
+                        : new ObjectName(String.format("id.unifi.service.%s:type=%s,name=%s,metric=%s", escapedParts));
             }
         } catch (MalformedObjectNameException e) {
             log.warn("Unable to derive a JMX object name for domain {}, metric name {}", domain, name, e);
