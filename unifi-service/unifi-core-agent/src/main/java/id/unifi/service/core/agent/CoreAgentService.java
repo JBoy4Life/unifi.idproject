@@ -2,7 +2,6 @@ package id.unifi.service.core.agent;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
-import com.opencsv.CSVWriter;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Nullable;
@@ -15,11 +14,10 @@ import id.unifi.service.common.util.MetricUtils;
 import id.unifi.service.core.agent.config.AgentConfig;
 import id.unifi.service.core.agent.config.ConfigSerialization;
 import id.unifi.service.core.agent.parsing.HexByteArrayValueParser;
+import id.unifi.service.core.agent.setup.CsvDetectionLogger;
+import id.unifi.service.core.agent.setup.DetectionLogger;
 import id.unifi.service.provider.rfid.RfidProvider;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.APPEND;
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.WRITE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +35,6 @@ import java.util.function.Consumer;
 
 public class CoreAgentService {
     private static final Logger log = LoggerFactory.getLogger(CoreAgentService.class);
-
-    private static final Path DETECTION_LOG_FILE_PATH = Paths.get("detections.log");
 
     private enum AgentMode {
         PRODUCTION,
@@ -88,8 +84,10 @@ public class CoreAgentService {
         }
 
         AgentConfigPersistence persistence;
+        Optional<DetectionLogger> detectionLogger;
         if (mode == AgentMode.PRODUCTION) {
             persistence = new AgentConfigFilePersistence();
+            detectionLogger = Optional.empty();
         } else { // AgentMode.TEST_SETUP
             Path setupFilePath = Paths.get(args[0]);
             AgentConfig setupAgentConfig;
@@ -98,33 +96,18 @@ public class CoreAgentService {
                         ConfigSerialization.getSetupObjectMapper().readValue(reader, AgentConfig.class);
             }
             persistence = new AgentConfigNoopPersistence(setupAgentConfig);
+            detectionLogger = Optional.of(new CsvDetectionLogger());
         }
 
         MetricRegistry registry = new MetricRegistry();
         JmxReporter jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
 
-        Optional<CSVWriter> logWriter = getDetectionLogWriter(mode);
-
         AtomicReference<CoreClient> client = new AtomicReference<>();
         Consumer<RawDetectionReport> detectionConsumer = report -> {
             CoreClient coreClient = client.get();
             if (coreClient != null) coreClient.sendRawDetections(report);
-            logWriter.ifPresent(w -> {
-                try {
-                    report.detections.forEach(d -> w.writeNext(new String[]{
-                            d.timestamp.toString(),
-                            report.readerSn,
-                            Integer.toString(d.portNumber),
-                            d.detectableId,
-                            d.detectableType.toString(),
-                            Double.toString(d.rssi)
-                    }));
-                    w.flush();
-                } catch (IOException e) {
-                    log.error("Failed to write detection to file.", e);
-                }
-            });
+            detectionLogger.ifPresent(w -> w.log(report));
         };
 
         ReaderManager readerManager = config.mockDetections()
@@ -137,22 +120,6 @@ public class CoreAgentService {
             client.set(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
         } else {
             log.info("Running in {} mode. Not connecting to a server.", mode);
-        }
-    }
-
-    private static Optional<CSVWriter> getDetectionLogWriter(AgentMode mode) {
-        if (mode == AgentMode.PRODUCTION) {
-            return Optional.empty();
-        } else {
-            try {
-                log.info("Appending detections to {}", DETECTION_LOG_FILE_PATH);
-                CSVWriter writer = new CSVWriter(
-                        Files.newBufferedWriter(DETECTION_LOG_FILE_PATH, UTF_8, WRITE, APPEND, CREATE));
-                return Optional.of(writer);
-            } catch (IOException e) {
-                log.warn("Error opening {}, can't log detections.", DETECTION_LOG_FILE_PATH, e);
-                return Optional.empty();
-            }
         }
     }
 }
