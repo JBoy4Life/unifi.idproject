@@ -2,12 +2,10 @@ package id.unifi.service.core.agent.services;
 
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
-import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.core.agent.ReaderManager;
+import id.unifi.service.core.agent.config.AgentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 @ApiService("config")
 public class ConfigService {
@@ -20,8 +18,8 @@ public class ConfigService {
     }
 
     @ApiOperation
-    public void setReaderConfig(List<ReaderConfig> readers) {
-        log.info("Received reader config from server: {}", readers);
-        readerManager.configure(readers);
+    public void setAgentConfig(AgentConfig config) {
+        log.info("Received agent config from server: {}", config);
+        readerManager.configure(config);
     }
 }

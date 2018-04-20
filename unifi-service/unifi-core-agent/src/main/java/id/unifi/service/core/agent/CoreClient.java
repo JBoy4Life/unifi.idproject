@@ -53,7 +53,7 @@ public class CoreClient {
                 componentHolder);
         dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
         dispatcher.putMessageListener("core.detection.process-raw-detections-result", Void.class,
-                (s, o) -> log.debug("Confirmed detection"));
+                (s, o) -> log.trace("Confirmed detection"));
 
         dispatcher.putMessageListener("core.identity.auth-password-result", Void.class, (s, o) -> {
             sessionRef.set(s);

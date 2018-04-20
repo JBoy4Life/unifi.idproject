@@ -1,9 +1,7 @@
 package id.unifi.service.core.agent;
 
-import id.unifi.service.common.detection.ReaderConfig;
-
-import java.util.List;
+import id.unifi.service.core.agent.config.AgentConfig;
 
 public interface ReaderManager {
-    void configure(List<ReaderConfig> readers);
+    void configure(AgentConfig config);
 }

@@ -14,7 +14,6 @@
         <module>unifi-core-schema</module>
         <module>unifi-common</module>
         <module>unifi-core-agent</module>
-        <module>unifi-core-agent-schema</module>
         <module>unifi-provider-rfid</module>
         <module>unifi-attendance</module>
         <module>unifi-attendance-schema</module>
@@ -41,6 +40,7 @@
         <jetty.version>9.4.8.v20171121</jetty.version>
         <jackson.version>2.9.3</jackson.version>
         <jackson.msgpack.version>0.8.14</jackson.msgpack.version>
+        <jackson.yaml.version>2.9.5</jackson.yaml.version>
         <jersey.version>2.26</jersey.version>
         <spring.version>5.0.2.RELEASE</spring.version>
         <postgres.version>42.1.4</postgres.version>
@@ -111,6 +111,11 @@
                 <groupId>org.msgpack</groupId>
                 <artifactId>jackson-dataformat-msgpack</artifactId>
                 <version>${jackson.msgpack.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${jackson.yaml.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jmdns</groupId>

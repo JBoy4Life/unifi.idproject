@@ -2,8 +2,8 @@ package id.unifi.service.provider.rfid;
 
 import com.codahale.metrics.MetricRegistry;
 import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.common.provider.DetectionProvider;
+import id.unifi.service.provider.rfid.config.ReaderFullConfig;
 import static java.util.stream.Collectors.toMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +24,9 @@ public class RfidProvider implements DetectionProvider {
         this.controllers = Map.of();
     }
 
-    public synchronized void configure(List<ReaderConfig> readers) {
+    public synchronized void configure(List<ReaderFullConfig> readers) {
         controllers.forEach((sn, controller) -> controller.close());
         controllers = readers.stream()
-                .collect(toMap(r -> r.readerSn, r -> new ImpinjReaderController(r, detectionConsumer, registry)));
+                .collect(toMap(r -> r.readerSn.get(), r -> new ImpinjReaderController(r, detectionConsumer, registry)));
     }
 }

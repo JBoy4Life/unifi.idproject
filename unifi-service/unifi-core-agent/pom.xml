@@ -20,11 +20,6 @@
         </dependency>
         <dependency>
             <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-core-agent-schema</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>id.unifi.service</groupId>
             <artifactId>unifi-provider-rfid</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -39,6 +34,10 @@
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
         <dependency>
             <groupId>com.statemachinesystems</groupId>
@@ -86,12 +85,6 @@
                                 <property><key>unifi.core.jdbc.user</key><value>${postgres.user}</value></property>
                                 <property><key>unifi.core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
                                 <property><key>unifi.core.jooq.dialect</key><value>POSTGRES</value></property>
-
-                                <!-- Core agent database config -->
-                                <property><key>unifi.core.agent.jdbc.url</key><value>jdbc:postgresql:unifi?currentSchema=core_agent</value></property>
-                                <property><key>unifi.core.agent.jdbc.user</key><value>${postgres.user}</value></property>
-                                <property><key>unifi.core.agent.jdbc.driver</key><value>org.postgresql.Driver</value></property>
-                                <property><key>unifi.core.agent.jooq.dialect</key><value>POSTGRES</value></property>
                             </systemProperties>
                         </configuration>
                     </execution>

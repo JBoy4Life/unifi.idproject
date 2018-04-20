@@ -9,18 +9,22 @@ import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.util.MetricUtils;
-import id.unifi.service.core.agent.config.HexByteArrayValueParser;
+import id.unifi.service.core.agent.config.AgentConfig;
+import id.unifi.service.core.agent.config.ConfigSerialization;
+import id.unifi.service.core.agent.parsing.HexByteArrayValueParser;
 import id.unifi.service.provider.rfid.RfidProvider;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.WRITE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,8 +38,20 @@ import java.util.function.Consumer;
 public class CoreAgentService {
     private static final Logger log = LoggerFactory.getLogger(CoreAgentService.class);
 
+    private static final Path DETECTION_LOG_FILE_PATH = Paths.get("detections.log");
+
+    private enum AgentMode {
+        PRODUCTION,
+        TEST_SETUP,
+        GENERATE_SETUP;
+    }
+
     @Prefix("unifi")
     interface Config {
+        @Default("false")
+        boolean production(); // Force production mode
+
+        @Nullable
         String clientId();
 
         @Default("default")
@@ -49,41 +65,46 @@ public class CoreAgentService {
 
         @Default("false")
         boolean mockDetections();
-
-        @Default("false")
-        boolean standaloneMode();
-
-        @Default("")
-        ReaderConfigs readers();
-
-        @Nullable
-        String detectionLogFilePath();
     }
 
-    public static void main(String[] args) {
-        log.info("Starting unifi.id core agent service");
+    public static void main(String[] args) throws IOException {
+        if (args.length > 1)
+            throw new IllegalArgumentException(
+                    "Too many arguments. Expected either none to discover readers and generate a setup file " +
+                            "or a setup file name to test setup and generate service config.");
 
-        Config config = getConfig();
+        Config config = Envy.configure(Config.class, UnifiConfigSource.get(),
+                HostAndPortValueParser.instance, HexByteArrayValueParser.instance);
+
+        AgentMode mode = !config.production() && args.length > 0
+                ? AgentMode.TEST_SETUP
+                : (config.production() || config.clientId() != null ? AgentMode.PRODUCTION : AgentMode.GENERATE_SETUP);
+
+        log.info("Starting unifi.id core agent service in {} mode", mode);
+
+        if (mode == AgentMode.GENERATE_SETUP) {
+            GenerateSetupMode.run();
+            return;
+        }
+
+        AgentConfigPersistence persistence;
+        if (mode == AgentMode.PRODUCTION) {
+            persistence = new AgentConfigFilePersistence();
+        } else { // AgentMode.TEST_SETUP
+            Path setupFilePath = Paths.get(args[0]);
+            AgentConfig setupAgentConfig;
+            try (BufferedReader reader = Files.newBufferedReader(setupFilePath, UTF_8)) {
+                setupAgentConfig =
+                        ConfigSerialization.getSetupObjectMapper().readValue(reader, AgentConfig.class);
+            }
+            persistence = new AgentConfigNoopPersistence(setupAgentConfig);
+        }
 
         MetricRegistry registry = new MetricRegistry();
         JmxReporter jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
 
-        Optional<BufferedWriter> logWriter = Optional.ofNullable(config.detectionLogFilePath()).flatMap(filePath -> {
-            try {
-                Path path = Paths.get(filePath);
-                log.info("Appending detections to {}", path);
-                return Optional.of(Files.newBufferedWriter(
-                        path,
-                        StandardCharsets.UTF_8,
-                        StandardOpenOption.WRITE,
-                        StandardOpenOption.APPEND,
-                        StandardOpenOption.CREATE));
-            } catch (IOException e) {
-                log.error("Error opening detection log file", e);
-                return Optional.empty();
-            }
-        });
+        Optional<BufferedWriter> logWriter = getDetectionLogWriter(mode);
 
         AtomicReference<CoreClient> client = new AtomicReference<>();
         Consumer<RawDetectionReport> detectionConsumer = report -> {
@@ -94,34 +115,41 @@ public class CoreAgentService {
                     w.write(report.toString());
                     w.newLine();
                     w.flush();
-                } catch (IOException ignored) {}
+                } catch (IOException e) {
+                    log.error("Failed to write detection to file.", e);
+                }
             });
         };
-
-        ReaderConfigPersistence persistence = config.standaloneMode()
-                ? new ReaderConfigNoopPersistence(config.readers().readers)
-                : new ReaderConfigDatabasePersistence(new DatabaseProvider(), config.readers().readers);
 
         ReaderManager readerManager = config.mockDetections()
                 ? new MockReaderManager(persistence, config.clientId(), detectionConsumer)
                 : new DefaultReaderManager(persistence, new RfidProvider(detectionConsumer, registry),
-                config.standaloneMode() ? Duration.ZERO : Duration.ofSeconds(10));
+                mode == AgentMode.PRODUCTION ? Duration.ofSeconds(10) : Duration.ZERO);
 
-        if (!config.standaloneMode()) {
+        if (mode == AgentMode.PRODUCTION) {
             ComponentHolder componentHolder = new ComponentHolder(Map.of(ReaderManager.class, readerManager));
             client.set(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
         } else {
-            log.info("Running in standalone mode as requested. Not connecting to a server.");
+            log.info("Running in {} mode. Not connecting to a server.", mode);
         }
     }
 
-    private static Config getConfig() {
-        Config config = Envy.configure(Config.class, UnifiConfigSource.get(),
-                HostAndPortValueParser.instance, ReaderConfigsValueParser.instance, HexByteArrayValueParser.instance);
-
-        if (config.standaloneMode() && config.readers() == null)
-            throw new IllegalArgumentException("UNIFI_READERS must be specified in standalone mode.");
-
-        return config;
+    private static Optional<BufferedWriter> getDetectionLogWriter(AgentMode mode) {
+        if (mode == AgentMode.PRODUCTION) {
+            return Optional.empty();
+        } else {
+            try {
+                log.info("Appending detections to {}", DETECTION_LOG_FILE_PATH);
+                return Optional.of(Files.newBufferedWriter(
+                        DETECTION_LOG_FILE_PATH,
+                        UTF_8,
+                        WRITE,
+                        StandardOpenOption.APPEND,
+                        CREATE));
+            } catch (IOException e) {
+                log.warn("Error opening {}, can't log detections.", DETECTION_LOG_FILE_PATH, e);
+                return Optional.empty();
+            }
+        }
     }
 }

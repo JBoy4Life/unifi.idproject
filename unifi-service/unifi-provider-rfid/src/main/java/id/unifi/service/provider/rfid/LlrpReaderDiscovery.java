@@ -79,14 +79,20 @@ public class LlrpReaderDiscovery {
                 status = reader.queryStatus();
                 reader.disconnect();
             } catch (OctaneSdkException e) {
-                throw new RuntimeException("Error querying reader " + service);
+                log.error("Error querying reader {}", service);
+                features = null;
+                status = null;
             }
 
-            Map<Integer, Boolean> antennaeConnected = status.getAntennaStatusGroup().getAntennaList().stream()
-                    .collect(toMap(a -> (int) a.getPortNumber(), AntennaStatus::isConnected));
+            if (status != null) {
+                Map<Integer, Boolean> antennaeConnected = status.getAntennaStatusGroup().getAntennaList().stream()
+                        .collect(toMap(a -> (int) a.getPortNumber(), AntennaStatus::isConnected));
 
-            return new RfidReader(features.getSerialNumber(), features.getModelName(),
-                    new RfidReaderStatus(service.endpoint, features.getFirmwareVersion(), antennaeConnected));
+                return new RfidReader(features.getSerialNumber().replaceAll("-", ""), features.getModelName(),
+                        new RfidReaderStatus(service.endpoint, features.getFirmwareVersion(), antennaeConnected));
+            } else {
+                return new RfidReader(null, null, new RfidReaderStatus(service.endpoint, null, Map.of()));
+            }
         }).collect(toList());
     }
 }
