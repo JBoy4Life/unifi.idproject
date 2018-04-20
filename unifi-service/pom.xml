@@ -50,6 +50,7 @@
         <logback.version>1.2.3</logback.version>
         <jmustache.version>1.14</jmustache.version>
         <scrypt.version>1.4.0</scrypt.version>
+        <opencsv.version>4.1</opencsv.version>
         <metrics.version>4.1.0-rc0</metrics.version>
         <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.platform.version>1.0.1</junit.platform.version>
@@ -177,6 +178,11 @@
                 <groupId>com.lambdaworks</groupId>
                 <artifactId>scrypt</artifactId>
                 <version>${scrypt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.opencsv</groupId>
+                <artifactId>opencsv</artifactId>
+                <version>${opencsv.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.statemachinesystems</groupId>
