@@ -70,7 +70,7 @@
                     <!--
                       To start the service, run `mvn install`, start postgres and then:
 
-                          mvn exec:java -pl unifi-core-agent -Dpostgres.user=<postgres username>
+                          mvn exec:java -pl unifi-core-agent
                     -->
                     <execution>
                         <id>default-cli</id>
