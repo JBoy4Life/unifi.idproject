@@ -60,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -144,8 +145,10 @@ public class CoreService {
                     RFID_DETECTION.DETECTABLE_TYPE,
                     RFID_DETECTION.READER_SN,
                     RFID_DETECTION.PORT_NUMBER,
-                    RFID_DETECTION.DETECTION_TIME)
-                    .values(null, null, null, null, (Integer) null, null)
+                    RFID_DETECTION.DETECTION_TIME,
+                    RFID_DETECTION.RSSI,
+                    RFID_DETECTION.COUNT)
+                    .values((String) null, null, null, null, null, null, null, null)
                     .onConflictDoNothing();
 
             while (true) {
@@ -166,7 +169,8 @@ public class CoreService {
 
                 List<Detection> detections = allTagged.stream()
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
-                                new Detection(new ClientDetectable(t.clientId, d.detectableId, d.detectableType), r.readerSn, d.portNumber, d.timestamp))))
+                                new Detection(new ClientDetectable(t.clientId, d.detectableId, d.detectableType),
+                                        r.readerSn, d.portNumber, d.timestamp, BigDecimal.valueOf(d.rssi), d.count))))
                         .collect(toList());
 
                 Row2<String, String>[] detectableIdRows = detections.stream()
@@ -196,7 +200,9 @@ public class CoreService {
                                     detection.detectable.detectableType.toString(),
                                     detection.readerSn,
                                     detection.portNumber,
-                                    utcLocalFromInstant(detection.detectionTime));
+                                    utcLocalFromInstant(detection.detectionTime),
+                                    detection.rssi,
+                                    detection.count);
                         }
                     });
                     int batchSize = batch.size();

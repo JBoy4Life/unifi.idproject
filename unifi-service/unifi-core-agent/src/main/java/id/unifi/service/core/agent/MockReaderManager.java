@@ -77,7 +77,7 @@ public class MockReaderManager implements ReaderManager {
                 String detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
                 Instant timestamp = Instant.now().minusMillis(random.nextInt(200));
                 RawDetection detection =
-                        new RawDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, 0d);
+                        new RawDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, 0d, 1);
                 detectionConsumer.accept(new RawDetectionReport(antenna.readerSn, List.of(detection)));
             }
 

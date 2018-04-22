@@ -183,7 +183,9 @@ public class AttendanceProcessor {
                     RFID_DETECTION.DETECTABLE_TYPE,
                     RFID_DETECTION.READER_SN,
                     RFID_DETECTION.PORT_NUMBER,
-                    RFID_DETECTION.DETECTION_TIME)
+                    RFID_DETECTION.DETECTION_TIME,
+                    RFID_DETECTION.RSSI,
+                    RFID_DETECTION.COUNT)
                     .from(RFID_DETECTION.join(ANTENNA).onKey())
                     .join(PROCESSING_STATE).on(
                             ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID),
@@ -195,7 +197,9 @@ public class AttendanceProcessor {
                             new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
                             d.value4(),
                             d.value5(),
-                            instantFromUtcLocal(d.value6())))
+                            instantFromUtcLocal(d.value6()),
+                            d.value7(),
+                            d.value8()))
                     .collect(toList());
         });
 

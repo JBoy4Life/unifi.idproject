@@ -14,6 +14,7 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.util.MetricUtils;
 import static id.unifi.service.core.agent.DefaultReaderManager.getDetectableTypes;
+import static id.unifi.service.core.agent.DefaultReaderManager.getRollup;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getConfigObjectMapper;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
@@ -116,9 +117,13 @@ public class CoreAgentService {
                     report.detections.stream()
                             .filter(d -> getDetectableTypes().contains(d.detectableType))
                             .collect(toList()));
+
             CoreClient coreClient = client.get();
-            if (coreClient != null) coreClient.sendRawDetections(filteredReport);
-            detectionLogger.ifPresent(w -> w.log(filteredReport));
+
+            getRollup().process(filteredReport).forEach(rolledUpReport -> {
+                if (coreClient != null) coreClient.sendRawDetections(rolledUpReport);
+                detectionLogger.ifPresent(w -> w.log(rolledUpReport));
+            });
         };
 
         ReaderManager readerManager = config.mockDetections()

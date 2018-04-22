@@ -8,17 +8,20 @@ public class RawDetection {
     public final String detectableId;
     public final DetectableType detectableType;
     public final double rssi;
+    public final int count;
 
     public RawDetection(Instant timestamp,
                         int portNumber,
                         String detectableId,
                         DetectableType detectableType,
-                        double rssi) {
+                        double rssi,
+                        int count) {
         this.timestamp = timestamp;
         this.portNumber = portNumber;
         this.detectableId = detectableId;
         this.detectableType = detectableType;
         this.rssi = rssi;
+        this.count = count;
     }
 
     public String toString() {
@@ -28,6 +31,7 @@ public class RawDetection {
                 ", detectableId='" + detectableId + '\'' +
                 ", detectableType=" + detectableType +
                 ", rssi=" + rssi +
+                ", count=" + count +
                 '}';
     }
 }

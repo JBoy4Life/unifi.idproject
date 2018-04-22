@@ -94,14 +94,16 @@ public class ImpinjReaderController implements Closeable {
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
                             DetectableType.UHF_EPC,
-                            tag.getPeakRssiInDbm());
+                            tag.getPeakRssiInDbm(),
+                            1);
 
                     RawDetection tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
                             tag.getTid().toHexString(),
                             DetectableType.UHF_TID,
-                            tag.getPeakRssiInDbm());
+                            tag.getPeakRssiInDbm(),
+                            1);
                     return Stream.of(epcDetection, tidDetection).filter(Objects::nonNull);
                 }).collect(toList());
 
