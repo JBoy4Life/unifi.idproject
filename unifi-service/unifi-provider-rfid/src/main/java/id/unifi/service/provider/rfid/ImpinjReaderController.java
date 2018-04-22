@@ -229,10 +229,12 @@ public class ImpinjReaderController implements Closeable {
                 AntennaConfig antennaConfig = e.getValue();
                 com.impinj.octane.AntennaConfig antenna = settings.getAntennas().getAntenna(portNumber);
                 antenna.setEnabled(true);
+                antenna.setIsMaxTxPower(false);
                 antenna.setIsMaxRxSensitivity(false);
                 antennaConfig.txPower.ifPresentOrElse(antenna::setTxPowerinDbm,
+                        () -> antenna.setIsMaxTxPower(true));
+                antennaConfig.rxSensitivity.ifPresentOrElse(antenna::setRxSensitivityinDbm,
                         () -> antenna.setIsMaxRxSensitivity(true));
-                antennaConfig.rxSensitivity.ifPresent(antenna::setRxSensitivityinDbm);
             }
         }
 
