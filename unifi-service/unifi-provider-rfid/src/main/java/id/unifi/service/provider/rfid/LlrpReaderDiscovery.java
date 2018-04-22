@@ -50,7 +50,7 @@ public class LlrpReaderDiscovery {
                 && IMPINJ_PEN.equals(service.getPropertyString("pen"));
     }
 
-    public static List<RfidReader> discoverReaders() {
+    public static List<RfidReader> discoverReaders(boolean logFeatures) {
         InetAddress localAddress;
         try {
             localAddress = InetAddress.getLocalHost();
@@ -85,10 +85,23 @@ public class LlrpReaderDiscovery {
             }
 
             if (status != null) {
+                String readerSn = features.getSerialNumber().replaceAll("-", "");
                 Map<Integer, Boolean> antennaeConnected = status.getAntennaStatusGroup().getAntennaList().stream()
                         .collect(toMap(a -> (int) a.getPortNumber(), AntennaStatus::isConnected));
 
-                return new RfidReader(features.getSerialNumber().replaceAll("-", ""), features.getModelName(),
+                if (logFeatures) {
+                    log.info("Reader features ({}/{}/{}):", readerSn, service.endpoint, features.getModelName());
+                    log.info("  Reader modes: {}", features.getReaderModes());
+                    log.info("  Tx frequencies: {}", features.getTxFrequencies());
+                    log.info("  Tx powers (per antenna): {}", features.getTxPowers().stream()
+                            .map(e -> e.Dbm)
+                            .collect(toList()));
+                    log.info("  Rx sensitivities (per antenna): {}", features.getRxSensitivities().stream()
+                            .map(e -> e.Dbm)
+                            .collect(toList()));
+                }
+
+                return new RfidReader(readerSn, features.getModelName(),
                         new RfidReaderStatus(service.endpoint, features.getFirmwareVersion(), antennaeConnected));
             } else {
                 return new RfidReader(null, null, new RfidReaderStatus(service.endpoint, null, Map.of()));

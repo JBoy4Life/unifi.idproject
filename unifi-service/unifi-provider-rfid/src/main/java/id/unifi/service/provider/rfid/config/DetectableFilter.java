@@ -1,11 +1,16 @@
 package id.unifi.service.provider.rfid.config;
 
-public class DetectableFilter {
-    public final UhfDetectableType detectableType;
-    public final String detectableIdPrefix;
+import com.impinj.octane.TagFilterOp;
 
-    public DetectableFilter(UhfDetectableType detectableType, String detectableIdPrefix) {
-        this.detectableType = detectableType;
+/**
+ * EPC prefix detectable filter.
+ */
+public class DetectableFilter {
+    public final String detectableIdPrefix; // hex encoded
+    public final TagFilterOp action;
+
+    public DetectableFilter(String detectableIdPrefix, TagFilterOp action) {
         this.detectableIdPrefix = detectableIdPrefix;
+        this.action = action;
     }
 }

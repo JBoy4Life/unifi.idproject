@@ -16,8 +16,8 @@ public class ReaderConfig {
     public final Optional<SearchMode> searchMode;
     public final OptionalInt session;
     public final OptionalInt tagPopulationEstimate;
+    public final Optional<Boolean> enableFastId;
     public final Optional<List<Double>> txFrequencies;
-    public final Optional<List<FilterDetectableType>> detectableTypes;
     public final Optional<DetectableFilter> filter;
     public final Optional<Map<Integer, AntennaConfig>> ports;
 
@@ -36,16 +36,16 @@ public class ReaderConfig {
                         Optional<SearchMode> searchMode,
                         OptionalInt session,
                         OptionalInt tagPopulationEstimate,
+                        Optional<Boolean> enableFastId,
                         Optional<List<Double>> txFrequencies,
-                        Optional<List<FilterDetectableType>> detectableTypes,
                         Optional<DetectableFilter> filter,
                         Optional<Map<Integer, AntennaConfig>> ports) {
         this.readerMode = readerMode;
         this.searchMode = searchMode;
         this.session = session;
         this.tagPopulationEstimate = tagPopulationEstimate;
+        this.enableFastId = enableFastId;
         this.txFrequencies = txFrequencies;
-        this.detectableTypes = detectableTypes;
         this.filter = filter;
         this.ports = ports;
     }
@@ -58,15 +58,15 @@ public class ReaderConfig {
                 Objects.equals(searchMode, that.searchMode) &&
                 Objects.equals(session, that.session) &&
                 Objects.equals(tagPopulationEstimate, that.tagPopulationEstimate) &&
+                Objects.equals(enableFastId, that.enableFastId) &&
                 Objects.equals(txFrequencies, that.txFrequencies) &&
-                Objects.equals(detectableTypes, that.detectableTypes) &&
                 Objects.equals(filter, that.filter) &&
                 Objects.equals(ports, that.ports);
     }
 
     public int hashCode() {
         return Objects.hash(
-                readerMode, searchMode, session, tagPopulationEstimate, txFrequencies, detectableTypes, filter, ports);
+                readerMode, searchMode, session, tagPopulationEstimate, enableFastId, txFrequencies, filter, ports);
     }
 
     public String toString() {
@@ -75,8 +75,8 @@ public class ReaderConfig {
                 ", searchMode=" + searchMode +
                 ", session=" + session +
                 ", tagPopulationEstimate=" + tagPopulationEstimate +
+                ", enableFastId=" + enableFastId +
                 ", txFrequencies=" + txFrequencies +
-                ", detectableTypes=" + detectableTypes +
                 ", filter=" + filter +
                 ", ports=" + ports +
                 '}';

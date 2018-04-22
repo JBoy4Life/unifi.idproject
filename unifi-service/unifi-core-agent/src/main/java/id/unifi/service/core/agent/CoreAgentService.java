@@ -11,13 +11,15 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.util.MetricUtils;
-import id.unifi.service.core.agent.config.AgentConfig;
-import id.unifi.service.core.agent.config.ConfigSerialization;
+import static id.unifi.service.core.agent.DefaultReaderManager.getDetectableTypes;
+import id.unifi.service.core.agent.config.AgentFullConfig;
+import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
 import id.unifi.service.core.agent.parsing.HexByteArrayValueParser;
 import id.unifi.service.core.agent.setup.CsvDetectionLogger;
 import id.unifi.service.core.agent.setup.DetectionLogger;
 import id.unifi.service.provider.rfid.RfidProvider;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,10 +92,9 @@ public class CoreAgentService {
             detectionLogger = Optional.empty();
         } else { // AgentMode.TEST_SETUP
             Path setupFilePath = Paths.get(args[0]);
-            AgentConfig setupAgentConfig;
+            AgentFullConfig setupAgentConfig;
             try (BufferedReader reader = Files.newBufferedReader(setupFilePath, UTF_8)) {
-                setupAgentConfig =
-                        ConfigSerialization.getSetupObjectMapper().readValue(reader, AgentConfig.class);
+                setupAgentConfig = getSetupObjectMapper().readValue(reader, AgentFullConfig.class);
             }
             persistence = new AgentConfigNoopPersistence(setupAgentConfig);
             detectionLogger = Optional.of(new CsvDetectionLogger());
@@ -105,9 +106,13 @@ public class CoreAgentService {
 
         AtomicReference<CoreClient> client = new AtomicReference<>();
         Consumer<RawDetectionReport> detectionConsumer = report -> {
+            RawDetectionReport filteredReport = new RawDetectionReport(report.readerSn,
+                    report.detections.stream()
+                            .filter(d -> getDetectableTypes().contains(d.detectableType))
+                            .collect(toList()));
             CoreClient coreClient = client.get();
-            if (coreClient != null) coreClient.sendRawDetections(report);
-            detectionLogger.ifPresent(w -> w.log(report));
+            if (coreClient != null) coreClient.sendRawDetections(filteredReport);
+            detectionLogger.ifPresent(w -> w.log(filteredReport));
         };
 
         ReaderManager readerManager = config.mockDetections()

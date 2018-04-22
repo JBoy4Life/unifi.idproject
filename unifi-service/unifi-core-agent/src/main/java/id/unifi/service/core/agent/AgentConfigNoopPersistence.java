@@ -1,21 +1,22 @@
 package id.unifi.service.core.agent;
 
 import id.unifi.service.core.agent.config.AgentConfig;
+import id.unifi.service.core.agent.config.AgentFullConfig;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 
 public class AgentConfigNoopPersistence implements AgentConfigPersistence {
     @Nullable
-    private final AgentConfig config;
+    private final AgentFullConfig config;
 
-    public AgentConfigNoopPersistence(AgentConfig config) {
+    public AgentConfigNoopPersistence(AgentFullConfig config) {
         this.config = config;
     }
 
-    public Optional<AgentConfig> readConfig() {
+    public Optional<AgentFullConfig> readConfig() {
         return Optional.ofNullable(config);
     }
 
-    public void writeConfig(AgentConfig config) {}
+    public void writeConfig(AgentFullConfig config) {}
 }

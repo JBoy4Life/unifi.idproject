@@ -6,11 +6,12 @@ import static com.codahale.metrics.MetricRegistry.name;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.impinj.octane.*;
+import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetection;
 import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.provider.rfid.config.AntennaConfig;
 import id.unifi.service.provider.rfid.config.ReaderConfig;
-import id.unifi.service.provider.rfid.config.ReaderFullConfig;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import org.slf4j.Logger;
@@ -23,10 +24,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class ImpinjReaderController implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(ImpinjReaderController.class);
@@ -37,7 +40,7 @@ public class ImpinjReaderController implements Closeable {
     private static final int INTERVAL_BETWEEN_RECONNECTIONS_MILLIS = 5_000;
 
     private final TagReportListener impinjTagReportListener;
-    private final ReaderFullConfig fullConfig;
+    private final ReaderFullConfig<ReaderConfig> fullConfig;
     private final ReaderConfig config;
     private final Thread connectionThread;
     private final CountDownLatch connectionCloseLatch;
@@ -50,7 +53,7 @@ public class ImpinjReaderController implements Closeable {
     private volatile boolean closing; // writes on connection thread
     private volatile long lastKeepaliveMillis; // writes on connection thread
 
-    ImpinjReaderController(ReaderFullConfig fullConfig,
+    ImpinjReaderController(ReaderFullConfig<ReaderConfig> fullConfig,
                            Consumer<RawDetectionReport> detectionConsumer,
                            MetricRegistry registry) {
         this.fullConfig = fullConfig;
@@ -83,15 +86,25 @@ public class ImpinjReaderController implements Closeable {
         this.impinjTagReportListener = (reader, report) -> {
             log.trace("Report received {}: {} tags", reader.getAddress(), report.getTags().size());
             try {
+                List<RawDetection> detections = report.getTags().stream().flatMap(tag -> {
+                    Instant timestamp = instantFromTimestamp(tag.getLastSeenTime());
 
-                List<RawDetection> detections = report.getTags().stream().map(tag ->
-                        new RawDetection(
-                                instantFromTimestamp(tag.getLastSeenTime()),
-                                tag.getAntennaPortNumber(),
-                                tag.getEpc().toHexString(),
-                                DetectableType.UHF_EPC,
-                                tag.getPeakRssiInDbm()))
-                        .collect(toList());
+                    RawDetection epcDetection = new RawDetection(
+                            timestamp,
+                            tag.getAntennaPortNumber(),
+                            tag.getEpc().toHexString(),
+                            DetectableType.UHF_EPC,
+                            tag.getPeakRssiInDbm());
+
+                    RawDetection tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
+                            timestamp,
+                            tag.getAntennaPortNumber(),
+                            tag.getTid().toHexString(),
+                            DetectableType.UHF_TID,
+                            tag.getPeakRssiInDbm());
+                    return Stream.of(epcDetection, tidDetection).filter(Objects::nonNull);
+                }).collect(toList());
+
                 detectionConsumer.accept(new RawDetectionReport(reader.getName(), detections));
                 detections.forEach(d -> {
                     Meter meter = antennaDetectionMeters.get(d.portNumber);
@@ -135,11 +148,12 @@ public class ImpinjReaderController implements Closeable {
                 if (Thread.interrupted()) throw new InterruptedException();
 
                 updateAntennaStatus(reader);
-                String readerSn = checkSerialNumber(reader);
+                FeatureSet featureSet = reader.queryFeatureSet();
+                String readerSn = checkSerialNumber(featureSet);
                 reader.setName(readerSn);
                 applySettings(reader);
 
-                log.info("Starting detection on {}", fullConfig);
+                log.info("Starting detection on {}/{}/{}", readerSn, endpoint, featureSet.getModelName());
                 reader.start();
                 lostLatch.await();
                 log.info("Lost connection to reader {}", fullConfig);
@@ -181,7 +195,27 @@ public class ImpinjReaderController implements Closeable {
         settings.getKeepalives().setEnabled(true);
         settings.getKeepalives().setPeriodInMs(KEEPALIVE_INTERVAL_MILLIS);
 
+        config.readerMode.ifPresent(settings::setReaderMode);
+        config.searchMode.ifPresent(settings::setSearchMode);
+        config.session.ifPresent(settings::setSession);
+        config.tagPopulationEstimate.ifPresent(settings::setTagPopulationEstimate);
+        config.txFrequencies.ifPresent(freqs -> settings.setTxFrequenciesInMhz(new ArrayList<>(freqs)));
+        //config.detectableTypes.ifPresent(...);
+        config.filter.ifPresent(filter -> {
+            FilterSettings filters = new FilterSettings();
+            TagFilter tagFilter = new TagFilter();
+            tagFilter.setBitPointer(BitPointers.Epc);
+            tagFilter.setMemoryBank(MemoryBank.Epc);
+            tagFilter.setFilterOp(filter.action);
+            tagFilter.setBitCount(filter.detectableIdPrefix.length() * 4);
+            tagFilter.setTagMask(filter.detectableIdPrefix);
+            filters.setMode(TagFilterMode.OnlyFilter1);
+            filters.setTagFilter1(tagFilter);
+            settings.setFilters(filters);
+        });
+
         ReportConfig reportConfig = settings.getReport();
+        config.enableFastId.ifPresent(reportConfig::setIncludeFastId);
         reportConfig.setIncludeAntennaPortNumber(true);
         reportConfig.setIncludePeakRssi(true);
         reportConfig.setIncludeLastSeenTime(true);
@@ -190,6 +224,16 @@ public class ImpinjReaderController implements Closeable {
         if (config.ports.isPresent()) {
             settings.getAntennas().disableAll();
             settings.getAntennas().enableById(new ArrayList<>(config.ports.get().keySet()));
+            for (Map.Entry<Integer, AntennaConfig> e : config.ports.get().entrySet()) {
+                int portNumber = e.getKey();
+                AntennaConfig antennaConfig = e.getValue();
+                com.impinj.octane.AntennaConfig antenna = settings.getAntennas().getAntenna(portNumber);
+                antenna.setEnabled(true);
+                antenna.setIsMaxRxSensitivity(false);
+                antennaConfig.txPower.ifPresentOrElse(antenna::setTxPowerinDbm,
+                        () -> antenna.setIsMaxRxSensitivity(true));
+                antennaConfig.rxSensitivity.ifPresent(antenna::setRxSensitivityinDbm);
+            }
         }
 
         reader.applySettings(settings);
@@ -226,8 +270,7 @@ public class ImpinjReaderController implements Closeable {
         return fullConfig.readerSn.orElse(endpoint.toString()) + "_" + portNumber;
     }
 
-    private String checkSerialNumber(ImpinjReader reader) throws OctaneSdkException {
-        FeatureSet featureSet = reader.queryFeatureSet();
+    private String checkSerialNumber(FeatureSet featureSet) {
         String actualSn = featureSet.getSerialNumber().replaceAll("-", "");
         if (!fullConfig.readerSn.stream().allMatch(actualSn::equals)) {
             throw new RuntimeException("Reader serial number mismatch for " + fullConfig.endpoint

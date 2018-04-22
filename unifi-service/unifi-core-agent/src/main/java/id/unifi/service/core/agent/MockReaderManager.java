@@ -6,7 +6,7 @@ import id.unifi.service.common.detection.AntennaKey;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetection;
 import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.core.agent.config.AgentConfig;
+import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.db.tables.records.DetectableRecord;
@@ -33,7 +33,7 @@ public class MockReaderManager implements ReaderManager {
         this.detectionConsumer = detectionConsumer;
     }
 
-    public synchronized void configure(AgentConfig config) {
+    public synchronized void configure(AgentFullConfig config) {
         log.info("Received reader config: {}", config);
         if (detectionThread != null) {
             detectionThread.interrupt();

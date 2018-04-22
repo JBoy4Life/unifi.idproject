@@ -3,7 +3,7 @@ package id.unifi.service.core.agent.services;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.core.agent.ReaderManager;
-import id.unifi.service.core.agent.config.AgentConfig;
+import id.unifi.service.core.agent.config.AgentFullConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class ConfigService {
     }
 
     @ApiOperation
-    public void setAgentConfig(AgentConfig config) {
+    public void setAgentConfig(AgentFullConfig config) {
         log.info("Received agent config from server: {}", config);
         readerManager.configure(config);
     }

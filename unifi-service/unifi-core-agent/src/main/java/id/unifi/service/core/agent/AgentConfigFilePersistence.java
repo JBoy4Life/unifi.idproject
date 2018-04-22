@@ -1,7 +1,7 @@
 package id.unifi.service.core.agent;
 
-import id.unifi.service.core.agent.config.AgentConfig;
-import id.unifi.service.core.agent.config.ConfigSerialization;
+import id.unifi.service.core.agent.config.AgentFullConfig;
+import static id.unifi.service.core.agent.config.ConfigSerialization.getConfigObjectMapper;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -24,9 +24,9 @@ public class AgentConfigFilePersistence implements AgentConfigPersistence {
     private static final Path AGENT_CONFIG_PATH =
             Paths.get(System.getProperty("user.home"), ".unifi", "agent-config.json");
 
-    public Optional<AgentConfig> readConfig() {
+    public Optional<AgentFullConfig> readConfig() {
         try (BufferedReader reader = Files.newBufferedReader(AGENT_CONFIG_PATH, UTF_8)) {
-            return Optional.ofNullable(ConfigSerialization.getConfigObjectMapper().readValue(reader, AgentConfig.class));
+            return Optional.ofNullable(getConfigObjectMapper().readValue(reader, AgentFullConfig.class));
         } catch (NoSuchFileException e) { // TODO: factor out IOException handling
             log.warn("Local config file not found: " + AGENT_CONFIG_PATH);
             return Optional.empty();
@@ -36,12 +36,12 @@ public class AgentConfigFilePersistence implements AgentConfigPersistence {
         }
     }
 
-    public void writeConfig(AgentConfig config) {
+    public void writeConfig(AgentFullConfig config) {
         try {
             Files.createDirectories(AGENT_CONFIG_PATH.getParent());
             Path tempPath = Files.createTempFile("agent-config", null);
             try (BufferedWriter writer = Files.newBufferedWriter(tempPath, UTF_8, WRITE, CREATE)) {
-                ConfigSerialization.getConfigObjectMapper().writeValue(writer, config);
+                getConfigObjectMapper().writeValue(writer, config);
             }
 
             Files.move(tempPath, AGENT_CONFIG_PATH, REPLACE_EXISTING);
