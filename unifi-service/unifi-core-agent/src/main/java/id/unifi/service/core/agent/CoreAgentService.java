@@ -2,10 +2,12 @@ package id.unifi.service.core.agent;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Nullable;
 import com.statemachinesystems.envy.Prefix;
+import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
@@ -13,11 +15,13 @@ import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.common.util.MetricUtils;
 import static id.unifi.service.core.agent.DefaultReaderManager.getDetectableTypes;
 import id.unifi.service.core.agent.config.AgentFullConfig;
+import static id.unifi.service.core.agent.config.ConfigSerialization.getConfigObjectMapper;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
 import id.unifi.service.core.agent.parsing.HexByteArrayValueParser;
 import id.unifi.service.core.agent.setup.CsvDetectionLogger;
 import id.unifi.service.core.agent.setup.DetectionLogger;
 import id.unifi.service.provider.rfid.RfidProvider;
+import id.unifi.service.provider.rfid.config.ReaderConfig;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
@@ -96,6 +100,8 @@ public class CoreAgentService {
             try (BufferedReader reader = Files.newBufferedReader(setupFilePath, UTF_8)) {
                 setupAgentConfig = getSetupObjectMapper().readValue(reader, AgentFullConfig.class);
             }
+            logServiceConfig(setupAgentConfig);
+
             persistence = new AgentConfigNoopPersistence(setupAgentConfig);
             detectionLogger = Optional.of(new CsvDetectionLogger());
         }
@@ -125,6 +131,19 @@ public class CoreAgentService {
             client.set(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
         } else {
             log.info("Running in {} mode. Not connecting to a server.", mode);
+        }
+    }
+
+    private static void logServiceConfig(AgentFullConfig setupAgentConfig) throws JsonProcessingException {
+        AgentFullConfig serviceConfig = setupAgentConfig.compactForService();
+        String serializedServiceAgentConfig =
+                getConfigObjectMapper().writeValueAsString(serviceConfig.agent.get());
+        log.info("Serialized agent config for service use: \n{}", serializedServiceAgentConfig);
+
+        for (ReaderFullConfig<ReaderConfig> r : serviceConfig.readers) {
+            String serializedServiceReaderConfig = getConfigObjectMapper().writeValueAsString(r.config.get());
+            log.info("Serialized reader configuration for {}/{}: \n{}",
+                    r.readerSn.orElse("?"), r.endpoint.orElse(null), String.join("\n", serializedServiceReaderConfig));
         }
     }
 }

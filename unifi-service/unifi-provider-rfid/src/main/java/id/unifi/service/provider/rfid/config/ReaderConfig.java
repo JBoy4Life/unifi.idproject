@@ -50,6 +50,11 @@ public class ReaderConfig {
         this.ports = ports;
     }
 
+    public ReaderConfig copyWithPorts(Optional<Map<Integer, AntennaConfig>> newPorts) {
+        return new ReaderConfig(
+                readerMode, searchMode, session, tagPopulationEstimate, enableFastId, txFrequencies, filter, newPorts);
+    }
+
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
