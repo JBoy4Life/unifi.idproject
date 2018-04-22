@@ -9,3 +9,4 @@ release.properties
 *.pem
 .vagrant
 .DS_Store
+*.log

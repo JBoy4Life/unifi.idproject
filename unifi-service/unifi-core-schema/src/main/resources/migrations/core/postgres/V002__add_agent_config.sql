@@ -1,0 +1,5 @@
+ALTER TABLE core.reader
+  ADD COLUMN config JSONB NOT NULL DEFAULT '{}';
+
+ALTER TABLE core.agent
+  ADD COLUMN config JSONB NOT NULL DEFAULT '{}';

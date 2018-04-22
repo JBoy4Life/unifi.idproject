@@ -6,7 +6,7 @@ import id.unifi.service.common.detection.AntennaKey;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetection;
 import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.common.detection.ReaderConfig;
+import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.db.tables.records.DetectableRecord;
@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
@@ -22,23 +21,20 @@ import java.util.function.Consumer;
 public class MockReaderManager implements ReaderManager {
     private static final Logger log = LoggerFactory.getLogger(MockReaderManager.class);
 
-    private final ReaderConfigPersistence persistence;
     private final String clientId;
     private final Consumer<RawDetectionReport> detectionConsumer;
     private volatile Thread detectionThread;
     private volatile AntennaKey[] antennae;
 
-    public MockReaderManager(ReaderConfigPersistence persistence,
+    public MockReaderManager(AgentConfigPersistence persistence,
                              String clientId,
                              Consumer<RawDetectionReport> detectionConsumer) {
-        this.persistence = persistence;
         this.clientId = clientId;
         this.detectionConsumer = detectionConsumer;
-        configure(persistence.readConfig());
     }
 
-    public synchronized void configure(List<ReaderConfig> readers) {
-        log.info("Received reader config: {}", readers);
+    public synchronized void configure(AgentFullConfig config) {
+        log.info("Received reader config: {}", config);
         if (detectionThread != null) {
             detectionThread.interrupt();
             try {
@@ -48,11 +44,10 @@ public class MockReaderManager implements ReaderManager {
             }
         }
 
-        antennae = readers.stream()
-                .flatMap(r -> Arrays.stream(r.enabledAntennae).mapToObj(n -> new AntennaKey(clientId, r.readerSn, n)))
+        antennae = config.readers.stream()
+                .flatMap(r -> r.config.get().ports.get().keySet().stream().map(n -> new AntennaKey(clientId, r.readerSn.get(), n)))
                 .toArray(AntennaKey[]::new);
         if (antennae.length > 0) {
-            persistence.writeConfig(readers);
             log.info("Generating mock detections for {} antennae", antennae.length);
             detectionThread = new Thread(this::mockDetections);
             detectionThread.start();

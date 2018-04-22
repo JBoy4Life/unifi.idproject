@@ -1,6 +1,8 @@
 package id.unifi.service.common.util;
 
 import static java.time.ZoneOffset.UTC;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -25,5 +27,9 @@ public class TimeUtils {
 
     public static LocalDateTime utcLocalFromZoned(@Nullable ZonedDateTime date) {
         return date == null ? null : utcLocalFromInstant(date.toInstant());
+    }
+
+    public static String getFormattedLocalDateTimeNow() {
+        return LocalDateTime.now().truncatedTo(SECONDS).format(ISO_LOCAL_DATE_TIME);
     }
 }

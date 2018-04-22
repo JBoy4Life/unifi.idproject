@@ -1,8 +1,14 @@
 package id.unifi.service.core.agents;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.net.HostAndPort;
+import id.unifi.service.common.agent.AgentFullConfig;
+import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.Protocol;
+import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import static id.unifi.service.common.api.Validation.shortId;
 import static id.unifi.service.common.api.Validation.v;
 import static id.unifi.service.common.api.Validation.validateAll;
@@ -11,20 +17,25 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.AuthenticationFailed;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.ReaderConfig;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.core.AgentPK;
 import id.unifi.service.core.AgentSessionData;
 import static id.unifi.service.core.db.Core.CORE;
+import static id.unifi.service.core.db.Tables.AGENT;
 import static id.unifi.service.core.db.Tables.AGENT_PASSWORD;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.READER;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
 import id.unifi.service.core.db.tables.records.ReaderRecord;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.StreamSupport.stream;
 import org.eclipse.jetty.websocket.api.Session;
 import org.jooq.DSLContext;
+import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +43,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @ApiService("identity")
 public class IdentityService {
@@ -68,12 +80,17 @@ public class IdentityService {
             throw new AuthenticationFailed();
         }
 
-        pushReaderConfig(session, sessionData);
+        pushAgentConfig(session, sessionData);
     }
 
-    private void pushReaderConfig(Session session, AgentSessionData sessionData) {
+    private void pushAgentConfig(Session session, AgentSessionData sessionData) {
         AgentPK agent = sessionData.getAgent();
-        List<ReaderConfig> readerConfigs = db.execute(sql -> {
+        AgentFullConfig agentFullConfig = db.execute(sql -> {
+            Optional<JsonNode> rawAgentConfig = sql.selectFrom(AGENT)
+                    .where(AGENT.CLIENT_ID.eq(agent.clientId))
+                    .and(AGENT.AGENT_ID.eq(agent.agentId))
+                    .fetchOptional(r -> jsonFromPgObject(r.getConfig()));
+
             List<ReaderRecord> readerRecords = sql.selectFrom(READER)
                     .where(READER.CLIENT_ID.eq(agent.clientId))
                     .and(READER.AGENT_ID.eq(agent.agentId))
@@ -88,20 +105,55 @@ public class IdentityService {
                     .stream()
                     .collect(groupingBy(AntennaRecord::getReaderSn));
 
-            return readerRecords.stream()
-                    .map(r -> new ReaderConfig(
-                            r.getReaderSn(),
-                            HostAndPort.fromString(r.getEndpoint()),
-                            antennae.get(r.getReaderSn()).stream().mapToInt(AntennaRecord::getPortNumber).toArray()))
+            List<ReaderFullConfig<JsonNode>> readerConfigs = readerRecords.stream()
+                    .map(r -> new ReaderFullConfig<>(
+                            Optional.of(r.getReaderSn()),
+                            Optional.of(HostAndPort.fromString(r.getEndpoint())),
+                            Optional.of(splicePortConfig(jsonFromPgObject(r.getConfig()),
+                                    antennae.get(r.getReaderSn()).stream().map(AntennaRecord::getPortNumber).collect(toSet())))))
                     .collect(toList());
+            return new AgentFullConfig<>(rawAgentConfig, readerConfigs);
         });
 
         try {
             agentDispatcher.request(
                     session,
                     Protocol.MSGPACK,
-                    "core.config.set-reader-config",
-                    Map.of("readers", readerConfigs));
+                    "core.config.set-agent-config",
+                    Map.of("config", agentFullConfig));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private JsonNode splicePortConfig(JsonNode configNode, Set<Integer> enabledPortNumbers) {
+        ObjectMapper objectMapper = getObjectMapper(Protocol.JSON);
+        JsonNode portsNode = configNode.get("ports");
+        Set<Integer> configuredPortNumbers = portsNode == null ? Set.of() :
+                stream(spliteratorUnknownSize(portsNode.fieldNames(), ORDERED), false)
+                        .map(Integer::parseInt)
+                        .collect(toSet());
+
+        ObjectNode newPortsNode = objectMapper.createObjectNode();
+        for (int portNumber : enabledPortNumbers) {
+            String portNumberString = Integer.toString(portNumber);
+            JsonNode newPortNode = configuredPortNumbers.contains(portNumber)
+                    ? portsNode.get(portNumberString)
+                    : objectMapper.createObjectNode();
+            newPortsNode.set(portNumberString, newPortNode);
+        }
+
+        ObjectNode newConfigNode = configNode.deepCopy();
+        newConfigNode.set("ports", newPortsNode);
+
+        return newConfigNode;
+    }
+
+    private JsonNode jsonFromPgObject(Object object) {
+        String jsonString = ((PGobject) object).getValue();
+
+        try {
+            return getObjectMapper(Protocol.JSON).readTree(jsonString);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
