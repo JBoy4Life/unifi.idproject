@@ -33,8 +33,8 @@ public class CsvDetectionLogger implements DetectionLogger {
                     d.timestamp.toString(),
                     report.readerSn,
                     Integer.toString(d.portNumber),
-                    d.detectableId,
-                    d.detectableType.toString(),
+                    d.detectable.detectableId,
+                    d.detectable.detectableType.toString(),
                     d.rssi.toString(),
                     Integer.toString(d.count)
             }));

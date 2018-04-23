@@ -111,7 +111,7 @@ public class CoreAgentService {
         Consumer<SiteDetectionReport> detectionConsumer = report -> {
             var filteredReport = new SiteDetectionReport(report.readerSn,
                     report.detections.stream()
-                            .filter(d -> getDetectableTypes().contains(d.detectableType))
+                            .filter(d -> getDetectableTypes().contains(d.detectable.detectableType))
                             .collect(toList()));
 
             var coreClient = client.get();

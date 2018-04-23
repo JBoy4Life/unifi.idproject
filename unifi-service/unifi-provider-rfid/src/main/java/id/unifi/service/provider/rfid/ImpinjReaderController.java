@@ -10,6 +10,7 @@ import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.common.types.client.ClientDetectable;
 import id.unifi.service.provider.rfid.config.ReaderConfig;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -95,16 +96,14 @@ public class ImpinjReaderController implements Closeable {
                     var epcDetection = new SiteRfidDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
-                            tag.getEpc().toHexString(),
-                            DetectableType.UHF_EPC,
+                            new ClientDetectable(tag.getEpc().toHexString(), DetectableType.UHF_EPC),
                             rssi,
                             tag.getTagSeenCount());
 
                     var tidDetection = !tag.isFastIdPresent() ? null : new SiteRfidDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
-                            tag.getTid().toHexString(),
-                            DetectableType.UHF_TID,
+                            new ClientDetectable(tag.getTid().toHexString(), DetectableType.UHF_TID),
                             rssi,
                             tag.getTagSeenCount());
                     return Stream.of(epcDetection, tidDetection).filter(Objects::nonNull);

@@ -25,10 +25,9 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.detection.Detection;
-import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.detection.DetectionReports;
+import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
@@ -162,7 +161,7 @@ public class CoreService {
 
                 var detections = allTagged.stream()
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
-                                new Detection(new DetectablePK(t.clientId, d.detectableId, d.detectableType),
+                                new Detection(d.detectable.withClientId(t.clientId),
                                         r.readerSn, d.portNumber, d.timestamp, d.rssi, d.count))))
                         .collect(toList());
 

@@ -1,6 +1,7 @@
 package id.unifi.service.core.agent;
 
 import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.common.types.client.ClientDetectable;
 import id.unifi.service.common.types.pk.AntennaPK;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.SiteRfidDetection;
@@ -76,7 +77,7 @@ public class MockReaderManager implements ReaderManager {
                 var detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
                 var timestamp = Instant.now().minusMillis(random.nextInt(200));
                 var detection =
-                        new SiteRfidDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, BigDecimal.ZERO, 1);
+                        new SiteRfidDetection(timestamp, antenna.portNumber, new ClientDetectable(detectableId, DetectableType.UHF_EPC), BigDecimal.ZERO, 1);
                 detectionConsumer.accept(new SiteDetectionReport(antenna.readerSn, List.of(detection)));
             }
 

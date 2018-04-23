@@ -1,8 +1,8 @@
 package id.unifi.service.core.agent.rollup;
 
-import id.unifi.service.common.detection.DetectableType;
-import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.common.detection.SiteRfidDetection;
+import id.unifi.service.common.types.client.ClientDetectable;
 import static java.util.Collections.max;
 import static java.util.Collections.min;
 import static java.util.stream.Collectors.toList;
@@ -38,8 +38,7 @@ public class TimeSlotRollup implements Rollup {
         List<SiteDetectionReport> reports = new ArrayList<>();
         var readerSn = report.readerSn;
         for (var detection : report.detections) {
-            var antennaDetectable =
-                    new AntennaDetectable(detection.portNumber, detection.detectableId, detection.detectableType);
+            var antennaDetectable = new AntennaDetectable(detection.portNumber, detection.detectable);
             var detectionSlotStart =
                     Instant.ofEpochSecond(detection.timestamp.getEpochSecond() / intervalSeconds * intervalSeconds, 0L);
 
@@ -65,8 +64,7 @@ public class TimeSlotRollup implements Rollup {
                         .map(e -> new SiteRfidDetection(
                                 e.getValue().firstSeen,
                                 e.getKey().portNumber,
-                                e.getKey().detectableId,
-                                e.getKey().detectableType,
+                                e.getKey().detectable,
                                 e.getValue().rssi,
                                 e.getValue().count))
                         .collect(toList());
@@ -119,13 +117,11 @@ public class TimeSlotRollup implements Rollup {
 
     private static class AntennaDetectable {
         final int portNumber;
-        final String detectableId;
-        final DetectableType detectableType;
+        final ClientDetectable detectable;
 
-        AntennaDetectable(int portNumber, String detectableId, DetectableType detectableType) {
+        AntennaDetectable(int portNumber, ClientDetectable detectable) {
             this.portNumber = portNumber;
-            this.detectableId = detectableId;
-            this.detectableType = detectableType;
+            this.detectable = detectable;
         }
 
         public boolean equals(Object o) {
@@ -133,12 +129,11 @@ public class TimeSlotRollup implements Rollup {
             if (o == null || getClass() != o.getClass()) return false;
             var that = (AntennaDetectable) o;
             return portNumber == that.portNumber &&
-                    Objects.equals(detectableId, that.detectableId) &&
-                    detectableType == that.detectableType;
+                    Objects.equals(detectable, that.detectable);
         }
 
         public int hashCode() {
-            return Objects.hash(portNumber, detectableId, detectableType);
+            return Objects.hash(portNumber, detectable);
         }
     }
 }
