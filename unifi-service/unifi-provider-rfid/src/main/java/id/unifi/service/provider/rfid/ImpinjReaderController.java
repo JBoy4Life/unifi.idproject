@@ -50,6 +50,7 @@ public class ImpinjReaderController implements Closeable {
     private final Set<String> metricNames;
     private final Map<Integer, Boolean> antennaConnected;
     private final HostAndPort endpoint;
+    private final String readerName;
 
     private volatile boolean closing; // writes on connection thread
     private volatile long lastKeepaliveMillis; // writes on connection thread
@@ -64,6 +65,7 @@ public class ImpinjReaderController implements Closeable {
         this.antennaConnected = new ConcurrentHashMap<>(
                 configuredPortNumbers.stream().collect(toMap(n -> n, n -> false)));
         this.endpoint = fullConfig.endpoint.get();
+        this.readerName = fullConfig.readerSn.orElse("?") + "/" + endpoint;
 
         // Register health and detection rate metrics
         this.metricNames = new HashSet<>();
@@ -157,7 +159,7 @@ public class ImpinjReaderController implements Closeable {
                 reader.setName(readerSn);
                 applySettings(reader);
 
-                log.info("Starting detection on {}/{}/{}", readerSn, endpoint, featureSet.getModelName());
+                log.info("Starting detection on {}/{}", readerName, featureSet.getModelName());
                 reader.start();
                 lostLatch.await();
                 log.info("Lost connection to reader {}", fullConfig);
@@ -249,12 +251,12 @@ public class ImpinjReaderController implements Closeable {
         boolean connected;
         switch (e.getState()) {
             case AntennaConnected:
-                log.info("Antenna {} reconnected to reader {}.", e.getPortNumber(), fullConfig.readerSn);
+                log.info("Antenna {} reconnected to reader {}.", e.getPortNumber(), readerName);
                 connected = true;
                 break;
 
             case AntennaDisconnected:
-                log.info("Antenna {} disconnected from reader {}.", e.getPortNumber(), fullConfig.readerSn);
+                log.info("Antenna {} disconnected from reader {}.", e.getPortNumber(), readerName);
                 connected = false;
                 break;
 
@@ -292,11 +294,11 @@ public class ImpinjReaderController implements Closeable {
             int portNumber = status.getPortNumber();
             if (startingFromEmpty || antennaConnected.containsKey(portNumber)) {
                 if (!status.isConnected()) {
-                    log.warn("Antenna {} on reader {} not connected.", portNumber, fullConfig.readerSn);
+                    log.warn("Antenna {} on reader {} not connected.", portNumber, readerName);
                 }
                 antennaConnected.put(portNumber, status.isConnected());
             } else if (status.isConnected()) {
-                log.warn("Antenna {} on reader {} isn't configured.", portNumber, fullConfig.readerSn);
+                log.warn("Antenna {} on reader {} isn't configured.", portNumber, readerName);
             }
         });
     }

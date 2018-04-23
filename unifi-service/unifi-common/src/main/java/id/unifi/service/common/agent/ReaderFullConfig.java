@@ -18,4 +18,12 @@ public class ReaderFullConfig<R> {
         this.endpoint = endpoint;
         this.config = config;
     }
+
+    public String toString() {
+        return "ReaderFullConfig{" +
+                "readerSn=" + readerSn +
+                ", endpoint=" + endpoint +
+                ", config=" + config +
+                '}';
+    }
 }
