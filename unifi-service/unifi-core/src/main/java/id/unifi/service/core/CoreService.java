@@ -137,7 +137,7 @@ public class CoreService {
                                      Database db,
                                      DetectionProcessor detectionProcessor,
                                      AttendanceProcessor attendanceProcessor) {
-        Thread thread = new Thread(() -> {
+        var thread = new Thread(() -> {
             InsertReturningStep<RfidDetectionRecord> insertQuery = insertInto(RFID_DETECTION,
                     RFID_DETECTION.CLIENT_ID,
                     RFID_DETECTION.DETECTABLE_ID,

@@ -409,7 +409,7 @@ public class OperatorService {
     }
 
     public static class ListFilter {
-        Optional<Boolean> active;
+        final Optional<Boolean> active;
 
         @JsonCreator(mode = JsonCreator.Mode.PROPERTIES) // TODO: shouldn't have to specify mode(?)
         public ListFilter(Optional<Boolean> active) {

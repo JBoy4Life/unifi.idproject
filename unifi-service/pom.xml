@@ -22,8 +22,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.source.version>9</java.source.version>
-        <java.target.version>9</java.target.version>
+        <java.source.version>10</java.source.version>
+        <java.target.version>10</java.target.version>
         <postgres.user>${user.name}</postgres.user>
 
         <octane.version>1.30.0.0</octane.version>
@@ -328,7 +328,7 @@
                 <configuration>
                     <rules>
                         <requireJavaVersion>
-                            <version>9</version>
+                            <version>${java.source.version}</version>
                         </requireJavaVersion>
                     </rules>
 

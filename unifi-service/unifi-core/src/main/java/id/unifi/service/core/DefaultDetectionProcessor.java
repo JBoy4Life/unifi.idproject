@@ -38,7 +38,7 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
     public DefaultDetectionProcessor(DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE);
         this.detectionListeners = CacheBuilder.newBuilder()
-                .build(CacheLoader.from((String k) -> newSetFromMap(new HashMap<ListenerWithSession, Boolean>())));
+                .build(CacheLoader.from((String k) -> newSetFromMap(new HashMap<>())));
         this.recentDetectables = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.SECONDS).build();
     }
 

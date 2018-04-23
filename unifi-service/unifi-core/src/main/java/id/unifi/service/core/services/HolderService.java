@@ -142,10 +142,8 @@ public class HolderService {
                         break;
                 }
 
-                imageWithType.ifPresent(img -> {
-                    insertIntoHolderImageQuery(sql, clientId, clientReference, img)
-                            .execute();
-                });
+                imageWithType.ifPresent(img ->
+                        insertIntoHolderImageQuery(sql, clientId, clientReference, img).execute());
             } catch (DuplicateKeyException e) {
                 throw new AlreadyExists("holder");
             }
