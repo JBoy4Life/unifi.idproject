@@ -98,7 +98,7 @@ public class ImpinjReaderController implements Closeable {
                             tag.getEpc().toHexString(),
                             DetectableType.UHF_EPC,
                             rssi,
-                            1);
+                            tag.getTagSeenCount());
 
                     var tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
                             timestamp,
@@ -106,7 +106,7 @@ public class ImpinjReaderController implements Closeable {
                             tag.getTid().toHexString(),
                             DetectableType.UHF_TID,
                             rssi,
-                            1);
+                            tag.getTagSeenCount());
                     return Stream.of(epcDetection, tidDetection).filter(Objects::nonNull);
                 }).collect(toList());
 
@@ -224,6 +224,7 @@ public class ImpinjReaderController implements Closeable {
         reportConfig.setIncludeAntennaPortNumber(true);
         reportConfig.setIncludePeakRssi(true);
         reportConfig.setIncludeLastSeenTime(true);
+        reportConfig.setIncludeSeenCount(true);
         reportConfig.setMode(ReportMode.Individual);
 
         if (config.ports.isPresent()) {
