@@ -79,7 +79,8 @@ public class TimeSlotRollup implements Rollup {
     }
 
     private AntennaDetectableState emptyState(Instant detectableSlotStart) {
-        return new AntennaDetectableState(detectableSlotStart, BigDecimal.valueOf(Long.MIN_VALUE), 0);
+        var firstSeen = detectableSlotStart.plusSeconds(intervalSeconds);
+        return new AntennaDetectableState(firstSeen, BigDecimal.valueOf(Long.MIN_VALUE), 0);
     }
 
     private static AntennaDetectableState updateState(AntennaDetectableState state, RawDetection detection) {
