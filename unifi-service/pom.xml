@@ -28,35 +28,35 @@
 
         <octane.version>1.30.0.0</octane.version>
         <ltk.version>10.30.0.0</ltk.version>
-        <jmdns.version>3.5.3</jmdns.version>
+        <jmdns.version>3.5.4</jmdns.version>
         <mina.version>2.0.16</mina.version>
         <velocity.version>1.7</velocity.version>            
-        <guava.version>23.6-jre</guava.version>
-        <amqp.client>5.1.1</amqp.client>
+        <guava.version>24.1-jre</guava.version>
+        <amqp.client>5.2.0</amqp.client>
         <jooq.version>3.10.1</jooq.version>
-        <simple.java.mail.version>5.0.0</simple.java.mail.version>
+        <simple.java.mail.version>5.0.3</simple.java.mail.version>
         <jsr205.version>1.0</jsr205.version>
-        <jetty.version>9.4.8.v20171121</jetty.version>
-        <jackson.version>2.9.3</jackson.version>
-        <jackson.msgpack.version>0.8.14</jackson.msgpack.version>
+        <jetty.version>9.4.10.RC0</jetty.version>
+        <jackson.version>2.9.5</jackson.version>
+        <jackson.msgpack.version>0.8.16</jackson.msgpack.version>
         <jackson.yaml.version>2.9.5</jackson.yaml.version>
         <jersey.version>2.26</jersey.version>
-        <spring.version>5.0.2.RELEASE</spring.version>
-        <postgres.version>42.1.4</postgres.version>
+        <spring.version>5.0.5.RELEASE</spring.version>
+        <postgres.version>42.2.2</postgres.version>
         <flyway.version>5.0.2</flyway.version>
-        <envy.version>1.7</envy.version>
+        <envy.version>1.8</envy.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <jmustache.version>1.14</jmustache.version>
         <scrypt.version>1.4.0</scrypt.version>
         <opencsv.version>4.1</opencsv.version>
         <metrics.version>4.1.0-rc0</metrics.version>
-        <junit.jupiter.version>5.0.2</junit.jupiter.version>
+        <junit.jupiter.version>5.2.0-RC1</junit.jupiter.version>
         <junit.platform.version>1.0.1</junit.platform.version>
         <hamcrest.version>2.0.0.0</hamcrest.version>
 
         <compiler.plugin.version>3.7.0</compiler.plugin.version>
-        <surefire.plugin.version>2.19.1</surefire.plugin.version>
+        <surefire.plugin.version>2.20</surefire.plugin.version>
         <findbugs.plugin.version>3.0.5</findbugs.plugin.version>
         <exec.plugin.version>1.6.0</exec.plugin.version>
         <enforcer.plugin.version>3.0.0-M1</enforcer.plugin.version>
@@ -73,6 +73,10 @@
         <developerConnection>scm:git:ssh://git@github.com/megawarne-consulting/unifi.id</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <prerequisites>
+        <maven>3.5.0</maven>
+    </prerequisites>
 
     <dependencyManagement>
         <dependencies>
