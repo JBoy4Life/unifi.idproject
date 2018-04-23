@@ -7,7 +7,7 @@
 
 == Build dependencies
 
-- Oracle JDK 9/10
+- Oracle JDK 10
 - Maven 3.5+
 - PostgreSQL 9.6+ with a `unifi` database, see below
 - RabbitMQ (runtime only)
