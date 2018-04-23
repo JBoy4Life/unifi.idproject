@@ -184,7 +184,7 @@ public class AttendanceProcessor {
                     RFID_DETECTION.DETECTION_TIME,
                     RFID_DETECTION.RSSI,
                     RFID_DETECTION.COUNT)
-                    .from(RFID_DETECTION.join(ANTENNA).onKey())
+                    .from(RFID_DETECTION.join(ANTENNA).using(ANTENNA.CLIENT_ID, ANTENNA.READER_SN, ANTENNA.PORT_NUMBER))
                     .join(PROCESSING_STATE).on(
                             ANTENNA.CLIENT_ID.eq(PROCESSING_STATE.CLIENT_ID),
                             ANTENNA.READER_SN.eq(PROCESSING_STATE.READER_SN),
