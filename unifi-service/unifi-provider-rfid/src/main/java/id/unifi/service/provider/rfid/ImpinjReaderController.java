@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 public class ImpinjReaderController implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(ImpinjReaderController.class);
 
+    private static final int DEFAULT_LLRP_PORT = 5084;
     private static final int KEEPALIVE_INTERVAL_MILLIS = 10_000;
     private static final int MAX_HEALTHY_KEEPALIVE_INTERVAL_MILLIS = 20_000;
     private static final String METRIC_NAME_PREFIX = "id.unifi.service.rfid-provider";
@@ -64,7 +65,7 @@ public class ImpinjReaderController implements Closeable {
         Set<Integer> configuredPortNumbers = config.ports.map(Map::keySet).orElse(Set.of());
         this.antennaConnected = new ConcurrentHashMap<>(
                 configuredPortNumbers.stream().collect(toMap(n -> n, n -> false)));
-        this.endpoint = fullConfig.endpoint.get();
+        this.endpoint = fullConfig.endpoint.get().withDefaultPort(DEFAULT_LLRP_PORT);
         this.readerName = fullConfig.readerSn.orElse("?") + "/" + endpoint;
 
         // Register health and detection rate metrics
