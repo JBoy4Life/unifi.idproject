@@ -7,7 +7,7 @@
 
 == Build dependencies
 
-- Oracle JDK 9
+- Oracle JDK 9/10
 - Maven 3.5+
 - PostgreSQL 9.6+ with a `unifi` database, see below
 - RabbitMQ (runtime only)
@@ -78,6 +78,14 @@ mvn exec:java -pl unifi-core
 # Produces unifi-core-1.0.2.deb and unifi-core-agent-1.0.2.deb, ready for install
 dpkg -i unifi-core-1.0.2.deb
 ----
+
+=== IntelliJ IDEA settings
+
+The project requires parameter names to be present in the Java bytecode for
+correct JSON deserialization, which needs to be configured in IntelliJ IDEA.
+Go to
+`Project Structure > Build, Execution, Deployment > Compiler > Java Compiler`
+and put `-parameters` in `Additional command line parameters`.
 
 === Schema generation
 
