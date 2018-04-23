@@ -21,6 +21,7 @@ import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObj
 import id.unifi.service.core.agent.parsing.HexByteArrayValueParser;
 import id.unifi.service.core.agent.setup.CsvDetectionLogger;
 import id.unifi.service.core.agent.setup.DetectionLogger;
+import id.unifi.service.core.agent.setup.GenerateSetupMode;
 import id.unifi.service.provider.rfid.RfidProvider;
 import id.unifi.service.provider.rfid.config.ReaderConfig;
 import static java.nio.charset.StandardCharsets.UTF_8;

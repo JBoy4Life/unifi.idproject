@@ -1,4 +1,4 @@
-package id.unifi.service.core.agent;
+package id.unifi.service.core.agent.setup;
 
 import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.rfid.RfidReader;
@@ -23,11 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-class GenerateSetupMode {
+public class GenerateSetupMode {
     private static final Logger log = LoggerFactory.getLogger(GenerateSetupMode.class);
     private static final String SETUP_FILE_NAME_FORMAT = "generated-agent-setup_%s.yaml";
 
-    static void run() throws IOException {
+    public static void run() throws IOException {
+        generateAgentPasswordAndHash();
+
         final boolean logFeatures = true;
         List<RfidReader> readers = LlrpReaderDiscovery.discoverReaders(logFeatures);
 
@@ -55,5 +57,12 @@ class GenerateSetupMode {
         Path setupFilePath = Paths.get(String.format(SETUP_FILE_NAME_FORMAT, getFormattedLocalDateTimeNow()));
         Files.write(setupFilePath, List.of(serializedAgentConfig), UTF_8, WRITE, CREATE);
         log.info("Setup saved to {}", setupFilePath);
+    }
+
+    private static void generateAgentPasswordAndHash() {
+        String hexPassword = PasswordGenerator.generateHexPassword();
+        log.info("Generated agent password (hex): " + hexPassword);
+        log.info("Password hash (hex): " + PasswordGenerator.hashHexPassword(hexPassword));
+        log.info("Algorithm: scrypt");
     }
 }
