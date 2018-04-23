@@ -27,133 +27,102 @@ public class TimeSlotRollup implements Rollup {
     private static final Logger log = LoggerFactory.getLogger(TimeSlotRollup.class);
 
     private final int intervalSeconds;
-    private final Map<AntennaId, AntennaState> antennaStates;
+    private final Map<String, ReaderState> readerStates;
 
     TimeSlotRollup(int intervalSeconds) {
         this.intervalSeconds = intervalSeconds;
-        this.antennaStates = new HashMap<>();
+        this.readerStates = new HashMap<>();
     }
 
     public Stream<RawDetectionReport> process(RawDetectionReport report) {
         List<RawDetectionReport> reports = new ArrayList<>();
+        var readerSn = report.readerSn;
         for (var detection : report.detections) {
-            var detectable = new Detectable(detection.detectableId, detection.detectableType);
-            var antennaId = new AntennaId(report.readerSn, detection.portNumber);
-
+            var antennaDetectable =
+                    new AntennaDetectable(detection.portNumber, detection.detectableId, detection.detectableType);
             var detectionSlotStart =
                     Instant.ofEpochSecond(detection.timestamp.getEpochSecond() / intervalSeconds * intervalSeconds, 0L);
 
-            var currentAntennaState = antennaStates.computeIfAbsent(antennaId,
-                    id -> new AntennaState(detectionSlotStart, new HashMap<>()));
-            var state = currentAntennaState.detectableStates.computeIfAbsent(detectable,
-                    id -> emptyState(detectionSlotStart));
-            if (detection.timestamp.isBefore(currentAntennaState.slotStart)) {
+            var currentReaderState = readerStates.computeIfAbsent(readerSn,
+                    sn -> new ReaderState(detectionSlotStart, new HashMap<>()));
+            var state = currentReaderState.states.computeIfAbsent(antennaDetectable,
+                    ad -> emptyState(detectionSlotStart));
+
+            if (detection.timestamp.isBefore(currentReaderState.slotStart)) {
                 // Old detection that should've been processed
-                log.debug("Ignoring old detection at {}, current slot for {} is {}",
-                        detection.timestamp, antennaId, currentAntennaState.slotStart);
-            } else if (detection.timestamp.isBefore(slotEnd(currentAntennaState))) {
+                log.debug("Ignoring old detection at {}, current slot for {}/{} is {}",
+                        detection.timestamp, readerSn, detection.portNumber, currentReaderState.slotStart);
+            } else if (detection.timestamp.isBefore(slotEnd(currentReaderState))) {
                 // Detection is in the current slot for antenna
-                currentAntennaState.detectableStates.put(detectable, updateState(state, detection));
+                currentReaderState.states.put(antennaDetectable, updateState(state, detection));
             } else {
                 // Detection happened after the current time slot, we're rolling up
-                var updatedState = new AntennaState(detectionSlotStart, new HashMap<>());
-                updatedState.detectableStates.put(detectable, updateState(emptyState(detectionSlotStart), detection));
-                antennaStates.put(antennaId, updatedState);
+                var updatedState = new ReaderState(detectionSlotStart, new HashMap<>());
+                updatedState.states.put(antennaDetectable, updateState(emptyState(detectionSlotStart), detection));
+                readerStates.put(readerSn, updatedState);
 
-                var pastDetections = currentAntennaState.detectableStates.entrySet().stream()
+                var pastDetections = currentReaderState.states.entrySet().stream()
                         .map(e -> new RawDetection(
                                 e.getValue().firstSeen,
-                                antennaId.portNumber,
+                                e.getKey().portNumber,
                                 e.getKey().detectableId,
                                 e.getKey().detectableType,
                                 e.getValue().rssi,
                                 e.getValue().count))
                         .collect(toList());
 
-                reports.add(new RawDetectionReport(report.readerSn, pastDetections));
-            }
-        }
-        if (!reports.isEmpty()) {
-            for (var r : reports) {
-                log.debug("Rolling up for {}: {}", r.readerSn, r.detections);
+                reports.add(new RawDetectionReport(readerSn, pastDetections));
             }
         }
 
         return reports.stream();
     }
 
-    private DetectableState emptyState(Instant detectableSlotStart) {
-        return new DetectableState(detectableSlotStart, BigDecimal.valueOf(Long.MIN_VALUE), 0);
+    private AntennaDetectableState emptyState(Instant detectableSlotStart) {
+        return new AntennaDetectableState(detectableSlotStart, BigDecimal.valueOf(Long.MIN_VALUE), 0);
     }
 
-    private static DetectableState updateState(DetectableState state, RawDetection detection) {
-        return new DetectableState(
+    private static AntennaDetectableState updateState(AntennaDetectableState state, RawDetection detection) {
+        return new AntennaDetectableState(
                 min(List.of(detection.timestamp, state.firstSeen)),
                 max(List.of(detection.rssi, state.rssi)),
                 state.count + detection.count
         );
     }
 
-    private Instant slotEnd(AntennaState antennaState) {
-        return antennaState.slotStart.plusSeconds(intervalSeconds);
+    private Instant slotEnd(ReaderState readerState) {
+        return readerState.slotStart.plusSeconds(intervalSeconds);
     }
 
-    private static class AntennaState {
+    private static class ReaderState {
         final Instant slotStart;
-        final Map<Detectable, DetectableState> detectableStates;
+        final Map<AntennaDetectable, AntennaDetectableState> states;
 
-        AntennaState(Instant slotStart, Map<Detectable, DetectableState> detectableStates) {
+        ReaderState(Instant slotStart, Map<AntennaDetectable, AntennaDetectableState> states) {
             this.slotStart = slotStart;
-            this.detectableStates = detectableStates;
+            this.states = states;
         }
     }
 
-    private static class DetectableState {
+    private static class AntennaDetectableState {
         final Instant firstSeen;
         final BigDecimal rssi;
         final int count;
 
-        DetectableState(Instant firstSeen, BigDecimal rssi, int count) {
+        AntennaDetectableState(Instant firstSeen, BigDecimal rssi, int count) {
             this.firstSeen = firstSeen;
             this.rssi = rssi;
             this.count = count;
         }
     }
 
-    private static class AntennaId {
-        final String readerSn;
+    private static class AntennaDetectable {
         final int portNumber;
-
-        AntennaId(String readerSn, int portNumber) {
-            this.readerSn = readerSn;
-            this.portNumber = portNumber;
-        }
-
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            var antennaId = (AntennaId) o;
-            return portNumber == antennaId.portNumber &&
-                    Objects.equals(readerSn, antennaId.readerSn);
-        }
-
-        public int hashCode() {
-            return Objects.hash(readerSn, portNumber);
-        }
-
-        public String toString() {
-            return "AntennaId{" +
-                    "readerSn='" + readerSn + '\'' +
-                    ", portNumber=" + portNumber +
-                    '}';
-        }
-    }
-
-    private static class Detectable {
         final String detectableId;
         final DetectableType detectableType;
 
-        Detectable(String detectableId, DetectableType detectableType) {
+        AntennaDetectable(int portNumber, String detectableId, DetectableType detectableType) {
+            this.portNumber = portNumber;
             this.detectableId = detectableId;
             this.detectableType = detectableType;
         }
@@ -161,13 +130,14 @@ public class TimeSlotRollup implements Rollup {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            var that = (Detectable) o;
-            return Objects.equals(detectableId, that.detectableId) &&
+            var that = (AntennaDetectable) o;
+            return portNumber == that.portNumber &&
+                    Objects.equals(detectableId, that.detectableId) &&
                     detectableType == that.detectableType;
         }
 
         public int hashCode() {
-            return Objects.hash(detectableId, detectableType);
+            return Objects.hash(portNumber, detectableId, detectableType);
         }
     }
 }
