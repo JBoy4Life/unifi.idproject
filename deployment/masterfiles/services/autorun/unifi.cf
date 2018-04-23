@@ -129,18 +129,18 @@ bundle agent oracle_java_jdk {
           };
       "java_packages" 
           slist => {
-              "oracle-java9-installer",
-              "oracle-java9-set-default",
-              "oracle-java9-unlimited-jce-policy"
+              "oracle-java10-installer",
+              "oracle-java10-set-default",
+              "oracle-java10-unlimited-jce-policy"
           };
       "keyserver"
           string => "keyserver.ubuntu.com";
       "key_fp"
-          string => "7B2C 3B08 89BF 5709 A105  D03A C251 8248 EEA1 4886";
+          string => "73C3DB2A";
       "repository_url"
-          string => "http://ppa.launchpad.net/webupd8team/java/ubuntu";
+          string => "http://ppa.launchpad.net/linuxuprising/java/ubuntu";
       "ubuntu_version"
-          string => "xenial main";
+          string => "bionic main";
   classes:
       "apt_key_added"
           expression => returnszero("/usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
