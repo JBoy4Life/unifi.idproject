@@ -2,7 +2,7 @@ package id.unifi.service.core.agent.setup;
 
 import com.opencsv.CSVWriter;
 import id.unifi.service.common.detection.RawDetectionReport;
-import static id.unifi.service.common.util.TimeUtils.getFormattedLocalDateTimeNow;
+import static id.unifi.service.common.util.TimeUtils.filenameFormattedLocalDateTimeNow;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -23,7 +23,7 @@ public class CsvDetectionLogger implements DetectionLogger {
     private final CSVWriter writer;
 
     public CsvDetectionLogger() {
-        writer = createWriter(Paths.get(String.format("detections_%s.csv", getFormattedLocalDateTimeNow())));
+        writer = createWriter(Paths.get(String.format("detections_%s.csv", filenameFormattedLocalDateTimeNow())));
     }
 
     public void log(RawDetectionReport report) {

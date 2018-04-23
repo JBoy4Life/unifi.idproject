@@ -1,7 +1,7 @@
 package id.unifi.service.core.agent.setup;
 
 import id.unifi.service.common.agent.ReaderFullConfig;
-import static id.unifi.service.common.util.TimeUtils.getFormattedLocalDateTimeNow;
+import static id.unifi.service.common.util.TimeUtils.filenameFormattedLocalDateTimeNow;
 import id.unifi.service.core.agent.config.AgentConfig;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
@@ -52,7 +52,7 @@ public class GenerateSetupMode {
         var agentConfig = new AgentFullConfig(Optional.of(AgentConfig.empty), configuredReaders);
         var serializedAgentConfig = getSetupObjectMapper().writeValueAsString(agentConfig);
 
-        var setupFilePath = Paths.get(String.format(SETUP_FILE_NAME_FORMAT, getFormattedLocalDateTimeNow()));
+        var setupFilePath = Paths.get(String.format(SETUP_FILE_NAME_FORMAT, filenameFormattedLocalDateTimeNow()));
         Files.write(setupFilePath, List.of(serializedAgentConfig), UTF_8, WRITE, CREATE);
         log.info("Setup saved to {}", setupFilePath);
     }

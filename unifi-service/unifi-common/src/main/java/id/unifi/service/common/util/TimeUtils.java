@@ -29,7 +29,7 @@ public class TimeUtils {
         return date == null ? null : utcLocalFromInstant(date.toInstant());
     }
 
-    public static String getFormattedLocalDateTimeNow() {
-        return LocalDateTime.now().truncatedTo(SECONDS).format(ISO_LOCAL_DATE_TIME);
+    public static String filenameFormattedLocalDateTimeNow() {
+        return LocalDateTime.now().truncatedTo(SECONDS).format(ISO_LOCAL_DATE_TIME).replaceAll(":", "-");
     }
 }
