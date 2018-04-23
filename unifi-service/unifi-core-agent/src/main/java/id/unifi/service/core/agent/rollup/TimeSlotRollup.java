@@ -36,16 +36,16 @@ public class TimeSlotRollup implements Rollup {
 
     public Stream<RawDetectionReport> process(RawDetectionReport report) {
         List<RawDetectionReport> reports = new ArrayList<>();
-        for (RawDetection detection : report.detections) {
-            Detectable detectable = new Detectable(detection.detectableId, detection.detectableType);
-            AntennaId antennaId = new AntennaId(report.readerSn, detection.portNumber);
+        for (var detection : report.detections) {
+            var detectable = new Detectable(detection.detectableId, detection.detectableType);
+            var antennaId = new AntennaId(report.readerSn, detection.portNumber);
 
-            Instant detectionSlotStart =
+            var detectionSlotStart =
                     Instant.ofEpochSecond(detection.timestamp.getEpochSecond() / intervalSeconds * intervalSeconds, 0L);
 
-            AntennaState currentAntennaState = antennaStates.computeIfAbsent(antennaId,
+            var currentAntennaState = antennaStates.computeIfAbsent(antennaId,
                     id -> new AntennaState(detectionSlotStart, new HashMap<>()));
-            DetectableState state = currentAntennaState.detectableStates.computeIfAbsent(detectable,
+            var state = currentAntennaState.detectableStates.computeIfAbsent(detectable,
                     id -> emptyState(detectionSlotStart));
             if (detection.timestamp.isBefore(currentAntennaState.slotStart)) {
                 // Old detection that should've been processed
@@ -56,11 +56,11 @@ public class TimeSlotRollup implements Rollup {
                 currentAntennaState.detectableStates.put(detectable, updateState(state, detection));
             } else {
                 // Detection happened after the current time slot, we're rolling up
-                AntennaState updatedState = new AntennaState(detectionSlotStart, new HashMap<>());
+                var updatedState = new AntennaState(detectionSlotStart, new HashMap<>());
                 updatedState.detectableStates.put(detectable, updateState(emptyState(detectionSlotStart), detection));
                 antennaStates.put(antennaId, updatedState);
 
-                List<RawDetection> pastDetections = currentAntennaState.detectableStates.entrySet().stream()
+                var pastDetections = currentAntennaState.detectableStates.entrySet().stream()
                         .map(e -> new RawDetection(
                                 e.getValue().firstSeen,
                                 antennaId.portNumber,
@@ -74,7 +74,7 @@ public class TimeSlotRollup implements Rollup {
             }
         }
         if (!reports.isEmpty()) {
-            for (RawDetectionReport r : reports) {
+            for (var r : reports) {
                 log.debug("Rolling up for {}: {}", r.readerSn, r.detections);
             }
         }
@@ -132,7 +132,7 @@ public class TimeSlotRollup implements Rollup {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            AntennaId antennaId = (AntennaId) o;
+            var antennaId = (AntennaId) o;
             return portNumber == antennaId.portNumber &&
                     Objects.equals(readerSn, antennaId.readerSn);
         }
@@ -161,7 +161,7 @@ public class TimeSlotRollup implements Rollup {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Detectable that = (Detectable) o;
+            var that = (Detectable) o;
             return Objects.equals(detectableId, that.detectableId) &&
                     detectableType == that.detectableType;
         }

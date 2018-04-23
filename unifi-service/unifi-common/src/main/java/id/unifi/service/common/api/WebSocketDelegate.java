@@ -59,8 +59,8 @@ public class WebSocketDelegate {
         }
 
         public WebSocketDelegate createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse res) {
-            String path = req.getHttpServletRequest().getPathInfo();
-            Protocol protocol = protocolByPath.get(path);
+            var path = req.getHttpServletRequest().getPathInfo();
+            var protocol = protocolByPath.get(path);
             if (protocol != null) {
                 return new WebSocketDelegate(dispatcher, protocol);
             } else {
@@ -85,10 +85,10 @@ public class WebSocketDelegate {
     }
 
     private void pingLoop(Session session) {
-        ByteBuffer payload = ByteBuffer.allocate(0);
+        var payload = ByteBuffer.allocate(0);
         updatePingTime();
         while (true) {
-            long nowMillis = System.currentTimeMillis();
+            var nowMillis = System.currentTimeMillis();
             if (nextPingMillis <= nowMillis) {
                 try {
                     log.trace("Sending ping in {}", session);
@@ -100,7 +100,7 @@ public class WebSocketDelegate {
                 }
             } else {
                 try {
-                    long waitMillis = nextPingMillis - nowMillis;
+                    var waitMillis = nextPingMillis - nowMillis;
                     log.trace("Waiting {} ms ", waitMillis);
                     Thread.sleep(waitMillis);
                 } catch (InterruptedException e) {
@@ -134,7 +134,7 @@ public class WebSocketDelegate {
     @OnWebSocketMessage
     public void onBinaryMessage(Session session, InputStream stream) {
         updatePingTime();
-        MessageStream messageStream = protocol.isBinary()
+        var messageStream = protocol.isBinary()
                 ? new MessageStream(stream)
                 : new MessageStream(new BufferedReader(new InputStreamReader(stream, UTF_8)));
         dispatchMessage(session, messageStream);

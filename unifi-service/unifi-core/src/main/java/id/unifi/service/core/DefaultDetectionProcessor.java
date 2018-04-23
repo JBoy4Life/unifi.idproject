@@ -46,22 +46,22 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
         if (recentDetectables.getIfPresent(detection.detectable) != null) return; // FIXME
         recentDetectables.put(detection.detectable, true);
 
-        String clientId = detection.detectable.clientId;
-        Set<ListenerWithSession> listeners = detectionListeners.getIfPresent(clientId);
+        var clientId = detection.detectable.clientId;
+        var listeners = detectionListeners.getIfPresent(clientId);
         if (listeners == null || listeners.isEmpty()) {
             log.trace("No client listening on detections for {}", clientId);
             return;
         }
 
-        List<ResolvedDetection> resolvedDetections = db.execute(sql -> {
-            String zoneId = sql.selectFrom(ANTENNA)
+        var resolvedDetections = db.execute(sql -> {
+            var zoneId = sql.selectFrom(ANTENNA)
                     .where(ANTENNA.CLIENT_ID.eq(clientId))
                     .and(ANTENNA.READER_SN.eq(detection.readerSn))
                     .and(ANTENNA.PORT_NUMBER.eq(detection.portNumber))
                     .fetchOne(ANTENNA.ZONE_ID);
             if (zoneId == null) return Stream.<ResolvedDetection>empty();
 
-            String clientReference = sql
+            var clientReference = sql
                     .select(ASSIGNMENT.CLIENT_REFERENCE)
                     .from(DETECTABLE)
                     .join(ASSIGNMENT).onKey()
@@ -72,7 +72,7 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
             return Stream.of(new ResolvedDetection(detection.detectionTime, clientReference, zoneId));
         }).collect(toList());
 
-        for (ListenerWithSession l : listeners) {
+        for (var l : listeners) {
             log.trace("Sending {} detections for {} to {}", resolvedDetections.size(), clientId, l.session);
             l.listener.accept(DETECTIONS_MESSAGE_TYPE, resolvedDetections);
         }

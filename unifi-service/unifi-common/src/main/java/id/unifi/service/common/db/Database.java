@@ -55,11 +55,11 @@ public class Database {
     }
 
     private Flyway getMigrator() {
-        Flyway migrator = new Flyway();
+        var migrator = new Flyway();
         migrator.setDataSource(dataSource);
         migrator.setSchemas(schemaName);
 
-        String dialectPathName = dialect.toString().toLowerCase();
+        var dialectPathName = dialect.toString().toLowerCase();
         migrator.setLocations("classpath:migrations/" + schemaName + "/" + dialectPathName);
 
         return migrator;

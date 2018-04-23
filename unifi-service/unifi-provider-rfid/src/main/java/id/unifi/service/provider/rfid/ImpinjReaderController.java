@@ -10,7 +10,6 @@ import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.RawDetection;
 import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.provider.rfid.config.AntennaConfig;
 import id.unifi.service.provider.rfid.config.ReaderConfig;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -23,7 +22,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -62,7 +60,7 @@ public class ImpinjReaderController implements Closeable {
         this.fullConfig = fullConfig;
         this.config = fullConfig.config.orElse(ReaderConfig.empty);
         this.registry = registry;
-        Set<Integer> configuredPortNumbers = config.ports.map(Map::keySet).orElse(Set.of());
+        var configuredPortNumbers = config.ports.map(Map::keySet).orElse(Set.of());
         this.antennaConnected = new ConcurrentHashMap<>(
                 configuredPortNumbers.stream().collect(toMap(n -> n, n -> false)));
         this.endpoint = fullConfig.endpoint.get().withDefaultPort(DEFAULT_LLRP_PORT);
@@ -72,7 +70,7 @@ public class ImpinjReaderController implements Closeable {
         this.metricNames = new HashSet<>();
 
         fullConfig.readerSn.ifPresent(readerSn -> {
-            String readerHealthMetricName = name(METRIC_NAME_PREFIX, "reader", readerSn, "health");
+            var readerHealthMetricName = name(METRIC_NAME_PREFIX, "reader", readerSn, "health");
             registry.gauge(readerHealthMetricName, () -> () -> checkReaderHealth() ? 1 : 0);
             metricNames.add(readerHealthMetricName);
         });
@@ -81,8 +79,8 @@ public class ImpinjReaderController implements Closeable {
         for (int portNumber : configuredPortNumbers) {
             antennaDetectionMeters.put(portNumber, createAntennaDetectionMeter(portNumber));
 
-            String antennaName = getAntennaMetricNameElement(portNumber);
-            String antennaHealthMetricName = name(METRIC_NAME_PREFIX, "antenna", antennaName, "health");
+            var antennaName = getAntennaMetricNameElement(portNumber);
+            var antennaHealthMetricName = name(METRIC_NAME_PREFIX, "antenna", antennaName, "health");
             registry.gauge(antennaHealthMetricName, () -> () -> checkAntennaHealth(portNumber) ? 1 : 0);
             metricNames.add(antennaHealthMetricName);
         }
@@ -90,11 +88,11 @@ public class ImpinjReaderController implements Closeable {
         this.impinjTagReportListener = (reader, report) -> {
             log.trace("Report received {}: {} tags", reader.getAddress(), report.getTags().size());
             try {
-                List<RawDetection> detections = report.getTags().stream().flatMap(tag -> {
-                    Instant timestamp = instantFromTimestamp(tag.getLastSeenTime());
-                    BigDecimal rssi = BigDecimal.valueOf(tag.getPeakRssiInDbm());
+                var detections = report.getTags().stream().flatMap(tag -> {
+                    var timestamp = instantFromTimestamp(tag.getLastSeenTime());
+                    var rssi = BigDecimal.valueOf(tag.getPeakRssiInDbm());
 
-                    RawDetection epcDetection = new RawDetection(
+                    var epcDetection = new RawDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
@@ -102,7 +100,7 @@ public class ImpinjReaderController implements Closeable {
                             rssi,
                             1);
 
-                    RawDetection tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
+                    var tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
                             tag.getTid().toHexString(),
@@ -114,7 +112,7 @@ public class ImpinjReaderController implements Closeable {
 
                 detectionConsumer.accept(new RawDetectionReport(reader.getName(), detections));
                 detections.forEach(d -> {
-                    Meter meter = antennaDetectionMeters.get(d.portNumber);
+                    var meter = antennaDetectionMeters.get(d.portNumber);
                     if (meter != null) meter.mark();
                 });
             } catch (RuntimeException e) {
@@ -140,8 +138,8 @@ public class ImpinjReaderController implements Closeable {
     private synchronized void configureFromScratch() {
         while (!closing) {
             antennaConnected.replaceAll((n, c) -> false);
-            ImpinjReader reader = new ImpinjReader();
-            CountDownLatch lostLatch = new CountDownLatch(1);
+            var reader = new ImpinjReader();
+            var lostLatch = new CountDownLatch(1);
             try {
                 log.info("Configuring reader {}", fullConfig);
                 reader.setConnectionLostListener(r -> lostLatch.countDown());
@@ -155,8 +153,8 @@ public class ImpinjReaderController implements Closeable {
                 if (Thread.interrupted()) throw new InterruptedException();
 
                 updateAntennaStatus(reader);
-                FeatureSet featureSet = reader.queryFeatureSet();
-                String readerSn = checkSerialNumber(featureSet);
+                var featureSet = reader.queryFeatureSet();
+                var readerSn = checkSerialNumber(featureSet);
                 reader.setName(readerSn);
                 applySettings(reader);
 
@@ -195,7 +193,7 @@ public class ImpinjReaderController implements Closeable {
     }
 
     private void applySettings(ImpinjReader reader) throws OctaneSdkException {
-        Settings settings = reader.queryDefaultSettings();
+        var settings = reader.queryDefaultSettings();
 
         settings.getLowDutyCycle().setIsEnabled(false);
         settings.setHoldReportsOnDisconnect(true);
@@ -209,8 +207,8 @@ public class ImpinjReaderController implements Closeable {
         config.txFrequencies.ifPresent(freqs -> settings.setTxFrequenciesInMhz(new ArrayList<>(freqs)));
         //config.detectableTypes.ifPresent(...);
         config.filter.ifPresent(filter -> {
-            FilterSettings filters = new FilterSettings();
-            TagFilter tagFilter = new TagFilter();
+            var filters = new FilterSettings();
+            var tagFilter = new TagFilter();
             tagFilter.setBitPointer(BitPointers.Epc);
             tagFilter.setMemoryBank(MemoryBank.Epc);
             tagFilter.setFilterOp(filter.action);
@@ -221,7 +219,7 @@ public class ImpinjReaderController implements Closeable {
             settings.setFilters(filters);
         });
 
-        ReportConfig reportConfig = settings.getReport();
+        var reportConfig = settings.getReport();
         config.enableFastId.ifPresent(reportConfig::setIncludeFastId);
         reportConfig.setIncludeAntennaPortNumber(true);
         reportConfig.setIncludePeakRssi(true);
@@ -231,10 +229,10 @@ public class ImpinjReaderController implements Closeable {
         if (config.ports.isPresent()) {
             settings.getAntennas().disableAll();
             settings.getAntennas().enableById(new ArrayList<>(config.ports.get().keySet()));
-            for (Map.Entry<Integer, AntennaConfig> e : config.ports.get().entrySet()) {
+            for (var e : config.ports.get().entrySet()) {
                 int portNumber = e.getKey();
-                AntennaConfig antennaConfig = e.getValue();
-                com.impinj.octane.AntennaConfig antenna = settings.getAntennas().getAntenna(portNumber);
+                var antennaConfig = e.getValue();
+                var antenna = settings.getAntennas().getAntenna(portNumber);
                 antenna.setEnabled(true);
                 antenna.setIsMaxTxPower(false);
                 antenna.setIsMaxRxSensitivity(false);
@@ -268,9 +266,9 @@ public class ImpinjReaderController implements Closeable {
     }
 
     private Meter createAntennaDetectionMeter(int portNumber) {
-        String antennaName = getAntennaMetricNameElement(portNumber);
-        String detectionsMetricName = name(METRIC_NAME_PREFIX, "antenna", antennaName, "detections");
-        Meter meter = registry.meter(detectionsMetricName);
+        var antennaName = getAntennaMetricNameElement(portNumber);
+        var detectionsMetricName = name(METRIC_NAME_PREFIX, "antenna", antennaName, "detections");
+        var meter = registry.meter(detectionsMetricName);
         metricNames.add(detectionsMetricName);
         return meter;
     }
@@ -280,7 +278,7 @@ public class ImpinjReaderController implements Closeable {
     }
 
     private String checkSerialNumber(FeatureSet featureSet) {
-        String actualSn = featureSet.getSerialNumber().replaceAll("-", "");
+        var actualSn = featureSet.getSerialNumber().replaceAll("-", "");
         if (!fullConfig.readerSn.stream().allMatch(actualSn::equals)) {
             throw new RuntimeException("Reader serial number mismatch for " + fullConfig.endpoint
                     + ": Expected " + fullConfig.readerSn.get() + ", got " + actualSn);
@@ -289,8 +287,8 @@ public class ImpinjReaderController implements Closeable {
     }
 
     private void updateAntennaStatus(ImpinjReader reader) throws OctaneSdkException {
-        List<AntennaStatus> antennaList = reader.queryStatus().getAntennaStatusGroup().getAntennaList();
-        boolean startingFromEmpty = antennaConnected.isEmpty();
+        var antennaList = reader.queryStatus().getAntennaStatusGroup().getAntennaList();
+        var startingFromEmpty = antennaConnected.isEmpty();
         antennaList.forEach(status -> {
             int portNumber = status.getPortNumber();
             if (startingFromEmpty || antennaConnected.containsKey(portNumber)) {
@@ -314,8 +312,8 @@ public class ImpinjReaderController implements Closeable {
 
     private static Instant instantFromTimestamp(ImpinjTimestamp timestamp) {
         // This is horrible but Octane "exposes" the full microsecond resolution only as a stringy long
-        long microsecondsSinceEpoch = Long.parseLong(timestamp.ToString());
-        long nanoAdjustment = (microsecondsSinceEpoch % 1_000_000) * 1000;
+        var microsecondsSinceEpoch = Long.parseLong(timestamp.ToString());
+        var nanoAdjustment = (microsecondsSinceEpoch % 1_000_000) * 1000;
         return Instant.ofEpochSecond(microsecondsSinceEpoch / 1_000_000, nanoAdjustment);
     }
 }

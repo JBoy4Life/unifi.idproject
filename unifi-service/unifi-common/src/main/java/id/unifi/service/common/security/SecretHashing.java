@@ -61,7 +61,7 @@ public class SecretHashing {
         }
 
         byte[] encoded() {
-            ByteBuffer output = ByteBuffer.allocate(56);
+            var output = ByteBuffer.allocate(56);
             output.put(SCRYPT_FORMAT_HEADER);
             output.put(logN);
             output.putShort(r);
@@ -78,16 +78,16 @@ public class SecretHashing {
     }
 
     private static Optional<ScryptHash> parse(byte[] encoded) {
-        ByteBuffer input = ByteBuffer.wrap(encoded);
+        var input = ByteBuffer.wrap(encoded);
 
-        byte[] format = new byte[3];
-        byte[] salt = new byte[16];
-        byte[] hash = new byte[32];
+        var format = new byte[3];
+        var salt = new byte[16];
+        var hash = new byte[32];
 
         input.get(format);
-        byte logN = input.get();
-        short r = input.getShort();
-        short p = input.getShort();
+        var logN = input.get();
+        var r = input.getShort();
+        var p = input.getShort();
 
         log.trace("Extracted hash params: log_N={}, r={}, p={}", logN, r, p);
         input.get(salt);
@@ -106,7 +106,7 @@ public class SecretHashing {
     }
 
     public static boolean check(byte[] password, byte[] encodedHash) {
-        ScryptHash hash = parse(encodedHash)
+        var hash = parse(encodedHash)
                 .orElseThrow(() -> new RuntimeException("Bad hash format: " + new HexEncoded(encodedHash)));
         log.trace("Checking password with hash: {}", new HexEncoded(encodedHash));
 
@@ -117,7 +117,7 @@ public class SecretHashing {
             throw new RuntimeException(e);
         }
 
-        boolean result = MessageDigest.isEqual(hash.derivedKey, rederived);
+        var result = MessageDigest.isEqual(hash.derivedKey, rederived);
         log.trace("Password check result: {} for {}", rederived, hash);
         return result;
     }
@@ -131,7 +131,7 @@ public class SecretHashing {
     }
 
     public byte[] hash(byte[] password) {
-        byte[] salt = new byte[16];
+        var salt = new byte[16];
         random.nextBytes(salt);
         byte[] derivedKey;
         try {

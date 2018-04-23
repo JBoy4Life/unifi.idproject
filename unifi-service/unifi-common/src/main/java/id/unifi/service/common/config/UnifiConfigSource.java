@@ -6,7 +6,6 @@ import com.statemachinesystems.envy.Parameter;
 import com.statemachinesystems.envy.sources.DelegatingConfigSource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -39,7 +38,7 @@ public class UnifiConfigSource {
     private static void loadProperties() {
         if (properties == null) {
             properties = new Properties();
-            InputStream stream = UnifiConfigSource.class.getResourceAsStream(PROPERTIES_RESOURCE_NAME);
+            var stream = UnifiConfigSource.class.getResourceAsStream(PROPERTIES_RESOURCE_NAME);
             if (stream != null) {
                 try {
                     properties.load(stream);

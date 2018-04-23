@@ -23,7 +23,6 @@ import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import id.unifi.service.core.db.tables.records.AssignmentRecord;
 import id.unifi.service.core.db.tables.records.DetectableRecord;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.InsertOnDuplicateStep;
 import org.jooq.Record;
@@ -65,8 +64,8 @@ public class DetectableService {
         authorize(session, clientId);
         if (filter == null) filter = ListFilter.empty();
 
-        Table<? extends Record> tables = calculateTableJoin(filter, with);
-        Condition filterCondition = and(
+        var tables = calculateTableJoin(filter, with);
+        var filterCondition = and(
                 filterCondition(filter.detectableType, t -> DETECTABLE.DETECTABLE_TYPE.eq(t.toString())),
                 filterCondition(filter.active, DETECTABLE.ACTIVE::eq),
                 filterCondition(filter.assignment, ASSIGNMENT.CLIENT_REFERENCE::eq),
@@ -126,10 +125,10 @@ public class DetectableService {
         authorize(session, clientId);
         changes.validate();
 
-        Map<? extends TableField<DetectableRecord, ?>, ?> fieldMap = getUpdateQueryFieldMap(editables, changes);
+        var fieldMap = getUpdateQueryFieldMap(editables, changes);
 
         db.execute(sql -> {
-            int rowsUpdated = 0;
+            var rowsUpdated = 0;
             if (!fieldMap.isEmpty()) {
                 rowsUpdated += sql
                         .update(DETECTABLE)
@@ -142,7 +141,7 @@ public class DetectableService {
 
             if (changes.assignment != null) {
                 if (changes.assignment.isPresent()) {
-                    String assignment = changes.assignment.get();
+                    var assignment = changes.assignment.get();
                     try {
                         rowsUpdated += insertIntoAssignmentQuery(sql, clientId, detectableId, detectableType, assignment)
                                 .onConflict()

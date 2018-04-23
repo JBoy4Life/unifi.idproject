@@ -2,7 +2,6 @@ package id.unifi.service.common.api;
 
 import com.fasterxml.jackson.core.Base64Variants;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
@@ -69,18 +68,18 @@ public class Dispatcher<S> {
 
     public void dispatch(Session session, MessageStream stream, Protocol protocol, Channel returnChannel) {
         log.trace("Dispatching {} request in {}", protocol, session);
-        ObjectMapper mapper = getObjectMapper(protocol);
+        var mapper = getObjectMapper(protocol);
         Message message = null;
         try {
             message = parseMessage(stream, mapper);
 
-            PayloadConsumer messageListener = messageListeners.get(message.messageType);
+            var messageListener = messageListeners.get(message.messageType);
             if (messageListener != null) {
                 messageListener.accept(mapper, session, message.payload);
                 return;
             }
 
-            ServiceRegistry.Operation operation = serviceRegistry.getOperation(message.messageType);
+            var operation = serviceRegistry.getOperation(message.messageType);
             processRequest(session, returnChannel, mapper, protocol, message, operation);
         } catch (MarshallableError e) {
             if (message != null) {
@@ -89,7 +88,7 @@ public class Dispatcher<S> {
                 session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
             }
         } catch (JsonProcessingException e) {
-            String errMessage = "Couldn't process " + protocol + " payload";
+            var errMessage = "Couldn't process " + protocol + " payload";
             log.debug(errMessage + " in {}", session, e);
             session.close(StatusCode.BAD_PAYLOAD, errMessage);
         } catch (RuntimeException | IOException e) {
@@ -107,10 +106,10 @@ public class Dispatcher<S> {
                         String messageType,
                         Map<String, Object> params) throws IOException {
         log.debug("Requesting using {} in {}", protocol, session);
-        ObjectMapper mapper = getObjectMapper(protocol);
+        var mapper = getObjectMapper(protocol);
 
-        JsonNode payload = mapper.valueToTree(params);
-        Message message = new Message(
+        var payload = mapper.valueToTree(params);
+        var message = new Message(
                 CURRENT_PROTOCOL_VERSION,
                 CURRENT_PROTOCOL_VERSION,
                 new Token().raw,
@@ -138,7 +137,7 @@ public class Dispatcher<S> {
     }
 
     public void createSession(Session session) {
-        S sessionData = sessionDataCreator.apply(session);
+        var sessionData = sessionDataCreator.apply(session);
         sessionDataStore.put(session, sessionData);
         sessionListeners.forEach(l -> l.onSessionCreated(session, sessionData));
     }
@@ -158,8 +157,8 @@ public class Dispatcher<S> {
                                 Protocol protocol,
                                 Message message,
                                 ServiceRegistry.Operation operation) {
-        Object[] params = operation.params.entrySet().stream().map(entry -> {
-            Type type = entry.getValue().type;
+        var params = operation.params.entrySet().stream().map(entry -> {
+            var type = entry.getValue().type;
             if (type == Session.class)
                 return session;
             if (type == ObjectMapper.class)
@@ -167,9 +166,9 @@ public class Dispatcher<S> {
             if (type == sessionDataType)
                 return sessionDataStore.get(session);
 
-            String name = entry.getKey();
+            var name = entry.getKey();
             try {
-                JsonNode paramNode = message.payload.get(name);
+                var paramNode = message.payload.get(name);
                 if (paramNode == null || paramNode.isNull()) {
                     if (entry.getValue().nullable) {
                         return null;
@@ -189,9 +188,9 @@ public class Dispatcher<S> {
             case RPC:
                 Message rpcResponse;
                 try {
-                    Object result = serviceRegistry.invokeRpc(operation, params);
+                    var result = serviceRegistry.invokeRpc(operation, params);
 
-                    JsonNode payload = mapper.valueToTree(result);
+                    var payload = mapper.valueToTree(result);
                     rpcResponse = new Message(
                             CURRENT_PROTOCOL_VERSION,
                             message.releaseVersion,
@@ -208,8 +207,8 @@ public class Dispatcher<S> {
 
             case MULTI:
                 MessageListener<Object> listenerParam = (messageType, payloadObj) -> {
-                    JsonNode payloadNode = mapper.valueToTree(payloadObj);
-                    Message response = new Message(
+                    var payloadNode = mapper.valueToTree(payloadObj);
+                    var response = new Message(
                             CURRENT_PROTOCOL_VERSION,
                             message.releaseVersion,
                             message.correlationId,
@@ -229,14 +228,14 @@ public class Dispatcher<S> {
     }
 
     private static <T> T readValue(ObjectMapper mapper, Type type, JsonNode paramNode) throws IOException {
-        JavaType javaType = mapper.constructType(type);
+        var javaType = mapper.constructType(type);
         try {
             return mapper.readValue(mapper.treeAsTokens(paramNode), javaType);
         } catch (InvalidFormatException e) {
             // For failed base-64 decoding try again with URL-safe Base64 variant
             // This is a hack that won't work on nested structures
             if (e.getTargetType() == byte[].class && paramNode.isTextual()) {
-                byte[] binValue = ((TextNode) paramNode).getBinaryValue(Base64Variants.MODIFIED_FOR_URL);
+                var binValue = ((TextNode) paramNode).getBinaryValue(Base64Variants.MODIFIED_FOR_URL);
                 return mapper.readValue(mapper.treeAsTokens(new BinaryNode(binValue)), javaType);
             }
             throw e;
@@ -253,9 +252,9 @@ public class Dispatcher<S> {
     }
 
     private static Message parseMessage(MessageStream stream, ObjectMapper mapper) throws IOException {
-        JsonNode message = stream.isBinary() ? mapper.readTree(stream.inputStream) : mapper.readTree(stream.reader);
+        var message = stream.isBinary() ? mapper.readTree(stream.inputStream) : mapper.readTree(stream.reader);
         log.trace("Request parsed: {}", message);
-        Message request = mapper.treeToValue(message, Message.class);
+        var request = mapper.treeToValue(message, Message.class);
         log.trace("Request unmarshalled: {}", request);
         return request;
     }
@@ -288,7 +287,7 @@ public class Dispatcher<S> {
     }
 
     private static byte[] generateCorrelationId() {
-        byte[] id = new byte[16];
+        var id = new byte[16];
         random.nextBytes(id);
         return id;
     }

@@ -30,7 +30,7 @@ public class Token {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Token token = (Token) o;
+        var token = (Token) o;
         return Arrays.equals(raw, token.raw);
     }
 

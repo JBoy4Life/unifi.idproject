@@ -30,7 +30,6 @@ import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import id.unifi.service.core.db.tables.records.HolderImageRecord;
 import id.unifi.service.core.db.tables.records.HolderRecord;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.InsertOnDuplicateStep;
 import org.jooq.Record;
@@ -78,7 +77,7 @@ public class HolderService {
         authorize(session, clientId);
 
         if (filter == null) filter = ListFilter.empty();
-        Condition filterCondition = and(
+        var filterCondition = and(
                 filterCondition(filter.holderType, ht -> HOLDER.HOLDER_TYPE.eq(ht.toString())),
                 filterCondition(filter.active, HOLDER.ACTIVE::eq));
 
@@ -120,7 +119,7 @@ public class HolderService {
                           @Nullable byte[] image) {
         authorize(session, clientId);
 
-        Optional<ImageWithType> imageWithType = validateImageFormat(Optional.ofNullable(image));
+        var imageWithType = validateImageFormat(Optional.ofNullable(image));
 
         db.execute(sql -> {
             try {
@@ -160,11 +159,11 @@ public class HolderService {
         authorize(session, clientId);
         changes.validate();
 
-        Map<? extends TableField<HolderRecord, ?>, ?> fieldMap = getUpdateQueryFieldMap(editables, changes);
-        Optional<ImageWithType> imageWithType = changes.image == null ? null : validateImageFormat(changes.image);
+        var fieldMap = getUpdateQueryFieldMap(editables, changes);
+        var imageWithType = changes.image == null ? null : validateImageFormat(changes.image);
 
         db.execute(sql -> {
-            int rowsUpdated = 0;
+            var rowsUpdated = 0;
             if (!fieldMap.isEmpty()) {
                 rowsUpdated += sql
                         .update(HOLDER)
@@ -176,7 +175,7 @@ public class HolderService {
 
             if (imageWithType != null) {
                 if (imageWithType.isPresent()) {
-                    ImageWithType img = imageWithType.get();
+                    var img = imageWithType.get();
                     rowsUpdated += insertIntoHolderImageQuery(sql, clientId, clientReference, img)
                             .onConflict()
                             .doUpdate()
@@ -252,7 +251,7 @@ public class HolderService {
             throw new IllegalArgumentException("Unexpected metadata type: " + metadata);
         }
 
-        String metadataString = ((PGobject) metadata).getValue();
+        var metadataString = ((PGobject) metadata).getValue();
 
         try {
             return getObjectMapper(Protocol.JSON).readValue(metadataString, MAP_TYPE_REFERENCE);

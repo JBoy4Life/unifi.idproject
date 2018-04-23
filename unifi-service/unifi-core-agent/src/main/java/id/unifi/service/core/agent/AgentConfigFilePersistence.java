@@ -9,8 +9,6 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -25,7 +23,7 @@ public class AgentConfigFilePersistence implements AgentConfigPersistence {
             Paths.get(System.getProperty("user.home"), ".unifi", "agent-config.json");
 
     public Optional<AgentFullConfig> readConfig() {
-        try (BufferedReader reader = Files.newBufferedReader(AGENT_CONFIG_PATH, UTF_8)) {
+        try (var reader = Files.newBufferedReader(AGENT_CONFIG_PATH, UTF_8)) {
             return Optional.ofNullable(getConfigObjectMapper().readValue(reader, AgentFullConfig.class));
         } catch (NoSuchFileException e) { // TODO: factor out IOException handling
             log.warn("Local config file not found: " + AGENT_CONFIG_PATH);
@@ -39,8 +37,8 @@ public class AgentConfigFilePersistence implements AgentConfigPersistence {
     public void writeConfig(AgentFullConfig config) {
         try {
             Files.createDirectories(AGENT_CONFIG_PATH.getParent());
-            Path tempPath = Files.createTempFile("agent-config", null);
-            try (BufferedWriter writer = Files.newBufferedWriter(tempPath, UTF_8, WRITE, CREATE)) {
+            var tempPath = Files.createTempFile("agent-config", null);
+            try (var writer = Files.newBufferedWriter(tempPath, UTF_8, WRITE, CREATE)) {
                 getConfigObjectMapper().writeValue(writer, config);
             }
 

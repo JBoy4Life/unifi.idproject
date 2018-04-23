@@ -20,7 +20,7 @@ public class Validation {
 
     public static void validateAll(ValidationDef... validationDefs) {
         List<ValidationError> validationErrors = new ArrayList<>();
-        for (ValidationDef def : validationDefs) {
+        for (var def : validationDefs) {
             if (def.issue != null) {
                 if (def.immediateError != null) {
                     throw def.immediateError.get();

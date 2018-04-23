@@ -26,13 +26,13 @@ class PasswordGenerator {
     }
 
     static String hashHexPassword(String hexPassword) {
-        SecretHashing hashing = new SecretHashing(config);
-        byte[] hash = hashing.hash(hex.decode(hexPassword));
+        var hashing = new SecretHashing(config);
+        var hash = hashing.hash(hex.decode(hexPassword));
         return hex.encode(hash);
     }
 
     private static byte[] randomBytes() {
-        byte[] bytes = new byte[PASSWORD_LENGTH];
+        var bytes = new byte[PASSWORD_LENGTH];
         random.nextBytes(bytes);
         return bytes;
     }

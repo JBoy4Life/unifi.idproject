@@ -1,6 +1,5 @@
 package id.unifi.service.core.agent;
 
-import id.unifi.service.core.agent.config.AgentConfig;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 
 import javax.annotation.Nullable;

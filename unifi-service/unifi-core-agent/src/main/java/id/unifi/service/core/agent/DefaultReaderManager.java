@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +38,7 @@ public class DefaultReaderManager implements ReaderManager {
                                 Duration serverConfigReceiveTimeout) {
         this.persistence = persistence;
         this.rfidProvider = rfidProvider;
-        ScheduledExecutorService backupConfigScheduler = Executors.newSingleThreadScheduledExecutor();
+        var backupConfigScheduler = Executors.newSingleThreadScheduledExecutor();
         alternativeConfigFuture = backupConfigScheduler.schedule(() ->
                         persistence.readConfig().ifPresentOrElse(
                                 config -> configure(config, false),
@@ -73,7 +72,7 @@ public class DefaultReaderManager implements ReaderManager {
             configured = true;
             if (authoritative) persistence.writeConfig(config); // TODO: factor out
 
-            AgentConfig agentConfig = config.agent.orElse(AgentConfig.empty);
+            var agentConfig = config.agent.orElse(AgentConfig.empty);
             detectableTypes = agentConfig.detectableTypes.orElse(DEFAULT_DETECTABLE_TYPES);
             rollup = RollupUtils.rollupFromConfig(agentConfig.rollup);
 

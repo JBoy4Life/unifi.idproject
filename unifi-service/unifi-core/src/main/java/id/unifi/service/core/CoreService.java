@@ -1,7 +1,6 @@
 package id.unifi.service.core;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.jmx.JmxReporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
 import com.rabbitmq.client.AMQP;
@@ -42,13 +41,9 @@ import id.unifi.service.core.agents.IdentityService;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
-import id.unifi.service.core.db.tables.records.RfidDetectionRecord;
 import static java.net.InetSocketAddress.createUnresolved;
 import static java.util.stream.Collectors.toList;
 import org.eclipse.jetty.websocket.api.Session;
-import org.jooq.BatchBindStep;
-import org.jooq.Field;
-import org.jooq.InsertReturningStep;
 import org.jooq.Record1;
 import org.jooq.Row2;
 import org.jooq.impl.DSL;
@@ -60,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -108,17 +102,17 @@ public class CoreService {
         log.info("Starting unifi.id Core");
         VersionInfo.log();
 
-        Config config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
+        var config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
 
-        MetricRegistry registry = new MetricRegistry();
-        JmxReporter jmxReporter = MetricUtils.createJmxReporter(registry);
+        var registry = new MetricRegistry();
+        var jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
 
-        DatabaseProvider dbProvider = new DatabaseProvider();
+        var dbProvider = new DatabaseProvider();
         dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
-        DetectionProcessor detectionProcessor = new DefaultDetectionProcessor(dbProvider);
+        var detectionProcessor = new DefaultDetectionProcessor(dbProvider);
 
-        ComponentHolder componentHolder = new ComponentHolder(Map.of(
+        var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
                 MqConfig.class, config.mq(),
@@ -127,9 +121,9 @@ public class CoreService {
                 EmailSenderProvider.class, new LoggingEmailSender()));
 
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
-        ObjectMapper mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
-        Channel channel = startRawDetectionConsumer(mapper, config.mq());
-        AttendanceProcessor attendanceProcessor = new AttendanceProcessor(dbProvider);
+        var mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
+        var channel = startRawDetectionConsumer(mapper, config.mq());
+        var attendanceProcessor = new AttendanceProcessor(dbProvider);
         processQueue(channel, dbProvider.bySchema(CORE), detectionProcessor, attendanceProcessor);
     }
 
@@ -138,7 +132,7 @@ public class CoreService {
                                      DetectionProcessor detectionProcessor,
                                      AttendanceProcessor attendanceProcessor) {
         var thread = new Thread(() -> {
-            InsertReturningStep<RfidDetectionRecord> insertQuery = insertInto(RFID_DETECTION,
+            var insertQuery = insertInto(RFID_DETECTION,
                     RFID_DETECTION.CLIENT_ID,
                     RFID_DETECTION.DETECTABLE_ID,
                     RFID_DETECTION.DETECTABLE_TYPE,
@@ -166,22 +160,22 @@ public class CoreService {
 
                 log.debug("Processing {} detection reports", allTagged.stream().mapToInt(t -> t.reports.size()).sum());
 
-                List<Detection> detections = allTagged.stream()
+                var detections = allTagged.stream()
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
                                 new Detection(new ClientDetectable(t.clientId, d.detectableId, d.detectableType),
                                         r.readerSn, d.portNumber, d.timestamp, d.rssi, d.count))))
                         .collect(toList());
 
-                Row2<String, String>[] detectableIdRows = detections.stream()
+                var detectableIdRows = detections.stream()
                         .map(d -> d.detectable)
                         .distinct()
                         .map(cd -> DSL.row(cd.clientId, cd.detectableId))
                         .toArray((IntFunction<Row2<String, String>[]>) Row2[]::new);
 
                 db.execute(sql -> {
-                    Field<String> vDetectableId = field(name("v", "detectable_id"), String.class);
-                    Field<String> vClientId = field(name("v", "client_id"), String.class);
-                    List<String> unknownDetectableIds = sql
+                    var vDetectableId = field(name("v", "detectable_id"), String.class);
+                    var vClientId = field(name("v", "client_id"), String.class);
+                    var unknownDetectableIds = sql
                             .select(vDetectableId)
                             .from(values(detectableIdRows).asTable("v", "client_id", "detectable_id"))
                             .leftJoin(DETECTABLE).using(vClientId, vDetectableId)
@@ -190,7 +184,7 @@ public class CoreService {
 
                     log.trace("Unknown: {}", unknownDetectableIds);
 
-                    BatchBindStep batch = sql.batch(insertQuery);
+                    var batch = sql.batch(insertQuery);
                     detections.forEach(detection -> {
                         if (!unknownDetectableIds.contains(detection.detectable.detectableId)) {
                             batch.bind(
@@ -204,7 +198,7 @@ public class CoreService {
                                     detection.count);
                         }
                     });
-                    int batchSize = batch.size();
+                    var batchSize = batch.size();
                     if (batchSize > 0) {
                         batch.execute();
                     }
@@ -215,7 +209,7 @@ public class CoreService {
                 attendanceProcessor.processDetections(detections);
 
                 if (!allTagged.isEmpty()) {
-                    long deliveryTag = allTagged.get(allTagged.size() - 1).deliveryTag;
+                    var deliveryTag = allTagged.get(allTagged.size() - 1).deliveryTag;
                     try {
                         channel.basicAck(deliveryTag, true);
                     } catch (IOException e) {
@@ -228,7 +222,7 @@ public class CoreService {
     }
 
     private static Channel startRawDetectionConsumer(ObjectMapper mapper, MqConfig mqConfig) {
-        ConnectionFactory factory = new ConnectionFactory();
+        var factory = new ConnectionFactory();
         factory.setHost(mqConfig.endpoint().getHost());
         factory.setPort(mqConfig.endpoint().getPort());
         Connection connection;
@@ -246,7 +240,7 @@ public class CoreService {
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
-                RawSiteDetectionReports report = mapper.readValue(body, RawSiteDetectionReports.class);
+                var report = mapper.readValue(body, RawSiteDetectionReports.class);
                 try {
                     detectionQueue.put(new TaggedDetectionReport(report.clientId, report.reports, envelope.getDeliveryTag()));
                 } catch (InterruptedException e) {
@@ -266,10 +260,9 @@ public class CoreService {
 
     private static ObjectMapper startAgentService(ComponentHolder componentHolder,
                                                   HostAndPort agentEndpoint) throws Exception {
-        ServiceRegistry agentRegistry = new ServiceRegistry(
+        var agentRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agents"), componentHolder);
-        Dispatcher<AgentSessionData> agentDispatcher =
-                new Dispatcher<>(agentRegistry, AgentSessionData.class, s -> new AgentSessionData());
+        var agentDispatcher = new Dispatcher<>(agentRegistry, AgentSessionData.class, s -> new AgentSessionData());
         componentHolder.get(IdentityService.class).setAgentDispatcher(agentDispatcher); // FIXME: break circular dependency
         agentDispatcher.addSessionListener(new Dispatcher.SessionListener<>() {
             public void onSessionCreated(Session session, AgentSessionData data) {
@@ -281,8 +274,8 @@ public class CoreService {
             }
         });
 
-        InetSocketAddress agentServerSocket = createUnresolved(agentEndpoint.getHost(), agentEndpoint.getPort());
-        HttpServer agentServer = new HttpServer(
+        var agentServerSocket = createUnresolved(agentEndpoint.getHost(), agentEndpoint.getPort());
+        var agentServer = new HttpServer(
                 agentServerSocket,
                 "/agents",
                 agentDispatcher,
@@ -292,15 +285,14 @@ public class CoreService {
     }
 
     private static void startApiService(HostAndPort apiEndpoint, ComponentHolder componentHolder) throws Exception {
-        ServiceRegistry registry = new ServiceRegistry(
+        var registry = new ServiceRegistry(
                 Map.of(
                         "core", "id.unifi.service.core.services",
                         "attendance", "id.unifi.service.attendance.services"),
                 componentHolder);
-        Dispatcher<?> dispatcher =
-                new Dispatcher<>(registry, OperatorSessionData.class, s -> new OperatorSessionData());
-        InetSocketAddress apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
-        HttpServer apiServer = new HttpServer(
+        var dispatcher = new Dispatcher<>(registry, OperatorSessionData.class, s -> new OperatorSessionData());
+        var apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
+        var apiServer = new HttpServer(
                 apiServerSocket,
                 "/service",
                 dispatcher,

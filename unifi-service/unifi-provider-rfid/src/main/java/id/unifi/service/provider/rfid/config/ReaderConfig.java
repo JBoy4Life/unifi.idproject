@@ -26,7 +26,7 @@ public class ReaderConfig {
                     Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     public static ReaderConfig fromPortNumbers(List<Integer> portNumbers) {
-        Map<Integer, AntennaConfig> antennae =
+        var antennae =
                 portNumbers.stream().collect(toMap(identity(), n -> AntennaConfig.empty));
         return new ReaderConfig(Optional.empty(), Optional.empty(), OptionalInt.empty(), OptionalInt.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(antennae));
@@ -58,7 +58,7 @@ public class ReaderConfig {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ReaderConfig that = (ReaderConfig) o;
+        var that = (ReaderConfig) o;
         return Objects.equals(readerMode, that.readerMode) &&
                 Objects.equals(searchMode, that.searchMode) &&
                 Objects.equals(session, that.session) &&

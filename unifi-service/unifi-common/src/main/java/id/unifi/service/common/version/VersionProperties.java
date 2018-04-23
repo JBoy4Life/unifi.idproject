@@ -1,7 +1,6 @@
 package id.unifi.service.common.version;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 public class VersionProperties {
@@ -9,8 +8,8 @@ public class VersionProperties {
     public final String buildNumber;
 
     public static VersionProperties read() {
-        Properties props = new Properties();
-        try (InputStream stream = VersionProperties.class.getResourceAsStream("/unifi-version.properties")) {
+        var props = new Properties();
+        try (var stream = VersionProperties.class.getResourceAsStream("/unifi-version.properties")) {
             props.load(stream);
             return new VersionProperties(props.getProperty("project.version"), props.getProperty("build.number"));
         } catch (IOException e) {

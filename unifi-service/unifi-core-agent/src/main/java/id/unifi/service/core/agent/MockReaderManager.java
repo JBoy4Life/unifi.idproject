@@ -1,6 +1,5 @@
 package id.unifi.service.core.agent;
 
-import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.AntennaKey;
 import id.unifi.service.common.detection.DetectableType;
@@ -9,7 +8,6 @@ import id.unifi.service.common.detection.RawDetectionReport;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
-import id.unifi.service.core.db.tables.records.DetectableRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +56,10 @@ public class MockReaderManager implements ReaderManager {
     }
 
     private void mockDetections() {
-        Random random = new Random();
-        DatabaseProvider dbProvider = new DatabaseProvider();
-        Database serviceDb = dbProvider.bySchema(CORE);
-        DetectableRecord[] detectables = serviceDb.execute(sql -> sql
+        var random = new Random();
+        var dbProvider = new DatabaseProvider();
+        var serviceDb = dbProvider.bySchema(CORE);
+        var detectables = serviceDb.execute(sql -> sql
                 .selectFrom(DETECTABLE)
                 .where(DETECTABLE.CLIENT_ID.eq(clientId))
                 .and(DETECTABLE.DETECTABLE_TYPE.eq(DetectableType.UHF_EPC.toString()))
@@ -72,12 +70,12 @@ public class MockReaderManager implements ReaderManager {
         }
 
         while (true) {
-            int count = random.nextInt(10);
-            for (int i = 0; i < count; i++) {
-                AntennaKey antenna = antennae[random.nextInt(antennae.length)];
-                String detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
-                Instant timestamp = Instant.now().minusMillis(random.nextInt(200));
-                RawDetection detection =
+            var count = random.nextInt(10);
+            for (var i = 0; i < count; i++) {
+                var antenna = antennae[random.nextInt(antennae.length)];
+                var detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
+                var timestamp = Instant.now().minusMillis(random.nextInt(200));
+                var detection =
                         new RawDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, BigDecimal.ZERO, 1);
                 detectionConsumer.accept(new RawDetectionReport(antenna.readerSn, List.of(detection)));
             }

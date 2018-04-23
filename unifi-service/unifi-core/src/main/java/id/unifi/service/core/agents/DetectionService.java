@@ -2,7 +2,6 @@ package id.unifi.service.core.agents;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.MessageProperties;
@@ -26,7 +25,7 @@ public class DetectionService {
     private Connection connection;
 
     public DetectionService(CoreService.MqConfig mqConfig) {
-        ConnectionFactory factory = new ConnectionFactory();
+        var factory = new ConnectionFactory();
         factory.setHost(mqConfig.endpoint().getHost());
         factory.setPort(mqConfig.endpoint().getPort());
         try {
@@ -35,7 +34,7 @@ public class DetectionService {
             throw new RuntimeException(e);
         }
 
-        try (Channel channel = connection.createChannel()) {
+        try (var channel = connection.createChannel()) {
             channel.queueDeclare(PENDING_RAW_DETECTIONS_QUEUE_NAME, true, false, false, null);
         } catch (IOException | TimeoutException e) {
             throw new RuntimeException(e);
@@ -45,7 +44,7 @@ public class DetectionService {
     @ApiOperation
     public void processRawDetections(AgentSessionData session, ObjectMapper mapper, List<RawDetectionReport> reports) {
         log.trace("Got reports: {}", reports);
-        RawSiteDetectionReports siteReport =
+        var siteReport =
                 new RawSiteDetectionReports(session.getAgent().clientId, reports);
 
         byte[] marshalledReport;
@@ -54,7 +53,7 @@ public class DetectionService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        try (Channel channel = connection.createChannel()) {
+        try (var channel = connection.createChannel()) {
             channel.basicPublish("", PENDING_RAW_DETECTIONS_QUEUE_NAME, MessageProperties.PERSISTENT_BASIC, marshalledReport);
         } catch (IOException | TimeoutException e) {
             throw new RuntimeException(e);

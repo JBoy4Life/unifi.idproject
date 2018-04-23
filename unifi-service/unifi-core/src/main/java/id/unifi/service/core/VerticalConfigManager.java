@@ -44,11 +44,9 @@ public class VerticalConfigManager {
     }
 
     public Map<String, VerticalConfigForApi> getClientSideConfig(String clientId) {
-        AllConfig config = this.config;
-        Set<String> enabledVerticals =
-                Optional.ofNullable(config.clientEnabledVerticals.get(clientId)).orElse(Set.of());
-        ClientConfigRecord coreConfig =
-                Optional.ofNullable(config.coreConfig.get(clientId)).orElse(new ClientConfigRecord());
+        var config = this.config;
+        var enabledVerticals = Optional.ofNullable(config.clientEnabledVerticals.get(clientId)).orElse(Set.of());
+        var coreConfig = Optional.ofNullable(config.coreConfig.get(clientId)).orElse(new ClientConfigRecord());
         fillDefaults(coreConfig);
 
         HashMap<String, VerticalConfigForApi> clientSideConfig = new HashMap<>(
@@ -61,10 +59,10 @@ public class VerticalConfigManager {
     private void refresh() {
         log.info("Refreshing vertical config");
         this.config = db.execute(sql -> {
-            Map<String, Set<String>> clientEnabledVerticals = sql.selectFrom(CLIENT_VERTICAL).stream()
+            var clientEnabledVerticals = sql.selectFrom(CLIENT_VERTICAL).stream()
                     .collect(groupingBy(ClientVerticalRecord::getClientId,
                             mapping(ClientVerticalRecord::getVerticalId, toSet())));
-            Map<String, ClientConfigRecord> clientConfig = sql.selectFrom(CLIENT_CONFIG).stream()
+            var clientConfig = sql.selectFrom(CLIENT_CONFIG).stream()
                     .collect(toMap(ClientConfigRecord::getClientId, identity()));
             return new AllConfig(clientEnabledVerticals, clientConfig);
         });

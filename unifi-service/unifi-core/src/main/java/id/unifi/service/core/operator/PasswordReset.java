@@ -60,8 +60,8 @@ public class PasswordReset {
     }
 
     public TimestampedToken generateResetToken(DSLContext sql, String clientId, String username) {
-        Token token = new Token();
-        byte[] tokenHash = tokenHashing.hash(token.raw);
+        var token = new Token();
+        var tokenHash = tokenHashing.hash(token.raw);
             sql.insertInto(OPERATOR_PASSWORD_RESET)
                     .set(OPERATOR_PASSWORD_RESET.CLIENT_ID, clientId)
                     .set(OPERATOR_PASSWORD_RESET.USERNAME, username)
@@ -70,12 +70,12 @@ public class PasswordReset {
                     .set(OPERATOR_PASSWORD_RESET.EXPIRY_DATE, sqlExpiryDate)
                     .returning(OPERATOR_PASSWORD_RESET.EXPIRY_DATE)
                     .execute();
-        LocalDateTime now = sql.fetchOne(select(currentLocalDateTime())).value1();
+        var now = sql.fetchOne(select(currentLocalDateTime())).value1();
         return new TimestampedToken(now.toInstant(ZoneOffset.UTC), token);
     }
 
     public boolean preparePasswordReset(DSLContext sql, String clientId, String username, TimestampedToken token) {
-        Optional<TimestampedTokenHash> tokenHash = findValidTokenHash(sql, clientId, username, token);
+        var tokenHash = findValidTokenHash(sql, clientId, username, token);
         tokenHash.ifPresent(t -> sql.deleteFrom(OPERATOR_PASSWORD_RESET) // TODO: archive
                 .where(OPERATOR_PASSWORD_RESET.CLIENT_ID.eq(clientId))
                 .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))
@@ -86,7 +86,7 @@ public class PasswordReset {
 
     public void cancel(String clientId, String username, TimestampedToken token) {
         db.execute(sql -> {
-            Optional<TimestampedTokenHash> tokenHash = findValidTokenHash(sql, clientId, username, token);
+            var tokenHash = findValidTokenHash(sql, clientId, username, token);
             tokenHash.ifPresent(t -> sql.deleteFrom(OPERATOR_PASSWORD_RESET) // TODO: archive
                     .where(OPERATOR_PASSWORD_RESET.CLIENT_ID.eq(clientId))
                     .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))

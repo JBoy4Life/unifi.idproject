@@ -20,18 +20,18 @@ public class TimestampedToken {
 
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public TimestampedToken(byte[] encoded) {
-        ByteBuffer bb = ByteBuffer.wrap(encoded);
-        long epochSecond = bb.getLong();
-        int epochNano = bb.getInt();
+        var bb = ByteBuffer.wrap(encoded);
+        var epochSecond = bb.getLong();
+        var epochNano = bb.getInt();
 
         this.timestamp = Instant.ofEpochSecond(epochSecond, epochNano);
-        byte[] rawToken = new byte[TOKEN_LENGTH];
+        var rawToken = new byte[TOKEN_LENGTH];
         bb.get(rawToken);
         this.token = new Token(rawToken);
     }
 
     public byte[] encoded() {
-        ByteBuffer bb = ByteBuffer.allocate(TIMESTAMPED_TOKEN_LENGTH);
+        var bb = ByteBuffer.allocate(TIMESTAMPED_TOKEN_LENGTH);
         bb.putLong(timestamp.getEpochSecond());
         bb.putInt(timestamp.getNano());
         bb.put(token.raw);
@@ -41,7 +41,7 @@ public class TimestampedToken {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TimestampedToken that = (TimestampedToken) o;
+        var that = (TimestampedToken) o;
         return Objects.equals(timestamp, that.timestamp) &&
                 Objects.equals(token, that.token);
     }

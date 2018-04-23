@@ -60,7 +60,7 @@ public class LlrpReaderDiscovery {
         
         log.info("Looking for LLRP readers on {}...", localAddress);
         Stream<ServiceSpec> services;
-        try (JmDNS jmdns = JmDNS.create(localAddress)) {
+        try (var jmdns = JmDNS.create(localAddress)) {
             services = Arrays.stream(jmdns.list("_llrp._tcp.local."))
                     .filter(LlrpReaderDiscovery::isAccessibleImpinjReader)
             .map(s -> new ServiceSpec(s.getName(),
@@ -73,7 +73,7 @@ public class LlrpReaderDiscovery {
             FeatureSet features;
             Status status;
             try {
-                ImpinjReader reader = new ImpinjReader();
+                var reader = new ImpinjReader();
                 reader.connect(service.endpoint.getHost(), service.endpoint.getPort());
                 features = reader.queryFeatureSet();
                 status = reader.queryStatus();
@@ -85,8 +85,8 @@ public class LlrpReaderDiscovery {
             }
 
             if (status != null) {
-                String readerSn = features.getSerialNumber().replaceAll("-", "");
-                Map<Integer, Boolean> antennaeConnected = status.getAntennaStatusGroup().getAntennaList().stream()
+                var readerSn = features.getSerialNumber().replaceAll("-", "");
+                var antennaeConnected = status.getAntennaStatusGroup().getAntennaList().stream()
                         .collect(toMap(a -> (int) a.getPortNumber(), AntennaStatus::isConnected));
 
                 if (logFeatures) {

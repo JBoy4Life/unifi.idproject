@@ -17,7 +17,7 @@ public class AntennaConfig {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AntennaConfig that = (AntennaConfig) o;
+        var that = (AntennaConfig) o;
         return Objects.equals(txPower, that.txPower) &&
                 Objects.equals(rxSensitivity, that.rxSensitivity);
     }

@@ -7,7 +7,6 @@ import id.unifi.service.common.config.UnifiConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -27,18 +26,16 @@ public class ComponentHolder {
     public synchronized <T> T get(Class<T> cls) {
         if (components.containsKey(cls)) return (T) components.get(cls);
 
-        Constructor<?>[] constructors = cls.getConstructors();
+        var constructors = cls.getConstructors();
         if (constructors.length != 1) {
             throw new RuntimeException("Expected one constructor, got " + constructors.length + " for " + cls);
         }
 
-        Constructor<?> constructor = constructors[0];
-        Object[] componentObjects = Arrays.stream(constructor.getParameters())
-                .map(this::getFromParameter)
-                .toArray();
+        var constructor = constructors[0];
+        var componentObjects = Arrays.stream(constructor.getParameters()).map(this::getFromParameter).toArray();
 
         try {
-            T instance = (T) constructor.newInstance(componentObjects);
+            var instance = (T) constructor.newInstance(componentObjects);
             components.put(cls, instance);
             return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -47,12 +44,12 @@ public class ComponentHolder {
     }
 
     private Object getFromParameter(Parameter parameter) {
-        Class<?> type = parameter.getType();
-        Object instance = components.get(type);
+        var type = parameter.getType();
+        var instance = components.get(type);
         if (instance == null) {
             if (type.isInterface()) {
-                ApiConfigPrefix prefixAnnotation = parameter.getDeclaredAnnotation(ApiConfigPrefix.class);
-                String prefix = prefixAnnotation == null ? null : prefixAnnotation.value();
+                var prefixAnnotation = parameter.getDeclaredAnnotation(ApiConfigPrefix.class);
+                var prefix = prefixAnnotation == null ? null : prefixAnnotation.value();
                 log.info("Getting configuration for {} with prefix {}", type, prefix);
                 instance =
                         Envy.configure(type, UnifiConfigSource.getForPrefix(prefix), HostAndPortValueParser.instance);

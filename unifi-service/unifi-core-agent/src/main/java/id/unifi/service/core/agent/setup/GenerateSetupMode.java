@@ -1,7 +1,6 @@
 package id.unifi.service.core.agent.setup;
 
 import id.unifi.service.common.agent.ReaderFullConfig;
-import id.unifi.service.common.rfid.RfidReader;
 import static id.unifi.service.common.util.TimeUtils.getFormattedLocalDateTimeNow;
 import id.unifi.service.core.agent.config.AgentConfig;
 import id.unifi.service.core.agent.config.AgentFullConfig;
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +28,8 @@ public class GenerateSetupMode {
     public static void run() throws IOException {
         generateAgentPasswordAndHash();
 
-        final boolean logFeatures = true;
-        List<RfidReader> readers = LlrpReaderDiscovery.discoverReaders(logFeatures);
+        final var logFeatures = true;
+        var readers = LlrpReaderDiscovery.discoverReaders(logFeatures);
 
         if (readers.isEmpty()) {
             log.error("No readers found");
@@ -40,27 +38,27 @@ public class GenerateSetupMode {
 
         readers.forEach(r -> log.info("Found reader: {}", r));
 
-        List<ReaderFullConfig<ReaderConfig>> configuredReaders = readers.stream().map(reader -> {
-            List<Integer> enabledPortNumbers = reader.getStatus().getAntennaeConnected().entrySet().stream()
+        var configuredReaders = readers.stream().map(reader -> {
+            var enabledPortNumbers = reader.getStatus().getAntennaeConnected().entrySet().stream()
                     .filter(Map.Entry::getValue)
                     .map(Map.Entry::getKey)
                     .collect(toList());
-            ReaderConfig cfg = ReaderConfig.fromPortNumbers(enabledPortNumbers);
+            var cfg = ReaderConfig.fromPortNumbers(enabledPortNumbers);
             return new ReaderFullConfig<>(Optional.ofNullable(reader.getSn()),
                     Optional.of(reader.getStatus().getEndpoint()),
                     Optional.of(cfg));
         }).collect(toList());
 
-        AgentFullConfig agentConfig = new AgentFullConfig(Optional.of(AgentConfig.empty), configuredReaders);
-        String serializedAgentConfig = getSetupObjectMapper().writeValueAsString(agentConfig);
+        var agentConfig = new AgentFullConfig(Optional.of(AgentConfig.empty), configuredReaders);
+        var serializedAgentConfig = getSetupObjectMapper().writeValueAsString(agentConfig);
 
-        Path setupFilePath = Paths.get(String.format(SETUP_FILE_NAME_FORMAT, getFormattedLocalDateTimeNow()));
+        var setupFilePath = Paths.get(String.format(SETUP_FILE_NAME_FORMAT, getFormattedLocalDateTimeNow()));
         Files.write(setupFilePath, List.of(serializedAgentConfig), UTF_8, WRITE, CREATE);
         log.info("Setup saved to {}", setupFilePath);
     }
 
     private static void generateAgentPasswordAndHash() {
-        String hexPassword = PasswordGenerator.generateHexPassword();
+        var hexPassword = PasswordGenerator.generateHexPassword();
         log.info("Generated agent password (hex): " + hexPassword);
         log.info("Password hash (hex): " + PasswordGenerator.hashHexPassword(hexPassword));
         log.info("Algorithm: scrypt");

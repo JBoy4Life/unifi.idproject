@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CoreClient {
@@ -48,7 +47,7 @@ public class CoreClient {
         pendingReports = new ArrayBlockingQueue<>(100_000);
         sessionRef = new AtomicReference<>();
 
-        ServiceRegistry registry = new ServiceRegistry(
+        var registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agent.services"),
                 componentHolder);
         dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
@@ -89,7 +88,7 @@ public class CoreClient {
             Map<String, Object> params = Map.of("reports", reports);
             while (true) {
                 try {
-                    Session session = sessionRef.get();
+                    var session = sessionRef.get();
                     if (session == null) throw new IOException("No session");
                     dispatcher.request(
                             session,
@@ -112,11 +111,11 @@ public class CoreClient {
     private void maintainConnection() {
         while (true) {
             try {
-                WebSocketClient client = new WebSocketClient();
+                var client = new WebSocketClient();
                 client.start();
-                ClientUpgradeRequest request = new ClientUpgradeRequest();
-                WebSocketDelegate delegate = new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
-                Future<Session> sessionFuture = client.connect(delegate, serviceUri, request);
+                var request = new ClientUpgradeRequest();
+                var delegate = new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
+                var sessionFuture = client.connect(delegate, serviceUri, request);
                 log.info("Waiting for connection to service");
                 Session session;
                 session = sessionFuture.get();
@@ -132,7 +131,7 @@ public class CoreClient {
                     log.error("Agent authentication failed");
                     session.close();
                 }
-                int closeCode = delegate.awaitClose();
+                var closeCode = delegate.awaitClose();
                 log.info("Connection closed (WebSocket code {})", closeCode);
             } catch (Exception e) {
                 log.error("Can't establish connection to server ({})", serviceUri);
@@ -152,7 +151,7 @@ public class CoreClient {
         try {
             pendingReports.put(report);
         } catch (InterruptedException ignored) {}
-        int reportsSize = pendingReports.size();
+        var reportsSize = pendingReports.size();
         if (reportsSize % 500 == 0 && reportsSize != 0) {
             log.info("Pending reports: {}", reportsSize);
         }

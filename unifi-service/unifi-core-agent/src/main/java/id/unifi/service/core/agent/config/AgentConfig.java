@@ -20,7 +20,7 @@ public class AgentConfig {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AgentConfig that = (AgentConfig) o;
+        var that = (AgentConfig) o;
         return Objects.equals(detectableTypes, that.detectableTypes) &&
                 Objects.equals(rollup, that.rollup);
     }

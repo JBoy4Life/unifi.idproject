@@ -33,7 +33,6 @@ import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -116,7 +115,7 @@ public class OperatorService {
                 v("name", shortString(name)),
                 v("email", email(email))
         );
-        OperatorPK onboarder = session.getOperator();
+        var onboarder = session.getOperator();
         db.execute(sql -> {
             try {
                 sql.insertInto(OPERATOR)
@@ -145,7 +144,7 @@ public class OperatorService {
         authorize(session, clientId);
         changes.validate();
 
-        Map<? extends TableField<OperatorRecord, ?>, ?> fieldMap = getUpdateQueryFieldMap(editables, changes);
+        var fieldMap = getUpdateQueryFieldMap(editables, changes);
 
         int rowsUpdated = db.execute(sql -> sql
                 .update(OPERATOR)
@@ -167,7 +166,7 @@ public class OperatorService {
                 v(shortString(password), AuthenticationFailed::new)
         );
         if (passwordMatches(clientId, username, password)) {
-            OperatorPK operator = new OperatorPK(clientId, username);
+            var operator = new OperatorPK(clientId, username);
             return approveAuthAttempt(session, operator);
         } else {
             // TODO recordLoginAttempt(clientId, username, false);
@@ -178,7 +177,7 @@ public class OperatorService {
 
     @ApiOperation
     public AuthInfo authToken(OperatorSessionData session, Token sessionToken) {
-        Optional<OperatorPK> operator = sessionTokenStore.get(sessionToken);
+        var operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
             session.setAuth(sessionToken, operator.get());
             return new AuthInfo(getOperatorInfo(operator.get().clientId, operator.get().username),
@@ -193,7 +192,7 @@ public class OperatorService {
 
     @ApiOperation
     public void invalidateAuthToken(OperatorSessionData session) {
-        Token sessionToken = session.getSessionToken();
+        var sessionToken = session.getSessionToken();
         if (sessionToken != null) {
             sessionTokenStore.remove(sessionToken);
             session.setAuth(null, null);
@@ -206,7 +205,7 @@ public class OperatorService {
                                             @Nullable ListFilter filter) {
         authorize(session, clientId);
         if (filter == null) filter = ListFilter.empty();
-        Condition filterCondition = filterCondition(filter.active, OPERATOR.ACTIVE::eq);
+        var filterCondition = filterCondition(filter.active, OPERATOR.ACTIVE::eq);
         return db.execute((DSLContext sql) -> sql.select(OPERATOR_FIELDS)
                 .from(OPERATOR)
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
@@ -224,7 +223,7 @@ public class OperatorService {
     public void requestPasswordReset(OperatorSessionData session, String clientId, String username) {
         Optional<OperatorPK> onboarder;
         if (session.getOperator() != null) { // Authorized invitation or reset request for someone password
-            OperatorPK operator = authorize(session, clientId);
+            var operator = authorize(session, clientId);
             onboarder = Optional.of(operator);
         } else { // Reset request for my own password
             onboarder = Optional.empty();
@@ -240,10 +239,10 @@ public class OperatorService {
     @ApiOperation
     public PasswordResetInfo getPasswordReset(String clientId, String username, TimestampedToken token) {
         return db.execute(sql -> {
-            Optional<PasswordReset.TimestampedTokenHash> tokenHash =
+            var tokenHash =
                     passwordReset.findValidTokenHash(sql, clientId, username, token);
             if (tokenHash.isPresent()) {
-                OperatorInfo operator = findOperator(sql, clientId, username).orElseThrow(AssertionError::new);
+                var operator = findOperator(sql, clientId, username).orElseThrow(AssertionError::new);
                 return new PasswordResetInfo(tokenHash.get().since, operator);
             } else {
                 return null;
@@ -258,7 +257,7 @@ public class OperatorService {
                                 String password,
                                 TimestampedToken token) {
         return db.execute(sql -> {
-            boolean isResetValid = passwordReset.preparePasswordReset(sql, clientId, username, token);
+            var isResetValid = passwordReset.preparePasswordReset(sql, clientId, username, token);
             if (isResetValid) {
                 setPassword(sql, clientId, username, password);
                 return approveAuthAttempt(session, new OperatorPK(clientId, username));
@@ -277,7 +276,7 @@ public class OperatorService {
 
     @ApiOperation
     public void changePassword(OperatorSessionData session, String currentPassword, String password) {
-        OperatorPK operator = authorize(session);
+        var operator = authorize(session);
         if (passwordMatches(operator.clientId, operator.username, currentPassword)) {
             db.execute(sql -> {
                 setPassword(sql, operator.clientId, operator.username, password);
@@ -289,7 +288,7 @@ public class OperatorService {
     }
 
     private AuthInfo approveAuthAttempt(OperatorSessionData session, OperatorPK operator) {
-        Token sessionToken = new Token();
+        var sessionToken = new Token();
         sessionTokenStore.put(sessionToken, operator);
         session.setAuth(sessionToken, operator);
         recordAuthAttempt(operator, true);
@@ -325,7 +324,7 @@ public class OperatorService {
     }
 
     private void setPassword(DSLContext sql, String clientId, String username, String password) {
-        byte[] hash = passwordHashing.hash(password);
+        var hash = passwordHashing.hash(password);
         sql.insertInto(OPERATOR_PASSWORD)
                 .set(OPERATOR_PASSWORD.CLIENT_ID, clientId)
                 .set(OPERATOR_PASSWORD.USERNAME, username)
@@ -343,14 +342,14 @@ public class OperatorService {
                                     String clientId,
                                     String username,
                                     Optional<OperatorPK> onboarder) {
-        TimestampedToken token = passwordReset.generateResetToken(sql, clientId, username);
+        var token = passwordReset.generateResetToken(sql, clientId, username);
 
-        OperatorInfo operatorInfo = getOperatorInfo(clientId, username);
+        var operatorInfo = getOperatorInfo(clientId, username);
         if (operatorInfo == null) throw new NotFound("operator");
 
         EmailSenderProvider.EmailMessage message;
         if (onboarder.isPresent()) {
-            OperatorInfo onboarderInfo = getOperatorInfo(onboarder.get().clientId, onboarder.get().username);
+            var onboarderInfo = getOperatorInfo(onboarder.get().clientId, onboarder.get().username);
             message = emailRenderer.renderInvitation(operatorInfo, token, onboarderInfo);
         } else {
             message = emailRenderer.renderPasswordResetInstructions(operatorInfo, token);
@@ -394,7 +393,7 @@ public class OperatorService {
     }
 
     private boolean passwordMatches(String clientId, String username, String password) {
-        Optional<byte[]> encodedHash = db.execute(sql -> sqlPasswordHash(sql, clientId, username));
+        var encodedHash = db.execute(sql -> sqlPasswordHash(sql, clientId, username));
         return encodedHash.map(hash -> SecretHashing.check(password, hash)).orElse(false);
     }
 

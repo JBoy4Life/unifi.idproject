@@ -1,7 +1,6 @@
 package id.unifi.service.core.agents;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.net.HostAndPort;
 import id.unifi.service.common.agent.AgentFullConfig;
@@ -18,7 +17,6 @@ import id.unifi.service.common.api.errors.AuthenticationFailed;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.security.SecretHashing;
-import id.unifi.service.core.AgentPK;
 import id.unifi.service.core.AgentSessionData;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.AGENT;
@@ -40,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -84,19 +81,19 @@ public class IdentityService {
     }
 
     private void pushAgentConfig(Session session, AgentSessionData sessionData) {
-        AgentPK agent = sessionData.getAgent();
-        AgentFullConfig agentFullConfig = db.execute(sql -> {
-            Optional<JsonNode> rawAgentConfig = sql.selectFrom(AGENT)
+        var agent = sessionData.getAgent();
+        var agentFullConfig = db.execute(sql -> {
+            var rawAgentConfig = sql.selectFrom(AGENT)
                     .where(AGENT.CLIENT_ID.eq(agent.clientId))
                     .and(AGENT.AGENT_ID.eq(agent.agentId))
                     .fetchOptional(r -> jsonFromPgObject(r.getConfig()));
 
-            List<ReaderRecord> readerRecords = sql.selectFrom(READER)
+            var readerRecords = sql.selectFrom(READER)
                     .where(READER.CLIENT_ID.eq(agent.clientId))
                     .and(READER.AGENT_ID.eq(agent.agentId))
                     .fetch();
 
-            Map<String, List<AntennaRecord>> antennae = sql.selectFrom(ANTENNA)
+            var antennae = sql.selectFrom(ANTENNA)
                     .where(ANTENNA.CLIENT_ID.eq(agent.clientId))
                     .and(ANTENNA.READER_SN.in(readerRecords.stream()
                             .map(ReaderRecord::getReaderSn)
@@ -105,7 +102,7 @@ public class IdentityService {
                     .stream()
                     .collect(groupingBy(AntennaRecord::getReaderSn));
 
-            List<ReaderFullConfig<JsonNode>> readerConfigs = readerRecords.stream()
+            var readerConfigs = readerRecords.stream()
                     .map(r -> new ReaderFullConfig<>(
                             Optional.of(r.getReaderSn()),
                             Optional.of(HostAndPort.fromString(r.getEndpoint())),
@@ -127,17 +124,17 @@ public class IdentityService {
     }
 
     private JsonNode splicePortConfig(JsonNode configNode, Set<Integer> enabledPortNumbers) {
-        ObjectMapper objectMapper = getObjectMapper(Protocol.JSON);
-        JsonNode portsNode = configNode.get("ports");
-        Set<Integer> configuredPortNumbers = portsNode == null ? Set.of() :
+        var objectMapper = getObjectMapper(Protocol.JSON);
+        var portsNode = configNode.get("ports");
+        var configuredPortNumbers = portsNode == null ? Set.of() :
                 stream(spliteratorUnknownSize(portsNode.fieldNames(), ORDERED), false)
                         .map(Integer::parseInt)
                         .collect(toSet());
 
-        ObjectNode newPortsNode = objectMapper.createObjectNode();
+        var newPortsNode = objectMapper.createObjectNode();
         for (int portNumber : enabledPortNumbers) {
-            String portNumberString = Integer.toString(portNumber);
-            JsonNode newPortNode = configuredPortNumbers.contains(portNumber)
+            var portNumberString = Integer.toString(portNumber);
+            var newPortNode = configuredPortNumbers.contains(portNumber)
                     ? portsNode.get(portNumberString)
                     : objectMapper.createObjectNode();
             newPortsNode.set(portNumberString, newPortNode);
@@ -150,7 +147,7 @@ public class IdentityService {
     }
 
     private JsonNode jsonFromPgObject(Object object) {
-        String jsonString = ((PGobject) object).getValue();
+        var jsonString = ((PGobject) object).getValue();
 
         try {
             return getObjectMapper(Protocol.JSON).readTree(jsonString);
@@ -160,7 +157,7 @@ public class IdentityService {
     }
 
     private boolean passwordMatches(String clientId, String agentId, byte[] password) {
-        Optional<byte[]> encodedHash = db.execute(sql -> sqlPasswordHash(sql, clientId, agentId));
+        var encodedHash = db.execute(sql -> sqlPasswordHash(sql, clientId, agentId));
         return encodedHash.map(hash -> SecretHashing.check(password, hash)).orElse(false);
 
     }

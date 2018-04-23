@@ -16,7 +16,7 @@ public final class ClientDetectable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ClientDetectable that = (ClientDetectable) o;
+        var that = (ClientDetectable) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(detectableId, that.detectableId) &&
                 detectableType == that.detectableType;

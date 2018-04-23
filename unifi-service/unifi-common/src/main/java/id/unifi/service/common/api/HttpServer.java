@@ -1,11 +1,10 @@
 package id.unifi.service.common.api;
 
-import org.eclipse.jetty.websocket.api.extensions.ExtensionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.websocket.server.WebSocketHandler;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
@@ -47,7 +46,7 @@ public class HttpServer {
                 factory.getPolicy().setIdleTimeout(webSocketIdleTimeoutMillis);
                 factory.getPolicy().setMaxBinaryMessageSize(10_000_000);
                 factory.getPolicy().setMaxTextMessageSize(10_000_000);
-                ExtensionFactory extensionFactory = factory.getExtensionFactory();
+                var extensionFactory = factory.getExtensionFactory();
                 extensionFactory.unregister("permessage-deflate");
                 extensionFactory.unregister("x-webkit-deflate-frame");
                 extensionFactory.unregister("deflate-frame");

@@ -14,7 +14,7 @@ public class SitePK {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SitePK that = (SitePK) o;
+        var that = (SitePK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(siteId, that.siteId);
     }

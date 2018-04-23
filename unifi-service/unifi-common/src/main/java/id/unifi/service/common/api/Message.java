@@ -22,7 +22,7 @@ public class Message {
 
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         public Version(String version) {
-            String[] split = versionSplitter.split(version, 3);
+            var split = versionSplitter.split(version, 3);
             this.major = Integer.parseInt(split[0]);
             this.minor = Integer.parseInt(split[1]);
             this.revision = Integer.parseInt(split[2]);

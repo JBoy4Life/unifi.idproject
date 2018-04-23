@@ -1,7 +1,6 @@
 package id.unifi.service.common.version;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -15,11 +14,11 @@ public class GitProperties {
     public final String buildUserName;
 
     public static Optional<GitProperties> read() {
-        Properties props = new Properties();
-        InputStream stream = GitProperties.class.getResourceAsStream("/unifi-git.properties");
+        var props = new Properties();
+        var stream = GitProperties.class.getResourceAsStream("/unifi-git.properties");
         if (stream == null) return Optional.empty();
 
-        try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+        try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             props.load(reader);
             return Optional.of(new GitProperties(
                     props.getProperty("git.commit.id"),

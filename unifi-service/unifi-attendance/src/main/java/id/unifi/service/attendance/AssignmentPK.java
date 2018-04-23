@@ -16,7 +16,7 @@ public final class AssignmentPK {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AssignmentPK that = (AssignmentPK) o;
+        var that = (AssignmentPK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientReference, that.clientReference) &&
                 Objects.equals(scheduleId, that.scheduleId);

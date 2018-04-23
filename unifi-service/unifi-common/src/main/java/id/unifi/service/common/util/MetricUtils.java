@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -33,10 +32,10 @@ public class MetricUtils {
     private static ObjectName deriveObjectName(String type, String domain, String name) {
         log.trace("Deriving a JMX object name for domain {}, metric name {}", domain, name);
 
-        Matcher m = unifiMetricName.matcher(name);
+        var m = unifiMetricName.matcher(name);
         try {
             if (m.matches()) {
-                Object[] escapedParts = IntStream.rangeClosed(1, 4)
+                var escapedParts = IntStream.rangeClosed(1, 4)
                         .mapToObj(m::group)
                         .filter(Objects::nonNull)
                         .map(MetricUtils::quotePropValue)

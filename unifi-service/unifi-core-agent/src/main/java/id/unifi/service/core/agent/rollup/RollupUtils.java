@@ -8,7 +8,7 @@ public class RollupUtils {
     private RollupUtils() {}
 
     public static Rollup rollupFromConfig(Optional<RollupConfig> config) {
-        RollupConfig c = config.orElse(RollupConfig.empty);
+        var c = config.orElse(RollupConfig.empty);
         switch (c.strategy) {
             case NONE:
                 return NullRollup.instance;

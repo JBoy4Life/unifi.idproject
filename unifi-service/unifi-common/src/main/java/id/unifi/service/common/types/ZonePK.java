@@ -16,7 +16,7 @@ public final class ZonePK {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ZonePK zonePK = (ZonePK) o;
+        var zonePK = (ZonePK) o;
         return Objects.equals(clientId, zonePK.clientId) &&
                 Objects.equals(siteId, zonePK.siteId) &&
                 Objects.equals(zoneId, zonePK.zoneId);

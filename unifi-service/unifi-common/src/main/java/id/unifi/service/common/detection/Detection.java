@@ -29,7 +29,7 @@ public final class Detection {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Detection detection = (Detection) o;
+        var detection = (Detection) o;
         return portNumber == detection.portNumber &&
                 count == detection.count &&
                 Objects.equals(detectable, detection.detectable) &&

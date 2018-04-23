@@ -18,7 +18,7 @@ public final class AttendancePK {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AttendancePK that = (AttendancePK) o;
+        var that = (AttendancePK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientReference, that.clientReference) &&
                 Objects.equals(scheduleId, that.scheduleId) &&

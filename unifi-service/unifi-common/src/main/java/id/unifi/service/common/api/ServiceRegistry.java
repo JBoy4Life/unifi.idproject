@@ -73,7 +73,7 @@ public class ServiceRegistry {
             throw new RuntimeException("Can't scan classpath, only system and URL-based class loaders supported.", e);
         }
 
-        Map<String, Map<Class<?>, ApiService>> services = packageNamesByModule.entrySet().stream()
+        var services = packageNamesByModule.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> discoverServices(classPath, e.getValue())));
 
         this.componentProvider = componentHolder;
@@ -94,7 +94,7 @@ public class ServiceRegistry {
     }
 
     public void invokeMulti(Operation operation, Object[] params, MessageListener<?> listenerParam) {
-        Object[] allParams = Stream.concat(Arrays.stream(params), Stream.of(listenerParam)).toArray();
+        var allParams = Stream.concat(Arrays.stream(params), Stream.of(listenerParam)).toArray();
         try {
             operation.method.invoke(serviceInstances.get(operation.cls), allParams);
         } catch (IllegalAccessException e) {
@@ -107,7 +107,7 @@ public class ServiceRegistry {
     }
 
     public Operation getOperation(String messageType) {
-        Operation operation = operations.get(messageType);
+        var operation = operations.get(messageType);
         if (operation == null) {
             throw new UnknownMessageType(messageType);
         }
@@ -116,9 +116,9 @@ public class ServiceRegistry {
 
     private static Map<Class<?>, ApiService> discoverServices(ClassPath classPath, String packageName) {
         Map<Class<?>, ApiService> classes = new HashMap<>();
-        for (ClassPath.ClassInfo classInfo : classPath.getTopLevelClasses(packageName)) {
-            Class<?> cls = classInfo.load();
-            ApiService annotation = cls.getDeclaredAnnotation(ApiService.class);
+        for (var classInfo : classPath.getTopLevelClasses(packageName)) {
+            var cls = classInfo.load();
+            var annotation = cls.getDeclaredAnnotation(ApiService.class);
             if (annotation != null) {
                 classes.put(cls, annotation);
             }
@@ -137,27 +137,26 @@ public class ServiceRegistry {
 
     private static Map<String, Operation> preloadOperations(Map<String, Map<Class<?>, ApiService>> services) {
         Map<String, Operation> operations = new HashMap<>();
-        for (Map.Entry<String, Map<Class<?>, ApiService>> module : services.entrySet()) {
-            String moduleName = module.getKey();
-            for (Map.Entry<Class<?>, ApiService> service : module.getValue().entrySet()) {
-                Class<?> cls = service.getKey();
-                ApiService serviceAnnotation = service.getValue();
-                String serviceName = serviceAnnotation.value();
-                String operationNamespace = moduleName + "." + serviceName;
-                for (Method method : cls.getDeclaredMethods()) {
-                    ApiOperation operationAnnotation = method.getAnnotation(ApiOperation.class);
+        for (var module : services.entrySet()) {
+            var moduleName = module.getKey();
+            for (var service : module.getValue().entrySet()) {
+                var cls = service.getKey();
+                var serviceAnnotation = service.getValue();
+                var serviceName = serviceAnnotation.value();
+                var operationNamespace = moduleName + "." + serviceName;
+                for (var method : cls.getDeclaredMethods()) {
+                    var operationAnnotation = method.getAnnotation(ApiOperation.class);
                     if (operationAnnotation == null) continue;
 
-                    String operationName = operationAnnotation.name().isEmpty()
+                    var operationName = operationAnnotation.name().isEmpty()
                             ? LOWER_CAMEL.to(LOWER_HYPHEN, method.getName())
                             : operationAnnotation.name();
-                    String messageType = operationNamespace + "." + operationName;
-                    Type returnType = method.getGenericReturnType();
-                    Parameter[] methodParams = method.getParameters();
+                    var messageType = operationNamespace + "." + operationName;
+                    var returnType = method.getGenericReturnType();
+                    var methodParams = method.getParameters();
 
-                    Type multiReturnType = getMultiResponseReturnType(returnType, methodParams);
-                    InvocationType invocationType =
-                            multiReturnType != null ? InvocationType.MULTI : InvocationType.RPC;
+                    var multiReturnType = getMultiResponseReturnType(returnType, methodParams);
+                    var invocationType = multiReturnType != null ? InvocationType.MULTI : InvocationType.RPC;
                     Map<String, Param> params;
                     switch (invocationType) {
                         case MULTI:
@@ -166,8 +165,8 @@ public class ServiceRegistry {
                                     new Operation(cls, method, params, InvocationType.MULTI, multiReturnType, null));
                             break;
                         case RPC:
-                            String annotatedResultType = operationAnnotation.resultType();
-                            String resultTypeName = annotatedResultType.isEmpty()
+                            var annotatedResultType = operationAnnotation.resultType();
+                            var resultTypeName = annotatedResultType.isEmpty()
                                     ? messageType + "-result"
                                     : annotatedResultType.startsWith(".") ? operationNamespace + annotatedResultType : annotatedResultType;
 
@@ -184,7 +183,7 @@ public class ServiceRegistry {
 
     private static Map<String, Param> preloadParams(Parameter[] methodParameters) {
         Map<String, Param> params = new LinkedHashMap<>(methodParameters.length);
-        for (Parameter parameter : methodParameters) {
+        for (var parameter : methodParameters) {
             if (!parameter.isNamePresent()) {
                 throw new RuntimeException(
                         "Method parameter names not found. Java compiler must be called with -parameter.");
@@ -197,9 +196,9 @@ public class ServiceRegistry {
     private static Type getMultiResponseReturnType(Type methodReturnType, Parameter[] methodParameters) {
         if (!methodReturnType.equals(Void.TYPE)) return null;
 
-        Type lastParamType = methodParameters[methodParameters.length - 1].getParameterizedType();
+        var lastParamType = methodParameters[methodParameters.length - 1].getParameterizedType();
         if (!(lastParamType instanceof ParameterizedType)) return null;
-        ParameterizedType type = (ParameterizedType) lastParamType;
+        var type = (ParameterizedType) lastParamType;
         if (type.getRawType() != MessageListener.class) return null;
         return type.getActualTypeArguments()[0];
     }

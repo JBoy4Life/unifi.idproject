@@ -13,8 +13,8 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.types.OperatorPK;
 import id.unifi.service.common.operator.OperatorSessionData;
+import id.unifi.service.common.types.OperatorPK;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromZoned;
 import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
@@ -41,10 +41,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -143,7 +141,7 @@ public class ScheduleService {
     @ApiOperation
     public @Nullable ScheduleStat getSchedule(OperatorSessionData session, String clientId, String scheduleId) {
         authorize(session, clientId);
-        List<ScheduleStat> stats = db.execute(sql -> fetchScheduleStats(
+        var stats = db.execute(sql -> fetchScheduleStats(
                 sql, clientId, SCHEDULE.SCHEDULE_ID.eq(scheduleId), SCHEDULE_ID.eq(scheduleId)));
         return stats.stream().findFirst().orElse(null);
     }
@@ -154,9 +152,9 @@ public class ScheduleService {
                                                                  String scheduleId) {
         authorize(session, clientId);
         return db.execute(sql -> {
-            int blockCount = sql.fetchCount(BLOCK, BLOCK.CLIENT_ID.eq(clientId).and(BLOCK.SCHEDULE_ID.eq(scheduleId)));
+            var blockCount = sql.fetchCount(BLOCK, BLOCK.CLIENT_ID.eq(clientId).and(BLOCK.SCHEDULE_ID.eq(scheduleId)));
 
-            Map<String, String> names = sql.select(ASSIGNMENT.CLIENT_REFERENCE, HOLDER.NAME)
+            var names = sql.select(ASSIGNMENT.CLIENT_REFERENCE, HOLDER.NAME)
                     .from(ASSIGNMENT)
                     .leftJoin(HOLDER)
                     .on(ASSIGNMENT.CLIENT_ID.eq(HOLDER.CLIENT_ID), ASSIGNMENT.CLIENT_REFERENCE.eq(HOLDER.CLIENT_REFERENCE))
@@ -165,7 +163,7 @@ public class ScheduleService {
                     .stream()
                     .collect(toMap(Record2::value1, Record2::value2));
 
-            List<ContactAttendance> attendance = sql
+            var attendance = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(ASSIGNMENT.CLIENT_REFERENCE,
                             count().filterWhere(IS_PRESENT_OR_AUTH_ABSENT),
@@ -191,7 +189,7 @@ public class ScheduleService {
                               String clientId,
                               String clientReference,
                               String scheduleId) {
-        OperatorPK operator = authorize(session, clientId);
+        var operator = authorize(session, clientId);
 
         db.execute(sql -> sql.insertInto(ASSIGNMENT)
                 .set(ASSIGNMENT.CLIENT_ID, operator.clientId)
@@ -206,9 +204,9 @@ public class ScheduleService {
                                                        String clientId,
                                                        String clientReference,
                                                        String scheduleId) {
-        OperatorPK operator = authorize(session, clientId);
+        var operator = authorize(session, clientId);
         return db.execute(sql -> {
-            SelectConditionStep<Record8<String, String, LocalDateTime, LocalDateTime, String, String, Boolean, String>> q = sql
+            var q = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(BLOCK_ID,
                             BLOCK.NAME,
@@ -248,21 +246,21 @@ public class ScheduleService {
         authorize(session, clientId);
 
         return db.execute(sql -> {
-            List<ScheduleInfoWithBlockCount> schedules = sql
+            var schedules = sql
                     .select(SCHEDULE.SCHEDULE_ID, SCHEDULE.NAME, count())
                     .from(SCHEDULE.leftJoin(BLOCK).onKey())
                     .where(SCHEDULE.CLIENT_ID.eq(clientId))
                     .groupBy(SCHEDULE.SCHEDULE_ID, SCHEDULE.NAME)
                     .fetch(r -> new ScheduleInfoWithBlockCount(r.get(SCHEDULE.SCHEDULE_ID), r.get(SCHEDULE.NAME), r.value3()));
 
-            Map<String, String> contactNames = sql
+            var contactNames = sql
                     .selectFrom(HOLDER)
                     .where(HOLDER.CLIENT_ID.eq(clientId))
                     .and(HOLDER.HOLDER_TYPE.eq("contact"))
                     .stream()
                     .collect(toMap(HolderRecord::getClientReference, HolderRecord::getName));
 
-            List<ContactScheduleAttendance> attendance = sql
+            var attendance = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(ASSIGNMENT.CLIENT_REFERENCE,
                             ASSIGNMENT.SCHEDULE_ID,
@@ -299,7 +297,7 @@ public class ScheduleService {
                                                              @Nullable ZonedDateTime endTime) {
         authorize(session, clientId);
         return db.execute(sql -> {
-            List<ContactScheduleSummaryAttendance> attendance = sql
+            var attendance = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                     .select(ASSIGNMENT.CLIENT_REFERENCE,
                             ASSIGNMENT.SCHEDULE_ID,
@@ -325,7 +323,7 @@ public class ScheduleService {
             // Get the start time of the first block if there is one
             ZonedDateTime actualStartTime = null;
             if (startTime == null) {
-                Set<String> scheduleIds = attendance.stream().map(a -> a.scheduleId).collect(Collectors.toSet());
+                var scheduleIds = attendance.stream().map(a -> a.scheduleId).collect(Collectors.toSet());
                 actualStartTime = zonedFromUtcLocal(sql.select(min(BLOCK_TIME.START_TIME))
                         .from(BLOCK_TIME)
                         .where(BLOCK_TIME.SCHEDULE_ID.in(scheduleIds))
@@ -342,7 +340,7 @@ public class ScheduleService {
                                    String scheduleId,
                                    String blockId,
                                    OverriddenStatus status) {
-        OperatorPK operator = authorize(session, clientId);
+        var operator = authorize(session, clientId);
         db.execute(sql -> {
             sql.insertInto(ATTENDANCE_OVERRIDE)
                     .set(ATTENDANCE_OVERRIDE.CLIENT_ID, operator.clientId)
@@ -357,8 +355,8 @@ public class ScheduleService {
     }
 
     private static Condition between(@Nullable ZonedDateTime startTime, @Nullable ZonedDateTime endTime) {
-        Condition startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromZoned(startTime)) : null;
-        Condition endCond = endTime != null ? BLOCK_TIME.START_TIME.lessOrEqual(utcLocalFromZoned(endTime)) : null;
+        var startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromZoned(startTime)) : null;
+        var endCond = endTime != null ? BLOCK_TIME.START_TIME.lessOrEqual(utcLocalFromZoned(endTime)) : null;
         return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
     }
 
@@ -370,7 +368,7 @@ public class ScheduleService {
                                                          String clientId,
                                                          Condition scheduleCondition,
                                                          Condition condition) {
-        Map<String, Record5<String, Integer, LocalDateTime, LocalDateTime, Integer>> blockSummary = sql
+        var blockSummary = sql
                 .with(ZONE_PROCESSING_STATE)
                 .select(SCHEDULE.SCHEDULE_ID,
                         count(BLOCK.BLOCK_ID),
@@ -386,7 +384,7 @@ public class ScheduleService {
                 .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
                 .stream()
                 .collect(toMap(r -> r.get(SCHEDULE.SCHEDULE_ID), identity()));
-        Map<String, Integer> scheduleAttendance = sql
+        var scheduleAttendance = sql
                 .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
                 .select(SCHEDULE_ID, count())
                 .from(FULL_ATTENDANCE)
@@ -409,10 +407,9 @@ public class ScheduleService {
                 .and(scheduleCondition)
                 .groupBy(Keys.SCHEDULE_PKEY.getFieldsArray())
                 .fetch(r -> {
-                    String scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
-                    String scheduleName = r.get(SCHEDULE.NAME);
-                    Record5<String, Integer, LocalDateTime, LocalDateTime, Integer> stats =
-                            blockSummary.get(scheduleId);
+                    var scheduleId = r.get(SCHEDULE.SCHEDULE_ID);
+                    var scheduleName = r.get(SCHEDULE.NAME);
+                    var stats = blockSummary.get(scheduleId);
                     return new ScheduleStat(
                             scheduleId,
                             scheduleName,

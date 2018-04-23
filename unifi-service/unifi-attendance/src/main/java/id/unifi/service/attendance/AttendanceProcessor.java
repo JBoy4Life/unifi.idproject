@@ -5,11 +5,7 @@ import static id.unifi.service.attendance.db.Keys.ATTENDANCE_PKEY;
 import static id.unifi.service.attendance.db.Keys.BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK;
 import static id.unifi.service.attendance.db.Keys.PROCESSING_STATE_PKEY;
 import id.unifi.service.attendance.db.Tables;
-import static id.unifi.service.attendance.db.Tables.ATTENDANCE_;
-import static id.unifi.service.attendance.db.Tables.BLOCK;
-import static id.unifi.service.attendance.db.Tables.BLOCK_TIME;
-import static id.unifi.service.attendance.db.Tables.BLOCK_ZONE;
-import static id.unifi.service.attendance.db.Tables.PROCESSING_STATE;
+import static id.unifi.service.attendance.db.Tables.*;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.AntennaKey;
@@ -20,10 +16,12 @@ import id.unifi.service.common.types.ZonePK;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Tables.*;
+import static id.unifi.service.core.db.Tables.ANTENNA;
+import static id.unifi.service.core.db.Tables.ASSIGNMENT;
+import static id.unifi.service.core.db.Tables.DETECTABLE;
+import static id.unifi.service.core.db.Tables.RFID_DETECTION;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.*;
-import org.jooq.BatchBindStep;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.Record;
@@ -79,7 +77,7 @@ public class AttendanceProcessor {
     }
 
     private void process() {
-        List<Detection> detections = fetchDetectionsFromDatabase(); // TODO: in chunks
+        var detections = fetchDetectionsFromDatabase(); // TODO: in chunks
         processAttendance(detections);
         while (true) {
             if (processingQueue.size() < 200) {
@@ -102,29 +100,29 @@ public class AttendanceProcessor {
 
     private void processAttendance(List<Detection> detections) {
         log.debug("Processing {} detections", detections.size());
-        Set<AttendancePK> attendances = detections.stream().flatMap(detection -> {
-            String clientId = detection.detectable.clientId;
+        var attendances = detections.stream().flatMap(detection -> {
+            var clientId = detection.detectable.clientId;
 
-            String clientReference = detectableHolders.get(detection.detectable);
+            var clientReference = detectableHolders.get(detection.detectable);
             if (clientReference == null) {
                 log.trace("Skipping unknown {}", detection.detectable);
                 return Stream.empty();
             }
 
-            AntennaKey antennaKey = new AntennaKey(clientId, detection.readerSn, detection.portNumber);
-            ZonePK zonePK = antennaZones.get(antennaKey);
+            var antennaKey = new AntennaKey(clientId, detection.readerSn, detection.portNumber);
+            var zonePK = antennaZones.get(antennaKey);
             if (zonePK == null) {
                 log.trace("Skipping unassigned {}", antennaKey);
                 return Stream.empty();
             }
 
-            ZoneBlocks blocks = zoneBlocks.get(zonePK);
+            var blocks = zoneBlocks.get(zonePK);
             if (blocks == null) {
                 log.trace("No blocks in {}", zonePK);
                 return Stream.empty();
             }
 
-            Instant detectionStartTime = detection.detectionTime.minus(blocks.maxBlockDuration);
+            var detectionStartTime = detection.detectionTime.minus(blocks.maxBlockDuration);
             SortedMap<Instant, Block> subMap = blocks.blocks.subMap(detectionStartTime, true, detection.detectionTime, true);
             return subMap.values().stream()
                     .filter(b -> contactSchedules.contains(new AssignmentPK(clientId, clientReference, b.scheduleId)) &&
@@ -133,7 +131,7 @@ public class AttendanceProcessor {
                     .map(b -> new AttendancePK(clientId, clientReference, b.scheduleId, b.blockId));
         }).collect(toSet());
 
-        Map<AntennaKey, Instant> newProcessingStates = detections.stream()
+        var newProcessingStates = detections.stream()
                 .collect(toMap(
                         d -> new AntennaKey(d.detectable.clientId, d.readerSn, d.portNumber),
                         d -> d.detectionTime,
@@ -142,13 +140,13 @@ public class AttendanceProcessor {
         if (!detections.isEmpty()) {
             db.execute(sql -> {
                 if (!attendances.isEmpty()) {
-                    BatchBindStep batch = sql.batch(insertAttendanceQuery);
-                    for (AttendancePK attendance : attendances) {
+                    var batch = sql.batch(insertAttendanceQuery);
+                    for (var attendance : attendances) {
                         batch.bind(attendance.clientId, attendance.clientReference, attendance.scheduleId, attendance.blockId);
                     }
 
-                    int[] attendanceRowsInserted = batch.execute();
-                    int newAttendanceRows = Arrays.stream(attendanceRowsInserted).sum();
+                    var attendanceRowsInserted = batch.execute();
+                    var newAttendanceRows = Arrays.stream(attendanceRowsInserted).sum();
                     if (newAttendanceRows > 0) {
                         log.debug("Persisting: {}", attendances);
                         log.debug("Attendance persisted: {}, of which new: {}",
@@ -156,15 +154,15 @@ public class AttendanceProcessor {
                     }
                 }
 
-                BatchBindStep stateBatch = sql.batch(insertProcessingStateQuery);
-                for (Map.Entry<AntennaKey, Instant> entry : newProcessingStates.entrySet()) {
-                    AntennaKey antenna = entry.getKey();
-                    LocalDateTime processedUpTo = utcLocalFromInstant(entry.getValue());
+                var stateBatch = sql.batch(insertProcessingStateQuery);
+                for (var entry : newProcessingStates.entrySet()) {
+                    var antenna = entry.getKey();
+                    var processedUpTo = utcLocalFromInstant(entry.getValue());
                     stateBatch.bind(antenna.clientId, antenna.readerSn, antenna.portNumber,
                             processedUpTo, processedUpTo, processedUpTo);
                 }
-                int[] stateRowsInserted = stateBatch.execute();
-                int updatedStateRows = Arrays.stream(stateRowsInserted).sum();
+                var stateRowsInserted = stateBatch.execute();
+                var updatedStateRows = Arrays.stream(stateRowsInserted).sum();
                 if (updatedStateRows > 0) {
                     log.debug("New processing state: {}", newProcessingStates);
                 }
@@ -174,7 +172,7 @@ public class AttendanceProcessor {
     }
 
     private List<Detection> fetchDetectionsFromDatabase() {
-        List<Detection> detections = db.execute(sql -> {
+        var detections = db.execute(sql -> {
             refreshAssignments(sql);
 
             return sql.select(
@@ -208,13 +206,13 @@ public class AttendanceProcessor {
     }
 
     private Void refreshAssignments(DSLContext sql) {
-        long timerStart = System.currentTimeMillis();
+        var timerStart = System.currentTimeMillis();
 
         List<Record> neverProcessedAntennae = sql
                 .selectFrom(ANTENNA.leftAntiJoin(PROCESSING_STATE)
                         .using(ANTENNA.CLIENT_ID, ANTENNA.READER_SN, ANTENNA.PORT_NUMBER))
                 .fetch();
-        for (Record antenna : neverProcessedAntennae) {
+        for (var antenna : neverProcessedAntennae) {
             sql.insertInto(PROCESSING_STATE)
                     .set(PROCESSING_STATE.CLIENT_ID, antenna.get(ANTENNA.CLIENT_ID))
                     .set(PROCESSING_STATE.READER_SN, antenna.get(ANTENNA.READER_SN))
@@ -247,7 +245,7 @@ public class AttendanceProcessor {
                 .map(r -> new AssignmentPK(r.getClientId(), r.getClientReference(), r.getScheduleId()))
                 .collect(toSet());
 
-        Map<ZonePK, TreeMap<Instant, Block>> rawBlocksByZone = sql
+        var rawBlocksByZone = sql
                 .select(BLOCK.CLIENT_ID, BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID,
                         BLOCK_ZONE.SITE_ID, BLOCK_ZONE.ZONE_ID,
                         BLOCK_TIME.START_TIME,
@@ -271,7 +269,7 @@ public class AttendanceProcessor {
 
     public void processDetections(Collection<Detection> detections) {
         try {
-            for (Detection detection : detections) {
+            for (var detection : detections) {
                 processingQueue.put(detection);
             }
         } catch (InterruptedException e) {

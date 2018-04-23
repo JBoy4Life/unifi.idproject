@@ -16,7 +16,7 @@ public final class AntennaKey {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AntennaKey that = (AntennaKey) o;
+        var that = (AntennaKey) o;
         return portNumber == that.portNumber &&
                 Objects.equals(clientId, that.clientId) &&
                 Objects.equals(readerSn, that.readerSn);

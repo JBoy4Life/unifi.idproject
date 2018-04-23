@@ -14,7 +14,7 @@ public class AgentPK {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AgentPK agentPK = (AgentPK) o;
+        var agentPK = (AgentPK) o;
         return Objects.equals(clientId, agentPK.clientId) &&
                 Objects.equals(agentId, agentPK.agentId);
     }
