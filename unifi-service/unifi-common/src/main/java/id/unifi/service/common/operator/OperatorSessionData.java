@@ -1,7 +1,7 @@
 package id.unifi.service.common.operator;
 
 import id.unifi.service.common.security.Token;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.types.pk.OperatorPK;
 
 public class OperatorSessionData {
     private Token sessionToken;

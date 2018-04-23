@@ -8,8 +8,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.impinj.octane.*;
 import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.detection.DetectableType;
-import id.unifi.service.common.detection.RawDetection;
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteRfidDetection;
+import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.provider.rfid.config.ReaderConfig;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -55,7 +55,7 @@ public class ImpinjReaderController implements Closeable {
     private volatile long lastKeepaliveMillis; // writes on connection thread
 
     ImpinjReaderController(ReaderFullConfig<ReaderConfig> fullConfig,
-                           Consumer<RawDetectionReport> detectionConsumer,
+                           Consumer<SiteDetectionReport> detectionConsumer,
                            MetricRegistry registry) {
         this.fullConfig = fullConfig;
         this.config = fullConfig.config.orElse(ReaderConfig.empty);
@@ -92,7 +92,7 @@ public class ImpinjReaderController implements Closeable {
                     var timestamp = instantFromTimestamp(tag.getLastSeenTime());
                     var rssi = BigDecimal.valueOf(tag.getPeakRssiInDbm());
 
-                    var epcDetection = new RawDetection(
+                    var epcDetection = new SiteRfidDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
@@ -100,7 +100,7 @@ public class ImpinjReaderController implements Closeable {
                             rssi,
                             tag.getTagSeenCount());
 
-                    var tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
+                    var tidDetection = !tag.isFastIdPresent() ? null : new SiteRfidDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
                             tag.getTid().toHexString(),
@@ -110,7 +110,7 @@ public class ImpinjReaderController implements Closeable {
                     return Stream.of(epcDetection, tidDetection).filter(Objects::nonNull);
                 }).collect(toList());
 
-                detectionConsumer.accept(new RawDetectionReport(reader.getName(), detections));
+                detectionConsumer.accept(new SiteDetectionReport(reader.getName(), detections));
                 detections.forEach(d -> {
                     var meter = antennaDetectionMeters.get(d.portNumber);
                     if (meter != null) meter.mark();

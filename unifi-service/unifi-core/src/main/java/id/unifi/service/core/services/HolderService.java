@@ -16,7 +16,7 @@ import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.util.QueryUtils.ImageWithType;
 import static id.unifi.service.common.util.QueryUtils.fieldValueOpt;
 import static id.unifi.service.common.util.QueryUtils.filterCondition;

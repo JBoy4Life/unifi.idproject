@@ -2,7 +2,7 @@ package id.unifi.service.common.operator;
 
 import com.google.common.cache.CacheBuilder;
 import id.unifi.service.common.security.Token;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.types.pk.OperatorPK;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;

@@ -1,8 +1,8 @@
-package id.unifi.service.common.types;
+package id.unifi.service.common.types.pk;
 
 import java.util.Objects;
 
-public class SitePK {
+public final class SitePK {
     public final String clientId;
     public final String siteId;
 

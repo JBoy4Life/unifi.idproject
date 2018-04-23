@@ -1,18 +1,20 @@
 package id.unifi.service.common.detection;
 
+import id.unifi.service.common.types.pk.DetectablePK;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
 public final class Detection {
-    public final ClientDetectable detectable;
+    public final DetectablePK detectable;
     public final String readerSn;
     public final int portNumber;
     public final Instant detectionTime;
     public final BigDecimal rssi;
     public final int count;
 
-    public Detection(ClientDetectable detectable,
+    public Detection(DetectablePK detectable,
                      String readerSn,
                      int portNumber,
                      Instant detectionTime,

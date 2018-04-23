@@ -14,7 +14,7 @@ import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.operator.OperatorSessionData;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.types.pk.OperatorPK;
 import static id.unifi.service.common.util.QueryUtils.fieldValueOpt;
 import static id.unifi.service.common.util.QueryUtils.filterCondition;
 import static id.unifi.service.common.util.QueryUtils.getUpdateQueryFieldMap;

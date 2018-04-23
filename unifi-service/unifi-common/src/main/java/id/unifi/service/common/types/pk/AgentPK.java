@@ -1,8 +1,8 @@
-package id.unifi.service.core;
+package id.unifi.service.common.types.pk;
 
 import java.util.Objects;
 
-public class AgentPK {
+public final class AgentPK {
     public final String clientId;
     public final String agentId;
 

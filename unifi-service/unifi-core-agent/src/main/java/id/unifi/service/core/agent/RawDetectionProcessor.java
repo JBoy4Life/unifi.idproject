@@ -1,7 +1,7 @@
 package id.unifi.service.core.agent;
 
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteDetectionReport;
 
 public interface RawDetectionProcessor {
-    void process(RawDetectionReport rawDetectionReport);
+    void process(SiteDetectionReport rfidReaderDetectionGroup);
 }

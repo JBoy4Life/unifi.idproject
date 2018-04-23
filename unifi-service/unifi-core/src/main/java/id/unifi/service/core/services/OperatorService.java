@@ -22,7 +22,7 @@ import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.types.OperatorInfo;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.types.pk.OperatorPK;
 import static id.unifi.service.common.util.QueryUtils.filterCondition;
 import static id.unifi.service.common.util.QueryUtils.getUpdateQueryFieldMap;
 import id.unifi.service.core.VerticalConfigManager;

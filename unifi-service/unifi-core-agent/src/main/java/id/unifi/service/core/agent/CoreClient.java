@@ -6,7 +6,7 @@ import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
 import id.unifi.service.common.api.errors.AuthenticationFailed;
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteDetectionReport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -28,7 +28,7 @@ public class CoreClient {
     private static final Logger log = LoggerFactory.getLogger(CoreClient.class);
 
     private final Dispatcher<Boolean> dispatcher;
-    private final BlockingQueue<RawDetectionReport> pendingReports;
+    private final BlockingQueue<SiteDetectionReport> pendingReports;
     private final Thread sendThread;
     private final URI serviceUri;
     private final String clientId;
@@ -74,7 +74,7 @@ public class CoreClient {
 
     private void takeAndSend() {
         while (true) {
-            List<RawDetectionReport> reports;
+            List<SiteDetectionReport> reports;
             try {
                 if (pendingReports.isEmpty()) {
                     reports = List.of(pendingReports.take());
@@ -147,7 +147,7 @@ public class CoreClient {
         }
     }
 
-    public void sendRawDetections(RawDetectionReport report) {
+    public void sendRawDetections(SiteDetectionReport report) {
         try {
             pendingReports.put(report);
         } catch (InterruptedException ignored) {}

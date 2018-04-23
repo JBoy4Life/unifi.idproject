@@ -1,6 +1,6 @@
 package id.unifi.service.core.agent.rollup;
 
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteDetectionReport;
 
 import java.util.stream.Stream;
 
@@ -9,7 +9,7 @@ public class NullRollup implements Rollup {
 
     private NullRollup() {}
 
-    public Stream<RawDetectionReport> process(RawDetectionReport report) {
+    public Stream<SiteDetectionReport> process(SiteDetectionReport report) {
         return Stream.of(report);
     }
 }

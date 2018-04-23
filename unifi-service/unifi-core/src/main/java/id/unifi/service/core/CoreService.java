@@ -25,10 +25,10 @@ import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.ClientDetectable;
+import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.detection.Detection;
-import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.common.detection.RawSiteDetectionReports;
+import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.common.detection.DetectionReports;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
@@ -162,7 +162,7 @@ public class CoreService {
 
                 var detections = allTagged.stream()
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
-                                new Detection(new ClientDetectable(t.clientId, d.detectableId, d.detectableType),
+                                new Detection(new DetectablePK(t.clientId, d.detectableId, d.detectableType),
                                         r.readerSn, d.portNumber, d.timestamp, d.rssi, d.count))))
                         .collect(toList());
 
@@ -240,7 +240,7 @@ public class CoreService {
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
-                var report = mapper.readValue(body, RawSiteDetectionReports.class);
+                var report = mapper.readValue(body, DetectionReports.class);
                 try {
                     detectionQueue.put(new TaggedDetectionReport(report.clientId, report.reports, envelope.getDeliveryTag()));
                 } catch (InterruptedException e) {
@@ -302,10 +302,10 @@ public class CoreService {
 
     private static class TaggedDetectionReport {
         final String clientId;
-        final List<RawDetectionReport> reports;
+        final List<SiteDetectionReport> reports;
         final long deliveryTag;
 
-        TaggedDetectionReport(String clientId, List<RawDetectionReport> reports, long deliveryTag) {
+        TaggedDetectionReport(String clientId, List<SiteDetectionReport> reports, long deliveryTag) {
             this.clientId = clientId;
             this.reports = reports;
             this.deliveryTag = deliveryTag;

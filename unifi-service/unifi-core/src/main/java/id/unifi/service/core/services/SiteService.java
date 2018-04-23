@@ -7,7 +7,7 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.types.OperatorPK;
+import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
 import id.unifi.service.core.DetectionProcessor;

@@ -4,17 +4,17 @@ import static java.util.Collections.unmodifiableList;
 
 import java.util.List;
 
-public class RawDetectionReport {
+public class SiteDetectionReport {
     public final String readerSn;
-    public final List<RawDetection> detections;
+    public final List<SiteRfidDetection> detections;
 
-    public RawDetectionReport(String readerSn, List<RawDetection> detections) {
+    public SiteDetectionReport(String readerSn, List<SiteRfidDetection> detections) {
         this.readerSn = readerSn;
         this.detections = unmodifiableList(detections);
     }
 
     public String toString() {
-        return "RawDetectionReport{" +
+        return "RfidReaderDetectionReport{" +
                 "readerSn='" + readerSn + '\'' +
                 ", detections=" + detections +
                 '}';

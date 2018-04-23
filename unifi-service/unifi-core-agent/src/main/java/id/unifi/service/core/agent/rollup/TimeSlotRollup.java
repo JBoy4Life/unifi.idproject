@@ -1,8 +1,8 @@
 package id.unifi.service.core.agent.rollup;
 
 import id.unifi.service.common.detection.DetectableType;
-import id.unifi.service.common.detection.RawDetection;
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteRfidDetection;
+import id.unifi.service.common.detection.SiteDetectionReport;
 import static java.util.Collections.max;
 import static java.util.Collections.min;
 import static java.util.stream.Collectors.toList;
@@ -34,8 +34,8 @@ public class TimeSlotRollup implements Rollup {
         this.readerStates = new HashMap<>();
     }
 
-    public Stream<RawDetectionReport> process(RawDetectionReport report) {
-        List<RawDetectionReport> reports = new ArrayList<>();
+    public Stream<SiteDetectionReport> process(SiteDetectionReport report) {
+        List<SiteDetectionReport> reports = new ArrayList<>();
         var readerSn = report.readerSn;
         for (var detection : report.detections) {
             var antennaDetectable =
@@ -62,7 +62,7 @@ public class TimeSlotRollup implements Rollup {
                 readerStates.put(readerSn, updatedState);
 
                 var pastDetections = currentReaderState.states.entrySet().stream()
-                        .map(e -> new RawDetection(
+                        .map(e -> new SiteRfidDetection(
                                 e.getValue().firstSeen,
                                 e.getKey().portNumber,
                                 e.getKey().detectableId,
@@ -71,7 +71,7 @@ public class TimeSlotRollup implements Rollup {
                                 e.getValue().count))
                         .collect(toList());
 
-                reports.add(new RawDetectionReport(readerSn, pastDetections));
+                reports.add(new SiteDetectionReport(readerSn, pastDetections));
             }
         }
 
@@ -83,7 +83,7 @@ public class TimeSlotRollup implements Rollup {
         return new AntennaDetectableState(firstSeen, BigDecimal.valueOf(Long.MIN_VALUE), 0);
     }
 
-    private static AntennaDetectableState updateState(AntennaDetectableState state, RawDetection detection) {
+    private static AntennaDetectableState updateState(AntennaDetectableState state, SiteRfidDetection detection) {
         return new AntennaDetectableState(
                 min(List.of(detection.timestamp, state.firstSeen)),
                 max(List.of(detection.rssi, state.rssi)),

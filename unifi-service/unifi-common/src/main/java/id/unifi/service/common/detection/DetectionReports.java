@@ -2,11 +2,11 @@ package id.unifi.service.common.detection;
 
 import java.util.List;
 
-public class RawSiteDetectionReports {
+public class DetectionReports {
     public final String clientId;
-    public final List<RawDetectionReport> reports;
+    public final List<SiteDetectionReport> reports;
 
-    public RawSiteDetectionReports(String clientId, List<RawDetectionReport> reports) {
+    public DetectionReports(String clientId, List<SiteDetectionReport> reports) {
         this.clientId = clientId;
         this.reports = reports;
     }

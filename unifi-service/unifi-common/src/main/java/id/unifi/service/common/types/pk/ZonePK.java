@@ -1,4 +1,4 @@
-package id.unifi.service.common.types;
+package id.unifi.service.common.types.pk;
 
 import java.util.Objects;
 

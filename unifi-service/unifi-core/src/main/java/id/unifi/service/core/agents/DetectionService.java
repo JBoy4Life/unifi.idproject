@@ -7,8 +7,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.MessageProperties;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
-import id.unifi.service.common.detection.RawDetectionReport;
-import id.unifi.service.common.detection.RawSiteDetectionReports;
+import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.common.detection.DetectionReports;
 import id.unifi.service.core.AgentSessionData;
 import id.unifi.service.core.CoreService;
 import static id.unifi.service.core.CoreService.PENDING_RAW_DETECTIONS_QUEUE_NAME;
@@ -42,10 +42,10 @@ public class DetectionService {
     }
 
     @ApiOperation
-    public void processRawDetections(AgentSessionData session, ObjectMapper mapper, List<RawDetectionReport> reports) {
+    public void processRawDetections(AgentSessionData session, ObjectMapper mapper, List<SiteDetectionReport> reports) {
         log.trace("Got reports: {}", reports);
         var siteReport =
-                new RawSiteDetectionReports(session.getAgent().clientId, reports);
+                new DetectionReports(session.getAgent().clientId, reports);
 
         byte[] marshalledReport;
         try {

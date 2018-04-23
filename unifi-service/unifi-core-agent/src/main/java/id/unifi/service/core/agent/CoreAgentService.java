@@ -9,7 +9,7 @@ import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.util.MetricUtils;
 import static id.unifi.service.core.agent.DefaultReaderManager.getDetectableTypes;
 import static id.unifi.service.core.agent.DefaultReaderManager.getRollup;
@@ -108,8 +108,8 @@ public class CoreAgentService {
         jmxReporter.start();
 
         AtomicReference<CoreClient> client = new AtomicReference<>();
-        Consumer<RawDetectionReport> detectionConsumer = report -> {
-            var filteredReport = new RawDetectionReport(report.readerSn,
+        Consumer<SiteDetectionReport> detectionConsumer = report -> {
+            var filteredReport = new SiteDetectionReport(report.readerSn,
                     report.detections.stream()
                             .filter(d -> getDetectableTypes().contains(d.detectableType))
                             .collect(toList()));

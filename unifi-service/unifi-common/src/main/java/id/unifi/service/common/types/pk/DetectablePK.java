@@ -1,13 +1,15 @@
-package id.unifi.service.common.detection;
+package id.unifi.service.common.types.pk;
+
+import id.unifi.service.common.detection.DetectableType;
 
 import java.util.Objects;
 
-public final class ClientDetectable {
+public final class DetectablePK {
     public final String clientId;
     public final String detectableId;
     public final DetectableType detectableType;
 
-    public ClientDetectable(String clientId, String detectableId, DetectableType detectableType) {
+    public DetectablePK(String clientId, String detectableId, DetectableType detectableType) {
         this.clientId = clientId;
         this.detectableId = detectableId;
         this.detectableType = detectableType;
@@ -16,7 +18,7 @@ public final class ClientDetectable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        var that = (ClientDetectable) o;
+        var that = (DetectablePK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(detectableId, that.detectableId) &&
                 detectableType == that.detectableType;
@@ -27,7 +29,7 @@ public final class ClientDetectable {
     }
 
     public String toString() {
-        return "ClientDetectable{" +
+        return "DetectablePK{" +
                 "clientId='" + clientId + '\'' +
                 ", detectableId='" + detectableId + '\'' +
                 ", detectableType=" + detectableType +

@@ -7,7 +7,7 @@ import com.google.common.cache.LoadingCache;
 import id.unifi.service.common.api.MessageListener;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.ClientDetectable;
+import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.detection.Detection;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
@@ -33,7 +33,7 @@ public class DefaultDetectionProcessor implements DetectionProcessor {
 
     private final Database db;
     private final LoadingCache<String, Set<ListenerWithSession>> detectionListeners;
-    private final Cache<ClientDetectable, Boolean> recentDetectables; // FIXME
+    private final Cache<DetectablePK, Boolean> recentDetectables; // FIXME
 
     public DefaultDetectionProcessor(DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE);

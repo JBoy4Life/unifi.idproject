@@ -8,11 +8,11 @@ import id.unifi.service.attendance.db.Tables;
 import static id.unifi.service.attendance.db.Tables.*;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.AntennaKey;
-import id.unifi.service.common.detection.ClientDetectable;
+import id.unifi.service.common.types.pk.AntennaPK;
+import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.Detection;
-import id.unifi.service.common.types.ZonePK;
+import id.unifi.service.common.types.pk.ZonePK;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
@@ -51,8 +51,8 @@ public class AttendanceProcessor {
     private final BlockingQueue<Detection> processingQueue;
     private final Thread processingThread;
     private final Database db;
-    private Map<ClientDetectable, String> detectableHolders;
-    private Map<AntennaKey, ZonePK> antennaZones;
+    private Map<DetectablePK, String> detectableHolders;
+    private Map<AntennaPK, ZonePK> antennaZones;
     private Set<AssignmentPK> contactSchedules;
     private Map<ZonePK, ZoneBlocks> zoneBlocks;
     private long lastRefreshMillis;
@@ -109,7 +109,7 @@ public class AttendanceProcessor {
                 return Stream.empty();
             }
 
-            var antennaKey = new AntennaKey(clientId, detection.readerSn, detection.portNumber);
+            var antennaKey = new AntennaPK(clientId, detection.readerSn, detection.portNumber);
             var zonePK = antennaZones.get(antennaKey);
             if (zonePK == null) {
                 log.trace("Skipping unassigned {}", antennaKey);
@@ -133,7 +133,7 @@ public class AttendanceProcessor {
 
         var newProcessingStates = detections.stream()
                 .collect(toMap(
-                        d -> new AntennaKey(d.detectable.clientId, d.readerSn, d.portNumber),
+                        d -> new AntennaPK(d.detectable.clientId, d.readerSn, d.portNumber),
                         d -> d.detectionTime,
                         BinaryOperator.maxBy(Comparator.<Instant>naturalOrder())));
 
@@ -192,7 +192,7 @@ public class AttendanceProcessor {
                     .where(RFID_DETECTION.DETECTION_TIME.gt(PROCESSING_STATE.PROCESSED_UP_TO))
                     .stream()
                     .map(d -> new Detection(
-                            new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
+                            new DetectablePK(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
                             d.value4(),
                             d.value5(),
                             instantFromUtcLocal(d.value6()),
@@ -228,14 +228,14 @@ public class AttendanceProcessor {
                 .from(ASSIGNMENT.join(DETECTABLE).onKey())
                 .stream()
                 .collect(toMap(
-                        d -> new ClientDetectable(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
+                        d -> new DetectablePK(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
                         Record4::value4));
 
         antennaZones = sql
                 .selectFrom(ANTENNA)
                 .stream()
                 .collect(toMap(
-                        a -> new AntennaKey(a.getClientId(), a.getReaderSn(), a.getPortNumber()),
+                        a -> new AntennaPK(a.getClientId(), a.getReaderSn(), a.getPortNumber()),
                         a -> new ZonePK(a.getClientId(), a.getSiteId(), a.getZoneId())
                 ));
 

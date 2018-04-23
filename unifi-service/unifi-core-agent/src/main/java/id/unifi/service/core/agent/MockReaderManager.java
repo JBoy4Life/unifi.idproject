@@ -1,10 +1,10 @@
 package id.unifi.service.core.agent;
 
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.AntennaKey;
+import id.unifi.service.common.types.pk.AntennaPK;
 import id.unifi.service.common.detection.DetectableType;
-import id.unifi.service.common.detection.RawDetection;
-import id.unifi.service.common.detection.RawDetectionReport;
+import id.unifi.service.common.detection.SiteRfidDetection;
+import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
@@ -21,13 +21,13 @@ public class MockReaderManager implements ReaderManager {
     private static final Logger log = LoggerFactory.getLogger(MockReaderManager.class);
 
     private final String clientId;
-    private final Consumer<RawDetectionReport> detectionConsumer;
+    private final Consumer<SiteDetectionReport> detectionConsumer;
     private volatile Thread detectionThread;
-    private volatile AntennaKey[] antennae;
+    private volatile AntennaPK[] antennae;
 
     public MockReaderManager(AgentConfigPersistence persistence,
                              String clientId,
-                             Consumer<RawDetectionReport> detectionConsumer) {
+                             Consumer<SiteDetectionReport> detectionConsumer) {
         this.clientId = clientId;
         this.detectionConsumer = detectionConsumer;
     }
@@ -44,8 +44,8 @@ public class MockReaderManager implements ReaderManager {
         }
 
         antennae = config.readers.stream()
-                .flatMap(r -> r.config.get().ports.get().keySet().stream().map(n -> new AntennaKey(clientId, r.readerSn.get(), n)))
-                .toArray(AntennaKey[]::new);
+                .flatMap(r -> r.config.get().ports.get().keySet().stream().map(n -> new AntennaPK(clientId, r.readerSn.get(), n)))
+                .toArray(AntennaPK[]::new);
         if (antennae.length > 0) {
             log.info("Generating mock detections for {} antennae", antennae.length);
             detectionThread = new Thread(this::mockDetections);
@@ -76,8 +76,8 @@ public class MockReaderManager implements ReaderManager {
                 var detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
                 var timestamp = Instant.now().minusMillis(random.nextInt(200));
                 var detection =
-                        new RawDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, BigDecimal.ZERO, 1);
-                detectionConsumer.accept(new RawDetectionReport(antenna.readerSn, List.of(detection)));
+                        new SiteRfidDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, BigDecimal.ZERO, 1);
+                detectionConsumer.accept(new SiteDetectionReport(antenna.readerSn, List.of(detection)));
             }
 
             try {

@@ -1,5 +1,7 @@
 package id.unifi.service.core;
 
+import id.unifi.service.common.types.pk.AgentPK;
+
 public class AgentSessionData {
     private volatile AgentPK agent;
 
