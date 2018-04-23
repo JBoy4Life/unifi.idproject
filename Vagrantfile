@@ -4,17 +4,16 @@ set -eu
 
 # Add unoffocial Oracle JDK repo
 apt-get -y install software-properties-common dirmngr
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
-add-apt-repository "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main"
-echo "oracle-java9-installer shared/accepted-oracle-license-v1-1 select true" |\
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EA8CACC073C3DB2A
+add-apt-repository ppa:linuxuprising/java
+echo "oracle-java10-installer shared/accepted-oracle-license-v1-1 select true" |\
   debconf-set-selections
 
 # Install everything
 apt-get -y update
 apt-get -y upgrade
-apt-get -y install oracle-java9-installer oracle-java9-set-default \
-                   oracle-java9-unlimited-jce-policy postgresql redis-server \
-                   git maven net-tools cfengine3 nginx rabbitmq-server
+apt-get -y install oracle-java10-installer oracle-java10-set-default git \
+                   postgresql maven net-tools cfengine3 nginx rabbitmq-server
 
 # Sorry.
 apt-get -y install curl
