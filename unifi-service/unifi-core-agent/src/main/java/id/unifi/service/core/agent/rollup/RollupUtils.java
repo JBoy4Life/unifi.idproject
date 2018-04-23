@@ -12,7 +12,10 @@ public class RollupUtils {
         switch (c.strategy) {
             case NONE:
                 return NullRollup.instance;
+            case TIME_SLOT:
+                return new TimeSlotRollup(c.intervalSeconds.getAsInt());
+            default:
+                throw new IllegalArgumentException("Unexpected roll-up strategy: " + c.strategy);
         }
-        return null;
     }
 }

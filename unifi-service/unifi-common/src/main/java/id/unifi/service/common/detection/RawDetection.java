@@ -1,5 +1,6 @@
 package id.unifi.service.common.detection;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public class RawDetection {
@@ -7,14 +8,14 @@ public class RawDetection {
     public final int portNumber;
     public final String detectableId;
     public final DetectableType detectableType;
-    public final double rssi;
+    public final BigDecimal rssi;
     public final int count;
 
     public RawDetection(Instant timestamp,
                         int portNumber,
                         String detectableId,
                         DetectableType detectableType,
-                        double rssi,
+                        BigDecimal rssi,
                         int count) {
         this.timestamp = timestamp;
         this.portNumber = portNumber;

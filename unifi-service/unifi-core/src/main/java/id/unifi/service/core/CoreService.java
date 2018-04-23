@@ -60,7 +60,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -170,7 +169,7 @@ public class CoreService {
                 List<Detection> detections = allTagged.stream()
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
                                 new Detection(new ClientDetectable(t.clientId, d.detectableId, d.detectableType),
-                                        r.readerSn, d.portNumber, d.timestamp, BigDecimal.valueOf(d.rssi), d.count))))
+                                        r.readerSn, d.portNumber, d.timestamp, d.rssi, d.count))))
                         .collect(toList());
 
                 Row2<String, String>[] detectableIdRows = detections.stream()

@@ -13,6 +13,7 @@ import id.unifi.service.core.db.tables.records.DetectableRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Random;
@@ -77,7 +78,7 @@ public class MockReaderManager implements ReaderManager {
                 String detectableId = detectables[random.nextInt(detectables.length)].getDetectableId();
                 Instant timestamp = Instant.now().minusMillis(random.nextInt(200));
                 RawDetection detection =
-                        new RawDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, 0d, 1);
+                        new RawDetection(timestamp, antenna.portNumber, detectableId, DetectableType.UHF_EPC, BigDecimal.ZERO, 1);
                 detectionConsumer.accept(new RawDetectionReport(antenna.readerSn, List.of(detection)));
             }
 

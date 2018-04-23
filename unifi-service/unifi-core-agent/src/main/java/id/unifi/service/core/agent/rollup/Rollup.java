@@ -2,8 +2,8 @@ package id.unifi.service.core.agent.rollup;
 
 import id.unifi.service.common.detection.RawDetectionReport;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 public interface Rollup {
-    List<RawDetectionReport> process(RawDetectionReport report);
+    Stream<RawDetectionReport> process(RawDetectionReport report);
 }

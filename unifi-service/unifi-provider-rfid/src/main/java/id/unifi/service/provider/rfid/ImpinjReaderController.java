@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,13 +89,14 @@ public class ImpinjReaderController implements Closeable {
             try {
                 List<RawDetection> detections = report.getTags().stream().flatMap(tag -> {
                     Instant timestamp = instantFromTimestamp(tag.getLastSeenTime());
+                    BigDecimal rssi = BigDecimal.valueOf(tag.getPeakRssiInDbm());
 
                     RawDetection epcDetection = new RawDetection(
                             timestamp,
                             tag.getAntennaPortNumber(),
                             tag.getEpc().toHexString(),
                             DetectableType.UHF_EPC,
-                            tag.getPeakRssiInDbm(),
+                            rssi,
                             1);
 
                     RawDetection tidDetection = !tag.isFastIdPresent() ? null : new RawDetection(
@@ -102,7 +104,7 @@ public class ImpinjReaderController implements Closeable {
                             tag.getAntennaPortNumber(),
                             tag.getTid().toHexString(),
                             DetectableType.UHF_TID,
-                            tag.getPeakRssiInDbm(),
+                            rssi,
                             1);
                     return Stream.of(epcDetection, tidDetection).filter(Objects::nonNull);
                 }).collect(toList());
@@ -289,7 +291,9 @@ public class ImpinjReaderController implements Closeable {
         antennaList.forEach(status -> {
             int portNumber = status.getPortNumber();
             if (startingFromEmpty || antennaConnected.containsKey(portNumber)) {
-                if (!status.isConnected()) log.warn("Antenna {} on reader {} not connected.");
+                if (!status.isConnected()) {
+                    log.warn("Antenna {} on reader {} not connected.", portNumber, fullConfig.readerSn);
+                }
                 antennaConnected.put(portNumber, status.isConnected());
             } else if (status.isConnected()) {
                 log.warn("Antenna {} on reader {} isn't configured.", portNumber, fullConfig.readerSn);
