@@ -2,9 +2,9 @@ package id.unifi.service.core.agent.setup;
 
 import com.opencsv.CSVWriter;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import static id.unifi.service.common.util.TimeUtils.UNIX_TIMESTAMP;
 import static id.unifi.service.common.util.TimeUtils.filenameFormattedLocalDateTimeNow;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 import org.slf4j.Logger;
@@ -15,9 +15,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 
 public class CsvDetectionLogger implements DetectionLogger {
     private static final Logger log = LoggerFactory.getLogger(CsvDetectionLogger.class);
+
+    private static final DecimalFormat microDecimalFormat = new DecimalFormat("#.######");
+    private static final String[] HEADERS = {
+            "iso_time", "unix_time", "reader_sn", "port_number", "detectable_id", "detectable_type", "rssi", "count"
+    };
 
     @Nullable
     private final CSVWriter writer;
@@ -31,6 +37,7 @@ public class CsvDetectionLogger implements DetectionLogger {
         try {
             report.detections.forEach(d -> writer.writeNext(new String[]{
                     d.timestamp.toString(),
+                    microDecimalFormat.format(d.timestamp.query(UNIX_TIMESTAMP)),
                     report.readerSn,
                     Integer.toString(d.portNumber),
                     d.detectable.detectableId,
@@ -51,8 +58,10 @@ public class CsvDetectionLogger implements DetectionLogger {
     @Nullable
     private CSVWriter createWriter(Path logFilePath) {
         try {
-            log.info("Appending detections to {}", logFilePath);
-            return new CSVWriter(Files.newBufferedWriter(logFilePath, UTF_8, WRITE, APPEND, CREATE));
+            log.info("Writing detections to {}", logFilePath);
+            var writer = new CSVWriter(Files.newBufferedWriter(logFilePath, UTF_8, WRITE, CREATE));
+            writer.writeNext(HEADERS);
+            return writer;
         } catch (IOException e) {
             log.warn("Error opening {}, can't log detections.", logFilePath, e);
             return null;
