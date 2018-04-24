@@ -1,15 +1,8 @@
 package id.unifi.service.core;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Prefix;
@@ -19,15 +12,17 @@ import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
 import id.unifi.service.common.api.Protocol;
-import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
+import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.DetectionReports;
-import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.common.mq.MqUtils;
+import static id.unifi.service.common.mq.MqUtils.DETECTION_REPORTS_TYPE;
+import id.unifi.service.common.mq.Tagged;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
@@ -55,12 +50,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeoutException;
 import java.util.function.IntFunction;
 
 public class CoreService {
@@ -73,12 +66,7 @@ public class CoreService {
 
     public static final String PENDING_RAW_DETECTIONS_QUEUE_NAME = "core.detection.pending-raw-detections";
 
-    private static final BlockingQueue<TaggedDetectionReport> detectionQueue = new ArrayBlockingQueue<>(10_000);
-
-    public interface MqConfig {
-        @Default("127.0.0.1:5672")
-        HostAndPort endpoint();
-    }
+    private static final BlockingQueue<Tagged<DetectionReports>> detectionQueue = new ArrayBlockingQueue<>(10_000);
 
     @Prefix("unifi")
     private interface Config {
@@ -120,8 +108,8 @@ public class CoreService {
                 EmailSenderProvider.class, new LoggingEmailSender()));
 
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
-        var mapper = startAgentService(componentHolder, config.agentServiceListenEndpoint());
-        var channel = startRawDetectionConsumer(mapper, config.mq());
+        startAgentService(componentHolder, config.agentServiceListenEndpoint());
+        var channel = startRawDetectionConsumer(config.mq());
         var attendanceProcessor = new AttendanceProcessor(dbProvider);
         processQueue(channel, dbProvider.bySchema(CORE), detectionProcessor, attendanceProcessor);
     }
@@ -154,12 +142,12 @@ public class CoreService {
                     if (detectionQueue.isEmpty()) continue;
                 }
 
-                ArrayList<TaggedDetectionReport> allTagged = new ArrayList<>(1000);
+                ArrayList<Tagged<DetectionReports>> allTagged = new ArrayList<>(1000);
                 detectionQueue.drainTo(allTagged, 1000);
 
-                log.debug("Processing {} detection reports", allTagged.stream().mapToInt(t -> t.reports.size()).sum());
+                log.debug("Processing {} detection reports", allTagged.stream().mapToInt(t -> t.payload.reports.size()).sum());
 
-                var detections = allTagged.stream()
+                var detections = allTagged.stream().map(t -> t.payload)
                         .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
                                 new Detection(d.detectable.withClientId(t.clientId),
                                         r.readerSn, d.portNumber, d.timestamp, d.rssi, d.count))))
@@ -220,34 +208,17 @@ public class CoreService {
         thread.start();
     }
 
-    private static Channel startRawDetectionConsumer(ObjectMapper mapper, MqConfig mqConfig) {
-        var factory = new ConnectionFactory();
-        factory.setHost(mqConfig.endpoint().getHost());
-        factory.setPort(mqConfig.endpoint().getPort());
-        Connection connection;
+    private static Channel startRawDetectionConsumer(MqConfig mqConfig) {
+        var connection = MqUtils.connect(mqConfig);
         Channel channel;
         try {
-            connection = factory.newConnection();
             channel = connection.createChannel();
             channel.basicQos(0);
-        } catch (IOException | TimeoutException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        Consumer consumer = new DefaultConsumer(channel) {
-            public void handleDelivery(String consumerTag,
-                                       Envelope envelope,
-                                       AMQP.BasicProperties properties,
-                                       byte[] body) throws IOException {
-                var report = mapper.readValue(body, DetectionReports.class);
-                try {
-                    detectionQueue.put(new TaggedDetectionReport(report.clientId, report.reports, envelope.getDeliveryTag()));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                // TODO fix and re-enable for live view: detectionProcessor.process(report.clientId, report.siteId, report.report);
-            }
-        };
+        var consumer = MqUtils.unmarshallingConsumer(DETECTION_REPORTS_TYPE, channel, detectionQueue::put);
         try {
             channel.basicConsume(PENDING_RAW_DETECTIONS_QUEUE_NAME, false, consumer);
         } catch (IOException e) {
@@ -257,10 +228,8 @@ public class CoreService {
         return channel;
     }
 
-    private static ObjectMapper startAgentService(ComponentHolder componentHolder,
-                                                  HostAndPort agentEndpoint) throws Exception {
-        var agentRegistry = new ServiceRegistry(
-                Map.of("core", "id.unifi.service.core.agents"), componentHolder);
+    private static void startAgentService(ComponentHolder componentHolder, HostAndPort agentEndpoint) throws Exception {
+        var agentRegistry = new ServiceRegistry(Map.of("core", "id.unifi.service.core.agents"), componentHolder);
         var agentDispatcher = new Dispatcher<>(agentRegistry, AgentSessionData.class, s -> new AgentSessionData());
         componentHolder.get(IdentityService.class).setAgentDispatcher(agentDispatcher); // FIXME: break circular dependency
         agentDispatcher.addSessionListener(new Dispatcher.SessionListener<>() {
@@ -280,7 +249,6 @@ public class CoreService {
                 agentDispatcher,
                 Set.of(Protocol.MSGPACK));
         agentServer.start();
-        return getObjectMapper(Protocol.MSGPACK);
     }
 
     private static void startApiService(HostAndPort apiEndpoint, ComponentHolder componentHolder) throws Exception {
@@ -297,17 +265,5 @@ public class CoreService {
                 dispatcher,
                 Set.of(Protocol.JSON, Protocol.MSGPACK));
         apiServer.start();
-    }
-
-    private static class TaggedDetectionReport {
-        final String clientId;
-        final List<SiteDetectionReport> reports;
-        final long deliveryTag;
-
-        TaggedDetectionReport(String clientId, List<SiteDetectionReport> reports, long deliveryTag) {
-            this.clientId = clientId;
-            this.reports = reports;
-            this.deliveryTag = deliveryTag;
-        }
     }
 }
