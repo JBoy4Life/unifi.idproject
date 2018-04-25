@@ -9,9 +9,16 @@
     <name>unifi.id Gallagher detection logger</name>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
         <unifi.common.version>0.1-SNAPSHOT</unifi.common.version>
-        <octane.version>1.28.0.1</octane.version>
-        <ltk.version>10.28.0.0</ltk.version>
+        <jinterop.version>2.0.4</jinterop.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
+        <junit.jupiter.version>5.2.0-RC1</junit.jupiter.version>
+
+        <compiler.plugin.version>3.7.0</compiler.plugin.version>
+        <exec.plugin.version>1.6.0</exec.plugin.version>
     </properties>
 
     <dependencies>
@@ -21,78 +28,32 @@
             <version>${unifi.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jmdns</groupId>
-            <artifactId>jmdns</artifactId>
-            <version>3.5.3</version>
-        </dependency>
-        <dependency>
             <groupId>org.jinterop</groupId>
             <artifactId>j-interop</artifactId>
-            <version>2.0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>23.5-jre</version>
+            <version>${jinterop.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>octane</groupId>
-            <artifactId>octane</artifactId>
-            <version>${octane.version}</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/OctaneSDKJava-${octane.version}.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>ltk</groupId>
-            <artifactId>ltk</artifactId>
-            <version>${ltk.version}</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/libltkjava-${ltk.version}.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.mina</groupId>
-            <artifactId>mina-core</artifactId>
-            <version>2.0.16</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jdom</groupId>
-            <artifactId>jdom</artifactId>
-            <version>1.1.3</version>
+            <version>${logback.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-        <dependency>
-            <groupId>com.talanlabs</groupId>
-            <artifactId>jargs</artifactId>
-            <version>1.0.0</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.1.0</version>
+            <version>${junit.jupiter.version}</version>
         </dependency>
     </dependencies>
 
-    <!--<repositories>-->
-        <!--<repository>-->
-            <!--<id>clojars.org</id>-->
-            <!--<url>http://clojars.org/repo</url>-->
-        <!--</repository>-->
-    <!--</repositories>-->
-    
     <build>
         <plugins>
             <plugin>
@@ -121,7 +82,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>${compiler.plugin.version}</version>
                 <configuration>
                     <source>9</source>
                     <target>9</target>
@@ -136,11 +97,6 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
-                    <!--
-                      To start the service, run `mvn install`, start postgres and then:
-
-                          mvn exec:java -pl -Dpostgres.user=<postgres username>
-                    -->
                     <execution>
                         <id>default-cli</id>
                         <goals>
