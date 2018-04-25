@@ -30,4 +30,10 @@ class OleDateTest {
         assertEquals(25570.25, value);
     }
 
+    @Test
+    void preciseTest() {
+        OleDate oleDate = new OleDate(ZonedDateTime.of(2018, 4, 21, 15, 35, 14, 0, ZoneId.of("UTC")));
+        double value = oleDate.toDouble();
+        assertEquals(43211.649467593, value, 1e-8);
+    }
 }

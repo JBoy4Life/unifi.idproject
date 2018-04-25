@@ -29,7 +29,7 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
                 password);
         try {
             final JIComServer comServer = new JIComServer(
-                    JIClsid.valueOf(UUID_FTEIAPI),
+                     JIClsid.valueOf(UUID_FTEIAPI),
                     server,
                     session);
             this.comServer = comServer.createInstance();
