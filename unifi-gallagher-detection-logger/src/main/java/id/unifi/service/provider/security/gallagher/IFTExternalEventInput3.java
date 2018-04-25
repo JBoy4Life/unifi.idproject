@@ -1,13 +1,13 @@
 package id.unifi.service.provider.security.gallagher;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 interface IFTExternalEventInput3 extends IFTExternalEventInput2 {
 
     void logLongCardEvent(
             int eventType,
             int eventId,
-            ZonedDateTime eventTime,
+            Instant eventTime,
             boolean hasRestoral,
             int cardIdSize,
             byte[] cardId,
@@ -21,7 +21,7 @@ interface IFTExternalEventInput3 extends IFTExternalEventInput2 {
     void logLongCardEvent2(
             int eventType,
             int eventId,
-            ZonedDateTime eventTime,
+            Instant eventTime,
             boolean hasRestoral,
             int cardNumberFormatType,
             String cardId,

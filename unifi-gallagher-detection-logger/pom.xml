@@ -125,7 +125,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>id.unifi.service.demo.gallagher.GallagherDemo</mainClass>
+                            <mainClass>id.unifi.service.demo.gallagher.GallagherDetectionLoggerService</mainClass>
                         </configuration>
                     </execution>
                 </executions>

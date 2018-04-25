@@ -21,20 +21,19 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.concurrent.CountDownLatch;
 
-public class GallagherDemo implements IFTMiddleware2 {
+public class GallagherDetectionLoggerService implements IFTMiddleware2 {
     static {
         // Prefer IPv4, otherwise 0.0.0.0 gets interpreted as IPv6 broadcast
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
-    private static final Logger log = LoggerFactory.getLogger(GallagherDemo.class);
-    public static final ZoneId ZONE = ZoneId.systemDefault();
+    private static final Logger log = LoggerFactory.getLogger(GallagherDetectionLoggerService.class);
 
     public final FtcApi ftcApi;
     public static final CountDownLatch registerLatch = new CountDownLatch(1);
     private static final CountDownLatch quitLatch = new CountDownLatch(1);
 
-    public GallagherDemo(FtcApi ftcApi) {
+    public GallagherDetectionLoggerService(FtcApi ftcApi) {
         this.ftcApi = ftcApi;
     }
 
@@ -59,9 +58,7 @@ public class GallagherDemo implements IFTMiddleware2 {
         var jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
 
-        log.info("Zone: {}", ZONE);
-
-        GallagherDemo demo = setUp();
+        GallagherDetectionLoggerService demo = setUp();
         Detection detection =
                 new Detection(new DetectablePK("test-club", "E28011606000020497CB0065", DetectableType.UHF_EPC),
                         "37017090614", 1, Instant.now(), BigDecimal.ZERO, 1);
@@ -69,7 +66,7 @@ public class GallagherDemo implements IFTMiddleware2 {
         quitLatch.await();
     }
 
-    public static GallagherDemo setUp() {
+    public static GallagherDetectionLoggerService setUp() {
         System.out.println("********* GALLAGHER DEMO *********");
 
         FtcApi ftcApi = new FtcApi(
@@ -77,7 +74,7 @@ public class GallagherDemo implements IFTMiddleware2 {
                 "localhost",
                 "Administrator",
                 "TestPass123");
-        GallagherDemo demo = new GallagherDemo(ftcApi);
+        GallagherDetectionLoggerService demo = new GallagherDetectionLoggerService(ftcApi);
         ftcApi.registerMiddleware(demo);
 
         try {
@@ -92,7 +89,7 @@ public class GallagherDemo implements IFTMiddleware2 {
     public void processDetection(Detection detection) {
         int eventId = 0; // corr ID; 0 for none
         log.info("Logging " + detection.detectable.detectableId);
-        ftcApi.logLongCardEvent2(2, eventId, detection.detectionTime.atZone(ZONE), false,
+        ftcApi.logLongCardEvent2(2, eventId, detection.detectionTime, false,
                 2, detection.detectable.detectableId, 12345, "unifi.id", "unifi.id.zone.reception",
                 "Card detected: Zone [Reception], #12345", "No details.");
         log.info("Logged " + detection.detectable.detectableId);

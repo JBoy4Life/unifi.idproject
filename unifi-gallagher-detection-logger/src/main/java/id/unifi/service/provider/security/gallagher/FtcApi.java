@@ -5,7 +5,7 @@ import org.jinterop.dcom.core.*;
 import org.jinterop.dcom.impls.JIObjectFactory;
 
 import java.io.Closeable;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 
 public class FtcApi implements IFTExternalEventInput3, Closeable {
@@ -118,14 +118,14 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
     public void logEvent(
             int eventType,
             int eventId,
-            ZonedDateTime eventTime,
+            Instant eventTime,
             boolean hasRestoral,
             String systemId,
             String itemId,
             String message,
             String details
     ) {
-        double timestamp = (new OleDate(eventTime)).toDouble();
+        var timestamp = OleDateTime.fromInstant(eventTime);
         JICallBuilder cb = new JICallBuilder(true);
         cb.setOpnum(0);
         cb.addInParamAsInt(eventType, JIFlags.FLAG_NULL);
@@ -148,7 +148,7 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
     public void logCardEvent(
             int eventType,
             int eventId,
-            ZonedDateTime eventTime,
+            Instant eventTime,
             boolean hasRestoral,
             int cardNumber,
             int facilityCode,
@@ -157,7 +157,7 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
             String message,
             String details
     ) {
-        double timestamp = (new OleDate(eventTime)).toDouble();
+        var timestamp = OleDateTime.fromInstant(eventTime);
         JICallBuilder cb = new JICallBuilder(true);
         cb.setOpnum(1);
         cb.addInParamAsInt(eventType, JIFlags.FLAG_NULL);
@@ -226,7 +226,7 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
     public void logLongCardEvent(
             int eventType,
             int eventId,
-            ZonedDateTime eventTime,
+            Instant eventTime,
             boolean hasRestoral,
             int cardIdSize,
             byte[] cardId,
@@ -263,7 +263,7 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
     public void logLongCardEvent2(
             int eventType,
             int eventId,
-            ZonedDateTime eventTime,
+            Instant eventTime,
             boolean hasRestoral,
             int cardNumberFormatType,
             String cardNumber,
@@ -273,7 +273,7 @@ public class FtcApi implements IFTExternalEventInput3, Closeable {
             String message,
             String details
     ) {
-        double timestamp = (new OleDate(eventTime)).toDouble();
+        double timestamp = OleDateTime.fromInstant(eventTime);
         JICallBuilder cb = new JICallBuilder(true);
         cb.setOpnum(5);
         cb.addInParamAsInt(eventType, JIFlags.FLAG_REPRESENTATION_UNSIGNED_INT);
