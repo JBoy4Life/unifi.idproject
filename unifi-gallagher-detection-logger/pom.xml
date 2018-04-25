@@ -10,6 +10,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.source.version>10</java.source.version>
+        <java.target.version>10</java.target.version>
+
+        <build.number>unknown</build.number><!-- to be replaced by CI -->
 
         <unifi.common.version>0.1-SNAPSHOT</unifi.common.version>
         <jinterop.version>2.0.4</jinterop.version>
@@ -19,6 +23,9 @@
 
         <compiler.plugin.version>3.7.0</compiler.plugin.version>
         <exec.plugin.version>1.6.0</exec.plugin.version>
+        <enforcer.plugin.version>3.0.0-M1</enforcer.plugin.version>
+        <build.helper.plugin.version>3.0.0</build.helper.plugin.version>
+        <commit.id.plugin.version>2.2.3</commit.id.plugin.version>
     </properties>
 
     <dependencies>
@@ -55,15 +62,29 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>unifi-version.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>${enforcer.plugin.version}</version>
                 <configuration>
                     <rules>
                         <requireJavaVersion>
-                            <version>9</version>
+                            <version>${java.source.version}</version>
                         </requireJavaVersion>
                     </rules>
 
@@ -84,8 +105,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler.plugin.version}</version>
                 <configuration>
-                    <source>9</source>
-                    <target>9</target>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
                     <compilerArgs>
                         <arg>-Xlint:deprecation</arg>
                         <arg>-parameters</arg>
@@ -96,6 +117,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>default-cli</id>
@@ -107,6 +129,50 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build.helper.plugin.version}</version>
+
+                <executions>
+                    <execution>
+                        <id>add-git-resources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>target/generated-resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>${commit.id.plugin.version}</version>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>target/generated-resources/unifi-git.properties</generateGitPropertiesFilename>
+                </configuration>
             </plugin>
         </plugins>
     </build>
