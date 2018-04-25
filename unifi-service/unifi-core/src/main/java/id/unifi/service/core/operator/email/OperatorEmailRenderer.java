@@ -6,6 +6,7 @@ import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.types.OperatorInfo;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -35,7 +36,7 @@ public class OperatorEmailRenderer {
             var filename = String.format("%s.%s.mustache", name, format);
             var stream = OperatorEmailRenderer.class.getResourceAsStream(filename);
             if (stream == null) throw new RuntimeException("Mustache template " + filename + " not found");
-            return new BufferedReader(new InputStreamReader(stream));
+            return new BufferedReader(new InputStreamReader(stream, UTF_8));
         };
         var htmlCompiler = Mustache.compiler().withLoader(loaderByFormat.apply("html")).escapeHTML(true);
         var textCompiler = Mustache.compiler().withLoader(loaderByFormat.apply("txt")).escapeHTML(false);

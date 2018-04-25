@@ -96,7 +96,7 @@ public class SiteService {
         }
     }
 
-    public class SiteInfo {
+    public static class SiteInfo {
         public final String siteId;
         public final String description;
         public final String address;

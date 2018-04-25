@@ -204,7 +204,7 @@ public class ScheduleService {
                                                        String clientId,
                                                        String clientReference,
                                                        String scheduleId) {
-        var operator = authorize(session, clientId);
+        authorize(session, clientId);
         return db.execute(sql -> {
             var q = sql
                     .with(FULL_ATTENDANCE, ZONE_PROCESSING_STATE)
@@ -471,7 +471,7 @@ public class ScheduleService {
         }
     }
 
-    public class BlockInfo {
+    public static class BlockInfo {
         public final String blockId;
         public final String name;
         public final ZonedDateTime startTime;
@@ -596,7 +596,7 @@ public class ScheduleService {
         }
     }
 
-    public class ContactScheduleSummaryAttendance {
+    public static class ContactScheduleSummaryAttendance {
         public final String clientReference;
         public final String scheduleId;
         public final int presentCount;
@@ -610,7 +610,7 @@ public class ScheduleService {
         }
     }
 
-    public class LowAttendanceReport {
+    public static class LowAttendanceReport {
         public final ZonedDateTime startTime;
         public final List<ContactScheduleSummaryAttendance> attendance;
 

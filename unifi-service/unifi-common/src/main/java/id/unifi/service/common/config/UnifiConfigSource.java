@@ -35,16 +35,13 @@ public class UnifiConfigSource {
         });
     }
 
-    private static void loadProperties() {
+    private static synchronized void loadProperties() {
         if (properties == null) {
             properties = new Properties();
-            var stream = UnifiConfigSource.class.getResourceAsStream(PROPERTIES_RESOURCE_NAME);
-            if (stream != null) {
-                try {
-                    properties.load(stream);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            try (var stream = UnifiConfigSource.class.getResourceAsStream(PROPERTIES_RESOURCE_NAME)) {
+                properties.load(stream);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
