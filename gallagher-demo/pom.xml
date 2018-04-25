@@ -15,6 +15,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
             <version>3.5.3</version>

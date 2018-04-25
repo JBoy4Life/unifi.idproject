@@ -16,7 +16,7 @@ public class OleDate {
         // Prepare yourself for the most moronic time representation ever.
         // https://docs.microsoft.com/en-gb/cpp/atl-mfc-shared/reference/coledatetime-class
         final ZonedDateTime oleEpoch = ZonedDateTime.of(1899, 12, 30, 0, 0, 0, 0, ZoneId.of("UTC"));
-        final double oleDateTime = Duration.between(oleEpoch, timestamp).toSeconds() / 3600 / 24.0;
+        final double oleDateTime = Duration.between(oleEpoch, timestamp).toSeconds() / 3600.0 / 24.0;
         return oleDateTime;
     }
 
