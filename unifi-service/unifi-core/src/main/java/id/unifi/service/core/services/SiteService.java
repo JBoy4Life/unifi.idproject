@@ -7,16 +7,16 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.types.pk.OperatorPK;
+import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
-import id.unifi.service.core.DetectionProcessor;
-import id.unifi.service.common.operator.OperatorSessionData;
+import id.unifi.service.common.types.pk.OperatorPK;
+import id.unifi.service.common.types.pk.SitePK;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.SITE;
 import static id.unifi.service.core.db.Tables.ZONE;
+import id.unifi.service.core.processing.listener.DetectionSubscriber;
 import id.unifi.service.core.site.ResolvedDetection;
-import org.eclipse.jetty.websocket.api.Session;
 
 import java.util.List;
 import java.util.Map;
@@ -25,11 +25,11 @@ import java.util.Optional;
 @ApiService("site")
 public class SiteService {
     private final Database db;
-    private final DetectionProcessor detectionProcessor;
+    private final DetectionSubscriber detectionSubscriber;
 
-    public SiteService(DatabaseProvider dbProvider, DetectionProcessor detectionProcessor) {
+    public SiteService(DatabaseProvider dbProvider, DetectionSubscriber detectionSubscriber) {
         this.db = dbProvider.bySchema(CORE);
-        this.detectionProcessor = detectionProcessor;
+        this.detectionSubscriber = detectionSubscriber;
     }
 
     @ApiOperation
@@ -72,11 +72,10 @@ public class SiteService {
     }
 
     @ApiOperation
-    public void subscribeDetections(Session session,
-                                    String clientId,
+    public void subscribeDetections(String clientId,
                                     String siteId,
                                     MessageListener<List<ResolvedDetection>> listener) {
-        detectionProcessor.addListener(clientId, siteId, session, listener);
+        detectionSubscriber.addListener(new SitePK(clientId, siteId), listener);
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {
@@ -84,8 +83,6 @@ public class SiteService {
                 .filter(op -> op.clientId.equals(clientId))
                 .orElseThrow(Unauthorized::new);
     }
-
-
 
     public static class ZoneInfo {
         public final String zoneId;

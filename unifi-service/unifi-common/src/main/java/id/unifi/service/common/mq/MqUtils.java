@@ -12,7 +12,7 @@ import com.rabbitmq.client.Envelope;
 import id.unifi.service.common.api.Protocol;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.config.MqConfig;
-import id.unifi.service.common.detection.DetectionReports;
+import id.unifi.service.common.detection.DetectionMatch;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 public class MqUtils {
     private MqUtils() {}
 
-    public static final TypeReference<DetectionReports> DETECTION_REPORTS_TYPE = new TypeReference<>() {};
+    public static final TypeReference<DetectionMatch> DETECTION_MATCH_TYPE = new TypeReference<>() {};
 
     private static final ObjectMapper mapper = getObjectMapper(Protocol.MSGPACK);
 

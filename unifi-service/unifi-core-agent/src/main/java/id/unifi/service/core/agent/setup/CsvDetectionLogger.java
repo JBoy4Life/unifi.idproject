@@ -36,8 +36,8 @@ public class CsvDetectionLogger implements DetectionLogger {
         if (writer == null) return;
         try {
             report.detections.forEach(d -> writer.writeNext(new String[]{
-                    d.timestamp.toString(),
-                    microDecimalFormat.format(d.timestamp.query(UNIX_TIMESTAMP)),
+                    d.detectionTime.toString(),
+                    microDecimalFormat.format(d.detectionTime.query(UNIX_TIMESTAMP)),
                     report.readerSn,
                     Integer.toString(d.portNumber),
                     d.detectable.detectableId,

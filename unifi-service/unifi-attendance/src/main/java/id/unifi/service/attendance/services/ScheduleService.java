@@ -1,6 +1,6 @@
 package id.unifi.service.attendance.services;
 
-import id.unifi.service.attendance.AttendanceProcessor;
+import id.unifi.service.attendance.AttendanceMatcher;
 import id.unifi.service.attendance.OverriddenStatus;
 import static id.unifi.service.attendance.OverriddenStatus.ABSENT;
 import static id.unifi.service.attendance.OverriddenStatus.AUTH_ABSENT;
@@ -82,7 +82,7 @@ public class ScheduleService {
 
     private static final Field<LocalDateTime> ZONE_PROCESSED_UP_TO = ZONE_PROCESSING_STATE.field("processed_up_to", LocalDateTime.class);
     private static final Field<LocalDateTime> BLOCK_DETECTION_END_TIME = field("{0} + {1} * interval '1 second'",
-            LocalDateTime.class, BLOCK_TIME.END_TIME, AttendanceProcessor.DETECTION_AFTER_BLOCK_END.toSeconds());
+            LocalDateTime.class, BLOCK_TIME.END_TIME, AttendanceMatcher.DETECTION_AFTER_BLOCK_END.toSeconds());
     private static final Condition ZONE_PROCESSED = ZONE_PROCESSED_UP_TO.ge(BLOCK_DETECTION_END_TIME);
 
     private static final Field<String> STATUS = coalesce(

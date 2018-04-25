@@ -3,9 +3,15 @@ package id.unifi.service.common.util;
 import id.unifi.service.common.api.errors.ValidationFailure;
 import static java.util.stream.Collectors.toMap;
 import org.jooq.Condition;
+import org.jooq.DataType;
+import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.SQLDialect;
 import org.jooq.TableField;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.trueCondition;
+import org.jooq.impl.DefaultDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +26,8 @@ import java.util.stream.Stream;
 
 public class QueryUtils {
     private static final Logger log = LoggerFactory.getLogger(QueryUtils.class);
+
+    public static final DataType<String> CITEXT = new DefaultDataType<>(SQLDialect.POSTGRES, String.class, "citext");
 
     public static <T> Condition filterCondition(Optional<T> filter, Function<T, Condition> condition) {
         return filter.map(condition).orElse(trueCondition());
@@ -58,6 +66,10 @@ public class QueryUtils {
         return editables.entrySet().stream()
                 .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public static <R extends Record, T> Field<T> unqualified(TableField<R, T> field) {
+        return field(name(field.getUnqualifiedName()), field.getType());
     }
 
     public static class ImageWithType {

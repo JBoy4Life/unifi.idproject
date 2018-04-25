@@ -1,5 +1,6 @@
 package id.unifi.service.common.detection;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import id.unifi.service.common.types.pk.DetectablePK;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ public final class Detection {
     public final BigDecimal rssi;
     public final int count;
 
+    @JsonCreator
     public Detection(DetectablePK detectable,
                      String readerSn,
                      int portNumber,
@@ -26,6 +28,15 @@ public final class Detection {
         this.detectionTime = detectionTime;
         this.rssi = rssi;
         this.count = count;
+    }
+
+    public Detection(String clientId, String readerSn, SiteRfidDetection detection) {
+        this.detectable = detection.detectable.withClientId(clientId);
+        this.readerSn = readerSn;
+        this.portNumber = detection.portNumber;
+        this.detectionTime = detection.detectionTime;
+        this.rssi = detection.rssi;
+        this.count = detection.count;
     }
 
     public boolean equals(Object o) {

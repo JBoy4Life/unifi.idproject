@@ -40,18 +40,18 @@ public class TimeSlotRollup implements Rollup {
         for (var detection : report.detections) {
             var antennaDetectable = new AntennaDetectable(detection.portNumber, detection.detectable);
             var detectionSlotStart =
-                    Instant.ofEpochSecond(detection.timestamp.getEpochSecond() / intervalSeconds * intervalSeconds, 0L);
+                    Instant.ofEpochSecond(detection.detectionTime.getEpochSecond() / intervalSeconds * intervalSeconds, 0L);
 
             var currentReaderState = readerStates.computeIfAbsent(readerSn,
                     sn -> new ReaderState(detectionSlotStart, new HashMap<>()));
             var state = currentReaderState.states.computeIfAbsent(antennaDetectable,
                     ad -> emptyState(detectionSlotStart));
 
-            if (detection.timestamp.isBefore(currentReaderState.slotStart)) {
+            if (detection.detectionTime.isBefore(currentReaderState.slotStart)) {
                 // Old detection that should've been processed
                 log.debug("Ignoring old detection at {}, current slot for {}/{} is {}",
-                        detection.timestamp, readerSn, detection.portNumber, currentReaderState.slotStart);
-            } else if (detection.timestamp.isBefore(slotEnd(currentReaderState))) {
+                        detection.detectionTime, readerSn, detection.portNumber, currentReaderState.slotStart);
+            } else if (detection.detectionTime.isBefore(slotEnd(currentReaderState))) {
                 // Detection is in the current slot for antenna
                 currentReaderState.states.put(antennaDetectable, updateState(state, detection));
             } else {
@@ -83,7 +83,7 @@ public class TimeSlotRollup implements Rollup {
 
     private static AntennaDetectableState updateState(AntennaDetectableState state, SiteRfidDetection detection) {
         return new AntennaDetectableState(
-                min(List.of(detection.timestamp, state.firstSeen)),
+                min(List.of(detection.detectionTime, state.firstSeen)),
                 max(List.of(detection.rssi, state.rssi)),
                 state.count + detection.count
         );

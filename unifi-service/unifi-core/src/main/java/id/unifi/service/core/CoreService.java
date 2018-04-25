@@ -2,10 +2,10 @@ package id.unifi.service.core;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.net.HostAndPort;
-import com.rabbitmq.client.Channel;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Prefix;
+import id.unifi.service.attendance.AttendanceMatcher;
 import id.unifi.service.attendance.AttendanceProcessor;
 import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.common.api.ComponentHolder;
@@ -16,45 +16,27 @@ import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
-import id.unifi.service.common.detection.Detection;
-import id.unifi.service.common.detection.DetectionReports;
-import id.unifi.service.common.mq.MqUtils;
-import static id.unifi.service.common.mq.MqUtils.DETECTION_REPORTS_TYPE;
-import id.unifi.service.common.mq.Tagged;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
 import id.unifi.service.common.util.MetricUtils;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import id.unifi.service.common.version.VersionInfo;
 import id.unifi.service.core.agents.IdentityService;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Tables.DETECTABLE;
-import static id.unifi.service.core.db.Tables.RFID_DETECTION;
+import id.unifi.service.core.processing.DetectionMatcher;
+import id.unifi.service.core.processing.DetectionProcessor;
+import id.unifi.service.core.processing.consumer.DetectionPersistence;
+import id.unifi.service.core.processing.listener.DetectionSubscriber;
 import static java.net.InetSocketAddress.createUnresolved;
-import static java.util.stream.Collectors.toList;
 import org.eclipse.jetty.websocket.api.Session;
-import org.jooq.Record1;
-import org.jooq.Row2;
-import org.jooq.impl.DSL;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.insertInto;
-import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.function.IntFunction;
 
 public class CoreService {
     static {
@@ -63,10 +45,6 @@ public class CoreService {
     }
 
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
-
-    public static final String PENDING_RAW_DETECTIONS_QUEUE_NAME = "core.detection.pending-raw-detections";
-
-    private static final BlockingQueue<Tagged<DetectionReports>> detectionQueue = new ArrayBlockingQueue<>(10_000);
 
     @Prefix("unifi")
     private interface Config {
@@ -97,135 +75,29 @@ public class CoreService {
 
         var dbProvider = new DatabaseProvider();
         dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
-        var detectionProcessor = new DefaultDetectionProcessor(dbProvider);
+
+        var detectionSubscriber = new DetectionSubscriber();
+        var detectionPersistence = new DetectionPersistence(dbProvider);
+
+        var attendanceMatcher = new AttendanceMatcher(dbProvider);
+        var attendanceProcessor = new AttendanceProcessor(dbProvider, attendanceMatcher);
+
+        var detectionMatcher = new DetectionMatcher(dbProvider);
+        var detectionProcessor = new DetectionProcessor(config.mq(), detectionMatcher,
+                Set.of(detectionPersistence, attendanceProcessor),
+                Set.of(detectionSubscriber));
 
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
                 MqConfig.class, config.mq(),
+                DetectionSubscriber.class, detectionSubscriber,
                 DetectionProcessor.class, detectionProcessor,
                 SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                 EmailSenderProvider.class, new LoggingEmailSender()));
 
         startApiService(config.apiServiceListenEndpoint(), componentHolder);
         startAgentService(componentHolder, config.agentServiceListenEndpoint());
-        var channel = startRawDetectionConsumer(config.mq());
-        var attendanceProcessor = new AttendanceProcessor(dbProvider);
-        processQueue(channel, dbProvider.bySchema(CORE), detectionProcessor, attendanceProcessor);
-    }
-
-    private static void processQueue(Channel channel,
-                                     Database db,
-                                     DetectionProcessor detectionProcessor,
-                                     AttendanceProcessor attendanceProcessor) {
-        var thread = new Thread(() -> {
-            var insertQuery = insertInto(RFID_DETECTION,
-                    RFID_DETECTION.CLIENT_ID,
-                    RFID_DETECTION.DETECTABLE_ID,
-                    RFID_DETECTION.DETECTABLE_TYPE,
-                    RFID_DETECTION.READER_SN,
-                    RFID_DETECTION.PORT_NUMBER,
-                    RFID_DETECTION.DETECTION_TIME,
-                    RFID_DETECTION.RSSI,
-                    RFID_DETECTION.COUNT)
-                    .values((String) null, null, null, null, null, null, null, null)
-                    .onConflictDoNothing();
-
-            while (true) {
-                if (detectionQueue.size() < 200) {
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        log.info("Detection processing thread interrupted, stopping");
-                        return;
-                    }
-                    if (detectionQueue.isEmpty()) continue;
-                }
-
-                ArrayList<Tagged<DetectionReports>> allTagged = new ArrayList<>(1000);
-                detectionQueue.drainTo(allTagged, 1000);
-
-                log.debug("Processing {} detection reports", allTagged.stream().mapToInt(t -> t.payload.reports.size()).sum());
-
-                var detections = allTagged.stream().map(t -> t.payload)
-                        .flatMap(t -> t.reports.stream().flatMap(r -> r.detections.stream().map(d ->
-                                new Detection(d.detectable.withClientId(t.clientId),
-                                        r.readerSn, d.portNumber, d.timestamp, d.rssi, d.count))))
-                        .collect(toList());
-
-                var detectableIdRows = detections.stream()
-                        .map(d -> d.detectable)
-                        .distinct()
-                        .map(cd -> DSL.row(cd.clientId, cd.detectableId))
-                        .toArray((IntFunction<Row2<String, String>[]>) Row2[]::new);
-
-                db.execute(sql -> {
-                    var vDetectableId = field(name("v", "detectable_id"), String.class);
-                    var vClientId = field(name("v", "client_id"), String.class);
-                    var unknownDetectableIds = sql
-                            .select(vDetectableId)
-                            .from(values(detectableIdRows).asTable("v", "client_id", "detectable_id"))
-                            .leftJoin(DETECTABLE).using(vClientId, vDetectableId)
-                            .where(DETECTABLE.DETECTABLE_ID.isNull())
-                            .fetch(Record1::value1);
-
-                    log.trace("Unknown: {}", unknownDetectableIds);
-
-                    var batch = sql.batch(insertQuery);
-                    detections.forEach(detection -> {
-                        if (!unknownDetectableIds.contains(detection.detectable.detectableId)) {
-                            batch.bind(
-                                    detection.detectable.clientId,
-                                    detection.detectable.detectableId,
-                                    detection.detectable.detectableType.toString(),
-                                    detection.readerSn,
-                                    detection.portNumber,
-                                    utcLocalFromInstant(detection.detectionTime),
-                                    detection.rssi,
-                                    detection.count);
-                        }
-                    });
-                    var batchSize = batch.size();
-                    if (batchSize > 0) {
-                        batch.execute();
-                    }
-                    return null;
-                });
-
-                detections.forEach(detectionProcessor::process);
-                attendanceProcessor.processDetections(detections);
-
-                if (!allTagged.isEmpty()) {
-                    var deliveryTag = allTagged.get(allTagged.size() - 1).deliveryTag;
-                    try {
-                        channel.basicAck(deliveryTag, true);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        });
-        thread.start();
-    }
-
-    private static Channel startRawDetectionConsumer(MqConfig mqConfig) {
-        var connection = MqUtils.connect(mqConfig);
-        Channel channel;
-        try {
-            channel = connection.createChannel();
-            channel.basicQos(0);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        var consumer = MqUtils.unmarshallingConsumer(DETECTION_REPORTS_TYPE, channel, detectionQueue::put);
-        try {
-            channel.basicConsume(PENDING_RAW_DETECTIONS_QUEUE_NAME, false, consumer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return channel;
     }
 
     private static void startAgentService(ComponentHolder componentHolder, HostAndPort agentEndpoint) throws Exception {

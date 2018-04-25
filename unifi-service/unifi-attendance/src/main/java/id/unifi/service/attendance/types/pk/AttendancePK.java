@@ -1,36 +1,40 @@
-package id.unifi.service.attendance;
+package id.unifi.service.attendance.types.pk;
 
 import java.util.Objects;
 
-public final class AssignmentPK {
+public final class AttendancePK {
     public final String clientId;
     public final String clientReference;
     public final String scheduleId;
+    public final String blockId;
 
-    public AssignmentPK(String clientId, String clientReference, String scheduleId) {
+    public AttendancePK(String clientId, String clientReference, String scheduleId, String blockId) {
         this.clientId = clientId;
         this.clientReference = clientReference;
         this.scheduleId = scheduleId;
+        this.blockId = blockId;
     }
 
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        var that = (AssignmentPK) o;
+        var that = (AttendancePK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientReference, that.clientReference) &&
-                Objects.equals(scheduleId, that.scheduleId);
+                Objects.equals(scheduleId, that.scheduleId) &&
+                Objects.equals(blockId, that.blockId);
     }
 
     public int hashCode() {
-        return Objects.hash(clientId, clientReference, scheduleId);
+        return Objects.hash(clientId, clientReference, scheduleId, blockId);
     }
 
     public String toString() {
-        return "AssignmentPK{" +
+        return "AttendancePK{" +
                 "clientId='" + clientId + '\'' +
                 ", clientReference='" + clientReference + '\'' +
                 ", scheduleId='" + scheduleId + '\'' +
+                ", blockId='" + blockId + '\'' +
                 '}';
     }
 }
