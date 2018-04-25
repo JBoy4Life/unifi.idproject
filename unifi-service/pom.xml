@@ -57,7 +57,6 @@
 
         <compiler.plugin.version>3.7.0</compiler.plugin.version>
         <surefire.plugin.version>2.20</surefire.plugin.version>
-        <findbugs.plugin.version>3.0.5</findbugs.plugin.version>
         <exec.plugin.version>1.6.0</exec.plugin.version>
         <enforcer.plugin.version>3.0.0-M1</enforcer.plugin.version>
         <build.helper.plugin.version>3.0.0</build.helper.plugin.version>
@@ -67,6 +66,7 @@
         <unleash.scm.provider.version>2.1.0</unleash.scm.provider.version>
         <install.plugin.version>2.5.2</install.plugin.version>
         <release.plugin.version>2.5.3</release.plugin.version>
+        <spotbugs.plugin.version>3.1.4</spotbugs.plugin.version>
     </properties>
 
     <scm>
@@ -283,9 +283,9 @@
                     </dependencies>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>${findbugs.plugin.version}</version>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>${spotbugs.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
