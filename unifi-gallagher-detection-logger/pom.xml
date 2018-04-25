@@ -3,12 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>id.unifi.service</groupId>
-    <artifactId>gallagher-demo</artifactId>
+    <artifactId>unifi-gallagher-detection-logger</artifactId>
     <version>0.1-SNAPSHOT</version>
 
-    <name>unifi.id Gallagher integration demo</name>
+    <name>unifi.id Gallagher detection logger</name>
 
     <properties>
+        <unifi.common.version>0.1-SNAPSHOT</unifi.common.version>
         <octane.version>1.28.0.1</octane.version>
         <ltk.version>10.28.0.0</ltk.version>
     </properties>
@@ -17,7 +18,7 @@
         <dependency>
             <groupId>id.unifi.service</groupId>
             <artifactId>unifi-common</artifactId>
-            <version>${project.version}</version>
+            <version>${unifi.common.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jmdns</groupId>
