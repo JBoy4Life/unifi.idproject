@@ -39,7 +39,7 @@ public class UnifiConfigSource {
         if (properties == null) {
             properties = new Properties();
             try (var stream = UnifiConfigSource.class.getResourceAsStream(PROPERTIES_RESOURCE_NAME)) {
-                properties.load(stream);
+                if (stream != null) properties.load(stream);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
