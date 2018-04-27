@@ -1,5 +1,4 @@
 import pick from 'lodash/pick'
-import { WSPackage } from 'lib/ws'
 
 // Function to generate action creator to handle websocket action
 export default ({
@@ -15,19 +14,17 @@ export default ({
   // payload: action parameter that are passed to action creator
   const wsType = subscribe ? 'socketSubscribe' : 'socketRequest'
 
-  const pack = new WSPackage({
-    protocolVersion: '1.0.0',
-    releaseVersion: '1.0.0',
+  const requestPayload = {
     messageType,
     payload: {
       ...(fields ? pick(defaultParams, fields) : defaultParams),
       ...(fields ? pick(payload, fields) : payload),
     }
-  })
+  }
 
   return {
     type,
-    [wsType]: pack.content,
+    [wsType]: requestPayload,
     selectorKey: selectorKey || messageType,
     payloadOnSuccess,
     payloadOnFail,

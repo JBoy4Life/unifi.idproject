@@ -1,0 +1,71 @@
+= unifi.id websocket client
+
+== Requirements
+
+`msgpack-lite` npm module should be installed for MessagePack support.
+
+----
+yarn add msgpack-lite
+----
+
+== Basic usage
+
+* Copy `unifi-ws-client` folder in `unifi-web/src/lib` to wherever you need.
+* Initialize websocket client
+
+----
+import UnifiWsClient from 'lib/unifi-ws-client'
+...
+
+const wsClient = new UnifiWsClient({
+  url: 'http://websocket.url/path',
+  type: 'json' // or 'msgpack'
+})
+----
+
+* Connect to the socket server
+----
+wsClient
+  .connect()
+  .then(() => {
+    wsClient.start()
+
+    ... // Now you can make a request or subscribe
+  })
+----
+
+* You can also use async/await for connecting to the server
+
+----
+await wsClient.connect()
+wsClient.start()
+
+... // Now you can make a request or subscribe
+----
+
+* Requests
+
+----
+const requestPayload = {
+  "messageType": "<module>.<service>.<operation>",
+  "payload": {
+    "param1": "value1",
+    "param2": 2.0,
+    "anotherParam": null
+  }
+}
+
+wsClient.request(requestPayload, (response) => {
+  ... // TODO: Add your response handler here
+})
+----
+
+* Subscriptions
+
+----
+...
+
+wsClient.subscribe(requestPayload, (response) => {
+  ... // TODO: Add your response handler here
+})
+----
