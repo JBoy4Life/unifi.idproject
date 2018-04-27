@@ -179,7 +179,7 @@ public class OperatorService {
     public AuthInfo authToken(OperatorSessionData session, Token sessionToken) {
         var operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
-            session.setAuth(sessionToken, operator.get());
+            session.setAuth(operator.get(), sessionToken);
             return new AuthInfo(getOperatorInfo(operator.get().clientId, operator.get().username),
                     sessionToken,
                     Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
@@ -290,7 +290,7 @@ public class OperatorService {
     private AuthInfo approveAuthAttempt(OperatorSessionData session, OperatorPK operator) {
         var sessionToken = new Token();
         sessionTokenStore.put(sessionToken, operator);
-        session.setAuth(sessionToken, operator);
+        session.setAuth(operator, sessionToken);
         recordAuthAttempt(operator, true);
         return new AuthInfo(getOperatorInfo(operator.clientId, operator.username),
                 sessionToken,
