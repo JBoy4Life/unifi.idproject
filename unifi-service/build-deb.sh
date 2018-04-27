@@ -22,7 +22,9 @@ Architecture: all
 Maintainer: @unifi
 Priority: optional
 Version: $2
-Description: Some description
+Description: $3
+
+Depends: $4
 "
 }
 
@@ -31,7 +33,18 @@ if [ -z $1 ]; then
 
 else 
   case $1 in
-    unifi-core | unifi-agent )
+    unifi-core )
+
+      description="Unifi Core Daemon"
+      application=$1
+      dependencies="oracle-java10-installer (>=10.0.0)"
+      #dependencies="oracle-java10-installer"
+      ;;
+    unifi-core-agent )
+
+      description="Unifi Core Agent Daemon"
+      dependenciaes="oracle-java10-installer (>=10.0.0)"
+      #dependencies="oracle-java10-installer"
       application=$1
       ;;
     *)
@@ -58,8 +71,18 @@ target=$3
 source_template=debian/$application-TEMPLATE
 destination_output=debian/$application-$version
 
+mkdir -p $destination_output/DEBIAN
 cp -aR $source_template $destination_output
-generate_control_file $application $version > $destination_output/debian/control
+echo "
+Package: $application
+Architecture: all
+Maintainer: @unifi
+Priority: optional
+Version: $version
+Depends: $dependencies
+Description: $description
+" > $destination_output/DEBIAN/control
+mkdir -p $destination_output/opt/unifi/
 cp $target $destination_output/opt/unifi/unifi-core.jar
 
 dpkg-deb --build $destination_output $application-$version.deb
