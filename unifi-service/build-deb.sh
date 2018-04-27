@@ -4,11 +4,11 @@ function usage {
   echo  "
 #####################################################################################################
 #
-# build_deb.sh usage
-# ./build_deb.sh <package> <version> <target_jar>
+# build-deb.sh usage
+# ./build-deb.sh <package> <version> <target_jar>
 #
 # i.e
-#  ./build_deb.sh unifi-core 1.0.1 unifi-core/target/unifi-core-1.0.1-SNAPSHOT-with-dependencies.jar
+#  ./build-deb.sh unifi-core 1.0.1 unifi-core/target/unifi-core-1.0.1-SNAPSHOT-with-dependencies.jar
 #
 ######################################################################################################
 "
@@ -48,18 +48,18 @@ else
       application=$1
       ;;
     *)
-      echo "Missing Application Type"
+      echo -en "\nMissing Application Type\n"
       usage
       ;; 
   esac
 
   if [ -z $2 ]; then
-    echo "Missing Version"
+    echo -en "\nMissing Version\n"
     usage
   fi
 
   if [ ! -f $3 ]; then
-    echo "Invalid file"
+    echo -en "\nInvalid file\n"
     usage
   fi
 fi

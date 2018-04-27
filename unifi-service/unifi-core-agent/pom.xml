@@ -85,7 +85,7 @@
                                 <property><key>file.encoding</key><value>UTF-8</value></property>
 
                                 <!-- Core database config; needed for mocking raw detections -->
-                                <property><key>unifi.core.jdbc.url</key><value>jdbc:postgresql:unifi?currentSchema=core</value></property>
+				<property><key>unifi.core.jdbc.url</key><value>jdbc:postgresql://10.0.80.13:5432/unifi?currentSchema=core</value></property>
                                 <property><key>unifi.core.jdbc.user</key><value>${postgres.user}</value></property>
                                 <property><key>unifi.core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
                                 <property><key>unifi.core.jooq.dialect</key><value>POSTGRES</value></property>
