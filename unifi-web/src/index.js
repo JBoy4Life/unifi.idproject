@@ -7,7 +7,7 @@ import Loading from 'components/loading'
 import Main from './main'
 import registerServiceWorker from './registerServiceWorker'
 import { configureStore, history } from 'redux/store'
-import { WSProtocol } from 'lib/ws'
+import UnifiWsClient from 'lib/unifi-ws-client'
 
 import './styles/less/index.less'
 import './styles/index.scss'
@@ -16,16 +16,16 @@ export const clientId = window.location.hostname.split(".")[0];
 
 ReactDOM.render(<Loading />, document.getElementById('root'))
 
-const wsProtocol = new WSProtocol({
+const wsClient = new UnifiWsClient({
   url: `${process.env.SOCKET_PROTO}://${process.env.SOCKET_URI}/service/${process.env.REACT_APP_WS_MESSAGE_FORMAT}`,
   type: process.env.REACT_APP_WS_MESSAGE_FORMAT
 })
 
-wsProtocol
+wsClient
   .connect()
-  .then(() => wsProtocol.start())
   .then(() => {
-    const { store, persistor } = configureStore(wsProtocol)
+    wsClient.start()
+    const { store, persistor } = configureStore(wsClient)
     ReactDOM.render(
       <Provider store={store}>
         <PersistGate

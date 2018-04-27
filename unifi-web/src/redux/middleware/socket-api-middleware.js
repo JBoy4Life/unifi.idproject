@@ -29,17 +29,15 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
     })
 
     const promiseResource = new Promise((resolve, reject) => {
-      socketClient.request(action.socketRequest, { json: true })
-        .then(res => {
-          const data = {
-            ...res,
-            formSubmit: action.formSubmit
-          }
-          res.messageType.startsWith('core.error')
-          ? reject(data)
-          : resolve(data)
-        })
-        .catch(ex => reject(ex))
+      socketClient.request(action.socketRequest, (res) => {
+        const data = {
+          ...res,
+          formSubmit: action.formSubmit
+        }
+        res.messageType.startsWith('core.error')
+        ? reject(data)
+        : resolve(data)
+      }).catch(ex => reject(ex))
     })
 
     promiseResource
@@ -67,7 +65,7 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
   }
 
   if (action.socketSubscribe) {
-    socketClient.subscribe(action.socketSubscribe, { json: true }, (data) => {
+    socketClient.subscribe(action.socketSubscribe, (data) => {
       const payload = {
         data: data.payload,
         actionType: action.type,

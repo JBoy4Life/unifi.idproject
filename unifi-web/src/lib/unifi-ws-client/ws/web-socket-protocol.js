@@ -1,5 +1,5 @@
 import WebSocketLayer from './web-socket-layer'
-import { sleep } from '../../utils/helpers'
+import { sleep } from './utils'
 
 export default class WebSocketProtocol {
   constructor({

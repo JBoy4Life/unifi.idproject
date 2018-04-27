@@ -101,7 +101,7 @@ export default class WebSocketLayer {
     return Promise.reject(new Error({ message: 'Unsupported message type' }))
   }
 
-  async send(content, { json = false } = {}) {
+  async send(content) {
     if (typeof content !== 'object') {
       throw new Error('Only JSON objects are supported for sending via socket layer')
     }
@@ -119,13 +119,7 @@ export default class WebSocketLayer {
 
     // console.log('connected, sending')
     if (this.type === 'json') {
-      if (json) {
-        // console.log('sending', JSON.stringify(content))
-        this.socket.send(JSON.stringify(content))
-      } else {
-        const encodedContent = this.encodeMessage(content)
-        this.socket.send(encodedContent.buffer)
-      }
+      this.socket.send(JSON.stringify(content))
     } else if (this.type === 'msgpack') {
       this.socket.send(this.encodeMessage(content))
     } else {
