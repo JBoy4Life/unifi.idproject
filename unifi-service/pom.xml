@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>id.unifi.service</groupId>
@@ -64,6 +63,7 @@
         <commit.id.plugin.version>2.2.3</commit.id.plugin.version>
         <unleash.maven.plugin.version>2.7.2</unleash.maven.plugin.version>
         <unleash.scm.provider.version>2.1.0</unleash.scm.provider.version>
+        <jgit.version>4.11.0.201803080745-r</jgit.version>
         <install.plugin.version>2.5.2</install.plugin.version>
         <release.plugin.version>2.5.3</release.plugin.version>
         <spotbugs.plugin.version>3.1.4</spotbugs.plugin.version>
@@ -242,11 +242,19 @@
                     <groupId>com.itemis.maven.plugins</groupId>
                     <artifactId>unleash-maven-plugin</artifactId>
                     <version>${unleash.maven.plugin.version}</version>
+                    <configuration>
+                        <workflowDescriptor>release.workflow</workflowDescriptor>
+                    </configuration>
                     <dependencies>
                         <dependency>
                             <groupId>com.itemis.maven.plugins</groupId>
                             <artifactId>unleash-scm-provider-git</artifactId>
                             <version>${unleash.scm.provider.version}</version>
+                        </dependency>
+                        <dependency><!-- Upgrade for modern ciphers that GH requires -->
+                            <groupId>org.eclipse.jgit</groupId>
+                            <artifactId>org.eclipse.jgit</artifactId>
+                            <version>${jgit.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -343,7 +351,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
