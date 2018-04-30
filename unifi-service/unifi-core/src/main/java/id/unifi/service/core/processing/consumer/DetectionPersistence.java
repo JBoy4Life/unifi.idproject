@@ -80,7 +80,7 @@ public class DetectionPersistence implements DetectionMatchMqConsumer {
                         d.readerSn,
                         d.portNumber,
                         utcLocalFromInstant(d.detectionTime),
-                        d.rssi,
+                        d.rssi.orElse(null),
                         d.count))
                 .toArray(Row8[]::new);
 

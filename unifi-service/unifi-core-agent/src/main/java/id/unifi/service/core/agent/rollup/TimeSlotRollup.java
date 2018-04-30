@@ -3,7 +3,6 @@ package id.unifi.service.core.agent.rollup;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.types.client.ClientDetectable;
-import static java.util.Collections.max;
 import static java.util.Collections.min;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
@@ -12,10 +11,12 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -79,13 +80,13 @@ public class TimeSlotRollup implements Rollup {
 
     private AntennaDetectableState emptyState(Instant detectableSlotStart) {
         var firstSeen = detectableSlotStart.plusSeconds(intervalSeconds);
-        return new AntennaDetectableState(firstSeen, BigDecimal.valueOf(Long.MIN_VALUE), 0);
+        return new AntennaDetectableState(firstSeen, Optional.empty(), 0);
     }
 
     private static AntennaDetectableState updateState(AntennaDetectableState state, SiteRfidDetection detection) {
         return new AntennaDetectableState(
                 min(List.of(detection.detectionTime, state.firstSeen)),
-                max(List.of(detection.rssi, state.rssi)),
+                Stream.of(detection.rssi, state.rssi).flatMap(Optional::stream).max(Comparator.naturalOrder()),
                 state.count + detection.count
         );
     }
@@ -106,10 +107,10 @@ public class TimeSlotRollup implements Rollup {
 
     private static class AntennaDetectableState {
         final Instant firstSeen;
-        final BigDecimal rssi;
+        final Optional<BigDecimal> rssi;
         final int count;
 
-        AntennaDetectableState(Instant firstSeen, BigDecimal rssi, int count) {
+        AntennaDetectableState(Instant firstSeen, Optional<BigDecimal> rssi, int count) {
             this.firstSeen = firstSeen;
             this.rssi = rssi;
             this.count = count;

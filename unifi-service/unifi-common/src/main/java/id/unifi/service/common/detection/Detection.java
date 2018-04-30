@@ -6,13 +6,14 @@ import id.unifi.service.common.types.pk.DetectablePK;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class Detection {
     public final DetectablePK detectable;
     public final String readerSn;
     public final int portNumber;
     public final Instant detectionTime;
-    public final BigDecimal rssi;
+    public final Optional<BigDecimal> rssi;
     public final int count;
 
     @JsonCreator
@@ -20,7 +21,7 @@ public final class Detection {
                      String readerSn,
                      int portNumber,
                      Instant detectionTime,
-                     BigDecimal rssi,
+                     Optional<BigDecimal> rssi,
                      int count) {
         this.detectable = detectable;
         this.readerSn = readerSn;
