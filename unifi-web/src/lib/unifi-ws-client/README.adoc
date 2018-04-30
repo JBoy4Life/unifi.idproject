@@ -1,8 +1,8 @@
 = unifi.id websocket client
 
-== Requirements
+== Dependencies
 
-`msgpack-lite` npm module should be installed for MessagePack support.
+* `msgpack-lite` npm module must be installed for MessagePack support.
 
 ----
 yarn add msgpack-lite
