@@ -1,6 +1,6 @@
 storeScmRevision
 checkProjectVersions
-#checkParentVersions
+checkParentVersions
 checkDependencies
 checkPlugins
 checkPluginDependencies
