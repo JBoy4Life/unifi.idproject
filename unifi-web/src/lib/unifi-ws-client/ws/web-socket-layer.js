@@ -4,7 +4,7 @@
  */
 import msgpack from 'msgpack-lite'
 
-import { base64EncodeUint8Array } from 'utils/helpers'
+import { base64EncodeUint8Array } from './utils'
 
 const binarryCodec = msgpack.createCodec({ binarraybuffer: true, preset: true })
 

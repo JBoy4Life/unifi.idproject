@@ -3,9 +3,11 @@
 == Dependencies
 
 * `msgpack-lite` npm module must be installed for MessagePack support.
+* `mock-socket` is used in testing.
+* `lodash` is used for data conversion between message pack and JSON.
 
 ----
-yarn add msgpack-lite
+yarn add msgpack-lite mock-socket lodash
 ----
 
 == Basic usage
