@@ -4,6 +4,7 @@ import com.rabbitmq.client.Connection;
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_BASIC;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.detection.Detection;
+import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.detection.DetectionMatchListener;
 import id.unifi.service.common.detection.DetectionMatchMqConsumer;
 import id.unifi.service.common.detection.SiteDetectionReport;
@@ -42,12 +43,22 @@ public class DetectionProcessor {
         });
     }
 
+    public void process(List<Detection> detections) {
+        var detectionMatches = detections.stream()
+                .flatMap(detection -> detectionMatcher.match(detection).stream())
+                .collect(toList());
+        processDetectionMatches(detectionMatches);
+    }
+
     public void process(String clientId, List<SiteDetectionReport> reports) {
         var detectionMatches = reports.stream()
                 .flatMap(r -> r.detections.stream().flatMap(d ->
                         detectionMatcher.match(new Detection(clientId, r.readerSn, d)).stream()))
                 .collect(toList());
+        processDetectionMatches(detectionMatches);
+    }
 
+    private void processDetectionMatches(List<DetectionMatch> detectionMatches) {
         if (!detectionMatches.isEmpty()) {
             listeners.forEach(l -> l.accept(detectionMatches));
         }

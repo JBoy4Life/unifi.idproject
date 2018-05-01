@@ -1,5 +1,8 @@
 package id.unifi.service.common.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.function.Consumer;
 public class BatchBuffer<E> {
     private final BlockingQueue<E> queue;
     private final Thread consumerThread;
+    private final Logger log;
 
     public static <E> BatchBuffer<E> create(String name, int size, Duration timeout, Consumer<List<E>> consumer) {
         var buffer = new BatchBuffer<>(name, size, timeout, consumer);
@@ -22,6 +26,7 @@ public class BatchBuffer<E> {
     }
 
     private BatchBuffer(String name, int size, Duration timeout, Consumer<List<E>> consumer) {
+        this.log = LoggerFactory.getLogger(BatchBuffer.class.getName() + ":" + name);
         this.queue = new ArrayBlockingQueue<>(size);
 
         this.consumerThread = new Thread(() -> {
@@ -29,9 +34,7 @@ public class BatchBuffer<E> {
             while (true) {
                 try {
                     Thread.sleep(timeout.toMillis());
-                } catch (InterruptedException e) {
-                    break;
-                }
+                } catch (InterruptedException ignored) {}
 
                 queue.drainTo(buffer, size);
                 consumer.accept(buffer);
@@ -50,7 +53,10 @@ public class BatchBuffer<E> {
 
         if (queue.remainingCapacity() == 0) {
             synchronized (this) {
-                if (queue.remainingCapacity() == 0) consumerThread.interrupt();
+                if (queue.remainingCapacity() == 0) {
+                    log.trace("Buffer queue full");
+                    consumerThread.interrupt();
+                }
             }
         }
     }

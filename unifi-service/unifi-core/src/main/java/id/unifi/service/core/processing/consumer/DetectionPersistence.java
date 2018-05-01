@@ -20,6 +20,7 @@ import static id.unifi.service.core.db.Tables.RFID_DETECTION;
 import org.jooq.Field;
 import org.jooq.Row8;
 import static org.jooq.impl.DSL.*;
+import static org.jooq.util.postgres.PostgresDataType.DECIMAL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.ConcurrencyFailureException;
@@ -80,7 +81,7 @@ public class DetectionPersistence implements DetectionMatchMqConsumer {
                         d.readerSn,
                         d.portNumber,
                         utcLocalFromInstant(d.detectionTime),
-                        d.rssi.orElse(null),
+                        cast(d.rssi.orElse(null), DECIMAL),
                         d.count))
                 .toArray(Row8[]::new);
 
