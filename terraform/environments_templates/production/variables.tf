@@ -5,7 +5,7 @@ variable "aws_secret_key" {}
 # Environment specific, defined in tfvars for that environment
 ##################################################################
 
-variable "aws_vpc_name" {
+variable "aws_vpc_description" {
   description = "Name for the whole VPC"
 
   #default     = "10.0.0.0/16"
@@ -111,6 +111,9 @@ variable "ec2_instance_sizes" {
   default = {
     policy-server = "t2.small"
     app           = "m4.large"
+
+    #policy-server = "t2.micro"
+    #app = "t2.micro"
   }
 }
 

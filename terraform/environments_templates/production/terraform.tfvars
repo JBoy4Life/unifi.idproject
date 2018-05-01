@@ -11,6 +11,8 @@ aws_key_name = "terraform_deploy"
 
 aws_region = "eu-west-2"
 
+aws_vpc_description = "shan-ucl VPC"
+
 aws_vpc_cidr = "10.10.0.0/21"
 
 aws_subnet_cidr = "10.10.1.0/24"

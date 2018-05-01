@@ -184,7 +184,7 @@ resource "aws_instance" "policy-server" {
   provisioner "remote-exec" {
     inline = [
       "sudo hostnamectl set-hostname ${var.unifi_nodeid}.policy-server.${var.unifi_environment}.unifi.id",
-      "sudo sh -c 'echo \"${lookup(var.ec2_instance_ips, "policy-server")}\" > /etc/hosts'",
+      "sudo sh -c 'echo \"${lookup(var.ec2_instance_ips, "policy-server")} ${var.unifi_nodeid}.policy-server.${var.unifi_environment}.unifi.id\" >> /etc/hosts'",
       "sudo sh -c 'wget -qO- https://cfengine-package-repos.s3.amazonaws.com/pub/gpg.key | apt-key add -'",
       "sudo sh -c 'echo \"deb https://cfengine-package-repos.s3.amazonaws.com/pub/apt/packages stable main\" > /etc/apt/sources.list.d/cfengine-community.list'",
       "sudo apt-get update && sudo apt-get install -y cfengine-community rsync",
@@ -249,7 +249,7 @@ resource "aws_instance" "app" {
   provisioner "remote-exec" {
     inline = [
       "sudo hostnamectl set-hostname ${var.unifi_nodeid}.app.${var.unifi_environment}.unifi.id",
-      "sudo sh -c 'echo \"${lookup(var.ec2_instance_ips, "app")}\" > /etc/hosts'",
+      "sudo sh -c 'echo \"${lookup(var.ec2_instance_ips, "app")} ${var.unifi_nodeid}.app.${var.unifi_environment}.unifi.id\" >> /etc/hosts'",
       "sudo sh -c 'wget -qO- https://cfengine-package-repos.s3.amazonaws.com/pub/gpg.key | apt-key add -'",
       "sudo sh -c 'echo \"deb https://cfengine-package-repos.s3.amazonaws.com/pub/apt/packages stable main\" > /etc/apt/sources.list.d/cfengine-community.list'",
       "sudo apt-get update && sudo apt-get install cfengine-community",
@@ -261,69 +261,3 @@ resource "aws_instance" "app" {
   }
   depends_on = ["aws_instance.policy-server"]
 }
-
-/*resource "aws_network_interface" "nic-agent" {
-  subnet_id = "${aws_subnet.default.id}"
-
-  #private_ips = ["10.0.80.13"]
-  private_ips = ["${lookup(var.ec2_instance_ips, "agent")}"]
-
-  #vpc_security_group_ids = ["${aws_security_group.terraform_default.id}"]
-  security_groups = ["${aws_security_group.terraform_default.id}"]
-
-  tags {
-    Name = "primary_network_interface"
-  }
-}
-
-resource "aws_instance" "agent" {
-  # The connection block tells our provisioner how to
-  # communicate with the resource (instance)
-  connection {
-    # The default username for our AMI
-    user = "admin"
-
-    # The connection will use the local SSH agent for authentication.
-    private_key = "${file(var.private_key_path)}"
-  }
-
-  #instance_type = "t2.nano"
-  instance_type = "${lookup(var.ec2_instance_sizes, "agent")}"
-
-  # Lookup the correct AMI based on the region
-  # we specified
-  ami = "${lookup(var.aws_amis, var.aws_region)}"
-
-  # The name of our SSH keypair we created above.
-  key_name = "${aws_key_pair.auth.id}"
-
-  # Our Security group to allow HTTP and SSH access
-  #vpc_security_group_ids = ["${aws_security_group.terraform_default.id}"]
-
-  # We're going to launch into the same subnet as our ELB. In a production
-  # environment it's more common to have a separate private subnet for
-  # backend instances.
-  #subnet_id = "${aws_subnet.default.id}"
-  network_interface {
-    network_interface_id = "${aws_network_interface.nic-agent.id}"
-    device_index         = 0
-  }
-  # We run a remote provisioner on the instance after creating it.
-  # In this case, we just install nginx and start it. By default,
-  # this should be on port 80
-  provisioner "remote-exec" {
-    inline = [
-      "sudo hostnamectl set-hostname ${var.unifi_nodeid}.agent.${var.unifi_environment}.unifi.id",
-      "sudo sh -c 'echo \"${lookup(var.ec2_instance_ips, "agent")}\" > /etc/hosts'",
-      "sudo sh -c 'wget -qO- https://cfengine-package-repos.s3.amazonaws.com/pub/gpg.key | apt-key add -'",
-      "sudo sh -c 'echo \"deb https://cfengine-package-repos.s3.amazonaws.com/pub/apt/packages stable main\" > /etc/apt/sources.list.d/cfengine-community.list'",
-      "sudo apt-get update && sudo apt-get install cfengine-community",
-      "sudo /var/cfengine/bin/cf-agent --bootstrap ${lookup(var.ec2_instance_ips, "policy-server")}",
-    ]
-  }
-  tags {
-    Name = "${var.unifi_nodeid}.agent.${var.unifi_environment}.unifi.id"
-  }
-  depends_on = ["aws_instance.policy-server"]
-}*/
-
