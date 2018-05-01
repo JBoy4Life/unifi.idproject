@@ -7,12 +7,13 @@ bundle common unifi_environment {
       "cfengine_local_store_dir"   string => "/var/cfengine/local";
 
     # Network/Environment  
-      "hst_policy_server" string => "10.0.80.10";
-      "hst_app"           string => "10.0.80.11";
-      "hst_services"      string => "10.0.80.12";
-      "hst_db"            string => "10.0.80.13";
-      "hst_agent"         string => "10.0.80.14";
-      "hst_logs"          string => "10.0.80.15";
+      #"hst_policy_server" string => "10.0.80.10";
+      "hst_policy_server" string => readfile( "/var/cfengine/policy_server.dat" , 0 );
+      #"hst_app"           string => "10.0.80.11";
+      #"hst_services"      string => "10.0.80.12";
+      #"hst_db"            string => "10.0.80.13";
+      #"hst_agent"         string => "10.0.80.14";
+      #"hst_logs"          string => "10.0.80.15";
 
     # Application Specific
     ## Papertrail
@@ -68,9 +69,18 @@ bundle agent unifi_role {
       "unifi_role_app";
     unifi_role_services::
       "unifi_role_services";
+#    unifi_role_buildnode::
+#      "unifi_role_services";
+#      "unifi_role_debian_build";
     unifi_role_db::
-      "unifi_role_db";
+      "unifi_role_db"; 
+#    unifi_role_allinone::
+#      "unifi_baseline";
+#      "unifi_role_app";
+#      "unifi_role_services";
+#      "unifi_role_db";
 }
+
 
 bundle agent unifi_baseline {
   vars:
@@ -103,6 +113,7 @@ bundle agent unifi_baseline {
 bundle agent unifi_role_app {
   methods:
       "yarn";
+      "nginx_app_server";
 }
 
 bundle agent unifi_role_services {
@@ -114,10 +125,26 @@ bundle agent unifi_role_services {
           package_module => apt_get;
 }
 
+bundle agent unifi_role_debian_build {
+  vars:
+    any::
+      "debbuild_packages"
+          slist => {
+              "build-essential",
+              "fakeroot",
+              "devscripts",
+          };
+  packages:
+      "$(debbuild_packages)"
+          policy => "present",
+          package_module => apt_get;
+}
+
 bundle agent unifi_role_db {
   methods:
       "postgresql";
 }
+
 
 bundle agent oracle_java_jdk {
   vars:
@@ -143,7 +170,7 @@ bundle agent oracle_java_jdk {
           string => "bionic main";
   classes:
       "apt_key_added"
-          expression => returnszero("/usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+          expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
       "apt_repo_added"
           expression => returnszero("/bin/fgrep \"deb $(repository_url) $(ubuntu_version)\" /etc/apt/sources.list", "noshell");
       "oracle_licence_accepted"
@@ -155,7 +182,7 @@ bundle agent oracle_java_jdk {
 #          classes => if_repaired("sources_list_changed");
   commands:
     !apt_key_added::
-      "/usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(key_fp)\"";
+      "APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(key_fp)\"";
     !apt_repo_added::
       "/usr/bin/add-apt-repository \"deb $(repository_url) $(ubuntu_version)\" && apt-get update"
           contain => useshell;
@@ -240,7 +267,7 @@ bundle agent yarn {
       "nodesource_repo_added"
           expression => fileexists("/etc/apt/sources.list.d/nodesource.list");
       "apt_key_added"
-          expression => returnszero("/usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+          expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
       "yarn_repo_added"
           expression => fileexists("/etc/apt/sources.list.d/yarn.list");
   commands:
@@ -248,7 +275,7 @@ bundle agent yarn {
       "/usr/bin/curl -sL https://deb.nodesource.com/setup_8.x | /bin/bash -"
           contain => useshell;
     !apt_key_added::
-      "/usr/bin/curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | /usr/bin/apt-key add -"
+      "/usr/bin/curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key add -"
           contain => useshell;
     !yarn_repo_added::
       "(/bin/echo \"deb https://dl.yarnpkg.com/debian/ stable main\" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list) && apt-get update"
@@ -257,6 +284,32 @@ bundle agent yarn {
       "yarn"
           policy => "present",
           package_module => apt_get;
+}
+
+bundle agent nginx_app_server {
+  packages:
+      "nginx"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "nginx"
+      service_policy => "nginx";
+      
+  commands: 
+    restart_nginx:: 
+      "/bin/systemctl restart nginx" 
+         contain => in_shell_and_silent; 
+  files:  
+    "/etc/nginx/."
+      perms => mo("755","root"),
+      create => "true";
+
+    "/etc/nginx/nginx.conf"
+      comment => "Copy nginx.conf from the policy server",
+      perms => mo("644","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/nginx/nginx.conf","$(unifi_environment.hst_policy_server)"),
+      action => if_elapsed("60");
 }
 
 bundle agent chrony {
@@ -288,6 +341,10 @@ bundle agent chrony {
          contain => in_shell_and_silent; 
 
   files:
+    "/etc/chrony/."
+      perms => mo("755","root"),
+      create => "true";
+
     "/etc/chrony/chrony.conf"
       comment => "Replace default Debian chrony/NTP Server",
       create => "false",
@@ -306,7 +363,7 @@ bundle agent syslogng {
   vars:
     any::
       "syslogng_conf_dir" string => "/etc/syslog-ng";
-      "system_log_source" string => "s_sys";
+      "system_log_source" string => "s_src";
 
     # Included from environment
       "papertrail_destination_host" string => "$(unifi_environment.papertrail_destination_host)";
@@ -329,6 +386,15 @@ bundle agent syslogng {
          contain => in_shell_and_silent; 
 
   files:
+    # Ensure we've got our local file store
+    "${unifi_environment.cfengine_local_store_dir}/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "${unifi_environment.cfengine_local_store_dir}${syslogng_conf_dir}/."
+      perms => mo("755","root"),
+      create => "true"; 
+
     "$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"
       comment => "Add papertrail integration",
       perms => mo("400","root"),
@@ -367,16 +433,44 @@ bundle agent collectd {
   # The librato recommended config file is stripped down to a large extent, 
   # copy the original and replace (potential refactor later, if there's extra collectd functionality we need)
   files:
+    # Ensure we've got our local file store
+    "${unifi_environment.cfengine_local_store_dir}/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "${unifi_environment.cfengine_local_store_dir}$(collectd_conf_dir)/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "${unifi_environment.cfengine_local_store_dir}$(collectd_conf_dir)/collectd.conf.d/."
+      perms => mo("755","root"),
+      create => "true"; 
+
     "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
       comment => "Copy librato/collectd template from policy server",
       perms => mo("400","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
       action => if_elapsed("60");
 
     "$(collectd_conf_dir)/collectd.conf"
       comment => "Expand the variables on host",
       create => "true",
       edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"),
+      edit_defaults => empty,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_collectd" );
+    
+    "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"
+      comment => "Copy librato/collectd template from policy server",
+      perms => mo("400","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/librato.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      action => if_elapsed("60");
+
+    "$(collectd_conf_dir)/collectd.conf.d/librato.conf"
+      comment => "Expand the variables on host",
+      create => "true",
+      edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"),
       edit_defaults => empty,
       perms => mo("644","root"),
       action => if_elapsed("60"),

@@ -108,4 +108,23 @@ Vagrant.configure("2") do |config|
     agent.vm.network "public_network"
   end
 
+  config.vm.define "buildnode" do |buildnode|
+    buildnode.vm.provision :shell, :inline => $bootstrap_script
+    buildnode.vm.provision "cfengine" do |cf|
+        cf.policy_server_address = "10.0.80.10"
+    end
+    buildnode.vm.hostname = "a.buildnode.local.unifi.id"
+    buildnode.vm.network "private_network", ip: "10.0.80.50"
+    buildnode.vm.network "public_network"
+  end
+
+  config.vm.define "allinone" do |allinone|
+    allinone.vm.provision :shell, :inline => $bootstrap_script
+    allinone.vm.provision "cfengine" do |cf|
+        cf.policy_server_address = "10.0.80.10"
+    end
+    allinone.vm.hostname = "a.allinone.local.unifi.id"
+    allinone.vm.network "private_network", ip: "10.0.80.100"
+    allinone.vm.network "public_network"
+  end
 end
