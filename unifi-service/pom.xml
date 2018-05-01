@@ -3,7 +3,7 @@
 
     <groupId>id.unifi.service</groupId>
     <artifactId>unifi-service-parent</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
 
     <name>unifi.id Platform Services Parent</name>
@@ -71,7 +71,7 @@
 
     <scm>
         <developerConnection>scm:git:ssh://git@github.com/megawarne-consulting/unifi.id</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.2</tag>
     </scm>
 
     <prerequisites>
