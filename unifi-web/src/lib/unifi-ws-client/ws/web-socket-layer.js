@@ -115,7 +115,7 @@ export default class WebSocketLayer {
     if (!this.isConnected) {
       await this.connected
     }
-    window.msgpack = msgpack
+    // window.msgpack = msgpack
 
     // console.log('connected, sending')
     if (this.type === 'json') {
