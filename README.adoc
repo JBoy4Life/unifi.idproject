@@ -2,3 +2,4 @@
 
 - link:unifi-service/README.adoc[unifi.id Platform Services]
 - link:data-fixtures/README.adoc[Data Fixtures]
+- link:unifi-gallagher-detection-logger/README.adoc[Gallagher Detection Logger]

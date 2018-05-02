@@ -1,0 +1,32 @@
+= Gallagher Detection Logger
+
+Reads UHF-TID detections from unifi-core via its RabbitMQ exchange and sends
+them to an instance of Gallagher Command Centre via its DCOM-based FTCAPI.
+
+Tested with Gallagher Command Centre 7.50.
+
+For configuration options see link:src/main/id/unifi/service/demo/gallagher/GallagherDetectionLoggerService.java[GallagherDetectionLoggerService$Config].
+
+== Build dependencies
+
+- Oracle JDK 10
+- Maven 3.5+
+- unifi-common Java library
+- RabbitMQ (runtime only)
+
+== Running
+
+A RabbitMQ exchange for detection matches must be created first.
+The easiest way to do that is to run unifi-core at least once.
+
+    mvn clean install
+    mvn exec:java
+
+== Cleanup
+
+The process will bind a durable RabbitMQ queue to an exchange.
+This queue should be removed if this project isn't being used to prevent it from
+filling up:
+
+    rabbitmqadmin delete queue name=integration.gallagher.logger
+

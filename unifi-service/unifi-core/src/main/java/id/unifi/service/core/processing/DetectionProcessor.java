@@ -9,6 +9,7 @@ import id.unifi.service.common.detection.DetectionMatchListener;
 import id.unifi.service.common.detection.DetectionMatchMqConsumer;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.mq.MqUtils;
+import static id.unifi.service.common.mq.MqUtils.DETECTION_MATCH_EXCHANGE_NAME;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
@@ -20,8 +21,6 @@ import java.util.concurrent.TimeoutException;
  * Matches detections against zone and holder, sends results and to subscribed listeners and a RabbitMQ exchange.
  */
 public class DetectionProcessor {
-    private static final String DETECTION_MATCH_EXCHANGE_NAME = "core.detection.detection-matches";
-
     private final DetectionMatcher detectionMatcher;
     private final Set<DetectionMatchListener> listeners;
     private Connection connection;

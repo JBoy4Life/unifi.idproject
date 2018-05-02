@@ -20,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 public class MqUtils {
     private MqUtils() {}
 
+    public static final String DETECTION_MATCH_EXCHANGE_NAME = "core.detection.detection-matches";
     public static final TypeReference<DetectionMatch> DETECTION_MATCH_TYPE = new TypeReference<>() {};
 
     private static final ObjectMapper mapper = getObjectMapper(Protocol.MSGPACK);
