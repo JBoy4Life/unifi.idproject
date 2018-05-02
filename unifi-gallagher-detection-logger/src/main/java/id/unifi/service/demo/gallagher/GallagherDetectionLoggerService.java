@@ -11,6 +11,7 @@ import id.unifi.service.common.util.MetricUtils;
 import id.unifi.service.common.version.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.IOException;
 
@@ -18,6 +19,10 @@ public class GallagherDetectionLoggerService {
     static {
         // Prefer IPv4, otherwise 0.0.0.0 gets interpreted as IPv6 broadcast
         System.setProperty("java.net.preferIPv4Stack", "true");
+
+        // j-Interop uses java.util.logging, let's redirect to SLF4J
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
     }
 
     private static final Logger log = LoggerFactory.getLogger(GallagherDetectionLoggerService.class);
