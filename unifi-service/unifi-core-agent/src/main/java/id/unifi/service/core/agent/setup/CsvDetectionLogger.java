@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,7 +43,7 @@ public class CsvDetectionLogger implements DetectionLogger {
                     Integer.toString(d.portNumber),
                     d.detectable.detectableId,
                     d.detectable.detectableType.toString(),
-                    d.rssi.toString(),
+                    d.rssi.map(BigDecimal::toString).orElse(""),
                     Integer.toString(d.count)
             }));
             writer.flush();
