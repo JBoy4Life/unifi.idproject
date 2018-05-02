@@ -15,4 +15,5 @@
     <logger name="id.unifi.service.core" level="DEBUG" />
     <logger name="id.unifi.service.core.agent" level="INFO" />
     <logger name="id.unifi.service.provider.rfid" level="INFO" />
+    <logger name="org.llrp" level="WARN" />
 </configuration>
