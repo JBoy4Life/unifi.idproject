@@ -126,6 +126,13 @@
                         </goals>
                         <configuration>
                             <mainClass>id.unifi.service.demo.gallagher.GallagherDetectionLoggerService</mainClass>
+                            <systemProperties>
+                                <property><key>unifi.ftc.api.server</key><value>10.0.99.3</value></property>
+                                <property><key>unifi.ftc.api.domain</key><value>localhost</value></property>
+                                <property><key>unifi.ftc.api.username</key><value>Administrator</value></property>
+                                <property><key>unifi.ftc.api.password</key><value>TestPass123</value></property>
+                                <property><key>unifi.ftc.api.facility.code</key><value>12345</value></property>
+                            </systemProperties>
                         </configuration>
                     </execution>
                 </executions>

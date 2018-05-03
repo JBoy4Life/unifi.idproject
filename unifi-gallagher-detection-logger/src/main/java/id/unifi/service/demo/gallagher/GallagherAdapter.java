@@ -14,30 +14,34 @@ import java.util.concurrent.SynchronousQueue;
 public class GallagherAdapter implements IFTMiddleware2 {
     private static final Logger log = LoggerFactory.getLogger(GallagherAdapter.class);
 
-    private final FtcApi ftcApi;
+    private FtcApi ftcApi;
     private final Thread processingThread;
     private final BlockingQueue<Runnable> detectionQueue;
+    private final FtcApiConfig config;
 
     private volatile CountDownLatch registerLatch;
 
-    public static GallagherAdapter create() {
-        var adapter = new GallagherAdapter();
+    public static GallagherAdapter create(FtcApiConfig config) {
+        var adapter = new GallagherAdapter(config);
         adapter.start();
         return adapter;
     }
 
-    private GallagherAdapter() {
+    private GallagherAdapter(FtcApiConfig config) {
+        this.config = config;
         this.detectionQueue = new SynchronousQueue<>();
-        var ftcApiHost = "10.0.99.3";
-        this.ftcApi = new FtcApi(ftcApiHost, "localhost", "Administrator", "TestPass123");
+
+        log.info("Connecting to FTC server {}", config.server());
         this.processingThread = new Thread(() -> {
             while (!Thread.interrupted()) {
-                log.info("Connecting to FTC server {}", ftcApiHost);
+                this.ftcApi = new FtcApi(config.server(), config.domain(), config.username(), config.password());
                 try {
                     registerLatch = new CountDownLatch(1);
                     log.info("Registering middleware");
                     ftcApi.registerMiddleware(this);
                     registerLatch.await();
+                    log.info("System registered");
+                    Thread.sleep(5000);
 
                     while (true) {
                         try {
@@ -74,23 +78,21 @@ public class GallagherAdapter implements IFTMiddleware2 {
         var detection = match.detection;
         var detectableId = detection.detectable.detectableId;
         final var hasRestoral = false;
-        var eventType = 2;
+
         var cardNumberFormatType = 2;
-        var facilityCode = 12345;
-        var systemId = "unifi.id";
         var itemId = String.format("%s:%d", detection.readerSn, detection.portNumber);
 
         log.trace("Logging {} to Gallagher", detection);
 
         ftcApi.logLongCardEvent2(
-                eventType,
+                config.eventType(),
                 eventId,
                 detection.detectionTime,
                 hasRestoral,
                 cardNumberFormatType,
                 detectableId,
-                facilityCode,
-                systemId,
+                config.facilityCode(),
+                config.systemId(),
                 itemId,
                 String.format("Card %s detected on %s", detectableId, itemId),
                 "No details.");
