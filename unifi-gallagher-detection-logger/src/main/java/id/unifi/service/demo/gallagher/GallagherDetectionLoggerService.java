@@ -43,7 +43,7 @@ public class GallagherDetectionLoggerService {
         jmxReporter.start();
 
         var mqConnection = MqUtils.connect(config.mq());
-        var adapter = GallagherAdapter.create(config.ftcApi());
+        var adapter = GallagherAdapter.create(registry, config.ftcApi());
         DetectionMqForwarder.create(mqConnection.createChannel(), (match, onSuccess) -> {
             try {
                 adapter.process(match, onSuccess);

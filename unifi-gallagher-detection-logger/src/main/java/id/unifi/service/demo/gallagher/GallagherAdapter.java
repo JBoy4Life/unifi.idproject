@@ -1,5 +1,8 @@
 package id.unifi.service.demo.gallagher;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import static com.codahale.metrics.MetricRegistry.name;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.provider.security.gallagher.FtcApi;
@@ -12,7 +15,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
 
 public class GallagherAdapter implements IFTMiddleware2 {
+    private static final String METRIC_NAME_PREFIX = "id.unifi.service.demo.gallagher";
+
     private static final Logger log = LoggerFactory.getLogger(GallagherAdapter.class);
+    private final Meter detectionsMeter;
 
     private FtcApi ftcApi;
     private final Thread processingThread;
@@ -20,16 +26,20 @@ public class GallagherAdapter implements IFTMiddleware2 {
     private final FtcApiConfig config;
 
     private volatile CountDownLatch registerLatch;
+    private volatile boolean connected;
 
-    public static GallagherAdapter create(FtcApiConfig config) {
-        var adapter = new GallagherAdapter(config);
+    public static GallagherAdapter create(MetricRegistry registry, FtcApiConfig config) {
+        var adapter = new GallagherAdapter(registry, config);
         adapter.start();
         return adapter;
     }
 
-    private GallagherAdapter(FtcApiConfig config) {
+    private GallagherAdapter(MetricRegistry registry, FtcApiConfig config) {
         this.config = config;
         this.detectionQueue = new SynchronousQueue<>();
+
+        registry.gauge(name(METRIC_NAME_PREFIX, "ftcapi", "health"), () -> () -> connected ? 1 : 0);
+        this.detectionsMeter = registry.meter(name(METRIC_NAME_PREFIX, "detections"));
 
         log.info("Connecting to FTC server {}", config.server());
         this.processingThread = new Thread(() -> {
@@ -40,6 +50,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
                     log.info("Registering middleware");
                     ftcApi.registerMiddleware(this);
                     registerLatch.await();
+                    connected = true;
                     log.info("System registered");
                     Thread.sleep(5000);
 
@@ -56,6 +67,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
+                connected = false;
             }
         });
     }
@@ -68,6 +80,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
         detectionQueue.put(() -> {
             if (match.detection.detectable.detectableType == DetectableType.UHF_TID) {
                 logDetection(match);
+                detectionsMeter.mark();
             }
             onSuccess.run();
         });

@@ -19,7 +19,7 @@ public class MetricUtils {
 
     private static final Logger log = LoggerFactory.getLogger(MetricUtils.class);
     private static final Pattern unifiMetricName =
-            Pattern.compile("id\\.unifi\\.service\\.([^.]+)\\.([^.]+)(?:\\.([^.]+)\\.([^.]+))?");
+            Pattern.compile("id\\.unifi\\.service\\.([^.]+)\\.([^.]+)(?:\\.([^.]+)(?:\\.([^.]+))?)?");
     private static final ObjectNameFactory defaultNameFactory = new DefaultObjectNameFactory();
     private static final CharMatcher invalidPropValueChars = CharMatcher.anyOf(",=:\"?*");
 
@@ -40,9 +40,16 @@ public class MetricUtils {
                         .filter(Objects::nonNull)
                         .map(MetricUtils::quotePropValue)
                         .toArray();
-                return escapedParts.length == 2
-                        ? new ObjectName(String.format("id.unifi.service.%s:metric=%s", escapedParts))
-                        : new ObjectName(String.format("id.unifi.service.%s:type=%s,name=%s,metric=%s", escapedParts));
+
+                switch (escapedParts.length) {
+                    case 2:
+                        return new ObjectName(String.format("id.unifi.service.%s:metric=%s", escapedParts));
+                    case 3:
+                        return new ObjectName(String.format("id.unifi.service.%s:type=%s,metric=%s", escapedParts));
+                    case 4:
+                        return new ObjectName(
+                                String.format("id.unifi.service.%s:type=%s,name=%s,metric=%s", escapedParts));
+                }
             }
         } catch (MalformedObjectNameException e) {
             log.warn("Unable to derive a JMX object name for domain {}, metric name {}", domain, name, e);
