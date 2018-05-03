@@ -64,10 +64,10 @@ public class GallagherAdapter implements IFTMiddleware2 {
         processingThread.start();
     }
 
-    public void process(DetectionMatch taggedMatch, Runnable onSuccess) throws InterruptedException {
+    public void process(DetectionMatch match, Runnable onSuccess) throws InterruptedException {
         detectionQueue.put(() -> {
-            if (taggedMatch.detection.detectable.detectableType == DetectableType.UHF_TID) {
-                logDetection(taggedMatch);
+            if (match.detection.detectable.detectableType == DetectableType.UHF_TID) {
+                logDetection(match);
             }
             onSuccess.run();
         });

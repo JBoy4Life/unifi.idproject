@@ -5,7 +5,8 @@ them to an instance of Gallagher Command Centre via its DCOM-based FTCAPI.
 
 Tested with Gallagher Command Centre 7.50.
 
-For configuration options see link:src/main/id/unifi/service/demo/gallagher/GallagherDetectionLoggerService.java[GallagherDetectionLoggerService$Config].
+For configuration options see the
+link:src/main/java/id/unifi/service/demo/gallagher/Config.java[Config interface].
 
 == Build dependencies
 
