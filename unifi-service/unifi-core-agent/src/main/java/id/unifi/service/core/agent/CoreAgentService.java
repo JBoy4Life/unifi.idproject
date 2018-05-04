@@ -33,7 +33,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.SynchronousQueue;
 import java.util.function.Consumer;
 
 public class CoreAgentService {
@@ -86,6 +86,19 @@ public class CoreAgentService {
             return;
         }
 
+        var registry = new MetricRegistry();
+        var jmxReporter = MetricUtils.createJmxReporter(registry);
+        jmxReporter.start();
+
+        var reportQueue = new SynchronousQueue<SiteDetectionReport>();
+        Consumer<SiteDetectionReport> detectionConsumer = report -> {
+            try {
+                reportQueue.put(report);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        };
+
         AgentConfigPersistence persistence;
         Optional<DetectionLogger> detectionLogger;
         if (mode == AgentMode.PRODUCTION) {
@@ -103,37 +116,39 @@ public class CoreAgentService {
             detectionLogger = Optional.of(new CsvDetectionLogger());
         }
 
-        var registry = new MetricRegistry();
-        var jmxReporter = MetricUtils.createJmxReporter(registry);
-        jmxReporter.start();
-
-        AtomicReference<CoreClient> client = new AtomicReference<>();
-        Consumer<SiteDetectionReport> detectionConsumer = report -> {
-            var filteredReport = new SiteDetectionReport(report.readerSn,
-                    report.detections.stream()
-                            .filter(d -> getDetectableTypes().contains(d.detectable.detectableType))
-                            .collect(toList()));
-
-            var coreClient = client.get();
-
-            getRollup().process(filteredReport).forEach(rolledUpReport -> {
-                if (coreClient != null) coreClient.sendRawDetections(rolledUpReport);
-                detectionLogger.ifPresent(w -> w.log(rolledUpReport));
-            });
-        };
-
         var readerManager = config.mockDetections()
                 ? new MockReaderManager(persistence, config.clientId(), detectionConsumer)
                 : new DefaultReaderManager(persistence, new RfidProvider(detectionConsumer, registry),
-                mode == AgentMode.PRODUCTION ? Duration.ofSeconds(10) : Duration.ZERO);
+                    mode == AgentMode.PRODUCTION ? Duration.ofSeconds(10) : Duration.ZERO);
 
+        Optional<CoreClient> coreClient;
         if (mode == AgentMode.PRODUCTION) {
             var componentHolder = new ComponentHolder(Map.of(ReaderManager.class, readerManager));
-            client.set(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
+            coreClient = Optional.of(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
         } else {
             log.info("Running in {} mode. Not connecting to a server.", mode);
+            coreClient = Optional.empty();
         }
-    }
+
+        var detectionProcessingThread = new Thread(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    var report = reportQueue.take();
+                    var filteredReport = new SiteDetectionReport(report.readerSn,
+                            report.detections.stream()
+                                    .filter(d -> getDetectableTypes().contains(d.detectable.detectableType))
+                                    .collect(toList()));
+
+                    getRollup().process(filteredReport).forEach(rolledUpReport -> {
+                        coreClient.ifPresent(c -> c.sendRawDetections(rolledUpReport));
+                        detectionLogger.ifPresent(w -> w.log(rolledUpReport));
+                    });
+                }
+            } catch (InterruptedException ignored) {}
+
+        });
+        detectionProcessingThread.start();
+}
 
     private static void logServiceConfig(AgentFullConfig setupAgentConfig) throws JsonProcessingException {
         var serviceConfig = setupAgentConfig.compactForService();
