@@ -93,7 +93,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
         final var hasRestoral = false;
 
         var cardNumberFormatType = 2;
-        var itemId = String.format("%s:%d", detection.readerSn, detection.portNumber);
+        var itemId = String.format("reader.%s.%d", detection.readerSn, detection.portNumber);
 
         log.trace("Logging {} to Gallagher", detection);
 
@@ -114,6 +114,8 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
     public void notifyItemRegistered(String systemId, String itemId, String config) {
         log.info("Item registered: {} / {}", systemId, itemId);
+        ftcApi.notifyStatus("unifi.id", "reader.37017090614.1",
+                1, false, false, "unifi.id: Reader is online.");
         //registerLatch.countDown();
     }
 
