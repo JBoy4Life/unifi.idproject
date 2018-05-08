@@ -36,6 +36,9 @@ export default class Capsule {
             // } else {
                 resolve(parties);
             // }
+        }).catch((error) => {
+            console.error(`HTTP Status ${error.response.status}: ${error.response.statusText}`);
+            resolve([]);
         });
     }
     _isPerson(party) {
