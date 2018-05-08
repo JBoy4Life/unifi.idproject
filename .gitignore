@@ -12,3 +12,4 @@ release.properties
 *.log
 cw-capsule-bridge/lib/
 cw-capsule-bridge/nbproject/
+cw-capsule-bridge/node_modules/
