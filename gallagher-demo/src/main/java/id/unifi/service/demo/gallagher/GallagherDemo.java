@@ -29,8 +29,9 @@ public class GallagherDemo implements IFTMiddleware2 {
         log.info("Zone: {}", ZONE);
 
         GallagherDemo demo = setUp();
+        log.info("Demo is set up");
         Detection detection =
-                new Detection(new DetectablePK("test-club", "E28011606000020497CB0065", DetectableType.UHF_EPC),
+                new Detection(new DetectablePK("test-club", "E28011606000020497CB0066", DetectableType.UHF_EPC),
                         "37017090614", 1, Instant.now(), BigDecimal.ZERO, 1);
         demo.processDetection(detection);
         quitLatch.await();
@@ -44,8 +45,12 @@ public class GallagherDemo implements IFTMiddleware2 {
                 "localhost",
                 "Administrator",
                 "TestPass123");
+        log.info("FTC API initialized");
+
         GallagherDemo demo = new GallagherDemo(ftcApi);
+        log.info("Registering middleware");
         ftcApi.registerMiddleware(demo);
+        log.info("Waiting for middleware registration response");
 
         try {
             registerLatch.await();
@@ -53,13 +58,14 @@ public class GallagherDemo implements IFTMiddleware2 {
             throw new RuntimeException(e);
         }
 
+        log.info("Registration received");
         return demo;
     }
 
     public void processDetection(Detection detection) {
         int eventId = 0; // corr ID; 0 for none
         log.info("Logging " + detection.detectable.detectableId);
-        ftcApi.logLongCardEvent2(2, eventId, detection.detectionTime.atZone(ZONE), false,
+        ftcApi.logLongCardEvent2(4, eventId, detection.detectionTime.atZone(ZONE), false,
                 2, detection.detectable.detectableId, 12345, "unifi.id", "unifi.id.zone.reception",
                 "Card detected: Zone [Reception], #12345", "No details.");
         log.info("Logged " + detection.detectable.detectableId);
@@ -67,10 +73,9 @@ public class GallagherDemo implements IFTMiddleware2 {
 
     @Override
     public void notifyItemRegistered(String systemId, String itemId, String config) {
+        log.info("notifyItemRegistered");
         ftcApi.notifyStatus("unifi.id", "unifi.id.zone.reception",
                 1, false, false, "Unifi.id: Zone [Reception] is online.");
-        ftcApi.notifyStatus("unifi.id", "unifi.id.zone.f1",
-                1, false, true, "Unifi.id: Zone [Floor 1] is offline.");
         registerLatch.countDown();
     }
 
