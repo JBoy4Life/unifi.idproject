@@ -16,7 +16,7 @@
         <build.number>unknown</build.number><!-- to be replaced by CI -->
 
         <unifi.common.version>0.3-SNAPSHOT</unifi.common.version>
-        <jinterop.version>2.0.4</jinterop.version>
+        <jinterop.version>2.0.8-kohsuke-1</jinterop.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <junit.jupiter.version>5.2.0-RC1</junit.jupiter.version>
@@ -35,7 +35,7 @@
             <version>${unifi.common.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jinterop</groupId>
+            <groupId>org.kohsuke.jinterop</groupId>
             <artifactId>j-interop</artifactId>
             <version>${jinterop.version}</version>
         </dependency>
