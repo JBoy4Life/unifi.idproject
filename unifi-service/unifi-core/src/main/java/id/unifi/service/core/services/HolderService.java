@@ -115,7 +115,8 @@ public class HolderService {
                           HolderType holderType,
                           String name,
                           @Nullable Boolean active,
-                          @Nullable byte[] image) {
+                          @Nullable byte[] image,
+                          @Nullable Map<String, Object> metadata) {
         authorize(session, clientId);
 
         var imageWithType = validateImageFormat(Optional.ofNullable(image));
@@ -129,6 +130,15 @@ public class HolderService {
                         .set(HOLDER.NAME, name)
                         .set(HOLDER.ACTIVE, active != null ? active : true)
                         .execute();
+
+                // TODO: validate metadata
+                if (metadata != null) {
+                    sql.insertInto(HOLDER_METADATA)
+                            .set(HOLDER_METADATA.CLIENT_ID, clientId)
+                            .set(HOLDER_METADATA.CLIENT_REFERENCE, clientReference)
+                            .set(HOLDER_METADATA.METADATA, metadataToJson(metadata))
+                            .execute();
+                }
 
                 switch (holderType) {
                     case CONTACT:
@@ -190,6 +200,18 @@ public class HolderService {
                 }
             }
 
+            if (changes.metadata != null) {
+                var jsonMetadata = metadataToJson(changes.metadata);
+                rowsUpdated += sql.insertInto(HOLDER_METADATA)
+                        .set(HOLDER_METADATA.CLIENT_ID, clientId)
+                        .set(HOLDER_METADATA.CLIENT_REFERENCE, clientReference)
+                        .set(HOLDER_METADATA.METADATA, jsonMetadata)
+                        .onConflict()
+                        .doUpdate()
+                        .set(HOLDER_METADATA.METADATA, jsonMetadata)
+                        .execute();
+            }
+
             if (rowsUpdated == 0) throw new NotFound("holder");
             return null;
         });
@@ -219,7 +241,7 @@ public class HolderService {
                 HolderType.fromString(r.get(HOLDER.HOLDER_TYPE)),
                 r.get(HOLDER.ACTIVE),
                 fieldValueOpt(r, HOLDER_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))),
-                fieldValueOpt(r, HOLDER_METADATA.METADATA).map(HolderService::extractMetadata));
+                Optional.ofNullable(r.field(HOLDER_METADATA.METADATA)).map(f -> extractMetadata(r.get(f))));
     }
 
     private static Table<? extends Record> calculateTableJoin(@Nullable Set<String> with) {
@@ -242,9 +264,12 @@ public class HolderService {
                 .orElseThrow(Unauthorized::new);
     }
 
-    @Nullable
     private static Map<String, Object> extractMetadata(JsonNode metadata) {
-        return metadata == null ? null : getObjectMapper(Protocol.JSON).convertValue(metadata, MAP_TYPE_REFERENCE);
+        return metadata == null ? Map.of() : getObjectMapper(Protocol.JSON).convertValue(metadata, MAP_TYPE_REFERENCE);
+    }
+
+    private static JsonNode metadataToJson(Map<String, Object> metadata) {
+        return getObjectMapper(Protocol.JSON).valueToTree(metadata);
     }
 
     public static class HolderInfo {
@@ -288,15 +313,15 @@ public class HolderService {
         public String name;
         public Boolean active;
         public Optional<byte[]> image;
+        public Map<String, Object> metadata;
 
         public FieldChanges() {}
 
         void validate() {
             validateAll(
-                    v("name|active|image", atLeastOneNonNull(active, image)),
+                    v("name|active|image|metadata", atLeastOneNonNull(name, active, image, metadata)),
                     v("name", name, Validation::shortString)
             );
-
         }
     }
 }
