@@ -7,31 +7,30 @@
         <version>0.3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>unifi-attendance-schema</artifactId>
+    <artifactId>unifi-db-common</artifactId>
 
-    <name>unifi.id Attendance Module Database Schema</name>
-
-    <properties>
-        <schema.name>attendance</schema.name>
-        <jdbc.url>jdbc:postgresql:unifi</jdbc.url>
-        <jdbc.driver>org.postgresql.Driver</jdbc.driver>
-        <jdbc.user>${user.name}</jdbc.user>
-        <jooq.package.name>id.unifi.service.attendance.db</jooq.package.name>
-    </properties>
+    <name>unifi.id Common Database Library</name>
 
     <dependencies>
         <dependency>
-            <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-core-schema</artifactId>
-	        <version>${project.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>jsr250-api</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
 </project>

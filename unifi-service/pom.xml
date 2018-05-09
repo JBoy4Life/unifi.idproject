@@ -11,6 +11,7 @@
     <modules>
         <module>unifi-core</module>
         <module>unifi-core-schema</module>
+        <module>unifi-db-common</module>
         <module>unifi-common</module>
         <module>unifi-core-agent</module>
         <module>unifi-provider-rfid</module>
@@ -426,6 +427,11 @@
                                         <forcedType>
                                             <name>CLOB</name>
                                             <types>CITEXT</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>com.fasterxml.jackson.databind.JsonNode</userType>
+                                            <binding>id.unifi.service.dbcommon.PostgresJsonbBinding</binding>
+                                            <types>JSONB</types>
                                         </forcedType>
                                     </forcedTypes>
                                 </database>

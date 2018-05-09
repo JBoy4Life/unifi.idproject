@@ -23,6 +23,7 @@ import static id.unifi.service.core.db.Tables.AGENT;
 import static id.unifi.service.core.db.Tables.AGENT_PASSWORD;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.READER;
+import id.unifi.service.core.db.tables.records.AgentRecord;
 import id.unifi.service.core.db.tables.records.AntennaRecord;
 import id.unifi.service.core.db.tables.records.ReaderRecord;
 import static java.util.Spliterator.ORDERED;
@@ -33,7 +34,6 @@ import static java.util.stream.Collectors.toSet;
 import static java.util.stream.StreamSupport.stream;
 import org.eclipse.jetty.websocket.api.Session;
 import org.jooq.DSLContext;
-import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +86,7 @@ public class IdentityService {
             var rawAgentConfig = sql.selectFrom(AGENT)
                     .where(AGENT.CLIENT_ID.eq(agent.clientId))
                     .and(AGENT.AGENT_ID.eq(agent.agentId))
-                    .fetchOptional(r -> jsonFromPgObject(r.getConfig()));
+                    .fetchOptional(AgentRecord::getConfig);
 
             var readerRecords = sql.selectFrom(READER)
                     .where(READER.CLIENT_ID.eq(agent.clientId))
@@ -106,7 +106,7 @@ public class IdentityService {
                     .map(r -> new ReaderFullConfig<>(
                             Optional.of(r.getReaderSn()),
                             Optional.of(HostAndPort.fromString(r.getEndpoint())),
-                            Optional.of(splicePortConfig(jsonFromPgObject(r.getConfig()),
+                            Optional.of(splicePortConfig(r.getConfig(),
                                     antennae.get(r.getReaderSn()).stream().map(AntennaRecord::getPortNumber).collect(toSet())))))
                     .collect(toList());
             return new AgentFullConfig<>(rawAgentConfig, readerConfigs);
@@ -146,20 +146,9 @@ public class IdentityService {
         return newConfigNode;
     }
 
-    private JsonNode jsonFromPgObject(Object object) {
-        var jsonString = ((PGobject) object).getValue();
-
-        try {
-            return getObjectMapper(Protocol.JSON).readTree(jsonString);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private boolean passwordMatches(String clientId, String agentId, byte[] password) {
         var encodedHash = db.execute(sql -> sqlPasswordHash(sql, clientId, agentId));
         return encodedHash.map(hash -> SecretHashing.check(password, hash)).orElse(false);
-
     }
 
     private static Optional<byte[]> sqlPasswordHash(DSLContext sql, String clientId, String agentId) {

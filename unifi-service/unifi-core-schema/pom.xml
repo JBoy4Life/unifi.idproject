@@ -21,12 +21,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>jooq</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>jsr250-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-db-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

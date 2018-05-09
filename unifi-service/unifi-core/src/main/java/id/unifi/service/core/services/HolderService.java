@@ -1,6 +1,7 @@
 package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import id.unifi.service.common.HolderType;
 import id.unifi.service.common.api.Protocol;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
@@ -40,13 +41,11 @@ import static org.jooq.impl.DSL.and;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.value;
-import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -244,20 +243,8 @@ public class HolderService {
     }
 
     @Nullable
-    private static Map<String, Object> extractMetadata(Object metadata) {
-        if (metadata == null) return null;
-
-        if (!(metadata instanceof PGobject) || !((PGobject) metadata).getType().equals("jsonb")) {
-            throw new IllegalArgumentException("Unexpected metadata type: " + metadata);
-        }
-
-        var metadataString = ((PGobject) metadata).getValue();
-
-        try {
-            return getObjectMapper(Protocol.JSON).readValue(metadataString, MAP_TYPE_REFERENCE);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static Map<String, Object> extractMetadata(JsonNode metadata) {
+        return metadata == null ? null : getObjectMapper(Protocol.JSON).convertValue(metadata, MAP_TYPE_REFERENCE);
     }
 
     public static class HolderInfo {
