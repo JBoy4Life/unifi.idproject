@@ -44,22 +44,46 @@ async function fullSync() {
             "username": config.operatorUsername,
             "password": config.operatorPassword
         }
-    }, (authResponse) => {
+    },
+    (authResponse) => {
         console.debug(authResponse);
         persons.forEach((person) => {
+
             unifi.request({
                 "messageType": "core.holder.add-holder",
                 "payload": {
                     "clientId": config.clientId,
                     "clientReference": person.id.toString(),
                     "holderType": "contact",
-                    "name": person.firstName + " " + person.lastName,
+                    "name": `${person.firstName} ${person.lastName}`,
                     "active": true,
                     "image": null
                 }
-            }, (response) => {
+            },
+            (response) => {
                 console.debug(response);
+                if (response.messageType === "core.error.already-exists") {
+
+                    unifi.request({
+                        "messageType": "core.holder.edit-holder",
+                        "payload": {
+                            "clientId": config.clientId,
+                            "clientReference": person.id.toString(),
+                            "holderType": "contact",
+                            "changes": {
+                                "name": `${person.firstName} ${person.lastName}`,
+                                "active": true,
+                                "image": null
+                            }
+                        }
+                    },
+                    (response) => {
+                        console.debug(response);
+                    });
+
+                }
             });
+
         });
     });
 
