@@ -6,16 +6,16 @@ var env = require("env-variable")({
     CAPSULE_BRIDGE_CLIENT_ID: "test-club",
     CAPSULE_BRIDGE_OPERATOR_USERNAME: "test",
     CAPSULE_BRIDGE_OPERATOR_PASSWORD: "test",
-    CAPSULE_BRIDGE_WEBSOCKET_IP: "127.0.0.1",
-    CAPSULE_BRIDGE_WEBSOCKET_PORT: "8000"
+    CAPSULE_BRIDGE_WEBSOCKET_URI: "ws://127.0.0.1:8000/service/json",
+    CAPSULE_BRIDGE_WEBSOCKET_TYPE: "json"
 });
 
 var config = {
     clientId: env.CAPSULE_BRIDGE_CLIENT_ID,
     operatorUsername: env.CAPSULE_BRIDGE_OPERATOR_USERNAME,
     operatorPassword: env.CAPSULE_BRIDGE_OPERATOR_PASSWORD,
-    websocketIp: env.CAPSULE_BRIDGE_WEBSOCKET_IP,
-    websocketPort: env.CAPSULE_BRIDGE_WEBSOCKET_PORT
+    websocketUri: env.CAPSULE_BRIDGE_WEBSOCKET_URI,
+    websocketType: env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
 };
 console.debug(`Configuration: ${JSON.stringify(config)}`);
 
@@ -30,8 +30,8 @@ async function fullSync() {
 
     // Connect to the Unifi.id service.
     let unifi = new UnifiWsClient({
-        url: `ws://${config.websocketIp}:${config.websocketPort}/service/json`,
-        type: "json"
+        url: config.websocketUri,
+        type: config.websocketType
     });
     await unifi.connect();
     unifi.start();
