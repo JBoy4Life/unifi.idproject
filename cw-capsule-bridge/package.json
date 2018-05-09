@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "btoa": "^1.2.1",
+    "env-variable": "0.0.4",
     "http-link-header": "^0.8.0",
     "jsonfile": "^4.0.0",
     "msgpack-lite": "^0.1.26",
