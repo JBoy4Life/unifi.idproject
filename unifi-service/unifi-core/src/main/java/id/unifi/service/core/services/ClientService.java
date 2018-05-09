@@ -14,6 +14,8 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT;
 import static id.unifi.service.core.db.Tables.CLIENT_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
+
+import id.unifi.service.core.db.tables.Client;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.slf4j.Logger;
@@ -59,6 +61,11 @@ public class ClientService {
         }
 
         return tables;
+    }
+
+    @ApiOperation
+    public ClientInfo siteDetections() {
+        return null;
     }
 
     private static ClientInfo clientInfoFromRecord(Record r) {
