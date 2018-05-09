@@ -4,8 +4,12 @@ set -eu
 
 # Add unoffocial Oracle JDK repo
 apt-get -y install software-properties-common dirmngr
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EA8CACC073C3DB2A
-add-apt-repository ppa:linuxuprising/java
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 73C3DB2A
+
+echo "deb http://ppa.launchpad.net/linuxuprising/java/ubuntu xenial main " |\
+  tee -a /etc/apt/sources.list.d/linux-uprising_java.list
+echo "deb http://ppa.launchpad.net/linuxuprising/java/ubuntu xenial main " |\
+  tee -a /etc/apt/sources.list.d/linux-uprising_java.list
 echo "oracle-java10-installer shared/accepted-oracle-license-v1-1 select true" |\
   debconf-set-selections
 
