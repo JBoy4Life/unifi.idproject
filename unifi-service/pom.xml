@@ -3,7 +3,7 @@
 
     <groupId>id.unifi.service</groupId>
     <artifactId>unifi-service-parent</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>unifi.id Platform Services Parent</name>
