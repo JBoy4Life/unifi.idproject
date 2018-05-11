@@ -9,22 +9,20 @@ import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.util.QueryUtils.ImageWithType;
-import static id.unifi.service.common.util.QueryUtils.fieldValueOpt;
-import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Tables.CLIENT;
-import static id.unifi.service.core.db.Tables.CLIENT_IMAGE;
-import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
-
-import id.unifi.service.core.db.tables.Client;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static id.unifi.service.common.util.QueryUtils.fieldValueOpt;
+import static id.unifi.service.core.db.Core.CORE;
+import static id.unifi.service.core.db.Tables.*;
 
 @ApiService("client")
 public class ClientService {
@@ -64,10 +62,11 @@ public class ClientService {
     }
 
     @ApiOperation
-    public ClientInfo siteDetections() {
-        return null;
+    public SiteDetectionReport siteDetectionsReports(OperatorSessionData session, ZonedDateTime startDate,ZonedDateTime endDate) {
+        return new SiteDetectionReport("testName", "testCardNumber", 6.2, "real", "Paddington");
     }
-
+    //above Operation will return List<SiteDetectionReport> instead of a single instance
+    //Map Structure for sites
     private static ClientInfo clientInfoFromRecord(Record r) {
         return new ClientInfo(
                 r.get(CLIENT.CLIENT_ID),
@@ -98,5 +97,22 @@ public class ClientService {
                     ", image=" + image +
                     '}';
         }
+    }
+
+    public static class SiteDetectionReport {
+        public final String cardNumber;
+        public final String firstName;
+        public final double totalHours;
+        public final String homeSite;
+        public final String memberType;
+        SiteDetectionReport(String firstName, String cardNumber, double totalHours, String memberType, String homeSite) {
+            this.firstName = firstName;
+            this.cardNumber = cardNumber;
+            this.totalHours = totalHours;
+            this.memberType = memberType;
+            this.homeSite = homeSite;
+        }
+
+
     }
 }
