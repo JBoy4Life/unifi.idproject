@@ -37,16 +37,13 @@ class DetectionMqForwarder {
             channel.basicQos(10);
 
             var mqConsumer = unmarshallingConsumer(DETECTION_MATCH_TYPE, channel, taggedMatch -> {
-                var success = false;
-                while (!success) {
-                    try {
-                        log.trace("Processing {} ", taggedMatch);
-                        consumer.accept(taggedMatch.payload);
-                        channel.basicAck(taggedMatch.deliveryTag, false);
-                        success = true;
-                    } catch (Exception e) {
-                        log.info("Failed to process {}, retrying", taggedMatch);
-                    }
+                try {
+                    log.trace("Processing {} ", taggedMatch);
+                    consumer.accept(taggedMatch.payload);
+                    channel.basicAck(taggedMatch.deliveryTag, false);
+                } catch (Exception e) {
+                    log.error("Fatal error", e);
+                    System.exit(1);
                 }
             });
             channel.basicConsume(PROCESSING_QUEUE_NAME, mqConsumer);

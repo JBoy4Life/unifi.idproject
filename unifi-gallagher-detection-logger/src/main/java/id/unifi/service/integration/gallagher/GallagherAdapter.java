@@ -7,9 +7,11 @@ import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.provider.security.gallagher.FtcApi;
 import id.unifi.service.provider.security.gallagher.IFTMiddleware2;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -18,6 +20,7 @@ import java.util.concurrent.SynchronousQueue;
 
 public class GallagherAdapter implements IFTMiddleware2 {
     private static final String METRIC_NAME_PREFIX = "id.unifi.service.integration.gallagher";
+    private static final Duration REGISTER_MIDDLEWARE_TIMEOUT = Duration.ofSeconds(60);
 
     private static final Logger log = LoggerFactory.getLogger(GallagherAdapter.class);
     private final Meter detectionsMeter;
@@ -45,32 +48,28 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
         log.info("Connecting to FTC server {}", config.server());
         this.processingThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                this.ftcApi = new FtcApi(config.server(), config.domain(), config.username(), config.password());
-                try {
-                    registerLatch = new CountDownLatch(1);
-                    log.info("Registering middleware");
-                    ftcApi.registerMiddleware(this);
-                    registerLatch.await();
-                    connected = true;
-                    log.info("System registered");
-                    Thread.sleep(5000);
+            try {
+                ftcApi = new FtcApi(config.server(), config.domain(), config.username(), config.password());
+                registerLatch = new CountDownLatch(1);
+                log.info("Registering middleware");
+                ftcApi.registerMiddleware(this);
 
-                    while (true) {
-                        try {
-                            processingQueue.take().run();
-                        } catch (Exception e) {
-                            log.error("Error processing detection, closing connection", e);
-                            break;
-                        }
-                    }
-                    
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    connected = false;
-                    ftcApi.close();
+                if (!registerLatch.await(REGISTER_MIDDLEWARE_TIMEOUT.toNanos(), NANOSECONDS)) {
+                    throw new RuntimeException("Timed out while registering middleware");
                 }
+
+                connected = true;
+                log.info("System registered");
+
+                Thread.sleep(5000); // TODO: wait for ESI notifications instead
+
+                while (!Thread.currentThread().isInterrupted()) {
+                    var currentTask = processingQueue.take();
+                    currentTask.run();
+                }
+            } catch (Exception e) {
+                log.error("Fatal error", e);
+                System.exit(1);
             }
         });
     }
@@ -120,8 +119,6 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
     public void notifyItemRegistered(String systemId, String itemId, String config) {
         log.info("Item registered: {} / {}", systemId, itemId);
-        ftcApi.notifyStatus("unifi.id", "reader.37017090614.1",
-                1, false, false, "unifi.id: Reader is online.");
     }
 
     public void notifyItemDeregistered(String systemId, String itemId) {
