@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
 
 public class GallagherAdapter implements IFTMiddleware2 {
@@ -22,7 +24,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
     private FtcApi ftcApi;
     private final Thread processingThread;
-    private final BlockingQueue<Runnable> detectionQueue;
+    private final BlockingQueue<FutureTask<?>> processingQueue;
     private final FtcApiConfig config;
 
     private volatile CountDownLatch registerLatch;
@@ -36,14 +38,14 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
     private GallagherAdapter(MetricRegistry registry, FtcApiConfig config) {
         this.config = config;
-        this.detectionQueue = new SynchronousQueue<>();
+        this.processingQueue = new SynchronousQueue<>();
 
         registry.gauge(name(METRIC_NAME_PREFIX, "ftcapi", "health"), () -> () -> connected ? 1 : 0);
         this.detectionsMeter = registry.meter(name(METRIC_NAME_PREFIX, "detections"));
 
         log.info("Connecting to FTC server {}", config.server());
         this.processingThread = new Thread(() -> {
-            while (!Thread.interrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 this.ftcApi = new FtcApi(config.server(), config.domain(), config.username(), config.password());
                 try {
                     registerLatch = new CountDownLatch(1);
@@ -56,18 +58,19 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
                     while (true) {
                         try {
-                            detectionQueue.take().run();
+                            processingQueue.take().run();
                         } catch (Exception e) {
                             log.error("Error processing detection, closing connection", e);
                             break;
                         }
                     }
                     
-                    ftcApi.close();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                } finally {
+                    connected = false;
+                    ftcApi.close();
                 }
-                connected = false;
             }
         });
     }
@@ -76,17 +79,19 @@ public class GallagherAdapter implements IFTMiddleware2 {
         processingThread.start();
     }
 
-    public void process(DetectionMatch match, Runnable onSuccess) throws InterruptedException {
-        detectionQueue.put(() -> {
-            if (match.detection.detectable.detectableType == DetectableType.UHF_TID) {
-                logDetection(match);
-                detectionsMeter.mark();
-            }
-            onSuccess.run();
-        });
+    public void process(DetectionMatch match) throws InterruptedException {
+        var future = new FutureTask<>(() -> logDetection(match), null);
+        processingQueue.put(future);
+        try {
+            future.get();
+        } catch (ExecutionException e) {
+            throw e.getCause() instanceof RuntimeException ? (RuntimeException) e.getCause() : new RuntimeException(e);
+        }
     }
 
     private void logDetection(DetectionMatch match) {
+        if (match.detection.detectable.detectableType != DetectableType.UHF_TID) return;
+
         var eventId = 0; // corr ID; 0 for none
         var detection = match.detection;
         var detectableId = detection.detectable.detectableId;
@@ -110,13 +115,13 @@ public class GallagherAdapter implements IFTMiddleware2 {
                 String.format("Card %s detected on %s", detectableId, itemId),
                 "No details.");
         log.trace("Logged {} to Gallagher", detection);
+        detectionsMeter.mark();
     }
 
     public void notifyItemRegistered(String systemId, String itemId, String config) {
         log.info("Item registered: {} / {}", systemId, itemId);
         ftcApi.notifyStatus("unifi.id", "reader.37017090614.1",
                 1, false, false, "unifi.id: Reader is online.");
-        //registerLatch.countDown();
     }
 
     public void notifyItemDeregistered(String systemId, String itemId) {

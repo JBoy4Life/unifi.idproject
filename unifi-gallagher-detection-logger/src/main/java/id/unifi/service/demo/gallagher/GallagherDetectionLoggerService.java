@@ -36,7 +36,6 @@ public class GallagherDetectionLoggerService {
         VersionInfo.log();
 
         var config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
-        log.info("Config: {}", config);
 
         var registry = new MetricRegistry();
         var jmxReporter = MetricUtils.createJmxReporter(registry);
@@ -44,12 +43,6 @@ public class GallagherDetectionLoggerService {
 
         var mqConnection = MqUtils.connect(config.mq());
         var adapter = GallagherAdapter.create(registry, config.ftcApi());
-        DetectionMqForwarder.create(mqConnection.createChannel(), (match, onSuccess) -> {
-            try {
-                adapter.process(match, onSuccess);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        DetectionMqForwarder.create(mqConnection.createChannel(), adapter::process);
     }
 }

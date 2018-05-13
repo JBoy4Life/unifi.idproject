@@ -15,7 +15,7 @@
 
         <build.number>unknown</build.number><!-- to be replaced by CI -->
 
-        <unifi.common.version>0.3-SNAPSHOT</unifi.common.version>
+        <unifi.common.version>0.4-SNAPSHOT</unifi.common.version>
         <jinterop.version>2.0.8-kohsuke-1</jinterop.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
