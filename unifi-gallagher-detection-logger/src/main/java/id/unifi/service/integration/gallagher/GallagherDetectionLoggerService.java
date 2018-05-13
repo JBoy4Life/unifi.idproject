@@ -1,6 +1,8 @@
 package id.unifi.service.integration.gallagher;
 
+import ch.qos.logback.classic.Level;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Slf4jReporter;
 import com.statemachinesystems.envy.Envy;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class GallagherDetectionLoggerService {
     static {
@@ -24,6 +27,8 @@ public class GallagherDetectionLoggerService {
     }
 
     private static final Logger log = LoggerFactory.getLogger(GallagherDetectionLoggerService.class);
+    private static final Logger metricsLog =
+            LoggerFactory.getLogger(GallagherDetectionLoggerService.class.getName() + ":metrics");
 
     public static void main(String[] args) throws IOException {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
@@ -36,10 +41,19 @@ public class GallagherDetectionLoggerService {
         VersionInfo.log();
 
         var config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
+        config.logLevel().ifPresent(level ->
+                ((ch.qos.logback.classic.Logger)
+                        LoggerFactory.getLogger(GallagherDetectionLoggerService.class.getPackageName()))
+                        .setLevel(Level.toLevel(level, null)));
 
         var registry = new MetricRegistry();
         var jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
+        var loggingReporter = Slf4jReporter.forRegistry(registry)
+                .outputTo(metricsLog)
+                .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO)
+                .build();
+        loggingReporter.start(1, 1, TimeUnit.MINUTES);
 
         var mqConnection = MqUtils.connect(config.mq());
         var adapter = GallagherAdapter.create(registry, config.ftcApi());
