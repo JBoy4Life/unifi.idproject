@@ -16,6 +16,6 @@
         <appender-ref ref="STDOUT" />
     </root>
 
-    <logger name="id.unifi.service.demo.gallagher" level="INFO" />
+    <logger name="id.unifi.service.integration.gallagher" level="INFO" />
     <logger name="org.jinterop" level="WARN" />
 </configuration>

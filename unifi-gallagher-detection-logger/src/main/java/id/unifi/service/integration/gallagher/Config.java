@@ -1,4 +1,4 @@
-package id.unifi.service.demo.gallagher;
+package id.unifi.service.integration.gallagher;
 
 import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.common.config.MqConfig;
@@ -8,4 +8,6 @@ interface Config {
     MqConfig mq();
 
     FtcApiConfig ftcApi();
+
+
 }

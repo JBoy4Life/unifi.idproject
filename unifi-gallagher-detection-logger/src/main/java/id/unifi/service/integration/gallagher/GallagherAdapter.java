@@ -1,4 +1,4 @@
-package id.unifi.service.demo.gallagher;
+package id.unifi.service.integration.gallagher;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -17,7 +17,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
 
 public class GallagherAdapter implements IFTMiddleware2 {
-    private static final String METRIC_NAME_PREFIX = "id.unifi.service.demo.gallagher";
+    private static final String METRIC_NAME_PREFIX = "id.unifi.service.integration.gallagher";
 
     private static final Logger log = LoggerFactory.getLogger(GallagherAdapter.class);
     private final Meter detectionsMeter;

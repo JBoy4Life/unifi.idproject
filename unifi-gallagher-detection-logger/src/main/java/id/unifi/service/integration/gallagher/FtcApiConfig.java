@@ -1,4 +1,4 @@
-package id.unifi.service.demo.gallagher;
+package id.unifi.service.integration.gallagher;
 
 import com.statemachinesystems.envy.Default;
 

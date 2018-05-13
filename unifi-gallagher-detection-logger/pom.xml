@@ -125,7 +125,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>id.unifi.service.demo.gallagher.GallagherDetectionLoggerService</mainClass>
+                            <mainClass>id.unifi.service.integration.gallagher.GallagherDetectionLoggerService</mainClass>
                             <systemProperties>
                                 <property><key>unifi.ftc.api.server</key><value>10.0.99.3</value></property>
                                 <property><key>unifi.ftc.api.domain</key><value>localhost</value></property>
