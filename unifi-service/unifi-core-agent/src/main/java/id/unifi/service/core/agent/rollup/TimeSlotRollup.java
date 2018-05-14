@@ -3,7 +3,6 @@ package id.unifi.service.core.agent.rollup;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.types.client.ClientDetectable;
-import static java.util.Collections.max;
 import static java.util.Collections.min;
 import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
@@ -12,16 +11,19 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
  * Rolls up detections into fixed-sized time slots, taking the first detection time and highest RSSI.
  *
- * Not thread-safe.
+ * Thread-safe as long as there's only one thread per reader.
  */
 public class TimeSlotRollup implements Rollup {
     private static final Logger log = LoggerFactory.getLogger(TimeSlotRollup.class);
@@ -31,7 +33,7 @@ public class TimeSlotRollup implements Rollup {
 
     TimeSlotRollup(int intervalSeconds) {
         this.intervalSeconds = intervalSeconds;
-        this.readerStates = new HashMap<>();
+        this.readerStates = new ConcurrentHashMap<>();
     }
 
     public Stream<SiteDetectionReport> process(SiteDetectionReport report) {
@@ -39,20 +41,20 @@ public class TimeSlotRollup implements Rollup {
         var readerSn = report.readerSn;
         for (var detection : report.detections) {
             var antennaDetectable = new AntennaDetectable(detection.portNumber, detection.detectable);
-            var detectionSlotStart =
-                    Instant.ofEpochSecond(detection.detectionTime.getEpochSecond() / intervalSeconds * intervalSeconds, 0L);
+            var detectionSlotStart = Instant.ofEpochSecond(
+                    detection.detectionTime.getEpochSecond() / intervalSeconds * intervalSeconds);
 
             var currentReaderState = readerStates.computeIfAbsent(readerSn,
                     sn -> new ReaderState(detectionSlotStart, new HashMap<>()));
             var state = currentReaderState.states.computeIfAbsent(antennaDetectable,
                     ad -> emptyState(detectionSlotStart));
 
-            if (detection.detectionTime.isBefore(currentReaderState.slotStart)) {
+            if (detection.detectionTime.isBefore(currentReaderState.slotStartInclusive)) {
                 // Old detection that should've been processed
                 log.debug("Ignoring old detection at {}, current slot for {}/{} is {}",
-                        detection.detectionTime, readerSn, detection.portNumber, currentReaderState.slotStart);
-            } else if (detection.detectionTime.isBefore(slotEnd(currentReaderState))) {
-                // Detection is in the current slot for antenna
+                        detection.detectionTime, readerSn, detection.portNumber, currentReaderState.slotStartInclusive);
+            } else if (detection.detectionTime.isBefore(slotEndExclusive(currentReaderState))) {
+                // Detection is in the current slot for reader
                 currentReaderState.states.put(antennaDetectable, updateState(state, detection));
             } else {
                 // Detection happened after the current time slot, we're rolling up
@@ -78,37 +80,37 @@ public class TimeSlotRollup implements Rollup {
 
     private AntennaDetectableState emptyState(Instant detectableSlotStart) {
         var firstSeen = detectableSlotStart.plusSeconds(intervalSeconds);
-        return new AntennaDetectableState(firstSeen, BigDecimal.valueOf(Long.MIN_VALUE), 0);
+        return new AntennaDetectableState(firstSeen, Optional.empty(), 0);
     }
 
     private static AntennaDetectableState updateState(AntennaDetectableState state, SiteRfidDetection detection) {
         return new AntennaDetectableState(
                 min(List.of(detection.detectionTime, state.firstSeen)),
-                max(List.of(detection.rssi, state.rssi)),
+                Stream.of(detection.rssi, state.rssi).flatMap(Optional::stream).max(Comparator.naturalOrder()),
                 state.count + detection.count
         );
     }
 
-    private Instant slotEnd(ReaderState readerState) {
-        return readerState.slotStart.plusSeconds(intervalSeconds);
+    private Instant slotEndExclusive(ReaderState readerState) {
+        return readerState.slotStartInclusive.plusSeconds(intervalSeconds);
     }
 
     private static class ReaderState {
-        final Instant slotStart;
+        final Instant slotStartInclusive;
         final Map<AntennaDetectable, AntennaDetectableState> states;
 
-        ReaderState(Instant slotStart, Map<AntennaDetectable, AntennaDetectableState> states) {
-            this.slotStart = slotStart;
+        ReaderState(Instant slotStartInclusive, Map<AntennaDetectable, AntennaDetectableState> states) {
+            this.slotStartInclusive = slotStartInclusive;
             this.states = states;
         }
     }
 
     private static class AntennaDetectableState {
         final Instant firstSeen;
-        final BigDecimal rssi;
+        final Optional<BigDecimal> rssi;
         final int count;
 
-        AntennaDetectableState(Instant firstSeen, BigDecimal rssi, int count) {
+        AntennaDetectableState(Instant firstSeen, Optional<BigDecimal> rssi, int count) {
             this.firstSeen = firstSeen;
             this.rssi = rssi;
             this.count = count;

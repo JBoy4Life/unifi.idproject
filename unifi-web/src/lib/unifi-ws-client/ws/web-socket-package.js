@@ -1,5 +1,5 @@
 import uuid4 from 'uuid/v4'
-
+import { btoa } from './utils'
 // function ab2str(buf) {
 //   return String.fromCharCode.apply(null, new Uint8Array(buf))
 // }

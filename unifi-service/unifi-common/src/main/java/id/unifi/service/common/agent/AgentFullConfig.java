@@ -16,4 +16,11 @@ public class AgentFullConfig<A, R> {
         this.agent = agent;
         this.readers = readers;
     }
+
+    public String toString() {
+        return "AgentFullConfig{" +
+                "agent=" + agent +
+                ", readers=" + readers +
+                '}';
+    }
 }

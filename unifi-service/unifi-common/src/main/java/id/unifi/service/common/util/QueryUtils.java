@@ -6,7 +6,7 @@ import org.jooq.Condition;
 import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.Record;
-import org.jooq.SQLDialect;
+import static org.jooq.SQLDialect.POSTGRES;
 import org.jooq.TableField;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 public class QueryUtils {
     private static final Logger log = LoggerFactory.getLogger(QueryUtils.class);
 
-    public static final DataType<String> CITEXT = new DefaultDataType<>(SQLDialect.POSTGRES, String.class, "citext");
+    public static final DataType<String> CITEXT = new DefaultDataType<>(POSTGRES, String.class, "public.citext");
 
     public static <T> Condition filterCondition(Optional<T> filter, Function<T, Condition> condition) {
         return filter.map(condition).orElse(trueCondition());

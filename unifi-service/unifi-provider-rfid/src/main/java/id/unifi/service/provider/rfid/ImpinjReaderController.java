@@ -8,8 +8,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.impinj.octane.*;
 import id.unifi.service.common.agent.ReaderFullConfig;
 import id.unifi.service.common.detection.DetectableType;
-import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.types.client.ClientDetectable;
 import id.unifi.service.provider.rfid.config.ReaderConfig;
 import static java.util.stream.Collectors.toList;
@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -91,7 +92,9 @@ public class ImpinjReaderController implements Closeable {
             try {
                 var detections = report.getTags().stream().flatMap(tag -> {
                     var timestamp = instantFromTimestamp(tag.getLastSeenTime());
-                    var rssi = BigDecimal.valueOf(tag.getPeakRssiInDbm());
+                    var rssi = Optional.of(tag.getPeakRssiInDbm())
+                            .filter(r -> tag.isPeakRssiInDbmPresent() && r < 0.0 && r > -1000.0)
+                            .map(BigDecimal::valueOf);
 
                     var epcDetection = new SiteRfidDetection(
                             timestamp,
@@ -112,7 +115,7 @@ public class ImpinjReaderController implements Closeable {
                 detectionConsumer.accept(new SiteDetectionReport(reader.getName(), detections));
                 detections.forEach(d -> {
                     var meter = antennaDetectionMeters.get(d.portNumber);
-                    if (meter != null) meter.mark();
+                    if (meter != null) meter.mark(d.count);
                 });
             } catch (RuntimeException e) {
                 log.error("Error while processing detection", e);

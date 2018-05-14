@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>id.unifi.service</groupId>
         <artifactId>unifi-service-parent</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>unifi-core-agent</artifactId>
@@ -85,7 +84,7 @@
                                 <property><key>file.encoding</key><value>UTF-8</value></property>
 
                                 <!-- Core database config; needed for mocking raw detections -->
-                                <property><key>unifi.core.jdbc.url</key><value>jdbc:postgresql:unifi?currentSchema=core</value></property>
+                                <property><key>unifi.core.jdbc.url</key><value>jdbc:postgresql:unifi</value></property>
                                 <property><key>unifi.core.jdbc.user</key><value>${postgres.user}</value></property>
                                 <property><key>unifi.core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
                                 <property><key>unifi.core.jooq.dialect</key><value>POSTGRES</value></property>

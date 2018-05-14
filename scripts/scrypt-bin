@@ -1,3 +1,0 @@
-#!/bin/bash
-set -eu
-java -jar $(dirname "$0")/../unifi-service/scrypt-bin/target/scrypt-bin-*.jar "$@"

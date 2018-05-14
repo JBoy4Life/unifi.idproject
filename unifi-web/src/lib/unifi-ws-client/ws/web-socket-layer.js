@@ -4,7 +4,7 @@
  */
 import msgpack from 'msgpack-lite'
 
-import { base64EncodeUint8Array } from 'utils/helpers'
+import { base64EncodeUint8Array } from './utils'
 
 const binarryCodec = msgpack.createCodec({ binarraybuffer: true, preset: true })
 
@@ -115,7 +115,7 @@ export default class WebSocketLayer {
     if (!this.isConnected) {
       await this.connected
     }
-    window.msgpack = msgpack
+    // window.msgpack = msgpack
 
     // console.log('connected, sending')
     if (this.type === 'json') {
