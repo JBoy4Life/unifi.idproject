@@ -5,6 +5,7 @@ import com.codahale.metrics.MetricRegistry;
 import static com.codahale.metrics.MetricRegistry.name;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.DetectionMatch;
+import id.unifi.service.common.types.client.ClientAntenna;
 import id.unifi.service.provider.security.gallagher.FtcApi;
 import id.unifi.service.provider.security.gallagher.IFTMiddleware2;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -12,23 +13,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
+import java.util.regex.Pattern;
 
 public class GallagherAdapter implements IFTMiddleware2 {
     private static final String METRIC_NAME_PREFIX = "id.unifi.service.integration.gallagher";
     private static final Duration REGISTER_MIDDLEWARE_TIMEOUT = Duration.ofSeconds(60);
+    private static final Duration ESI_REGISTRATION_TIMEOUT = Duration.ofSeconds(10);
 
     private static final Logger log = LoggerFactory.getLogger(GallagherAdapter.class);
-    private final Meter detectionsMeter;
+    private static final Pattern esiPattern = Pattern.compile("reader\\.([0-9]+)\\.([0-9]+)");
 
+    private final Meter detectionsMeter;
     private FtcApi ftcApi;
     private final Thread processingThread;
     private final BlockingQueue<FutureTask<?>> processingQueue;
     private final FtcApiConfig config;
+    private final Set<ClientAntenna> externalSystemItemReady;
 
     private volatile CountDownLatch registerLatch;
     private volatile boolean connected;
@@ -42,6 +49,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
     private GallagherAdapter(MetricRegistry registry, FtcApiConfig config) {
         this.config = config;
         this.processingQueue = new SynchronousQueue<>();
+        this.externalSystemItemReady = new CopyOnWriteArraySet<>();
 
         registry.gauge(name(METRIC_NAME_PREFIX, "ftcapi", "health"), () -> () -> connected ? 1 : 0);
         this.detectionsMeter = registry.meter(name(METRIC_NAME_PREFIX, "detections"));
@@ -61,7 +69,8 @@ public class GallagherAdapter implements IFTMiddleware2 {
                 connected = true;
                 log.info("System registered");
 
-                Thread.sleep(5000); // TODO: wait for ESI notifications instead
+                Thread.sleep(ESI_REGISTRATION_TIMEOUT.toMillis());
+                log.info("Registered ESI antennae: {}", externalSystemItemReady);
 
                 while (!Thread.currentThread().isInterrupted()) {
                     var currentTask = processingQueue.take();
@@ -91,13 +100,18 @@ public class GallagherAdapter implements IFTMiddleware2 {
     private void logDetection(DetectionMatch match) {
         if (match.detection.detectable.detectableType != DetectableType.UHF_TID) return;
 
-        var eventId = 0; // corr ID; 0 for none
+        var antenna = new ClientAntenna(match.detection.readerSn, match.detection.portNumber);
+        if (!externalSystemItemReady.contains(antenna)) {
+            throw new RuntimeException("External system item for " + antenna + " not registered");
+        }
+
+        var eventId = 0; // correlation ID; 0 for none
         var detection = match.detection;
         var detectableId = detection.detectable.detectableId;
         final var hasRestoral = false;
 
         var cardNumberFormatType = 2;
-        var itemId = String.format("reader.%s.%d", detection.readerSn, detection.portNumber);
+        var itemId = antennaToEsi(antenna);
 
         log.trace("Logging {} to Gallagher", detection);
 
@@ -111,14 +125,19 @@ public class GallagherAdapter implements IFTMiddleware2 {
                 config.facilityCode(),
                 config.systemId(),
                 itemId,
-                String.format("Card %s detected on %s", detectableId, itemId),
+                String.format("UHF-TID card %s detected on %s", detectableId, itemId),
                 "No details.");
         log.trace("Logged {} to Gallagher", detection);
         detectionsMeter.mark();
     }
 
     public void notifyItemRegistered(String systemId, String itemId, String config) {
-        log.info("Item registered: {} / {}", systemId, itemId);
+        var antenna = esiToAntenna(itemId);
+        if (antenna != null) {
+            externalSystemItemReady.add(antenna);
+        } else {
+            log.warn("Unknown external system item: {}", itemId);
+        }
     }
 
     public void notifyItemDeregistered(String systemId, String itemId) {
@@ -136,5 +155,16 @@ public class GallagherAdapter implements IFTMiddleware2 {
 
     public void notifyAlarmAcknowledged(String systemId, int eventId) {
         log.info("Alarm acknowledged: {} / {}", systemId, eventId);
+    }
+
+    private static ClientAntenna esiToAntenna(String itemId) {
+        var matcher = esiPattern.matcher(itemId);
+        return matcher.find()
+                ? new ClientAntenna(matcher.group(1), Integer.parseInt(matcher.group(2)))
+                : null;
+    }
+
+    private static String antennaToEsi(ClientAntenna antenna) {
+        return String.format("reader.%s.%d", antenna.readerSn, antenna.portNumber);
     }
 }

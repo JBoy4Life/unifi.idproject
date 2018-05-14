@@ -1,5 +1,7 @@
 package id.unifi.service.common.types.pk;
 
+import id.unifi.service.common.types.client.ClientAntenna;
+
 import java.util.Objects;
 
 public final class AntennaPK {
@@ -32,5 +34,9 @@ public final class AntennaPK {
                 ", readerSn='" + readerSn + '\'' +
                 ", portNumber=" + portNumber +
                 '}';
+    }
+
+    public ClientAntenna withoutClientId() {
+        return new ClientAntenna(readerSn, portNumber);
     }
 }
