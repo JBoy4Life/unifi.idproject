@@ -1,0 +1,12 @@
+[Unit]
+Description=Central Working Capsule-unifi.id bridge
+
+[Service]
+Type=idle
+WorkingDirectory=/home/unifi-id/unifi.id/cw-capsule-bridge
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
