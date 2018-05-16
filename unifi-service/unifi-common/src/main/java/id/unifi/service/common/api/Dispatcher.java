@@ -157,6 +157,9 @@ public class Dispatcher<S> {
                                 Protocol protocol,
                                 Message message,
                                 ServiceRegistry.Operation operation) {
+        var sessionData = sessionDataStore.get(session);
+        if (sessionData == null) return; // Ignore dead sessions
+
         var params = operation.params.entrySet().stream().map(entry -> {
             var type = entry.getValue().type;
             if (type == Session.class)
@@ -164,7 +167,7 @@ public class Dispatcher<S> {
             if (type == ObjectMapper.class)
                 return mapper;
             if (type == sessionDataType)
-                return sessionDataStore.get(session);
+                return sessionData;
 
             var name = entry.getKey();
             try {
