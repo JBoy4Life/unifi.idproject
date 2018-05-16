@@ -84,7 +84,7 @@ Description: $description
 
 #Depends: $dependencies
 mkdir -p $destination_output/opt/unifi/
-cp $target $destination_output/opt/unifi/unifi-core.jar
+cp $target $destination_output/opt/unifi/$application-core.jar
 
 dpkg-deb --build $destination_output $application-$version.deb
 
