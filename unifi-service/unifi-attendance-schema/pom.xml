@@ -4,7 +4,7 @@
     <parent>
         <groupId>id.unifi.service</groupId>
         <artifactId>unifi-service-parent</artifactId>
-        <version>0.3-SNAPSHOT</version>
+        <version>0.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>unifi-attendance-schema</artifactId>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>id.unifi.service</groupId>
             <artifactId>unifi-core-schema</artifactId>
-	    <version>${project.version}</version>
+	        <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>

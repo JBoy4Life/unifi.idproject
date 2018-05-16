@@ -3,7 +3,7 @@
 
     <groupId>id.unifi.service</groupId>
     <artifactId>unifi-service-parent</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>unifi.id Platform Services Parent</name>
@@ -11,6 +11,7 @@
     <modules>
         <module>unifi-core</module>
         <module>unifi-core-schema</module>
+        <module>unifi-db-common</module>
         <module>unifi-common</module>
         <module>unifi-core-agent</module>
         <module>unifi-provider-rfid</module>
@@ -67,6 +68,7 @@
         <install.plugin.version>2.5.2</install.plugin.version>
         <release.plugin.version>2.5.3</release.plugin.version>
         <spotbugs.plugin.version>3.1.4</spotbugs.plugin.version>
+        <hikaricp.version>3.1.0</hikaricp.version>
     </properties>
 
     <scm>
@@ -171,6 +173,11 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgres.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.flywaydb</groupId>
@@ -426,6 +433,11 @@
                                         <forcedType>
                                             <name>CLOB</name>
                                             <types>CITEXT</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>com.fasterxml.jackson.databind.JsonNode</userType>
+                                            <binding>id.unifi.service.dbcommon.PostgresJsonbBinding</binding>
+                                            <types>JSONB</types>
                                         </forcedType>
                                     </forcedTypes>
                                 </database>

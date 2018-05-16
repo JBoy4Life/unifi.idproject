@@ -7,33 +7,22 @@
         <version>0.4-SNAPSHOT</version>
     </parent>
 
-    <artifactId>unifi-attendance</artifactId>
+    <artifactId>unifi-db-common</artifactId>
 
-    <name>unifi.id Attendance Module</name>
+    <name>unifi.id Common Database Library</name>
 
     <dependencies>
         <dependency>
-            <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-core-schema</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-attendance-schema</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-common</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.statemachinesystems</groupId>
-            <artifactId>envy</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -42,10 +31,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
         </dependency>
     </dependencies>
 </project>
