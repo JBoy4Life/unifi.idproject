@@ -6,7 +6,7 @@ After=network.target
 SyslogIdentifier=SocketTest
 EnvironmentFile=/etc/unifi/unifi.conf
 ExecStart=/bin/sh -c "exec java -Dunifi.core.jdbc.url=${jdbc_url} -Dunifi.core.jdbc.user=${jdbc_user} -jar /opt/unifi/unifi-core.jar"
-User=root
+User=unifi
 Type=simple
 
 [Install]

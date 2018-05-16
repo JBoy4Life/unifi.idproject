@@ -1,0 +1,8 @@
+#!/bin/bash
+
+unifi_group=unifi
+unifi_user=unifi
+
+grep -q "^${unifi_group}:" /etc/group || addgroup --system unifi
+id ${unifi_user} >>/dev/null 2>&1 || adduser --system --no-create-home --ingroup unifi unifi
+

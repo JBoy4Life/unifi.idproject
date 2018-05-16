@@ -1,5 +1,7 @@
 #!/bin/bash
 
+chown unifi: -R /opt/unifi
+
 systemctl enable unifi-core-agent.service
 systemctl start unifi-core-agent.service
 
