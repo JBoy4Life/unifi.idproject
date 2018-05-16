@@ -72,7 +72,7 @@ source_template=debian/$application-TEMPLATE
 destination_output=debian/$application-$version
 
 mkdir -p $destination_output/DEBIAN
-cp -aR $source_template $destination_output
+cp -aR $source_template/* $destination_output
 echo "
 Package: $application
 Architecture: all
