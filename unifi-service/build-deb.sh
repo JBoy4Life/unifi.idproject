@@ -79,9 +79,10 @@ Architecture: all
 Maintainer: @unifi
 Priority: optional
 Version: $version
-Depends: $dependencies
 Description: $description
 " > $destination_output/DEBIAN/control
+
+#Depends: $dependencies
 mkdir -p $destination_output/opt/unifi/
 cp $target $destination_output/opt/unifi/unifi-core.jar
 
