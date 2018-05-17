@@ -1,0 +1,67 @@
+= Unifi.id Gallagher Detection Logger
+
+== Overview
+
+The system acts as a client connecting to Gallagher's FTCAPI via DCOM. Once
+connected, the system starts continuously sending tag identifiers (TIDs) of UHF
+tags detected on its associated antennae. These detections are sent as Gallagher
+card events.
+
+== Prerequisites
+
+The system requires the following components and configuration:
+
+- Gallagher CC 7.50 on a machine capable of logging at least 100 card events per
+  second
+- FTCAPI middleware set up for the Gallagher CC instance
+- External System and Card Type defined (see below)
+
+== Configuration Client configuration
+
+The system requires to be recorded 
+
+=== External System
+
+Right-click inside the External Systems window to create a new External System
+with the following properties:
+
+- General > Name: `Unifi.id`
+- API Setup > Controller: (per section 7.1.2 of FTCAPI spec)
+- API Setup > Middleware PC Name/IP Address: (FTCAPI machine's IP)
+- API Setup > Identity > Unique: `unifi.id`
+
+=== External System Items
+
+Unifi.id will provide a list of installed antennae and their IDs in the format
+`reader.<serial-number>.<antenna-port-number>`, e.g. `reader.12345678.1`.
+Each installed antenna must be recorded as an External System Item, so
+detections on that antenna can be logged directly against that item.
+
+Right-click inside the External Systems window to create a new External System
+Item with the following properties:
+
+- Name: (antenna ID as provided)
+- Setup > External System: `Unifi.id`
+- Setup > Identification: (antenna ID as provided)
+
+=== Card Type
+
+The system reader UHF RFID tags and this card type needs to be created by
+right-clicking inside the Card Type window and entering the following
+properties:
+
+- General > Name: `UHF TID`
+- Setup > Card Facility: (as desired, facility code will need to be passed to
+  Unifi.id engineer)
+- Setup > Card Number > Format: `Text`
+- Setup > Card Number > Syntax: `^[0-9a-fA-F]{24}$`
+
+== System Configuration
+
+In order to run the sytem and once the prerequisites have been satisfied, the
+Unifi.id installation engineer will require the following information from the
+maintainer of Gallagher CC:
+
+- FTCAPI login details: server (IP address), domain, username, password
+- Facility code as configured for the Card Type
+- Event type: event type code for the event occurrence; from 0 to 999

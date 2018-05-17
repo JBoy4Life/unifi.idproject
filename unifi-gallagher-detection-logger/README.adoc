@@ -8,6 +8,8 @@ Tested with Gallagher Command Centre 7.50.
 For configuration options see the
 link:src/main/java/id/unifi/service/integration/gallagher/Config.java[Config interface].
 
+link:doc/unifi-gallagher-logger-overview.adoc[Installation overview]
+
 == Build dependencies
 
 - Oracle JDK 10
