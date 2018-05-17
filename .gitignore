@@ -8,5 +8,6 @@ release.properties
 *.iml
 *.pem
 .vagrant
+.vagrant*
 .DS_Store
 *.log

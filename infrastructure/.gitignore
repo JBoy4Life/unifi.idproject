@@ -1,0 +1,13 @@
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+dependency-reduced-pom.xml
+release.properties
+.idea/
+*.iml
+*.pem
+.vagrant
+.vagrant*
+.DS_Store
+*.log
