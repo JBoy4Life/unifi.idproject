@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class CoreAgentService {
@@ -125,6 +126,9 @@ public class CoreAgentService {
         if (mode == AgentMode.PRODUCTION) {
             var componentHolder = new ComponentHolder(Map.of(ReaderManager.class, readerManager));
             coreClient = Optional.of(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
+
+            var coreHealthReporter = new CoreHealthReporter(registry, coreClient.get());
+            coreHealthReporter.start(10, TimeUnit.SECONDS);
         } else {
             log.info("Running in {} mode. Not connecting to a server.", mode);
             coreClient = Optional.empty();
@@ -148,7 +152,7 @@ public class CoreAgentService {
 
         });
         detectionProcessingThread.start();
-}
+    }
 
     private static void logServiceConfig(AgentFullConfig setupAgentConfig) throws JsonProcessingException {
         var serviceConfig = setupAgentConfig.compactForService();

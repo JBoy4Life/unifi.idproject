@@ -1,0 +1,14 @@
+= Troubleshooting
+
+_Overview of common errors that occur in development_
+
+== com.rabbitmq.client.ShutdownSignalException: channel error; protocol method: #method<channel.close>(reply-code=406, reply-text=PRECONDITION_FAILED
+
+RabbitMQ messaging layout might have changed. Remove the offending exchange/queue
+or reset everything while RabbitMQ is running as follows:
+
+----
+rabbitmqctl stop_app
+rabbitmqctl reset
+rabbitmqctl start_app
+----

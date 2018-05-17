@@ -1,5 +1,6 @@
 package id.unifi.service.core.agent;
 
+import id.unifi.service.common.agent.AgentHealth;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.Protocol;
@@ -53,6 +54,8 @@ public class CoreClient {
         dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
         dispatcher.putMessageListener("core.detection.process-raw-detections-result", Void.class,
                 (s, o) -> log.trace("Confirmed detection"));
+        dispatcher.putMessageListener("core.detection.report-agent-health-result", Void.class,
+                (s, o) -> log.trace("Confirmed health report"));
 
         dispatcher.putMessageListener("core.identity.auth-password-result", Void.class, (s, o) -> {
             sessionRef.set(s);
@@ -105,6 +108,19 @@ public class CoreClient {
                     }
                 }
             }
+        }
+    }
+
+    public void reportAgentHealth(AgentHealth health) {
+        if (authenticated.getCount() > 0) return; // Don't report health until we're authenticated
+        Map<String, Object> params = Map.of("health", health);
+        var session = sessionRef.get();
+        try {
+            if (session == null) throw new IOException("No session");
+            log.trace("Reporting health to service: {}", health);
+            dispatcher.request(session, Protocol.MSGPACK, "core.detection.report-agent-health", params);
+        } catch (WebSocketException | IOException e) {
+            log.info("Couldn't report agent health to core service", e);
         }
     }
 

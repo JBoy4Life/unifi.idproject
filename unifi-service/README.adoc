@@ -4,6 +4,7 @@
 
 - link:doc/api-spec.adoc[API Specification]
 - link:doc/min-requirements.adoc[Minimum Requirements]
+- link:doc/troubleshooting.adoc[Troubleshooting]
 
 == Build dependencies
 

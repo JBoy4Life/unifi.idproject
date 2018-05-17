@@ -3,6 +3,7 @@ package id.unifi.service.integration.gallagher;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import static com.codahale.metrics.MetricRegistry.name;
+import id.unifi.service.common.agent.ReaderHealth;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.types.client.ClientAntenna;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -67,7 +69,7 @@ public class GallagherAdapter implements IFTMiddleware2 {
                 }
 
                 connected = true;
-                log.info("System registered");
+                log.info("System registered, waiting for item notifications...");
 
                 Thread.sleep(ESI_REGISTRATION_TIMEOUT.toMillis());
                 log.info("Registered ESI antennae: {}", externalSystemItemReady);
@@ -94,6 +96,20 @@ public class GallagherAdapter implements IFTMiddleware2 {
             future.get();
         } catch (ExecutionException e) {
             throw e.getCause() instanceof RuntimeException ? (RuntimeException) e.getCause() : new RuntimeException(e);
+        }
+    }
+
+    public void reportHealth(List<ReaderHealth> readerHealth) {
+        for (var reader : readerHealth) {
+            for (var entry : reader.antennaHealth.entrySet()) {
+                var antenna = new ClientAntenna(reader.readerSn, entry.getKey());
+                if (externalSystemItemReady.contains(antenna)) {
+                    var itemId = antennaToEsi(antenna);
+                    var offline = !entry.getValue();
+                    var message = itemId + " is " + (offline ? "offline." : "online.");
+                    ftcApi.notifyStatus(config.systemId(), itemId, 1, false, offline, message);
+                }
+            }
         }
     }
 

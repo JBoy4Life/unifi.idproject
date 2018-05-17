@@ -11,5 +11,7 @@ interface Config {
 
     FtcApiConfig ftcApi();
 
+    Optional<ServiceApiConfig> serviceApi();
+
     Optional<String> logLevel();
 }

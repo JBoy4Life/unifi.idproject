@@ -55,6 +55,7 @@ public class IdentityService {
 
     public void setAgentDispatcher(Dispatcher<AgentSessionData> agentDispatcher) {
         this.agentDispatcher = agentDispatcher;
+        agentDispatcher.putMessageListener("core.config.set-agent-config-result", Void.class, (s, o) -> {});
     }
 
     @ApiOperation

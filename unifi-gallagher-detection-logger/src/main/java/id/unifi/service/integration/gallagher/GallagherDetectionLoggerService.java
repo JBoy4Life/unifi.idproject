@@ -58,5 +58,10 @@ public class GallagherDetectionLoggerService {
         var mqConnection = MqUtils.connect(config.mq());
         var adapter = GallagherAdapter.create(registry, config.ftcApi());
         DetectionMqForwarder.create(mqConnection.createChannel(), adapter::process);
+        if (config.serviceApi().isPresent()) {
+            HealthReporter.create(config.serviceApi().get(), adapter::reportHealth);
+        } else {
+            log.warn("No service API config present. Won't send health reports.");
+        }
     }
 }

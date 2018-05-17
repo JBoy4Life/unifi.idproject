@@ -1,5 +1,6 @@
 package id.unifi.service.core.services;
 
+import id.unifi.service.common.agent.ReaderHealth;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
@@ -15,11 +16,13 @@ import static id.unifi.service.common.util.TimeUtils.utcLocalFromZoned;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
 import id.unifi.service.core.db.tables.records.RfidDetectionRecord;
+import id.unifi.service.core.detection.ReaderHealthContainer;
 import id.unifi.service.core.processing.DetectionProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @ApiService("detection")
@@ -28,10 +31,14 @@ public class DetectionService {
 
     private final Database db;
     private final DetectionProcessor detectionProcessor;
+    private final ReaderHealthContainer readerHealthContainer;
 
-    public DetectionService(DatabaseProvider dbProvider, DetectionProcessor detectionProcessor) {
+    public DetectionService(DatabaseProvider dbProvider,
+                            DetectionProcessor detectionProcessor,
+                            ReaderHealthContainer readerHealthContainer) {
         this.db = dbProvider.bySchema(CORE);
         this.detectionProcessor = detectionProcessor;
+        this.readerHealthContainer = readerHealthContainer;
     }
 
     // TODO: This should be accessible only to unifi.id staff
@@ -51,6 +58,13 @@ public class DetectionService {
 
         log.info("Processing {} detections from DB", detections.size());
         detectionProcessor.process(detections);
+    }
+
+    @ApiOperation
+    public List<ReaderHealth> getReaderHealth(OperatorSessionData session, String clientId) {
+        authorize(session, clientId);
+
+        return readerHealthContainer.getHealth(clientId);
     }
 
     private static Detection detectionFromRecord(RfidDetectionRecord r) {
