@@ -113,14 +113,15 @@ resource "aws_elb" "web" {
 */
 
 resource "aws_db_instance" "default" {
-  allocated_storage = 100
-  storage_type      = "gp2"
-  engine            = "postgres"
-  engine_version    = "10.3"
-  instance_class    = "db.t2.medium"
-  name              = "unifi"
-  username          = "unifi"
-  password          = "${var.postgres_password}"
+  allocated_storage         = 100
+  storage_type              = "gp2"
+  engine                    = "postgres"
+  engine_version            = "10.3"
+  instance_class            = "db.t2.medium"
+  name                      = "unifi"
+  username                  = "unifi"
+  password                  = "${var.postgres_password}"
+  final_snapshot_identifier = "${var.aws_env_name}-final-snapshot-${md5(timestamp())}"
 
   #  parameter_group_name = "default.postres10.3"
   multi_az = true

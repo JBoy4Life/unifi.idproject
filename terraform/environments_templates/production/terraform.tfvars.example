@@ -22,4 +22,6 @@ unifi_environment = "dev"
 
 unifi_nodeid = "shan-ucl"
 
+unifi_env_name = "shan-ucl"
+
 postgres_password = "hiA0iJGK96x0Npjk6O4"

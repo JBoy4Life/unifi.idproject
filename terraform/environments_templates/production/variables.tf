@@ -35,6 +35,12 @@ variable "unifi_environment" {
   #default     = "dev"
 }
 
+variable "unifi_env_name" {
+  description = "Environment name (a general identifier)"
+
+  #default     = "dev"
+}
+
 variable "aws_public_key_path" {
   description = <<DESCRIPTION
 Path to the SSH public key to be used for authentication.

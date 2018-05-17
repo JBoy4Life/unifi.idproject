@@ -127,4 +127,16 @@ Vagrant.configure("2") do |config|
     allinone.vm.network "private_network", ip: "10.0.80.100"
     allinone.vm.network "public_network"
   end
+
+  config.vm.define "all-in-one" do |aio|
+    aio.vm.provision :shell, :inline => $bootstrap_script
+    aio.vm.provision "cfengine" do |cf|
+        cf.am_policy_hub = true
+        cf.policy_server_address = "localhost"
+        cf.files_path = "deployment"
+    end
+    aio.vm.hostname = "a.all-in-one.local.unifi.id"
+    aio.vm.network "private_network", ip: "10.0.80.60"
+    aio.vm.network "public_network"
+  end
 end

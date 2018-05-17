@@ -7,13 +7,17 @@ bundle common unifi_environment {
       "cfengine_local_store_dir"   string => "/var/cfengine/local";
 
     # Network/Environment  
-      #"hst_policy_server" string => "10.0.80.10";
       "hst_policy_server" string => readfile( "/var/cfengine/policy_server.dat" , 0 );
+      #"hst_policy_server" string => "10.0.80.10";
       #"hst_app"           string => "10.0.80.11";
       #"hst_services"      string => "10.0.80.12";
       #"hst_db"            string => "10.0.80.13";
       #"hst_agent"         string => "10.0.80.14";
       #"hst_logs"          string => "10.0.80.15";
+
+    # Gets around the issue of file copies (remote_cp) failing on the policy (or all in one) server(s)
+      "policy_filecopy_host"
+      string => ifelse( reglist(@(sys.ip_addresses), "$(hst_policy_server)"), "localhost", "$(hst_policy_server)");
 
     # Application Specific
     ## Papertrail
@@ -55,6 +59,7 @@ bundle common unifi {
       "Detected unifi.id environment: $(unifi_env).";
       "Detected unifi.id role: $(unifi_role).";
       "Detected unifi.id node ID: $(unifi_nodeid).";
+      "Detected we are a policy server: $(is_policy_server).";
 }
 
 bundle agent unifi_role {
@@ -74,11 +79,11 @@ bundle agent unifi_role {
 #      "unifi_role_debian_build";
     unifi_role_db::
       "unifi_role_db"; 
-#    unifi_role_allinone::
-#      "unifi_baseline";
-#      "unifi_role_app";
-#      "unifi_role_services";
-#      "unifi_role_db";
+    unifi_role_allinone::
+      "unifi_baseline";
+      "unifi_role_app";
+      "unifi_role_services";
+      "unifi_role_db";
 }
 
 
@@ -89,11 +94,11 @@ bundle agent unifi_baseline {
           slist => {
               "ack",
               "curl",
+              "debconf-utils",
               "git",
               "net-tools",
               "vim"
           };
-
   packages:
     any::
       "$(baseline_packages)"
@@ -107,6 +112,7 @@ bundle agent unifi_baseline {
       "chrony";
       "collectd";
       "syslogng";
+      "unifi_apt_s3";
 }
 
 
@@ -259,6 +265,45 @@ body location pg_hba_location {
 
 ## Application Managment Bundles
 
+
+bundle agent unifi_apt_s3 {
+  vars:
+      "gpg_sig"
+          string => "7838 C665 B08E 3C3F 2B78  168D 65B8 59F0 3EA4 78F0";
+      "apt_transport_s3_url"
+          string => "https://github.com/BashtonLtd/apt-transport-s3/releases/download/v1.3.0/apt-transport-s3_1.3.0-1_all.deb";
+  classes:
+      "s3_apt_installed"
+          expression => fileexists("/usr/lib/apt/methods/s3");
+      "apt_key_added"
+          expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(gpg_sig)\"", "useshell");
+  files:  
+    "/etc/apt/sources.list.d/unifi_id.list"
+      comment => "Copy APT Repository config",
+      perms => mo("644","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/unifi.list","$(unifi_environment.policy_filecopy_host)"),
+
+      action => if_elapsed("60");
+    "/etc/apt/s3auth.conf"
+      comment => "Copy s3 auth credentials for the apt repository",
+      perms => mo("600","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/s3auth.conf","$(unifi_environment.policy_filecopy_host)"),
+
+      action => if_elapsed("60");
+  commands:
+    !s3_apt_installed::
+      "/usr/bin/wget -O /tmp/apt_transport.deb ${apt_transport_s3_url} && dpkg -i /tmp/apt_transport.deb && rm -fv /tmp/apt_transport.deb"
+          contain => useshell;
+    !apt_key_added::
+      "/usr/bin/curl -sS https://s3.eu-west-2.amazonaws.com/unifi-id-apt/apt-gpg-key.pub | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key add -"
+          contain => useshell;
+  packages:
+      "python-configobj"
+          policy => "present",
+          package_module => apt_get;
+}
+
+
 bundle agent yarn {
   vars:
       "key_fp"
@@ -308,7 +353,7 @@ bundle agent nginx_app_server {
     "/etc/nginx/nginx.conf"
       comment => "Copy nginx.conf from the policy server",
       perms => mo("644","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/nginx/nginx.conf","$(unifi_environment.hst_policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/nginx/nginx.conf","$(unifi_environment.policy_filecopy_host)"),
       action => if_elapsed("60");
 }
 
@@ -398,7 +443,7 @@ bundle agent syslogng {
     "$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"
       comment => "Add papertrail integration",
       perms => mo("400","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/syslog-ng/papertrail.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/syslog-ng/papertrail.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
       action => if_elapsed("60");
 
     "$(syslogng_conf_dir)/conf.d/papertrail.conf"
@@ -449,7 +494,8 @@ bundle agent collectd {
     "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
       comment => "Copy librato/collectd template from policy server",
       perms => mo("400","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      #copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
       action => if_elapsed("60");
 
     "$(collectd_conf_dir)/collectd.conf"
@@ -464,7 +510,7 @@ bundle agent collectd {
     "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"
       comment => "Copy librato/collectd template from policy server",
       perms => mo("400","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/librato.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/librato.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
       action => if_elapsed("60");
 
     "$(collectd_conf_dir)/collectd.conf.d/librato.conf"
