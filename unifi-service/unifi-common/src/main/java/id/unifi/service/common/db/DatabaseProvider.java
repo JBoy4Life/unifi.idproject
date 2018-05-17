@@ -1,6 +1,8 @@
 package id.unifi.service.common.db;
 
 import com.statemachinesystems.envy.Envy;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import id.unifi.service.common.config.UnifiConfigSource;
 import org.jooq.Schema;
 import org.slf4j.Logger;
@@ -45,6 +47,11 @@ public class DatabaseProvider {
         var props = new Properties();
         props.setProperty("stringtype", "unspecified"); // to support non-standard stringy types like CITEXT in Postgres
         dataSource.setConnectionProperties(props);
-        return new Database(schemaName, dataSource, config.getJooqDialect());
+
+        var poolConfig = new HikariConfig();
+        poolConfig.setDataSource(dataSource);
+        var pooledDataSource = new HikariDataSource(poolConfig);
+
+        return new Database(schemaName, pooledDataSource, config.getJooqDialect());
     }
 }

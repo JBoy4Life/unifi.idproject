@@ -68,6 +68,7 @@
         <install.plugin.version>2.5.2</install.plugin.version>
         <release.plugin.version>2.5.3</release.plugin.version>
         <spotbugs.plugin.version>3.1.4</spotbugs.plugin.version>
+        <hikaricp.version>3.1.0</hikaricp.version>
     </properties>
 
     <scm>
@@ -172,6 +173,11 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgres.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.flywaydb</groupId>
