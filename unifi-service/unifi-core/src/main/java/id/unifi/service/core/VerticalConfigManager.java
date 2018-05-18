@@ -10,15 +10,11 @@ import id.unifi.service.core.db.tables.records.ClientConfigRecord;
 import id.unifi.service.core.db.tables.records.ClientVerticalRecord;
 import id.unifi.service.core.verticalconfig.CoreVerticalConfigForApi;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -49,8 +45,8 @@ public class VerticalConfigManager {
         var coreConfig = Optional.ofNullable(config.coreConfig.get(clientId)).orElse(new ClientConfigRecord());
         fillDefaults(coreConfig);
 
-        HashMap<String, VerticalConfigForApi> clientSideConfig = new HashMap<>(
-                enabledVerticals.stream().collect(toMap(identity(), v -> new VerticalConfigForApi() {})));
+        Map<String, VerticalConfigForApi> clientSideConfig =
+                enabledVerticals.stream().collect(toMap(identity(), v -> new VerticalConfigForApi() {}));
         clientSideConfig.put("core", new CoreVerticalConfigForApi(coreConfig));
 
         return clientSideConfig;
@@ -63,7 +59,7 @@ public class VerticalConfigManager {
                     .collect(groupingBy(ClientVerticalRecord::getClientId,
                             mapping(ClientVerticalRecord::getVerticalId, toSet())));
             var clientConfig = sql.selectFrom(CLIENT_CONFIG).stream()
-                    .collect(toMap(ClientConfigRecord::getClientId, identity()));
+                    .collect(toUnmodifiableMap(ClientConfigRecord::getClientId, identity()));
             return new AllConfig(clientEnabledVerticals, clientConfig);
         });
     }

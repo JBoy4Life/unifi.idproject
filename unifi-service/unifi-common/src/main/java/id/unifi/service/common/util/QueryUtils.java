@@ -1,7 +1,7 @@
 package id.unifi.service.common.util;
 
 import id.unifi.service.common.api.errors.ValidationFailure;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.jooq.Condition;
 import org.jooq.DataType;
 import org.jooq.Field;
@@ -65,7 +65,7 @@ public class QueryUtils {
             C changes) {
         return editables.entrySet().stream()
                 .flatMap(e -> Stream.ofNullable(e.getValue().apply(changes)).map(v -> Map.entry(e.getKey(), v)))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public static <R extends Record, T> Field<T> unqualified(TableField<R, T> field) {

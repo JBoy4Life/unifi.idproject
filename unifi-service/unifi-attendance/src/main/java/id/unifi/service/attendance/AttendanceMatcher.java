@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +125,7 @@ public class AttendanceMatcher {
                                             r.value3()),
                                     toMap(b -> b.detectionStartTime, Function.identity(), (a, b) -> a, TreeMap::new))));
             var zoneBlocks = rawBlocksByZone.entrySet().stream()
-                    .collect(toMap(Map.Entry::getKey, e -> new ZoneBlocks(e.getValue())));
+                    .collect(toUnmodifiableMap(Map.Entry::getKey, e -> new ZoneBlocks(e.getValue())));
 
             lastRefreshMillis = System.currentTimeMillis();
             log.info("Refreshed attendance assignments in {} ms: {} schedule assignments, {} zones",

@@ -3,7 +3,7 @@ package id.unifi.service.provider.rfid.config;
 import com.impinj.octane.ReaderMode;
 import com.impinj.octane.SearchMode;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class ReaderConfig {
                     Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     public static ReaderConfig fromPortNumbers(List<Integer> portNumbers) {
-        var ports = portNumbers.stream().collect(toMap(identity(), n -> AntennaConfig.empty));
+        var ports = portNumbers.stream().collect(toUnmodifiableMap(identity(), n -> AntennaConfig.empty));
         return new ReaderConfig(Optional.empty(), Optional.empty(), OptionalInt.empty(), OptionalInt.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(ports));
     }
