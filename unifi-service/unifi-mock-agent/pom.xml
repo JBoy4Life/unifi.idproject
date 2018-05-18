@@ -7,40 +7,20 @@
         <version>0.4-SNAPSHOT</version>
     </parent>
 
-    <artifactId>unifi-core-agent</artifactId>
+    <artifactId>unifi-mock-agent</artifactId>
 
-    <name>unifi.id Core Agent</name>
+    <name>unifi.id Mock Agent for testing</name>
 
     <dependencies>
         <dependency>
             <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-common</artifactId>
+            <artifactId>unifi-core-agent</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-provider-rfid</artifactId>
+            <artifactId>unifi-core-schema</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jmdns</groupId>
-            <artifactId>jmdns</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
         <dependency>
             <groupId>com.statemachinesystems</groupId>
@@ -69,7 +49,7 @@
                     <!--
                       To start the service, run `mvn install`, start postgres and then:
 
-                          mvn exec:java -pl unifi-core-agent
+                          mvn exec:java -pl unifi-mock-agent
                     -->
                     <execution>
                         <id>default-cli</id>
@@ -77,7 +57,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>id.unifi.service.core.agent.CoreAgentService</mainClass>
+                            <mainClass>id.unifi.service.mock.agent.MockAgentService</mainClass>
                             <systemProperties>
                                 <!-- JVM config -->
                                 <property><key>user.timezone</key><value>UTC</value></property>
@@ -110,7 +90,7 @@
                             <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>id.unifi.service.core.agent.CoreAgentService</mainClass>
+                                    <mainClass>id.unifi.service.mock.agent.MockAgentService</mainClass>
                                 </transformer>
                             </transformers>
                             <filters>

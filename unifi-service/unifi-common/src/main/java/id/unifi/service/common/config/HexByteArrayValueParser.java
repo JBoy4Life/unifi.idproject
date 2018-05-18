@@ -1,4 +1,4 @@
-package id.unifi.service.core.agent.parsing;
+package id.unifi.service.common.config;
 
 import com.google.common.io.BaseEncoding;
 import com.statemachinesystems.envy.ValueParser;
