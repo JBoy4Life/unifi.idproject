@@ -7,7 +7,11 @@ release.properties
 .idea/
 *.iml
 *.pem
-.vagrant
-.vagrant*
 .DS_Store
 *.log
+
+# infrastructure
+**/.vagrant
+**/.vagrant*
+**/.terraform
+**/terraform.tfstate*
