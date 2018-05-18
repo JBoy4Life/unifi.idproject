@@ -1,0 +1,13 @@
+[Unit]
+Description=unifi.id Core Agent
+
+[Service]
+Type=idle
+User=unifi-id
+WorkingDirectory=/home/unifi-id/unifi.id/unifi-service
+ExecStart=/usr/bin/mvn exec:java -pl unifi-core
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
