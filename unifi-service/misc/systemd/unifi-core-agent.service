@@ -5,7 +5,7 @@ Description=unifi.id Core Agent
 Type=idle
 User=unifi-id
 WorkingDirectory=/home/unifi-id/unifi.id/unifi-service
-ExecStart=/usr/bin/mvn exec:java -pl unifi-core
+ExecStart=/usr/bin/mvn exec:java -pl unifi-core-agent
 Restart=always
 RestartSec=5
 
