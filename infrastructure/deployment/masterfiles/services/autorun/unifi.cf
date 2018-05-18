@@ -74,12 +74,10 @@ bundle agent unifi_role {
       "unifi_role_app";
     unifi_role_services::
       "unifi_role_services";
-#    unifi_role_buildnode::
-#      "unifi_role_services";
-#      "unifi_role_debian_build";
     unifi_role_db::
       "unifi_role_db"; 
-    unifi_role_allinone::
+    ## Monolithic roles assumes all roles
+    unifi_role_monolithic::
       "unifi_baseline";
       "unifi_role_app";
       "unifi_role_services";
