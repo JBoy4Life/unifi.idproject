@@ -3,6 +3,7 @@ Description=Central Working Capsule-unifi.id bridge
 
 [Service]
 Type=idle
+User=unifi-id
 WorkingDirectory=/home/unifi-id/unifi.id/cw-capsule-bridge
 ExecStart=/usr/bin/npm run start
 Restart=always
