@@ -1,6 +1,5 @@
-package id.unifi.service.common.util;
+package id.unifi.service.dbcommon;
 
-import id.unifi.service.common.api.errors.ValidationFailure;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.jooq.Condition;
 import org.jooq.DataType;
@@ -12,21 +11,13 @@ import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.trueCondition;
 import org.jooq.impl.DefaultDataType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URLConnection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class QueryUtils {
-    private static final Logger log = LoggerFactory.getLogger(QueryUtils.class);
-
+public class DatabaseUtils {
     public static final DataType<String> CITEXT = new DefaultDataType<>(POSTGRES, String.class, "public.citext");
 
     public static <T> Condition filterCondition(Optional<T> filter, Function<T, Condition> condition) {
@@ -35,29 +26,6 @@ public class QueryUtils {
 
     public static <T> Optional<T> fieldValueOpt(Record r, TableField<?, T> tableField) {
         return r.field(tableField) == null ? Optional.empty() : Optional.ofNullable(r.get(tableField));
-    }
-
-    public static Optional<ImageWithType> imageWithType(byte[] data) {
-        String mimeType;
-        try {
-            mimeType = URLConnection.guessContentTypeFromStream(new ByteArrayInputStream(data));
-        } catch (IOException ignored) {
-            return Optional.empty();
-        }
-
-        if ("application/xml".equals(mimeType)) mimeType = "image/svg+xml";
-
-        if (mimeType == null || !mimeType.startsWith("image/")) {
-            log.warn("Ignoring image of unrecognizable type: {}", mimeType);
-            return Optional.empty();
-        }
-
-        return Optional.of(new ImageWithType(data, mimeType));
-    }
-
-    public static Optional<ImageWithType> validateImageFormat(Optional<byte[]> image) {
-        return image.map(im -> QueryUtils.imageWithType(im).orElseThrow(() -> new ValidationFailure(
-                List.of(new ValidationFailure.ValidationError("image", ValidationFailure.Issue.BAD_FORMAT)))));
     }
 
     public static <R extends Record, C> Map<? extends TableField<R, ?>, ?> getUpdateQueryFieldMap(
@@ -70,15 +38,5 @@ public class QueryUtils {
 
     public static <R extends Record, T> Field<T> unqualified(TableField<R, T> field) {
         return field(name(field.getUnqualifiedName()), field.getType());
-    }
-
-    public static class ImageWithType {
-        public final String mimeType;
-        public final byte[] data;
-
-        public ImageWithType(byte[] data, String mimeType) {
-            this.mimeType = mimeType;
-            this.data = data;
-        }
     }
 }

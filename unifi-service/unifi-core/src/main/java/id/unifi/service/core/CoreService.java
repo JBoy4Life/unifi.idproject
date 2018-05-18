@@ -16,7 +16,7 @@ import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;

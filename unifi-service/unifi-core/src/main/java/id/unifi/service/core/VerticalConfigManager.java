@@ -1,8 +1,8 @@
 package id.unifi.service.core;
 
 import id.unifi.service.common.api.VerticalConfigForApi;
-import id.unifi.service.common.db.Database;
-import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT_CONFIG;
 import static id.unifi.service.core.db.Tables.CLIENT_VERTICAL;

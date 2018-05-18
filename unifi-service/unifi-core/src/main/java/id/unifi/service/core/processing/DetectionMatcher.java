@@ -1,7 +1,7 @@
 package id.unifi.service.core.processing;
 
-import id.unifi.service.common.db.Database;
-import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.DetectionMatch;

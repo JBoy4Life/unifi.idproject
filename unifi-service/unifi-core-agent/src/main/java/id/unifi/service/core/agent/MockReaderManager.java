@@ -1,6 +1,6 @@
 package id.unifi.service.core.agent;
 
-import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.detection.SiteRfidDetection;

@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>id.unifi.service</groupId>
-            <artifactId>unifi-common</artifactId>
+            <artifactId>unifi-core-schema</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -1,4 +1,4 @@
-package id.unifi.service.common.db;
+package id.unifi.service.dbcommon;
 
 import com.statemachinesystems.envy.Envy;
 import com.zaxxer.hikari.HikariConfig;
