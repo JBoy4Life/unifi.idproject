@@ -18,8 +18,6 @@ The system requires the following components and configuration:
 
 == Configuration Client configuration
 
-The system requires to be recorded 
-
 === External System
 
 Right-click inside the External Systems window to create a new External System
@@ -58,7 +56,7 @@ properties:
 
 == System Configuration
 
-In order to run the sytem and once the prerequisites have been satisfied, the
+In order to run the system and once the prerequisites have been satisfied, the
 Unifi.id installation engineer will require the following information from the
 maintainer of Gallagher CC:
 
