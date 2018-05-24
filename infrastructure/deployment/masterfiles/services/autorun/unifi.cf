@@ -74,6 +74,8 @@ bundle agent unifi_role {
       "unifi_role_app";
     unifi_role_services::
       "unifi_role_services";
+    unifi_role_agent::
+      "unifi_role_agent";
     unifi_role_db::
       "unifi_role_db"; 
     ## Monolithic roles assumes all roles
@@ -83,7 +85,6 @@ bundle agent unifi_role {
       "unifi_role_services";
       "unifi_role_db";
 }
-
 
 bundle agent unifi_baseline {
   vars:
@@ -113,7 +114,6 @@ bundle agent unifi_baseline {
       "unifi_apt_s3";
 }
 
-
 bundle agent unifi_role_app {
   methods:
       "yarn";
@@ -129,26 +129,16 @@ bundle agent unifi_role_services {
           package_module => apt_get;
 }
 
-bundle agent unifi_role_debian_build {
-  vars:
-    any::
-      "debbuild_packages"
-          slist => {
-              "build-essential",
-              "fakeroot",
-              "devscripts",
-          };
-  packages:
-      "$(debbuild_packages)"
-          policy => "present",
-          package_module => apt_get;
+bundle agent unifi_role_agent {
+  methods:
+      "oracle_java_jdk";
+      "unifi_core_agent";
 }
 
 bundle agent unifi_role_db {
   methods:
       "postgresql";
 }
-
 
 bundle agent oracle_java_jdk {
   vars:
@@ -162,19 +152,21 @@ bundle agent oracle_java_jdk {
           slist => {
               "oracle-java10-installer",
               "oracle-java10-set-default",
-              "oracle-java10-unlimited-jce-policy"
           };
       "keyserver"
-          string => "keyserver.ubuntu.com";
-      "key_fp"
+          string => "hkp://keyserver.ubuntu.com:80";
+      # This is listed twice as apt-key lists the key with a fingerprint with space separation
+      "import_key_fp"
           string => "73C3DB2A";
+      "key_fp"
+          string => "73C3 DB2A";
       "repository_url"
           string => "http://ppa.launchpad.net/linuxuprising/java/ubuntu";
       "ubuntu_version"
           string => "bionic main";
   classes:
       "apt_key_added"
-          expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+          expression => returnszero("/usr/bin/env APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=2 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
       "apt_repo_added"
           expression => returnszero("/bin/fgrep \"deb $(repository_url) $(ubuntu_version)\" /etc/apt/sources.list", "noshell");
       "oracle_licence_accepted"
@@ -186,7 +178,8 @@ bundle agent oracle_java_jdk {
 #          classes => if_repaired("sources_list_changed");
   commands:
     !apt_key_added::
-      "APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(key_fp)\"";
+      "/usr/bin/env APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=2 /usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(import_key_fp)\"";
+
     !apt_repo_added::
       "/usr/bin/add-apt-repository \"deb $(repository_url) $(ubuntu_version)\" && apt-get update"
           contain => useshell;
@@ -401,6 +394,24 @@ bundle edit_line chrony_pool {
     replace_patterns:
         "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_string));
 }
+
+bundle agent unifi_core_agent {
+  packages:
+    any::
+      "unifi-core-agent"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "unifi-core-agent"
+      service_policy => "start";
+      
+  commands: 
+    restart_unifi_core_agent:: 
+      "/bin/systemctl restart unifi-core-agent" 
+         contain => in_shell_and_silent; 
+}
+
 
 bundle agent syslogng {
   vars:

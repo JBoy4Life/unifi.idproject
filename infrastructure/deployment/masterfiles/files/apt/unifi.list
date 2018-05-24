@@ -1,1 +1,1 @@
-deb s3://unifi-id-apt/dists/ stable main binary-amd64
+deb s3://unifi-id-apt/ stable main binary-amd64
