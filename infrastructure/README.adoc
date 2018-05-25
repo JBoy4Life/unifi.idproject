@@ -7,19 +7,25 @@
 . Run the following commands as root, replacing `192.168.2.248` with the IP address of the agent machine:
 +
 ----
+cd /root
+wget https://github.com/megawarne-consulting/unifi.id/archive/master.zip
+unzip unifi-id-master.zip
+
 wget -qO- https://cfengine-package-repos.s3.amazonaws.com/pub/gpg.key | apt-key add -
 echo "deb https://cfengine-package-repos.s3.amazonaws.com/pub/apt/packages stable main" > /etc/apt/sources.list.d/cfengine-community.list
 apt-get install apt-transport-https
 apt-get update
 apt-get install cfengine-community
-cp /vagrant/deployment/masterfiles/services/autorun/unifi.cf /var/cfengine/masterfiles/services/autorun/
+# sync CF Engine content before bootstrapping
+sudo rsync -vrlpxE /root/unifi-id-master/infrastructre/deployment/masterfiles/* /var/cfengine/masterfiles/
 /var/cfengine/bin/cf-agent --bootstrap 192.168.2.248
 cd /var/cfengine/inputs
+# Run the cf-agent, running the unifi.id agent policies
 cf-agent -Kf failsafe.cf && cf-agent -v -D unifi_role_agent -Kf promises.cf
 ----
 +
 . Repeat the commands on the last line until the reported fulfilled promises add up to 100.0%.
-. Configure agent in `/etc/unifi/unifi.conf`, e.g.:
+. Configure agent in `/etc/unifi/unifi-core-agent.conf`, e.g.:
 +
 ----
 UNIFI_CLIENT_ID=insert-client-id-here
@@ -29,3 +35,7 @@ UNIFI_AGENT_PASSWORD=abcd
 ----
 +
 . Restart agent.
+systemctl restart unifi-core-agent
+
+. Check for error/syslog via
+journalctl -f -u unifi-core-agent
