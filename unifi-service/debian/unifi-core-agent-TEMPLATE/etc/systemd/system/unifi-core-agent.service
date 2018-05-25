@@ -4,10 +4,13 @@ After=network.target
 
 [Service]
 SyslogIdentifier=SocketTest
-EnvironmentFile=/etc/unifi/unifi.conf
+Environment="UNIFI_PRODUCTION=true"
+EnvironmentFile=/etc/unifi/unifi-core-agent.conf
 ExecStart=/bin/sh -c "exec java -jar /opt/unifi/unifi-core-agent.jar"
 User=unifi
 Type=simple
+Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
