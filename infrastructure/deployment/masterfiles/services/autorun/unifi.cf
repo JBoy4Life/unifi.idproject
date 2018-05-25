@@ -1,0 +1,533 @@
+# TODO: Abstract this into a policy file called unifi_environment.cf
+# Idea being that unifi_environment would differ for every install 
+bundle common unifi_environment {
+    vars:
+    # CFEngine Defaults 
+      "cfengine_masterfiles"       string => "/var/cfengine/masterfiles/";
+      "cfengine_local_store_dir"   string => "/var/cfengine/local";
+
+    # Network/Environment  
+      "hst_policy_server" string => readfile( "/var/cfengine/policy_server.dat" , 0 );
+      #"hst_policy_server" string => "10.0.80.10";
+      #"hst_app"           string => "10.0.80.11";
+      #"hst_services"      string => "10.0.80.12";
+      #"hst_db"            string => "10.0.80.13";
+      #"hst_agent"         string => "10.0.80.14";
+      #"hst_logs"          string => "10.0.80.15";
+
+    # Gets around the issue of file copies (remote_cp) failing on the policy (or all in one) server(s)
+      "policy_filecopy_host"
+      string => ifelse( reglist(@(sys.ip_addresses), "$(hst_policy_server)"), "localhost", "$(hst_policy_server)");
+
+    # Application Specific
+    ## Papertrail
+      "papertrail_destination_host" string => "logs4.papertrailapp.com";
+      "papertrail_destination_port" int=> "21561";
+      "papertrail_destination_proto" string => "udp";
+    ## Librato
+      "appoptics_api_key" string => "2d07d9a16da96aae7d699de96718b661064cb4d11ae2de90b69693fcb4972b08";
+    ## NTP
+      "ntp_server_type" string => "pool";
+      "ntp_server" string => "1.uk.pool.ntp.org";
+}
+
+bundle common unifi {
+  vars:
+    any::
+      "hostname"
+          string => execresult("/bin/hostname -f", "noshell");
+      "parts"
+          slist => splitstring("$(hostname)", "\\.", "3");
+      "unifi_env"
+          string => nth("parts", 2);
+      "unifi_role"
+          string => nth("parts", 1);
+      "unifi_nodeid"
+          string => nth("parts", 0);
+  classes:
+    any::
+      "unifi_env_$(unifi_env)"
+          expression => "any";
+      "unifi_role_$(unifi_role)"
+          expression => "any";
+      "unifi_nodeid_$(unifi_nodeid)"
+          expression => "any";
+  reports:
+    any::
+      "Detected hostname: $(hostname)";
+      "Detected parts: $(parts)";
+      "Detected unifi.id environment: $(unifi_env).";
+      "Detected unifi.id role: $(unifi_role).";
+      "Detected unifi.id node ID: $(unifi_nodeid).";
+      "Detected we are a policy server: $(is_policy_server).";
+}
+
+bundle agent unifi_role {
+  meta:
+    "tags" slist => {
+        "autorun"
+    };
+  methods:
+    any::
+      "unifi_baseline";
+    unifi_role_app::
+      "unifi_role_app";
+    unifi_role_services::
+      "unifi_role_services";
+    unifi_role_agent::
+      "unifi_role_agent";
+    unifi_role_db::
+      "unifi_role_db"; 
+    ## Monolithic roles assumes all roles
+    unifi_role_monolithic::
+      "unifi_baseline";
+      "unifi_role_app";
+      "unifi_role_services";
+      "unifi_role_db";
+}
+
+bundle agent unifi_baseline {
+  vars:
+    any::
+      "baseline_packages"
+          slist => {
+              "ack",
+              "curl",
+              "debconf-utils",
+              "git",
+              "net-tools",
+              "vim"
+          };
+  packages:
+    any::
+      "$(baseline_packages)"
+          policy => "present",
+          package_module => apt_get;
+  
+  # Install/Configure some common tools
+  methods:
+    any::
+      # Install Chrony in place of traditional NTP client, recommended for performance (and backwards compatible with ntp.conf)
+      "chrony";
+      "collectd";
+      "syslogng";
+      "unifi_apt_s3";
+}
+
+bundle agent unifi_role_app {
+  methods:
+      "yarn";
+      "nginx_app_server";
+}
+
+bundle agent unifi_role_services {
+  methods:
+      "oracle_java_jdk";
+  packages:
+      "maven"
+          policy => "present",
+          package_module => apt_get;
+}
+
+bundle agent unifi_role_agent {
+  methods:
+      "oracle_java_jdk";
+      "unifi_core_agent";
+}
+
+bundle agent unifi_role_db {
+  methods:
+      "postgresql";
+}
+
+bundle agent oracle_java_jdk {
+  vars:
+      "prereq_packages"
+          slist => {
+              "software-properties-common",
+              "dirmngr",
+              "debconf-utils"
+          };
+      "java_packages" 
+          slist => {
+              "oracle-java10-installer",
+              "oracle-java10-set-default",
+          };
+      "keyserver"
+          string => "hkp://keyserver.ubuntu.com:80";
+      # This is listed twice as apt-key lists the key with a fingerprint with space separation
+      "import_key_fp"
+          string => "73C3DB2A";
+      "key_fp"
+          string => "73C3 DB2A";
+      "repository_url"
+          string => "http://ppa.launchpad.net/linuxuprising/java/ubuntu";
+      "ubuntu_version"
+          string => "bionic main";
+  classes:
+      "apt_key_added"
+          expression => returnszero("/usr/bin/env APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=2 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+      "apt_repo_added"
+          expression => returnszero("/bin/fgrep \"deb $(repository_url) $(ubuntu_version)\" /etc/apt/sources.list", "noshell");
+      "oracle_licence_accepted"
+          expression => returnszero("/usr/bin/debconf-get-selections | /bin/fgrep accepted-oracle-license | /bin/fgrep true", "useshell");
+#  files:
+#      "/etc/apt/sources.list.d/oracle-java.list"
+#          create => true,
+#          edit_line => oracle_java_apt,
+#          classes => if_repaired("sources_list_changed");
+  commands:
+    !apt_key_added::
+      "/usr/bin/env APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=2 /usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(import_key_fp)\"";
+
+    !apt_repo_added::
+      "/usr/bin/add-apt-repository \"deb $(repository_url) $(ubuntu_version)\" && apt-get update"
+          contain => useshell;
+    !oracle_licence_accepted::
+      "/bin/echo"
+          arglist => {
+              "\"oracle-java9-installer shared/accepted-oracle-license-v1-1 select true\"",
+              "|",
+              "debconf-set-selections"
+          },
+          contain => useshell;
+    sources_list_changed::
+      "/usr/bin/apt-get update";
+  packages: 
+      "$(prereq_packages)"
+          policy => "present",
+          package_module => apt_get;
+      "$(java_packages)"
+          policy => "present",
+          package_module => apt_get;
+}
+
+bundle agent postgresql {
+  vars:
+    unifi_env_local::
+      "dbuser" string => "vagrant";
+      "dbname" string => "unifi";
+  classes:
+      "dbuser_added"
+          expression => returnszero("/usr/bin/sudo -u $(dbuser) /usr/bin/psql -c \"SELECT;\" template1", "noshell");
+      "database_created"
+          expression => returnszero("/usr/bin/sudo -u $(dbuser) /usr/bin/psql -c \"SELECT;\" $(dbname)", "noshell");
+  commands:
+    !dbuser_added::
+      "/usr/bin/createuser -s $(dbuser)"
+          contain => exec_owner("postgres");
+    !database_created::
+      "/usr/bin/createdb $(dbname)"
+          contain => exec_owner("$(dbuser)");
+  files:
+      "/etc/postgresql/.*/main/pg_hba.conf"
+          edit_line => pg_hba,
+          classes => if_repaired("pg_hba_changed");
+  packages:
+      "postgresql"
+          policy => "present",
+          package_module => apt_get;
+  services:
+    pg_hba_changed::
+      "postgresql"
+          service_policy => reload;
+}
+
+body contain useshell {
+  useshell => "useshell";
+}
+
+body contain exec_owner(uid) {
+  exec_owner => "$(uid)";
+}
+
+bundle edit_line pg_hba {
+  insert_lines:
+      "# Unifi.id
+local all all trust
+host all all 0.0.0.0/0 trust"
+          location => pg_hba_location;
+}
+
+body location pg_hba_location {
+  select_line_matching => "# TYPE .*";
+  before_after => "after";
+}
+
+## Application Managment Bundles
+
+
+bundle agent unifi_apt_s3 {
+  vars:
+      "gpg_sig"
+          string => "7838 C665 B08E 3C3F 2B78  168D 65B8 59F0 3EA4 78F0";
+      "apt_transport_s3_url"
+          string => "https://github.com/BashtonLtd/apt-transport-s3/releases/download/v1.3.0/apt-transport-s3_1.3.0-1_all.deb";
+  classes:
+      "s3_apt_installed"
+          expression => fileexists("/usr/lib/apt/methods/s3");
+      "apt_key_added"
+          expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(gpg_sig)\"", "useshell");
+  files:  
+    "/etc/apt/sources.list.d/unifi_id.list"
+      comment => "Copy APT Repository config",
+      perms => mo("644","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/unifi.list","$(unifi_environment.policy_filecopy_host)"),
+
+      action => if_elapsed("60");
+    "/etc/apt/s3auth.conf"
+      comment => "Copy s3 auth credentials for the apt repository",
+      perms => mo("600","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/s3auth.conf","$(unifi_environment.policy_filecopy_host)"),
+
+      action => if_elapsed("60");
+  commands:
+    !s3_apt_installed::
+      "/usr/bin/wget -O /tmp/apt_transport.deb ${apt_transport_s3_url} && dpkg -i /tmp/apt_transport.deb && rm -fv /tmp/apt_transport.deb"
+          contain => useshell;
+    !apt_key_added::
+      "/usr/bin/curl -sS https://s3.eu-west-2.amazonaws.com/unifi-id-apt/apt-gpg-key.pub | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key add -"
+          contain => useshell;
+  packages:
+      "python-configobj"
+          policy => "present",
+          package_module => apt_get;
+}
+
+
+bundle agent yarn {
+  vars:
+      "key_fp"
+          string => "72EC F46A 56B4 AD39 C907  BBB7 1646 B01B 86E5 0310";
+  classes:
+      "nodesource_repo_added"
+          expression => fileexists("/etc/apt/sources.list.d/nodesource.list");
+      "apt_key_added"
+          expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+      "yarn_repo_added"
+          expression => fileexists("/etc/apt/sources.list.d/yarn.list");
+  commands:
+    !nodesource_repo_added::
+      "/usr/bin/curl -sL https://deb.nodesource.com/setup_8.x | /bin/bash -"
+          contain => useshell;
+    !apt_key_added::
+      "/usr/bin/curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key add -"
+          contain => useshell;
+    !yarn_repo_added::
+      "(/bin/echo \"deb https://dl.yarnpkg.com/debian/ stable main\" | /usr/bin/tee /etc/apt/sources.list.d/yarn.list) && apt-get update"
+          contain => useshell;
+  packages:
+      "yarn"
+          policy => "present",
+          package_module => apt_get;
+}
+
+bundle agent nginx_app_server {
+  packages:
+      "nginx"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "nginx"
+      service_policy => "nginx";
+      
+  commands: 
+    restart_nginx:: 
+      "/bin/systemctl restart nginx" 
+         contain => in_shell_and_silent; 
+  files:  
+    "/etc/nginx/."
+      perms => mo("755","root"),
+      create => "true";
+
+    "/etc/nginx/nginx.conf"
+      comment => "Copy nginx.conf from the policy server",
+      perms => mo("644","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/nginx/nginx.conf","$(unifi_environment.policy_filecopy_host)"),
+      action => if_elapsed("60");
+}
+
+bundle agent chrony {
+  defaults:
+    any::
+      "ntp_server_string" string => "pool 1.uk.pool.ntp.org iburst";
+      "ntp_server_type" string => "pool";
+      "ntp_server" string => "2.debian.pool.ntp.org";
+
+  vars:
+    any::
+      "ntp_server_type" string => "$(unifi_environment.ntp_server_type)";
+      "ntp_server" string => "$(unifi_environment.ntp_server)";
+      "ntp_server_string" string => "$(ntp_server_type) $(ntp_server) iburst";
+
+  packages:
+    any::
+      "chrony"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "chrony"
+      service_policy => "start";
+      
+  commands: 
+    restart_chrony:: 
+      "/bin/systemctl restart chrony" 
+         contain => in_shell_and_silent; 
+
+  files:
+    "/etc/chrony/."
+      perms => mo("755","root"),
+      create => "true";
+
+    "/etc/chrony/chrony.conf"
+      comment => "Replace default Debian chrony/NTP Server",
+      create => "false",
+      edit_line => chrony_pool,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_chrony" );
+}
+
+bundle edit_line chrony_pool {
+    replace_patterns:
+        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_string));
+}
+
+bundle agent unifi_core_agent {
+  packages:
+    any::
+      "unifi-core-agent"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "unifi-core-agent"
+      service_policy => "start";
+      
+  commands: 
+    restart_unifi_core_agent:: 
+      "/bin/systemctl restart unifi-core-agent" 
+         contain => in_shell_and_silent; 
+}
+
+
+bundle agent syslogng {
+  vars:
+    any::
+      "syslogng_conf_dir" string => "/etc/syslog-ng";
+      "system_log_source" string => "s_src";
+
+    # Included from environment
+      "papertrail_destination_host" string => "$(unifi_environment.papertrail_destination_host)";
+      "papertrail_destination_port" int => "$(unifi_environment.papertrail_destination_port)";
+      "papertrail_destination_proto" string => "$(unifi_environment.papertrail_destination_proto)";
+
+  packages:
+    any::
+      "syslog-ng"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "syslog-ng"
+      service_policy => "start";
+      
+  commands: 
+    restart_syslogng:: 
+      "/bin/systemctl restart syslog-ng" 
+         contain => in_shell_and_silent; 
+
+  files:
+    # Ensure we've got our local file store
+    "${unifi_environment.cfengine_local_store_dir}/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "${unifi_environment.cfengine_local_store_dir}${syslogng_conf_dir}/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"
+      comment => "Add papertrail integration",
+      perms => mo("400","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/syslog-ng/papertrail.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
+      action => if_elapsed("60");
+
+    "$(syslogng_conf_dir)/conf.d/papertrail.conf"
+      comment => "Expand the variables on host",
+      create => "true",
+      edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"),
+      edit_defaults => empty,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_syslogng" );
+}
+
+bundle agent collectd {
+  vars:
+      "collectd_conf_dir" string => "/etc/collectd";
+      "collectd_conf"     string => "collectd.conf";
+
+    # Included from environment
+      "appoptics_api_key" string => "$(unifi_environment.appoptics_api_key)";
+
+  packages:
+    any::
+      "collectd"
+        policy => "present",
+        package_module => apt_get;
+
+  commands: 
+    restart_collectd:: 
+      "/bin/systemctl restart collectd" 
+         contain => in_shell_and_silent; 
+
+  # The librato recommended config file is stripped down to a large extent, 
+  # copy the original and replace (potential refactor later, if there's extra collectd functionality we need)
+  files:
+    # Ensure we've got our local file store
+    "${unifi_environment.cfengine_local_store_dir}/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "${unifi_environment.cfengine_local_store_dir}$(collectd_conf_dir)/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "${unifi_environment.cfengine_local_store_dir}$(collectd_conf_dir)/collectd.conf.d/."
+      perms => mo("755","root"),
+      create => "true"; 
+
+    "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
+      comment => "Copy librato/collectd template from policy server",
+      perms => mo("400","root"),
+      #copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
+      action => if_elapsed("60");
+
+    "$(collectd_conf_dir)/collectd.conf"
+      comment => "Expand the variables on host",
+      create => "true",
+      edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"),
+      edit_defaults => empty,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_collectd" );
+    
+    "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"
+      comment => "Copy librato/collectd template from policy server",
+      perms => mo("400","root"),
+      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/librato.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
+      action => if_elapsed("60");
+
+    "$(collectd_conf_dir)/collectd.conf.d/librato.conf"
+      comment => "Expand the variables on host",
+      create => "true",
+      edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"),
+      edit_defaults => empty,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_collectd" );
+}

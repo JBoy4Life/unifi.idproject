@@ -1,0 +1,9 @@
+#Librato configuration
+<Plugin "write_http">
+  <Node "AppOptics">
+    URL "https://api.appoptics.com/v1/measurements"
+    User "$(collectd.appoptics_api_key)"
+    Password ""
+    Format "JSON"
+  </Node>
+</Plugin>
