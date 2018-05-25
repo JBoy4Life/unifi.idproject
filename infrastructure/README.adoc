@@ -1,0 +1,31 @@
+= Infrastructure
+
+== Agent deployment
+
+. Take a clean box with at least 8GB of RAM.
+. Install Debian 9 selecting only "standard system utilities" and "SSH server".
+. Run the following commands as root, replacing `192.168.2.248` with the IP address of the agent machine:
++
+----
+wget -qO- https://cfengine-package-repos.s3.amazonaws.com/pub/gpg.key | apt-key add -
+echo "deb https://cfengine-package-repos.s3.amazonaws.com/pub/apt/packages stable main" > /etc/apt/sources.list.d/cfengine-community.list
+apt-get install apt-transport-https
+apt-get update
+apt-get install cfengine-community
+cp /vagrant/deployment/masterfiles/services/autorun/unifi.cf /var/cfengine/masterfiles/services/autorun/
+/var/cfengine/bin/cf-agent --bootstrap 192.168.2.248
+cd /var/cfengine/inputs
+cf-agent -Kf failsafe.cf && cf-agent -v -D unifi_role_agent -Kf promises.cf
+----
++
+. Repeat the commands on the last line until the reported fulfilled promises add up to 100.0%.
+. Configure agent in `/etc/unifi/unifi.conf`, e.g.:
++
+----
+UNIFI_CLIENT_ID=insert-client-id-here
+UNIFI_AGENT_ID=insert-agent-id-here
+UNIFI_SERVICE_URI=wss://app.unifi.id/agents/msgpack
+UNIFI_AGENT_PASSWORD=abcd
+----
++
+. Restart agent.
