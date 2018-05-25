@@ -17,7 +17,7 @@ apt-get install apt-transport-https
 apt-get update
 apt-get install cfengine-community
 # sync CF Engine content before bootstrapping
-sudo rsync -vrlpxE /root/unifi-id-master/infrastructre/deployment/masterfiles/* /var/cfengine/masterfiles/
+sudo rsync -vrlpxE /root/unifi-id-master/infrastructure/deployment/masterfiles/* /var/cfengine/masterfiles/
 /var/cfengine/bin/cf-agent --bootstrap 192.168.2.248
 cd /var/cfengine/inputs
 # Run the cf-agent, running the unifi.id agent policies
