@@ -1,9 +1,0 @@
-= unifi.id Terraform build
-
-== Guide
-
-- Update variables.tf (editing VPC, Subnet, Region, EC2 IP's, intsances sizes
-- run:
- - terraform plan -out myplan.out
- - terraform apply myplan.out
-
