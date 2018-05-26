@@ -66,6 +66,10 @@ async function fullSync() {
                 clientReference: person.id.toString(),
                 name: `${person.firstName} ${person.lastName}`
             };
+            let detectable = {
+                detectableId: person.mifareNumber,
+                description: ""
+            };
 
             // Sanitise any values here that won't be primary keys in the
             // unifi-core database.
@@ -86,6 +90,7 @@ async function fullSync() {
                 // in the unifi-core database.
                 let unifiPrimaryKeys = {
                     "holder_clientReference": holder.clientReference,
+                    "detectable_detectableId": detectable.detectableId
                 };
 
                 let errorEncountered = false;
@@ -140,6 +145,40 @@ async function fullSync() {
                 }
             });
 
+            unifi.request({
+                "messageType": "core.detectable.add-detectable",
+                "payload": {
+                    "clientId": config.clientId,
+                    "detectableId": detectable.detectableId,
+                    "detectableType": "mifare-csn",
+                    "description": detectable.description,
+                    "active": true,
+                    "assignment": null
+                }
+            },
+            (response) => {
+                console.debug(response);
+                if (response.messageType === "core.error.already-exists") {
+
+                    unifi.request({
+                        "messageType": "core.detectable.edit-detectable",
+                        "payload": {
+                            "clientId": config.clientId,
+                            "detectableId": detectable.detectableId,
+                            "detectableType": "mifare-csn",
+                            "changes": {
+                                "description": detectable.description,
+                                "active": true,
+                                "assignment": null
+                            }
+                        }
+                    },
+                    (response) => {
+                        console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(response)}`);
+                    });
+
+                }
+            });
         });
     });
 
