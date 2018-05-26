@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>id.unifi.service</groupId>
+        <artifactId>unifi-service-parent</artifactId>
+        <version>0.4-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>unifi-mock-agent</artifactId>
+
+    <name>unifi.id Mock Agent for testing</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-core-agent</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>id.unifi.service</groupId>
+            <artifactId>unifi-core-schema</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.statemachinesystems</groupId>
+            <artifactId>envy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <!--
+                      To start the service, run `mvn install`, start postgres and then:
+
+                          mvn exec:java -pl unifi-mock-agent
+                    -->
+                    <execution>
+                        <id>default-cli</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>id.unifi.service.mock.agent.MockAgentService</mainClass>
+                            <systemProperties>
+                                <!-- JVM config -->
+                                <property><key>user.timezone</key><value>UTC</value></property>
+                                <property><key>file.encoding</key><value>UTF-8</value></property>
+
+                                <!-- Core database config; needed for mocking raw detections -->
+                                <property><key>unifi.core.jdbc.url</key><value>jdbc:postgresql:unifi</value></property>
+                                <property><key>unifi.core.jdbc.user</key><value>${postgres.user}</value></property>
+                                <property><key>unifi.core.jdbc.driver</key><value>org.postgresql.Driver</value></property>
+                                <property><key>unifi.core.jooq.dialect</key><value>POSTGRES</value></property>
+                            </systemProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Duplicate JAR with a custom classifier instead of replacing the original JAR,
+                                 so we can re-shade for custom installations -->
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>id.unifi.service.mock.agent.MockAgentService</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- signed JAR files don't shade properly -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

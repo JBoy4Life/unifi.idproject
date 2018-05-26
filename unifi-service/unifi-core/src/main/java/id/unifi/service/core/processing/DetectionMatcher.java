@@ -1,7 +1,7 @@
 package id.unifi.service.core.processing;
 
-import id.unifi.service.common.db.Database;
-import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.DetectionMatch;
@@ -12,7 +12,7 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.ASSIGNMENT;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,14 +73,14 @@ public class DetectionMatcher {
                     .from(DETECTABLE.leftJoin(ASSIGNMENT).onKey())
                     .where(DETECTABLE.ACTIVE)
                     .stream()
-                    .collect(toMap(
+                    .collect(toUnmodifiableMap(
                             d -> new DetectablePK(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
                             r -> Optional.ofNullable(r.value4())));
 
             var antennaZones = sql
                     .selectFrom(ANTENNA)
                     .stream()
-                    .collect(toMap(
+                    .collect(toUnmodifiableMap(
                             a -> new AntennaPK(a.getClientId(), a.getReaderSn(), a.getPortNumber()),
                             a -> new ZonePK(a.getClientId(), a.getSiteId(), a.getZoneId())
                     ));

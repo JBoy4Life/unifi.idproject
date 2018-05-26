@@ -2,8 +2,8 @@ package id.unifi.service.core.operator;
 
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
-import id.unifi.service.common.db.Database;
-import id.unifi.service.common.db.DatabaseProvider;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.security.ScryptConfig;
 import id.unifi.service.common.security.SecretHashing;
 import id.unifi.service.common.security.TimestampedToken;

@@ -72,18 +72,19 @@ source_template=debian/$application-TEMPLATE
 destination_output=debian/$application-$version
 
 mkdir -p $destination_output/DEBIAN
-cp -aR $source_template $destination_output
+cp -aR $source_template/* $destination_output
 echo "
 Package: $application
 Architecture: all
 Maintainer: @unifi
 Priority: optional
 Version: $version
-Depends: $dependencies
 Description: $description
 " > $destination_output/DEBIAN/control
+
+#Depends: $dependencies
 mkdir -p $destination_output/opt/unifi/
-cp $target $destination_output/opt/unifi/unifi-core.jar
+cp $target $destination_output/opt/unifi/$application.jar
 
 dpkg-deb --build $destination_output $application-$version.deb
 

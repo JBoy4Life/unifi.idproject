@@ -2,7 +2,7 @@ package id.unifi.service.common.api;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -55,7 +55,7 @@ public class WebSocketDelegate {
 
         Creator(Dispatcher<?> dispatcher, String basePath, Set<Protocol> protocols) {
             this.dispatcher = dispatcher;
-            this.protocolByPath = protocols.stream().collect(toMap(p -> basePath + "/" + p, identity()));
+            this.protocolByPath = protocols.stream().collect(toUnmodifiableMap(p -> basePath + "/" + p, identity()));
         }
 
         public WebSocketDelegate createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse res) {

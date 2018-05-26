@@ -6,6 +6,7 @@ import com.google.common.reflect.ClassPath;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.UnknownMessageType;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ServiceRegistry {
@@ -74,7 +74,7 @@ public class ServiceRegistry {
         }
 
         var services = packageNamesByModule.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> discoverServices(classPath, e.getValue())));
+                .collect(toUnmodifiableMap(Map.Entry::getKey, e -> discoverServices(classPath, e.getValue())));
 
         this.componentProvider = componentHolder;
         this.serviceInstances = createServiceInstances(services.values());
@@ -129,7 +129,7 @@ public class ServiceRegistry {
     private Map<Class<?>, Object> createServiceInstances(Collection<Map<Class<?>, ApiService>> services) {
         return services.stream()
                 .flatMap(map -> map.keySet().stream())
-                .collect(Collectors.toMap(Function.identity(), cls -> {
+                .collect(toUnmodifiableMap(Function.identity(), cls -> {
                     log.debug("Creating service instance for {}", cls);
                     return componentProvider.get(cls);
                 }));

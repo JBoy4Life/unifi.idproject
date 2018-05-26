@@ -1,4 +1,4 @@
-package id.unifi.service.common.db;
+package id.unifi.service.dbcommon;
 
 import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;

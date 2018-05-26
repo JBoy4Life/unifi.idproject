@@ -1,4 +1,4 @@
-package id.unifi.service.common.db;
+package id.unifi.service.dbcommon;
 
 import com.statemachinesystems.envy.Default;
 import org.jooq.SQLDialect;

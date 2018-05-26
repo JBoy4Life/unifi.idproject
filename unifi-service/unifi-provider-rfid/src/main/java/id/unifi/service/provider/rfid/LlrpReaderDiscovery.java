@@ -9,7 +9,7 @@ import com.impinj.octane.Status;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +87,7 @@ public class LlrpReaderDiscovery {
             if (status != null) {
                 var readerSn = features.getSerialNumber().replaceAll("-", "");
                 var antennaeConnected = status.getAntennaStatusGroup().getAntennaList().stream()
-                        .collect(toMap(a -> (int) a.getPortNumber(), AntennaStatus::isConnected));
+                        .collect(toUnmodifiableMap(a -> (int) a.getPortNumber(), AntennaStatus::isConnected));
 
                 if (logFeatures) {
                     log.info("Reader features ({}/{}/{}):", readerSn, service.endpoint, features.getModelName());

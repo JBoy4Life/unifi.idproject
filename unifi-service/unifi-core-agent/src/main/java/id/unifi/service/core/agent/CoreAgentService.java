@@ -16,7 +16,7 @@ import static id.unifi.service.core.agent.DefaultReaderManager.getRollup;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getConfigObjectMapper;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
-import id.unifi.service.core.agent.parsing.HexByteArrayValueParser;
+import id.unifi.service.common.config.HexByteArrayValueParser;
 import id.unifi.service.core.agent.setup.CsvDetectionLogger;
 import id.unifi.service.core.agent.setup.DetectionLogger;
 import id.unifi.service.core.agent.setup.GenerateSetupMode;
@@ -61,9 +61,6 @@ public class CoreAgentService {
 
         @Default("ws://localhost:8001/agents/msgpack")
         URI serviceUri();
-
-        @Default("false")
-        boolean mockDetections();
     }
 
     public static void main(String[] args) throws IOException {
@@ -116,9 +113,9 @@ public class CoreAgentService {
             detectionLogger = Optional.of(new CsvDetectionLogger());
         }
 
-        var readerManager = config.mockDetections()
-                ? new MockReaderManager(persistence, config.clientId(), detectionConsumer)
-                : new DefaultReaderManager(persistence, new RfidProvider(detectionConsumer, registry),
+        var readerManager = new DefaultReaderManager(
+                persistence,
+                new RfidProvider(detectionConsumer, registry),
                     mode == AgentMode.PRODUCTION ? Duration.ofSeconds(10) : Duration.ZERO);
 
         Optional<CoreClient> coreClient;

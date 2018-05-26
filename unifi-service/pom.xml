@@ -14,6 +14,7 @@
         <module>unifi-db-common</module>
         <module>unifi-common</module>
         <module>unifi-core-agent</module>
+        <module>unifi-mock-agent</module>
         <module>unifi-provider-rfid</module>
         <module>unifi-attendance</module>
         <module>unifi-attendance-schema</module>
