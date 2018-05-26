@@ -1,3 +1,4 @@
+node_modules/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -5,11 +6,15 @@ pom.xml.next
 dependency-reduced-pom.xml
 release.properties
 .idea/
+nbproject/
 *.iml
 *.pem
-.vagrant
 .DS_Store
 *.log
 /cw-capsule-bridge/lib/
-/cw-capsule-bridge/nbproject/
-/cw-capsule-bridge/node_modules/
+
+# infrastructure
+**/.vagrant
+**/.vagrant*
+**/.terraform
+**/terraform.tfstate*
