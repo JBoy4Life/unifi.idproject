@@ -5,6 +5,7 @@ pom.xml.next
 dependency-reduced-pom.xml
 release.properties
 .idea/
+nbproject/
 *.iml
 *.pem
 .DS_Store
