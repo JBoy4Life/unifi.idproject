@@ -56,13 +56,62 @@ async function fullSync() {
 
         persons.forEach((person) => {
 
+            // Don't add person if they don't have a Mifare number.
+            if (!person.mifareNumber) {
+                return;
+            }
+
+            // Define values here that will be sent through the unifi.id API.
+            let holder = {
+                clientReference: person.id.toString(),
+                name: `${person.firstName} ${person.lastName}`
+            };
+
+            // Sanitise any values here that won't be primary keys in the
+            // unifi-core database.
+            (function sanitiseKeys() {
+
+                // holder.name
+                if (holder.name.length > 64) {
+                    let newName = holder.name.subString(0, 64);
+                    console.warning(`${LOG_PREFIX_WARNING} Name exceeds 64 character size limit, trimming: ${holder.name} → ${newName}`);
+                    holder.name = newName;
+                }
+
+            })();
+
+            let primaryKeysInvalid = (function() {
+
+                // Define values here that will be set as primary key values
+                // in the unifi-core database.
+                let unifiPrimaryKeys = {
+                    "holder_clientReference": holder.clientReference,
+                };
+
+                let errorEncountered = false;
+                Object.keys(unifiPrimaryKeys).forEach((key) => {
+                    if (unifiPrimaryKeys[key].length > 64) {
+                        console.error(`${LOG_PREFIX_ERROR} Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}`);
+                        errorEncountered = true;
+                    }
+                });
+                return errorEncountered;
+
+            })();
+
+            // End processing this person if there's an error with the
+            // primary keys.
+            if (primaryKeysInvalid) {
+                return;
+            }
+
             unifi.request({
                 "messageType": "core.holder.add-holder",
                 "payload": {
                     "clientId": config.clientId,
-                    "clientReference": person.id.toString(),
+                    "clientReference": holder.clientReference,
                     "holderType": "contact",
-                    "name": `${person.firstName} ${person.lastName}`,
+                    "name": holder.name,
                     "active": true,
                     "image": null
                 }
@@ -75,10 +124,10 @@ async function fullSync() {
                         "messageType": "core.holder.edit-holder",
                         "payload": {
                             "clientId": config.clientId,
-                            "clientReference": person.id.toString(),
+                            "clientReference": holder.clientReference,
                             "holderType": "contact",
                             "changes": {
-                                "name": `${person.firstName} ${person.lastName}`,
+                                "name": holder.name,
                                 "active": true,
                                 "image": null
                             }
