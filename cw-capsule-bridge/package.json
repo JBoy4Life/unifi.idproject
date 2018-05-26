@@ -8,7 +8,7 @@
     "client",
     "browser"
   ],
-  "author": "andrew",
+  "author": "Andrew Steel <dev@andrewsteel.net>",
   "contributors": [],
   "dependencies": {
     "axios": "^0.18.0",
