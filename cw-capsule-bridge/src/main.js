@@ -8,19 +8,19 @@ const LOG_PREFIX_DEBUG   = "[DEBUG]",
 
 //Get environment variables and define defaults:
 var env = require("env-variable")({
-    CAPSULE_BRIDGE_CLIENT_ID: "test-club",
+    CAPSULE_BRIDGE_CLIENT_ID:         "test-club",
     CAPSULE_BRIDGE_OPERATOR_USERNAME: "test",
     CAPSULE_BRIDGE_OPERATOR_PASSWORD: "test",
-    CAPSULE_BRIDGE_WEBSOCKET_URI: "ws://127.0.0.1:8000/service/json",
-    CAPSULE_BRIDGE_WEBSOCKET_TYPE: "json"
+    CAPSULE_BRIDGE_WEBSOCKET_URI:     "ws://127.0.0.1:8000/service/json",
+    CAPSULE_BRIDGE_WEBSOCKET_TYPE:    "json"
 });
 
 var config = {
-    clientId: env.CAPSULE_BRIDGE_CLIENT_ID,
+    clientId:         env.CAPSULE_BRIDGE_CLIENT_ID,
     operatorUsername: env.CAPSULE_BRIDGE_OPERATOR_USERNAME,
     operatorPassword: env.CAPSULE_BRIDGE_OPERATOR_PASSWORD,
-    websocketUri: env.CAPSULE_BRIDGE_WEBSOCKET_URI,
-    websocketType: env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
+    websocketUri:     env.CAPSULE_BRIDGE_WEBSOCKET_URI,
+    websocketType:    env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
 };
 console.info(`${LOG_PREFIX_INFO} Configuration: ${JSON.stringify(config)}`);
 

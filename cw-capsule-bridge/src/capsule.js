@@ -1,14 +1,14 @@
 import Axios from "axios";
 import LinkHeader from "http-link-header";
 
-const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=fields";
-const CAPSULE_FIELD_MIFARENUMBER = 216824;
-const CAPSULE_FIELD_RTCONTACTID  = 371942;
 const LOG_PREFIX_DEBUG   = "[DEBUG]",
       LOG_PREFIX_ERROR   = "[ERROR]",
       LOG_PREFIX_INFO    = "[INFO]",
       LOG_PREFIX_WARNING = "[WARNING]";
 
+const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=tags,fields,organisation";
+const CAPSULE_FIELD_MIFARENUMBER = 216824,
+      CAPSULE_FIELD_RTCONTACTID  = 371942;
 export default class Capsule {
     constructor(apiKey) {
         this.apiKey = apiKey;
