@@ -10,6 +10,6 @@ release.properties
 .vagrant
 .DS_Store
 *.log
-cw-capsule-bridge/lib/
-cw-capsule-bridge/nbproject/
-cw-capsule-bridge/node_modules/
+/cw-capsule-bridge/lib/
+/cw-capsule-bridge/nbproject/
+/cw-capsule-bridge/node_modules/
