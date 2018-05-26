@@ -7,7 +7,9 @@ const LOG_PREFIX_DEBUG   = "[DEBUG]",
       LOG_PREFIX_WARNING = "[WARNING]";
 
 const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=tags,fields,organisation";
-const CAPSULE_FIELD_MIFARENUMBER = 216824,
+const CAPSULE_FIELD_CLUB         = 368576,
+      CAPSULE_FIELD_MEMBERTYPE   = 231465,
+      CAPSULE_FIELD_MIFARENUMBER = 216824,
       CAPSULE_FIELD_RTCONTACTID  = 371942;
 export default class Capsule {
     constructor(apiKey) {
@@ -51,6 +53,8 @@ export default class Capsule {
     _transformPerson(person) {
         return {
             ...person,
+            club: this._getFieldValue(person, CAPSULE_FIELD_CLUB, ""),
+            memberType: this._getFieldValue(person, CAPSULE_FIELD_MEMBERTYPE, ""),
             mifareNumber: this._getFieldValue(person, CAPSULE_FIELD_MIFARENUMBER, ""),
             rtContactId:  this._getFieldValue(person, CAPSULE_FIELD_RTCONTACTID,  "")
         };
