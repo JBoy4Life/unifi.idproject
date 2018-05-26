@@ -9,7 +9,6 @@ export default class WebSocketProtocol {
     reconnectionDelay = 1000,
     type = 'json'
   }) {
-    // console.log('WebSocketProtocol', url)
     this.correlations = []
     this.ws = new WebSocketLayerClass(url, type)
     this.reconnectionAttempts = reconnectionAttempts
@@ -73,7 +72,6 @@ export default class WebSocketProtocol {
   }
 
   request(content, params) {
-    // console.log('request data', content)
     if (this.correlations[content.correlationId]) {
       return this.correlations[content.correlationId].resource
     }
@@ -82,7 +80,6 @@ export default class WebSocketProtocol {
       this.correlations[content.correlationId] = {
         resolve, reject, content,
       }
-      // console.log('sending content', content)
       this.ws.send(content, params)
     })
 
