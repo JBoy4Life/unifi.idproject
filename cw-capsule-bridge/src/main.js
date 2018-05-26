@@ -118,7 +118,8 @@ async function fullSync() {
                     "holderType": "contact",
                     "name": holder.name,
                     "active": true,
-                    "image": null
+                    "image": null,
+                    "metadata": null
                 }
             },
             (response) => {
@@ -134,7 +135,8 @@ async function fullSync() {
                             "changes": {
                                 "name": holder.name,
                                 "active": true,
-                                "image": null
+                                "image": null,
+                                "metadata": null
                             }
                         }
                     },
