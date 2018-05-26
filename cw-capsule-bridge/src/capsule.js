@@ -4,6 +4,10 @@ import LinkHeader from "http-link-header";
 const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=fields";
 const CAPSULE_FIELD_MIFARENUMBER = 216824;
 const CAPSULE_FIELD_RTCONTACTID  = 371942;
+const LOG_PREFIX_DEBUG   = "[DEBUG]",
+      LOG_PREFIX_ERROR   = "[ERROR]",
+      LOG_PREFIX_INFO    = "[INFO]",
+      LOG_PREFIX_WARNING = "[WARNING]";
 
 export default class Capsule {
     constructor(apiKey) {
@@ -22,7 +26,7 @@ export default class Capsule {
 
     }
     _getPartyPages(soFar, uri, resolve, reject) {
-        console.debug(soFar.length + " parties, fetching " + uri + "...");
+        console.debug(`${LOG_PREFIX_DEBUG} ${soFar.length} parties, fetching '${uri}' ...`);
         Axios.get(uri, {
             headers: {
                 Authorization: "Bearer " + this.apiKey,
@@ -37,7 +41,7 @@ export default class Capsule {
                 resolve(parties);
             // }
         }).catch((error) => {
-            console.error(`HTTP Status ${error.response.status}: ${error.response.statusText}`);
+            console.error(`${LOG_PREFIX_ERROR} ${JSON.stringify(error)}`);
             resolve([]);
         });
     }

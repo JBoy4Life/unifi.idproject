@@ -1,6 +1,11 @@
 import Capsule from "./capsule";
 import UnifiWsClient from "./lib/unifi-ws-client";
 
+const LOG_PREFIX_DEBUG   = "[DEBUG]",
+      LOG_PREFIX_ERROR   = "[ERROR]",
+      LOG_PREFIX_INFO    = "[INFO]",
+      LOG_PREFIX_WARNING = "[WARNING]";
+
 //Get environment variables and define defaults:
 var env = require("env-variable")({
     CAPSULE_BRIDGE_CLIENT_ID: "test-club",
@@ -17,12 +22,12 @@ var config = {
     websocketUri: env.CAPSULE_BRIDGE_WEBSOCKET_URI,
     websocketType: env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
 };
-console.debug(`Configuration: ${JSON.stringify(config)}`);
+console.info(`${LOG_PREFIX_INFO} Configuration: ${JSON.stringify(config)}`);
 
 const CAPSULE_API_KEY = "2CHDNqokGLBzmYXUa6Ce62S2WhT26OhzJnsOl7bnQZ0YWsU5J3GN4yzEHY/h6ywK";
 
 async function fullSync() {
-    console.debug("Syncing at " + (new Date()));
+    console.info(`${LOG_PREFIX_INFO} Full sync started at ${new Date()}`);
 
     // Get the Capsule data.
     const capsule = new Capsule(CAPSULE_API_KEY);
@@ -46,7 +51,9 @@ async function fullSync() {
         }
     },
     (authResponse) => {
-        console.debug(authResponse);
+        console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(authResponse)}`);
+        console.debug(`${LOG_PREFIX_DEBUG} Collected ${persons.length} persons.`);
+
         persons.forEach((person) => {
 
             unifi.request({
@@ -61,7 +68,7 @@ async function fullSync() {
                 }
             },
             (response) => {
-                console.debug(response);
+                console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(response)}`);
                 if (response.messageType === "core.error.already-exists") {
 
                     unifi.request({
@@ -78,7 +85,7 @@ async function fullSync() {
                         }
                     },
                     (response) => {
-                        console.debug(response);
+                        console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(response)}`);
                     });
 
                 }
@@ -87,6 +94,7 @@ async function fullSync() {
         });
     });
 
+    console.info(`${LOG_PREFIX_INFO} Full sync ended at ${new Date()}`);
     // Queue up the next sync in 10 minutes.
     setTimeout(fullSync, 600000);
 }
