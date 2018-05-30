@@ -151,7 +151,7 @@ async function fullSync() {
                     "detectableType": "mifare-csn",
                     "description": detectable.description,
                     "active": true,
-                    "assignment": null
+                    "assignment": holder.clientReference
                 }
             },
             (response) => {
