@@ -1,10 +1,6 @@
 import Capsule from "./capsule";
+import Log from "./log";
 import UnifiWsClient from "./lib/unifi-ws-client";
-
-const LOG_PREFIX_DEBUG   = "[DEBUG]",
-      LOG_PREFIX_ERROR   = "[ERROR]",
-      LOG_PREFIX_INFO    = "[INFO]",
-      LOG_PREFIX_WARNING = "[WARNING]";
 
 //Get environment variables and define defaults:
 var env = require("env-variable")({
@@ -22,12 +18,12 @@ var config = {
     websocketUri:     env.CAPSULE_BRIDGE_WEBSOCKET_URI,
     websocketType:    env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
 };
-console.info(`${LOG_PREFIX_INFO} Configuration: ${JSON.stringify(config)}`);
+Log.info(`Configuration: ${JSON.stringify(config)}`);
 
 const CAPSULE_API_KEY = "2CHDNqokGLBzmYXUa6Ce62S2WhT26OhzJnsOl7bnQZ0YWsU5J3GN4yzEHY/h6ywK";
 
 async function fullSync() {
-    console.info(`${LOG_PREFIX_INFO} Full sync started at ${new Date()}`);
+    Log.info(`Full sync started at ${new Date()}`);
 
     // Get the Capsule data.
     const capsule = new Capsule(CAPSULE_API_KEY);
@@ -51,8 +47,8 @@ async function fullSync() {
         }
     },
     (authResponse) => {
-        console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(authResponse)}`);
-        console.debug(`${LOG_PREFIX_DEBUG} Collected ${persons.length} persons.`);
+        Log.debug(`${JSON.stringify(authResponse)}`);
+        Log.debug(`Collected ${persons.length} persons.`);
 
         persons.forEach((person) => {
 
@@ -78,7 +74,7 @@ async function fullSync() {
                 // holder.name
                 if (holder.name.length > 64) {
                     let newName = holder.name.subString(0, 64);
-                    console.warning(`${LOG_PREFIX_WARNING} Name exceeds 64 character size limit, trimming: ${holder.name} → ${newName}`);
+                    Log.warning(`Name exceeds 64 character size limit, trimming: ${holder.name} → ${newName}`);
                     holder.name = newName;
                 }
 
@@ -96,7 +92,7 @@ async function fullSync() {
                 let errorEncountered = false;
                 Object.keys(unifiPrimaryKeys).forEach((key) => {
                     if (unifiPrimaryKeys[key].length > 64) {
-                        console.error(`${LOG_PREFIX_ERROR} Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}`);
+                        Log.error(`Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}`);
                         errorEncountered = true;
                     }
                 });
@@ -123,7 +119,7 @@ async function fullSync() {
                 }
             },
             (response) => {
-                console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(response)}`);
+                Log.debug(`${JSON.stringify(response)}`);
                 if (response.messageType === "core.error.already-exists") {
 
                     unifi.request({
@@ -141,7 +137,7 @@ async function fullSync() {
                         }
                     },
                     (response) => {
-                        console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(response)}`);
+                        Log.debug(`${JSON.stringify(response)}`);
                     });
 
                 }
@@ -159,7 +155,7 @@ async function fullSync() {
                 }
             },
             (response) => {
-                console.debug(response);
+                Log.debug(`${JSON.stringify(response)}`);
                 if (response.messageType === "core.error.already-exists") {
 
                     unifi.request({
@@ -176,7 +172,7 @@ async function fullSync() {
                         }
                     },
                     (response) => {
-                        console.debug(`${LOG_PREFIX_DEBUG} ${JSON.stringify(response)}`);
+                        Log.debug(`${JSON.stringify(response)}`);
                     });
 
                 }
@@ -184,9 +180,9 @@ async function fullSync() {
         });
     });
 
-    console.info(`${LOG_PREFIX_INFO} Full sync ended at ${new Date()}`);
+    Log.info(`Full sync ended at ${new Date()}`);
     // Queue up the next sync in 10 minutes.
     setTimeout(fullSync, 600000);
 }
 
-fullSync().catch((e) => console.error(e));
+fullSync().catch((e) => Log.error(e));

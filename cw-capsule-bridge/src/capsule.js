@@ -1,10 +1,7 @@
 import Axios from "axios";
 import LinkHeader from "http-link-header";
 
-const LOG_PREFIX_DEBUG   = "[DEBUG]",
-      LOG_PREFIX_ERROR   = "[ERROR]",
-      LOG_PREFIX_INFO    = "[INFO]",
-      LOG_PREFIX_WARNING = "[WARNING]";
+import Log from "./log";
 
 const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=tags,fields,organisation";
 const CAPSULE_FIELD_CLUB         = 368576,
@@ -28,7 +25,7 @@ export default class Capsule {
 
     }
     _getPartyPages(soFar, uri, resolve, reject) {
-        console.debug(`${LOG_PREFIX_DEBUG} ${soFar.length} parties, fetching '${uri}' ...`);
+        Log.debug(`${soFar.length} parties, fetching '${uri}' ...`);
         Axios.get(uri, {
             headers: {
                 Authorization: "Bearer " + this.apiKey,
@@ -43,7 +40,7 @@ export default class Capsule {
                 resolve(parties);
              }
         }).catch((error) => {
-            console.error(`${LOG_PREFIX_ERROR} ${JSON.stringify(error)}`);
+            Log.error(`${JSON.stringify(error)}`);
             resolve([]);
         });
     }
