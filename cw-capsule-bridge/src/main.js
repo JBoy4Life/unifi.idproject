@@ -4,6 +4,7 @@ import UnifiWsClient from "./lib/unifi-ws-client";
 
 //Get environment variables and define defaults:
 var env = require("env-variable")({
+    CAPSULE_BRIDGE_API_KEY:           "2CHDNqokGLBzmYXUa6Ce62S2WhT26OhzJnsOl7bnQZ0YWsU5J3GN4yzEHY/h6ywK",
     CAPSULE_BRIDGE_CLIENT_ID:         "test-club",
     CAPSULE_BRIDGE_OPERATOR_USERNAME: "test",
     CAPSULE_BRIDGE_OPERATOR_PASSWORD: "test",
@@ -12,6 +13,7 @@ var env = require("env-variable")({
 });
 
 var config = {
+    apiKey:           env.CAPSULE_BRIDGE_API_KEY,
     clientId:         env.CAPSULE_BRIDGE_CLIENT_ID,
     operatorUsername: env.CAPSULE_BRIDGE_OPERATOR_USERNAME,
     operatorPassword: env.CAPSULE_BRIDGE_OPERATOR_PASSWORD,
@@ -20,13 +22,11 @@ var config = {
 };
 Log.info(`Configuration: ${JSON.stringify(config)}`);
 
-const CAPSULE_API_KEY = "2CHDNqokGLBzmYXUa6Ce62S2WhT26OhzJnsOl7bnQZ0YWsU5J3GN4yzEHY/h6ywK";
-
 async function fullSync() {
     Log.info(`Full sync started at ${new Date()}`);
 
     // Get the Capsule data.
-    const capsule = new Capsule(CAPSULE_API_KEY);
+    const capsule = new Capsule(config.apiKey);
     const persons = await capsule.getPersons();
 
     // Connect to the Unifi.id service.
