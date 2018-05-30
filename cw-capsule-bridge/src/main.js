@@ -167,7 +167,7 @@ async function fullSync() {
                             "changes": {
                                 "description": detectable.description,
                                 "active": true,
-                                "assignment": null
+                                "assignment": holder.clientReference
                             }
                         }
                     },
