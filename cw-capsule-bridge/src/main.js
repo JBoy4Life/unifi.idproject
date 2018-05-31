@@ -116,87 +116,60 @@ async function fullSync() {
                 return;
             }
 
-            unifi.request({
-                "messageType": "core.holder.add-holder",
-                "payload": {
-                    "clientId": config.clientId,
-                    "clientReference": holder.clientReference,
-                    "holderType": "contact",
-                    "name": holder.name,
-                    "active": true,
-                    "image": null,
-                    "metadata": null
-                }
-            },
-            (response) => {
-                Log.debug(`${JSON.stringify(response)}`);
-                if (response.messageType === "core.error.already-exists") {
+            var assertHolder = function () {
 
-                    unifi.request({
-                        "messageType": "core.holder.edit-holder",
-                        "payload": {
-                            "clientId": config.clientId,
-                            "clientReference": holder.clientReference,
-                            "holderType": "contact",
-                            "changes": {
-                                "name": holder.name,
-                                "active": true,
-                                "image": null,
-                                "metadata": null
+                unifi.request({
+                    "messageType": "core.holder.add-holder",
+                    "payload": {
+                        "clientId": config.clientId,
+                        "clientReference": holder.clientReference,
+                        "holderType": "contact",
+                        "name": holder.name,
+                        "active": true,
+                        "image": null,
+                        "metadata": null
+                    }
+                },
+                (response) => {
+                    Log.debug(`${JSON.stringify(response)}`);
+                    if (response.messageType === "core.error.already-exists") {
+
+                        unifi.request({
+                            "messageType": "core.holder.edit-holder",
+                            "payload": {
+                                "clientId": config.clientId,
+                                "clientReference": holder.clientReference,
+                                "holderType": "contact",
+                                "changes": {
+                                    "name": holder.name,
+                                    "active": true,
+                                    "image": null,
+                                    "metadata": null
+                                }
                             }
-                        }
-                    },
-                    (response) => {
-                        Log.debug(`${JSON.stringify(response)}`);
-                    });
+                        },
+                        (response) => {
+                            Log.debug(`${JSON.stringify(response)}`);
+                            assertDetectables();
+                        });
 
-                }
-            });
+                    }
+                    else {
+                        assertDetectables();
+                    }
+                });
 
-            unifi.request({
-                "messageType": "core.detectable.add-detectable",
-                "payload": {
-                    "clientId": config.clientId,
-                    "detectableId": mifare.detectableId,
-                    "detectableType": "mifare-csn",
-                    "description": mifare.description,
-                    "active": true,
-                    "assignment": holder.clientReference
-                }
-            },
-            (response) => {
-                Log.debug(`${JSON.stringify(response)}`);
-                if (response.messageType === "core.error.already-exists") {
+            };
 
-                    unifi.request({
-                        "messageType": "core.detectable.edit-detectable",
-                        "payload": {
-                            "clientId": config.clientId,
-                            "detectableId": mifare.detectableId,
-                            "detectableType": "mifare-csn",
-                            "changes": {
-                                "description": mifare.description,
-                                "active": true,
-                                "assignment": holder.clientReference
-                            }
-                        }
-                    },
-                    (response) => {
-                        Log.debug(`${JSON.stringify(response)}`);
-                    });
-
-                }
-            });
-
-            if (uhf !== undefined) {
+            var assertDetectables = function () {
 
                 unifi.request({
                     "messageType": "core.detectable.add-detectable",
                     "payload": {
                         "clientId": config.clientId,
-                        "detectableId": uhf.detectableId,
-                        "detectableType": "uhf-epc",
-                        "description": uhf.description,
+                        "detectableId": mifare.detectableId,
+                        "detectableType": "mifare-csn",
+                        "description": mifare.description,
                         "active": true,
                         "assignment": holder.clientReference
                     }
@@ -209,10 +182,10 @@ async function fullSync() {
                             "messageType": "core.detectable.edit-detectable",
                             "payload": {
                                 "clientId": config.clientId,
-                                "detectableId": uhf.detectableId,
-                                "detectableType": "uhf-epc",
+                                "detectableId": mifare.detectableId,
+                                "detectableType": "mifare-csn",
                                 "changes": {
-                                    "description": uhf.description,
+                                    "description": mifare.description,
                                     "active": true,
                                     "assignment": holder.clientReference
                                 }
@@ -225,7 +198,48 @@ async function fullSync() {
                     }
                 });
 
-            }
+                if (uhf !== undefined) {
+
+                    unifi.request({
+                        "messageType": "core.detectable.add-detectable",
+                        "payload": {
+                            "clientId": config.clientId,
+                            "detectableId": uhf.detectableId,
+                            "detectableType": "uhf-epc",
+                            "description": uhf.description,
+                            "active": true,
+                            "assignment": holder.clientReference
+                        }
+                    },
+                    (response) => {
+                        Log.debug(`${JSON.stringify(response)}`);
+                        if (response.messageType === "core.error.already-exists") {
+
+                            unifi.request({
+                                "messageType": "core.detectable.edit-detectable",
+                                "payload": {
+                                    "clientId": config.clientId,
+                                    "detectableId": uhf.detectableId,
+                                    "detectableType": "uhf-epc",
+                                    "changes": {
+                                        "description": uhf.description,
+                                        "active": true,
+                                        "assignment": holder.clientReference
+                                    }
+                                }
+                            },
+                            (response) => {
+                                Log.debug(`${JSON.stringify(response)}`);
+                            });
+
+                        }
+                    });
+
+                }
+
+            };
+
+            assertHolder();
 
         });
     });
