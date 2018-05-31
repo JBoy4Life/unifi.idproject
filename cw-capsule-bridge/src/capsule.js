@@ -34,11 +34,11 @@ export default class Capsule {
         }).then((response) => {
             let nextLink = LinkHeader.parse(response.headers.link).get("rel", "next")[0];
             let parties = soFar.concat(response.data.parties);
-             if (nextLink) {
-                 this._getPartyPages(parties, nextLink.uri, resolve, reject);
-             } else {
+            if (nextLink) {
+                this._getPartyPages(parties, nextLink.uri, resolve, reject);
+            } else {
                 resolve(parties);
-             }
+            }
         }).catch((error) => {
             Log.error(`${JSON.stringify(error)}`);
             resolve([]);
