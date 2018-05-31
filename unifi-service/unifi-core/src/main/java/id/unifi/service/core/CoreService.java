@@ -28,6 +28,7 @@ import id.unifi.service.core.agents.IdentityService;
 import static id.unifi.service.core.db.Core.CORE;
 import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.processing.DetectionProcessor;
+import id.unifi.service.core.processing.VisitScheduler;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
 import static java.net.InetSocketAddress.createUnresolved;
@@ -86,6 +87,9 @@ public class CoreService {
         var detectionProcessor = new DetectionProcessor(config.mq(), detectionMatcher,
                 Set.of(detectionPersistence, attendanceProcessor),
                 Set.of(detectionSubscriber));
+
+        var visitScheduler = new VisitScheduler(dbProvider);
+        visitScheduler.insertVisits(); //TODO: Test
 
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,

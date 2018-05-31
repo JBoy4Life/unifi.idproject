@@ -18,3 +18,4 @@ CREATE TABLE core.visit (
      'interpolated-month', 'interpolated-site',
      'interpolated-night', 'measured-day', 'measured-night'))
 );
+
