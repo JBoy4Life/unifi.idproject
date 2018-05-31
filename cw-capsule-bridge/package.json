@@ -36,5 +36,9 @@
     "build": "babel src -d lib; cp -R --verbose 'src/res/' 'lib/'"
   },
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "optionalDependencies": {
+    "user-home": "^2.0.0",
+    "write": "^1.0.3"
+  }
 }

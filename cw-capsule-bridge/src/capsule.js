@@ -3,11 +3,23 @@ import LinkHeader from "http-link-header";
 
 import Log from "./log";
 
+try {
+    var Write = require("write");
+} catch (error) {
+    Write = null;
+}
+try {
+    var userHome = require('user-home');
+} catch (error) {
+    userHome = null;
+}
+
 const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=tags,fields,organisation";
 const CAPSULE_FIELD_CLUB         = 368576,
       CAPSULE_FIELD_MEMBERTYPE   = 231465,
       CAPSULE_FIELD_MIFARENUMBER = 216824,
       CAPSULE_FIELD_RTCONTACTID  = 371942;
+
 export default class Capsule {
     constructor(apiKey) {
         this.apiKey = apiKey;
@@ -15,8 +27,27 @@ export default class Capsule {
     }
     getPersons() {
         return this.getAllParties()
-            .then((parties) => parties.filter(this._isPerson))
-            .then((persons) => persons.map(this._transformPerson));
+            .then((parties) => {
+                if (userHome && Write) {
+                    Write.sync(`${userHome}/capsuleParties.json`, JSON.stringify({data: parties}));
+                }
+                return parties.filter(this._isPerson)
+            })
+            .then((persons) => {
+                let transformedPersons = persons.map(this._transformPerson);
+
+                if (userHome && Write) {
+                    let mifaresExport = "";
+                    transformedPersons.forEach((person) => {
+                        if (person.mifareNumber !== "") {
+                            mifaresExport += `${person.mifareNumber}\n`;
+                        }
+                    });
+                    Write.sync(`${userHome}/capsuleMifares.txt`, mifaresExport);
+                }
+
+                return transformedPersons;
+            });
     }
     getAllParties() {
         return new Promise((resolve, reject) => {
