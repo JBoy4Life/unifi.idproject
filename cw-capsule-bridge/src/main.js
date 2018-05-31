@@ -61,7 +61,11 @@ async function fullSync() {
             // Define values here that will be sent through the unifi.id API.
             let holder = {
                 clientReference: person.id.toString(),
-                name: `${person.firstName} ${person.lastName}`
+                name: `${person.firstName} ${person.lastName}`,
+                metadata: {
+                    "club": person.club,
+                    "memberType": person.memberType
+                }
             };
             let mifare = {
                 detectableId: person.mifareNumber,
@@ -127,7 +131,7 @@ async function fullSync() {
                         "name": holder.name,
                         "active": true,
                         "image": null,
-                        "metadata": null
+                        "metadata": holder.metadata
                     }
                 },
                 (response) => {
@@ -144,7 +148,7 @@ async function fullSync() {
                                     "name": holder.name,
                                     "active": true,
                                     "image": null,
-                                    "metadata": null
+                                    "metadata": holder.metadata
                                 }
                             }
                         },
