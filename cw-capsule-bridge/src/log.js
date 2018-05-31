@@ -1,24 +1,19 @@
 function Log() {};
 
-const LOG_PREFIX_DEBUG   = "[DEBUG]",
-      LOG_PREFIX_ERROR   = "[ERROR]",
-      LOG_PREFIX_INFO    = "[INFO]",
-      LOG_PREFIX_WARNING = "[WARNING]";
-
 Log.prototype.debug = function debug(message) {
-    console.debug(`${LOG_PREFIX_DEBUG} ${message}`);
+    console.debug(`[DEBUG] ${message}`);
 };
 
 Log.prototype.error = function error(message) {
-    console.error(`${LOG_PREFIX_ERROR} ${message}`);
+    console.error(`[ERROR] ${message}`);
 };
 
 Log.prototype.info = function info(message) {
-    console.info(`${LOG_PREFIX_INFO} ${message}`);
+    console.info(`[INFO] ${message}`);
 };
 
 Log.prototype.warning = function warning(message) {
-    console.warning(`${LOG_PREFIX_WARNING} ${message}`);
+    console.warning(`[WARNING] ${message}`);
 };
 
 export default new Log();
