@@ -4,9 +4,9 @@
     "stage-2"
   ],
   "plugins": [
-    "transform-object-rest-spread",
     "syntax-async-functions",
+    "transform-object-rest-spread",
     "transform-regenerator",
-    "babel-polyfill"
+    "transform-runtime"
   ]
 }
