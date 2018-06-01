@@ -1,3 +1,4 @@
+node_modules/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -10,6 +11,7 @@ nbproject/
 *.pem
 .DS_Store
 *.log
+/cw-capsule-bridge/lib/
 
 # infrastructure
 **/.vagrant
