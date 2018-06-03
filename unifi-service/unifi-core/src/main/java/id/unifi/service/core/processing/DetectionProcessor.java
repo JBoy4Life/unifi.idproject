@@ -75,7 +75,7 @@ public class DetectionProcessor {
         connection = MqUtils.connect(mqConfig);
 
         try (var channel = connection.createChannel()) {
-            channel.exchangeDeclare(DETECTION_MATCH_EXCHANGE_NAME, "fanout", true);
+            channel.exchangeDeclare(DETECTION_MATCH_EXCHANGE_NAME, "fanout", false);
         } catch (IOException | TimeoutException e) {
             throw new RuntimeException(e);
         }
