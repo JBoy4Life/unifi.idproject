@@ -56,7 +56,7 @@ export default class Capsule {
 
     }
     _getPartyPages(soFar, uri, resolve, reject) {
-        Log.debug(`${soFar.length} parties, fetching '${uri}' ...`);
+        Log.info(`${soFar.length} parties, fetching '${uri}' ...`);
         Axios.get(uri, {
             headers: {
                 Authorization: "Bearer " + this.apiKey,

@@ -55,6 +55,7 @@ async function fullSync() {
 
             // Don't add person if they don't have a Mifare number.
             if (!person.mifareNumber) {
+                Log.debug(`Skipping person: No Mifare. Data: ${JSON.stringify(person)}`);
                 return;
             }
 
@@ -77,6 +78,10 @@ async function fullSync() {
                     detectableId: mifareUhfMappings[person.mifareNumber],
                     description: ""
                 };
+            }
+            else {
+                Log.warning(`Skipping person: No matching UHF found. Data: ${JSON.stringify(person)}`);
+                return;
             }
 
             // Sanitise any values here that won't be primary keys in the
@@ -117,6 +122,7 @@ async function fullSync() {
             // End processing this person if there's an error with the
             // primary keys.
             if (primaryKeysInvalid) {
+                Log.warning(`Skipping person: Primary key value invalid. Data: ${JSON.stringify(person)}`);
                 return;
             }
 
