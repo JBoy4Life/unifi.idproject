@@ -118,9 +118,9 @@ describe('WSProtocol', () => {
     instance.subscribe({
       correlationId,
       payload: null,
-    }, () => {
-      responseCount += 1
-    })
+    }, {}, () => {
+      responseCount += 1;
+    });
 
     await sleep(200)
     await instance.close()

@@ -1,6 +1,7 @@
 import Capsule from "./capsule";
 import Log from "./log";
 import UnifiWsClient from "./lib/unifi-ws-client";
+import getImageFromUrl from "./getImageFromUrl";
 
 import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
 //Get environment variables and define defaults:
@@ -22,6 +23,7 @@ var config = {
     websocketType:    env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
 };
 Log.info(`Configuration: ${JSON.stringify(config)}`);
+
 
 async function fullSync() {
     Log.info(`Full sync started at ${new Date()}`);
@@ -63,6 +65,7 @@ async function fullSync() {
             let holder = {
                 clientReference: person.id.toString(),
                 name: `${person.firstName} ${person.lastName}`,
+                image: getImageFromUrl(person.pictureURL),
                 metadata: {
                     "club": person.club,
                     "memberType": person.memberType
@@ -136,7 +139,7 @@ async function fullSync() {
                         "holderType": "contact",
                         "name": holder.name,
                         "active": true,
-                        "image": null,
+                        "image": holder.image,
                         "metadata": holder.metadata
                     }
                 },
@@ -153,7 +156,7 @@ async function fullSync() {
                                 "changes": {
                                     "name": holder.name,
                                     "active": true,
-                                    "image": null,
+                                    "image": holder.image,
                                     "metadata": holder.metadata
                                 }
                             }
