@@ -55,12 +55,6 @@ async function fullSync() {
 
         persons.forEach((person) => {
 
-            // Don't add person if they don't have a Mifare number.
-            if (!person.mifareNumber) {
-                Log.debug(`Skipping person: No Mifare. Data: ${JSON.stringify(person)}`);
-                return;
-            }
-
             // Define values here that will be sent through the unifi.id API.
             let holder = {
                 clientReference: person.id.toString(),
@@ -71,10 +65,17 @@ async function fullSync() {
                     "memberType": person.memberType
                 }
             };
-            let mifare = {
-                detectableId: person.mifareNumber,
-                description: ""
-            };
+            let mifare;
+            if (person.mifareNumber !== undefined) {
+                mifare = {
+                    detectableId: person.mifareNumber,
+                    description: ""
+                };
+            }
+            else {
+                Log.debug(`Skipping person: No Mifare. Data: "${JSON.stringify(person)}"`);
+                return;
+            }
             let uhf;
             if (person.mifareNumber in mifareUhfMappings) {
                 uhf = {
@@ -107,9 +108,7 @@ async function fullSync() {
                 let unifiPrimaryKeys = {};
                 unifiPrimaryKeys["holder_clientReference"] = holder.clientReference;
                 unifiPrimaryKeys["mifare_detectableId"] = mifare.detectableId;
-                if (uhf !== undefined) {
-                    unifiPrimaryKeys["uhf_detectableId"] = uhf.detectableId;
-                }
+                unifiPrimaryKeys["uhf_detectableId"] = uhf.detectableId;
 
                 let errorEncountered = false;
                 Object.keys(unifiPrimaryKeys).forEach((key) => {
@@ -211,44 +210,40 @@ async function fullSync() {
                     }
                 });
 
-                if (uhf !== undefined) {
+                unifi.request({
+                    "messageType": "core.detectable.add-detectable",
+                    "payload": {
+                        "clientId": config.clientId,
+                        "detectableId": uhf.detectableId,
+                        "detectableType": "uhf-epc",
+                        "description": uhf.description,
+                        "active": true,
+                        "assignment": holder.clientReference
+                    }
+                },
+                (response) => {
+                    Log.debug(`${JSON.stringify(response)}`);
+                    if (response.messageType === "core.error.already-exists") {
 
-                    unifi.request({
-                        "messageType": "core.detectable.add-detectable",
-                        "payload": {
-                            "clientId": config.clientId,
-                            "detectableId": uhf.detectableId,
-                            "detectableType": "uhf-epc",
-                            "description": uhf.description,
-                            "active": true,
-                            "assignment": holder.clientReference
-                        }
-                    },
-                    (response) => {
-                        Log.debug(`${JSON.stringify(response)}`);
-                        if (response.messageType === "core.error.already-exists") {
-
-                            unifi.request({
-                                "messageType": "core.detectable.edit-detectable",
-                                "payload": {
-                                    "clientId": config.clientId,
-                                    "detectableId": uhf.detectableId,
-                                    "detectableType": "uhf-epc",
-                                    "changes": {
-                                        "description": uhf.description,
-                                        "active": true,
-                                        "assignment": holder.clientReference
-                                    }
+                        unifi.request({
+                            "messageType": "core.detectable.edit-detectable",
+                            "payload": {
+                                "clientId": config.clientId,
+                                "detectableId": uhf.detectableId,
+                                "detectableType": "uhf-epc",
+                                "changes": {
+                                    "description": uhf.description,
+                                    "active": true,
+                                    "assignment": holder.clientReference
                                 }
-                            },
-                            (response) => {
-                                Log.debug(`${JSON.stringify(response)}`);
-                            });
+                            }
+                        },
+                        (response) => {
+                            Log.debug(`${JSON.stringify(response)}`);
+                        });
 
-                        }
-                    });
-
-                }
+                    }
+                });
 
             };
 
