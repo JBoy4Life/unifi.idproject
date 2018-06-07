@@ -1,9 +1,3 @@
-import Capsule from "./capsule";
-import Log from "./log";
-import UnifiWsClient from "./lib/unifi-ws-client";
-import getImageFromUrl from "./getImageFromUrl";
-
-import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
 //Get environment variables and define defaults:
 var env = require("env-variable")({
     CAPSULE_BRIDGE_API_KEY:           "2CHDNqokGLBzmYXUa6Ce62S2WhT26OhzJnsOl7bnQZ0YWsU5J3GN4yzEHY/h6ywK",
@@ -13,6 +7,12 @@ var env = require("env-variable")({
     CAPSULE_BRIDGE_WEBSOCKET_URI:     "ws://127.0.0.1:8000/service/json",
     CAPSULE_BRIDGE_WEBSOCKET_TYPE:    "json"
 });
+
+import Capsule from "./capsule";
+//import getImageFromUrl from "./getImageFromUrl";
+import Log from "./log";
+import UnifiWsClient from "./lib/unifi-ws-client";
+import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
 
 var config = {
     apiKey:           env.CAPSULE_BRIDGE_API_KEY,

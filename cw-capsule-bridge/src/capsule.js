@@ -1,18 +1,17 @@
 import Axios from "axios";
 import LinkHeader from "http-link-header";
-
-import Log from "./log";
-
 try {
     var Write = require("write");
 } catch (error) {
     Write = null;
 }
 try {
-    var userHome = require('user-home');
+    var userHome = require("user-home");
 } catch (error) {
     userHome = null;
 }
+
+import Log from "./log";
 
 const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=tags,fields,organisation";
 const CAPSULE_FIELD_CLUB         = 368576,
