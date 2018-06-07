@@ -1,19 +1,19 @@
 function Log() {};
 
-Log.prototype.debug = function debug(message) {
-    console.debug(`[DEBUG] ${message}`);
+Log.debug = function debug(message) {
+    //console.debug(`[DEBUG] ${message}`);
 };
 
-Log.prototype.error = function error(message) {
+Log.error = function error(message) {
     console.error(`[ERROR] ${message}`);
 };
 
-Log.prototype.info = function info(message) {
+Log.info = function info(message) {
     console.info(`[INFO] ${message}`);
 };
 
-Log.prototype.warning = function warning(message) {
+Log.warning = function warning(message) {
     console.warn(`[WARNING] ${message}`);
 };
 
-export default new Log();
+export default Log;
