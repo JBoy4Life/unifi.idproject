@@ -13,7 +13,7 @@ Log.prototype.info = function info(message) {
 };
 
 Log.prototype.warning = function warning(message) {
-    console.warning(`[WARNING] ${message}`);
+    console.warn(`[WARNING] ${message}`);
 };
 
 export default new Log();
