@@ -1,8 +1,3 @@
-import Capsule from "./capsule";
-import Log from "./log";
-import UnifiWsClient from "./lib/unifi-ws-client";
-
-import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
 //Get environment variables and define defaults:
 var env = require("env-variable")({
     CAPSULE_BRIDGE_API_KEY:           "2CHDNqokGLBzmYXUa6Ce62S2WhT26OhzJnsOl7bnQZ0YWsU5J3GN4yzEHY/h6ywK",
@@ -13,6 +8,11 @@ var env = require("env-variable")({
     CAPSULE_BRIDGE_WEBSOCKET_TYPE:    "json"
 });
 
+import Capsule from "./capsule";
+import Log from "./log";
+import UnifiWsClient from "./lib/unifi-ws-client";
+import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
+
 var config = {
     apiKey:           env.CAPSULE_BRIDGE_API_KEY,
     clientId:         env.CAPSULE_BRIDGE_CLIENT_ID,
@@ -22,6 +22,7 @@ var config = {
     websocketType:    env.CAPSULE_BRIDGE_WEBSOCKET_TYPE
 };
 Log.info(`Configuration: ${JSON.stringify(config)}`);
+
 
 async function fullSync() {
     Log.info(`Full sync started at ${new Date()}`);
@@ -53,30 +54,37 @@ async function fullSync() {
 
         persons.forEach((person) => {
 
-            // Don't add person if they don't have a Mifare number.
-            if (!person.mifareNumber) {
-                return;
-            }
-
             // Define values here that will be sent through the unifi.id API.
             let holder = {
                 clientReference: person.id.toString(),
                 name: `${person.firstName} ${person.lastName}`,
-                metadata: {
-                    "club": person.club,
-                    "memberType": person.memberType
-                }
+                image: null,
+                metadata: JSON.stringify({
+                    "homesite": person.club,
+                    "membertype": person.memberType
+                })
             };
-            let mifare = {
-                detectableId: person.mifareNumber,
-                description: ""
-            };
+            let mifare;
+            if (person.mifareNumber !== undefined) {
+                mifare = {
+                    detectableId: person.mifareNumber,
+                    description: ""
+                };
+            }
+            else {
+                Log.debug(`Skipping person: No Mifare. Data: "${JSON.stringify(person)}"`);
+                return;
+            }
             let uhf;
             if (person.mifareNumber in mifareUhfMappings) {
                 uhf = {
                     detectableId: mifareUhfMappings[person.mifareNumber],
                     description: ""
                 };
+            }
+            else {
+                Log.warning(`Skipping person: No matching UHF found. Data: ${JSON.stringify(person)}`);
+                return;
             }
 
             // Sanitise any values here that won't be primary keys in the
@@ -99,9 +107,7 @@ async function fullSync() {
                 let unifiPrimaryKeys = {};
                 unifiPrimaryKeys["holder_clientReference"] = holder.clientReference;
                 unifiPrimaryKeys["mifare_detectableId"] = mifare.detectableId;
-                if (uhf !== undefined) {
-                    unifiPrimaryKeys["uhf_detectableId"] = uhf.detectableId;
-                }
+                unifiPrimaryKeys["uhf_detectableId"] = uhf.detectableId;
 
                 let errorEncountered = false;
                 Object.keys(unifiPrimaryKeys).forEach((key) => {
@@ -117,6 +123,7 @@ async function fullSync() {
             // End processing this person if there's an error with the
             // primary keys.
             if (primaryKeysInvalid) {
+                Log.warning(`Skipping person: Primary key value invalid. Data: ${JSON.stringify(person)}`);
                 return;
             }
 
@@ -130,7 +137,7 @@ async function fullSync() {
                         "holderType": "contact",
                         "name": holder.name,
                         "active": true,
-                        "image": null,
+                        "image": holder.image,
                         "metadata": holder.metadata
                     }
                 },
@@ -147,7 +154,7 @@ async function fullSync() {
                                 "changes": {
                                     "name": holder.name,
                                     "active": true,
-                                    "image": null,
+                                    "image": holder.image,
                                     "metadata": holder.metadata
                                 }
                             }
@@ -202,44 +209,40 @@ async function fullSync() {
                     }
                 });
 
-                if (uhf !== undefined) {
+                unifi.request({
+                    "messageType": "core.detectable.add-detectable",
+                    "payload": {
+                        "clientId": config.clientId,
+                        "detectableId": uhf.detectableId,
+                        "detectableType": "uhf-epc",
+                        "description": uhf.description,
+                        "active": true,
+                        "assignment": holder.clientReference
+                    }
+                },
+                (response) => {
+                    Log.debug(`${JSON.stringify(response)}`);
+                    if (response.messageType === "core.error.already-exists") {
 
-                    unifi.request({
-                        "messageType": "core.detectable.add-detectable",
-                        "payload": {
-                            "clientId": config.clientId,
-                            "detectableId": uhf.detectableId,
-                            "detectableType": "uhf-epc",
-                            "description": uhf.description,
-                            "active": true,
-                            "assignment": holder.clientReference
-                        }
-                    },
-                    (response) => {
-                        Log.debug(`${JSON.stringify(response)}`);
-                        if (response.messageType === "core.error.already-exists") {
-
-                            unifi.request({
-                                "messageType": "core.detectable.edit-detectable",
-                                "payload": {
-                                    "clientId": config.clientId,
-                                    "detectableId": uhf.detectableId,
-                                    "detectableType": "uhf-epc",
-                                    "changes": {
-                                        "description": uhf.description,
-                                        "active": true,
-                                        "assignment": holder.clientReference
-                                    }
+                        unifi.request({
+                            "messageType": "core.detectable.edit-detectable",
+                            "payload": {
+                                "clientId": config.clientId,
+                                "detectableId": uhf.detectableId,
+                                "detectableType": "uhf-epc",
+                                "changes": {
+                                    "description": uhf.description,
+                                    "active": true,
+                                    "assignment": holder.clientReference
                                 }
-                            },
-                            (response) => {
-                                Log.debug(`${JSON.stringify(response)}`);
-                            });
+                            }
+                        },
+                        (response) => {
+                            Log.debug(`${JSON.stringify(response)}`);
+                        });
 
-                        }
-                    });
-
-                }
+                    }
+                });
 
             };
 

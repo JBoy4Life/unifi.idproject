@@ -1,5 +1,5 @@
 {
-  "name": "nodetest",
+  "name": "cw-capsule-bridge",
   "version": "1.0.0",
   "keywords": [
     "util",
@@ -22,7 +22,8 @@
     "node-schedule": "^1.3.0",
     "npm": "^6.0.0",
     "uuid": "^3.2.1",
-    "ws": "^5.1.1"
+    "ws": "^5.1.1",
+    "xmlhttprequest": "^1.8.0"
   },
   "main": "main.js",
   "devDependencies": {
