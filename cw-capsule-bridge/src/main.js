@@ -60,10 +60,12 @@ async function fullSync() {
                 clientReference: person.id.toString(),
                 name: `${person.firstName} ${person.lastName}`,
                 image: getImageFromUrl(person.pictureURL),
-                metadata: {
-                    "club": person.club,
-                    "memberType": person.memberType
-                }
+                //image: getImageFromUrl(person.pictureURL),
+                image: null,
+                metadata: JSON.stringify({
+                    "homesite": person.club,
+                    "membertype": person.memberType
+                })
             };
             let mifare;
             if (person.mifareNumber !== undefined) {
