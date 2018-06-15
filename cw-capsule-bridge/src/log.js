@@ -1,7 +1,7 @@
-function Log() {};
+function Log() {}
 
 Log.debug = function debug(message) {
-    //console.debug(`[DEBUG] ${message}`);
+    // console.debug(`[DEBUG] ${message}`);
 };
 
 Log.error = function error(message) {
