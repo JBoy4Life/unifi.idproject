@@ -30,7 +30,7 @@ export default class Capsule {
                 if (userHome && Write) {
                     Write.sync(`${userHome}/capsuleParties.json`, JSON.stringify({data: parties}));
                 }
-                return parties.filter(this._isPerson)
+                return parties.filter(this._isPerson);
             })
             .then((persons) => {
                 let transformedPersons = persons.map(this._transformPerson);
