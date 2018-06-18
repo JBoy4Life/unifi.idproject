@@ -25,7 +25,7 @@ Log.info(`Configuration: ${JSON.stringify(config)}`);
 
 
 async function fullSync() {
-    Log.info(`Full sync started at ${new Date()}`);
+    Log.notice(`Full sync started at ${new Date()}`);
 
     // Get the Capsule data.
     const capsule = new Capsule(config.apiKey);
@@ -253,7 +253,7 @@ async function fullSync() {
         });
     });
 
-    Log.info(`Full sync ended at ${new Date()}`);
+    Log.notice(`Full sync ended at ${new Date()}`);
     // Queue up the next sync in 10 minutes.
     setTimeout(fullSync, 600000);
 }
