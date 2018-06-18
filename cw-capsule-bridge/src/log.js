@@ -12,6 +12,10 @@ Log.info = function (message) {
     console.info(`<6> [INFO] ${message}`);
 };
 
+Log.notice = function (message) {
+    console.log(`<5> [NOTICE] ${message}`);
+};
+
 Log.warning = function (message) {
     console.warn(`<4> [WARNING] ${message}`);
 };
