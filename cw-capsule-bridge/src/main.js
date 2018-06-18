@@ -56,19 +56,21 @@ async function fullSync() {
 
             // Define values here that will be sent through the unifi.id API.
             let holder = {
-                clientReference: person.id.toString(),
-                name: `${person.firstName} ${person.lastName}`,
-                image: null,
-                metadata: JSON.stringify({
+                "clientReference": person.id.toString(),
+                "name": `${person.firstName} ${person.lastName}`,
+                "image": null,
+                "metadata": {
                     "homesite": person.club,
-                    "membertype": person.memberType
-                })
+                    "membertype": person.memberType,
+                    "company": (person.organisation !== undefined && person.organisation !== null ? person.organisation.name : null),
+                    "position": person.jobTitle
+                }
             };
             let mifare;
             if (person.mifareNumber !== undefined) {
                 mifare = {
-                    detectableId: person.mifareNumber,
-                    description: ""
+                    "detectableId": person.mifareNumber,
+                    "description": ""
                 };
             }
             else {
@@ -78,8 +80,8 @@ async function fullSync() {
             let uhf;
             if (person.mifareNumber in mifareUhfMappings) {
                 uhf = {
-                    detectableId: mifareUhfMappings[person.mifareNumber],
-                    description: ""
+                    "detectableId": mifareUhfMappings[person.mifareNumber],
+                    "description": ""
                 };
             }
             else {
