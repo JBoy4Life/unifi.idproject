@@ -74,7 +74,7 @@ async function fullSync() {
                 };
             }
             else {
-                Log.debug(`Skipping person: No Mifare. Data: "${JSON.stringify(person)}"`);
+                Log.debug(`Skipping person: No Mifare. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                 return;
             }
             let uhf;
@@ -85,7 +85,7 @@ async function fullSync() {
                 };
             }
             else {
-                Log.warning(`Skipping person: No matching UHF found. Data: ${JSON.stringify(person)}`);
+                Log.warning(`Skipping person: No matching UHF found. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                 return;
             }
 
@@ -114,7 +114,7 @@ async function fullSync() {
                 let errorEncountered = false;
                 Object.keys(unifiPrimaryKeys).forEach((key) => {
                     if (unifiPrimaryKeys[key].length > 64) {
-                        Log.error(`Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}`);
+                        Log.error(`Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                         errorEncountered = true;
                     }
                 });
@@ -125,7 +125,7 @@ async function fullSync() {
             // End processing this person if there's an error with the
             // primary keys.
             if (primaryKeysInvalid) {
-                Log.warning(`Skipping person: Primary key value invalid. Data: ${JSON.stringify(person)}`);
+                Log.warning(`Skipping person: Primary key value invalid. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                 return;
             }
 
