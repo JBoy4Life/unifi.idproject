@@ -10,6 +10,8 @@ link:src/main/java/id/unifi/service/integration/gallagher/Config.java[Config int
 
 link:doc/unifi-gallagher-logger-overview.adoc[Installation overview]
 
+link:doc/ops-manual.adoc[Operations Manual]
+
 == Build dependencies
 
 - Oracle JDK 10
