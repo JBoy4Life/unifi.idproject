@@ -6,8 +6,8 @@ import id.unifi.service.common.types.pk.SitePK;
 
 import java.util.List;
 
-public class SiteDetectionSubscriptionType implements SubscriptionType<List<ResolvedSiteDetection>> {
-    public static final SiteDetectionSubscriptionType instance = new SiteDetectionSubscriptionType();
+final public class SiteDetectionSubscriptionType implements SubscriptionType<List<ResolvedSiteDetection>> {
+    private static final SiteDetectionSubscriptionType instance = new SiteDetectionSubscriptionType();
 
     private SiteDetectionSubscriptionType() {}
 

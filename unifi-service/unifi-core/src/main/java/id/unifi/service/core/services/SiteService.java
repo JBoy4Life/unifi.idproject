@@ -11,6 +11,7 @@ import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.types.pk.SitePK;
+import id.unifi.service.common.types.pk.ZonePK;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.SITE;
 import static id.unifi.service.core.db.Tables.ZONE;
@@ -87,6 +88,26 @@ public class SiteService {
         }
 
         detectionSubscriber.addListener(site, listener);
+    }
+
+    @ApiOperation
+    public void subscribeZoneDetections(OperatorSessionData session,
+                                        String clientId,
+                                        String siteId,
+                                        String zoneId,
+                                        MessageListener<List<ResolvedSiteDetection>> listener) {
+        authorize(session, clientId);
+        var zone = new ZonePK(clientId, siteId, zoneId);
+
+        var zoneExists = db.execute(sql ->
+                sql.fetchExists(ZONE, ZONE.CLIENT_ID.eq(zone.clientId)
+                        .and(ZONE.SITE_ID.eq(zone.siteId))
+                        .and(ZONE.ZONE_ID.eq(zone.zoneId))));
+        if (!zoneExists) {
+            throw new NotFound("zone");
+        }
+
+        detectionSubscriber.addListener(zone, listener);
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {

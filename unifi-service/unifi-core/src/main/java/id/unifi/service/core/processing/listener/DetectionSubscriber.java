@@ -9,9 +9,10 @@ import id.unifi.service.common.subscriptions.SubscriptionHandler;
 import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.types.pk.SitePK;
+import id.unifi.service.common.types.pk.ZonePK;
 import id.unifi.service.core.site.ResolvedSiteDetection;
 import id.unifi.service.core.site.SiteDetectionSubscriptionType;
-import static id.unifi.service.core.site.SiteDetectionSubscriptionType.topic;
+import id.unifi.service.core.site.ZoneDetectionSubscriptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +39,13 @@ public class DetectionSubscriber implements DetectionMatchListener {
             recentDetectables.put(detectable, true);
 
             match.clientReference.ifPresent(clientReference -> {
-                var resolved = new ResolvedSiteDetection(match.detection.detectionTime, clientReference, match.zone.zoneId);
-                var site = new SitePK(match.zone.clientId, match.zone.siteId);
-                subscriptionManager.distributeMessage(topic(site), List.of(resolved));
+                var resolved =
+                        new ResolvedSiteDetection(match.detection.detectionTime, clientReference, match.zone.zoneId);
+                var detections = List.of(resolved);
+                subscriptionManager.distributeMessage(
+                        SiteDetectionSubscriptionType.topic(match.zone.getSite()), detections);
+                subscriptionManager.distributeMessage(
+                        ZoneDetectionSubscriptionType.topic(match.zone), detections);
             });
         }
     }
@@ -48,6 +53,14 @@ public class DetectionSubscriber implements DetectionMatchListener {
     public void addListener(SitePK site, MessageListener<List<ResolvedSiteDetection>> listener) {
         log.debug("Adding listener for {}", site);
         var topic = SiteDetectionSubscriptionType.topic(site);
+        subscriptionManager.addSubscription(topic,
+                new SubscriptionHandler<>(listener.getSession(), listener.getCorrelationId(),
+                        detections -> listener.accept("core.site.subscribe-detections-result", detections)));
+    }
+
+    public void addListener(ZonePK zone, MessageListener<List<ResolvedSiteDetection>> listener) {
+        log.debug("Adding listener for {}", zone);
+        var topic = ZoneDetectionSubscriptionType.topic(zone);
         subscriptionManager.addSubscription(topic,
                 new SubscriptionHandler<>(listener.getSession(), listener.getCorrelationId(),
                         detections -> listener.accept("core.site.subscribe-detections-result", detections)));
