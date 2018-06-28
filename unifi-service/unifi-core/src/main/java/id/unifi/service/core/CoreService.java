@@ -78,7 +78,7 @@ public class CoreService {
         var dbProvider = new DatabaseProvider();
         dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
 
-        SubscriptionManager subscriptionManager = new InMemorySubscriptionManager();
+        var subscriptionManager = new InMemorySubscriptionManager();
         var detectionSubscriber = new DetectionSubscriber(subscriptionManager);
         var detectionPersistence = new DetectionPersistence(dbProvider);
 
