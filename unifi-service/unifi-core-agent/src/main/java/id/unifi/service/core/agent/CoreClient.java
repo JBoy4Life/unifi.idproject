@@ -5,7 +5,6 @@ import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
-import id.unifi.service.common.api.errors.AuthenticationFailed;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketException;
@@ -51,15 +50,15 @@ public class CoreClient {
                 Map.of("core", "id.unifi.service.core.agent.services"),
                 componentHolder);
         dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
-        dispatcher.putMessageListener("core.detection.process-raw-detections-result", Void.class,
-                (s, o) -> log.trace("Confirmed detection"));
+        dispatcher.putMessageListener("core.detection.process-raw-detections-result",
+                (om, session, msg) -> log.trace("Confirmed detection"));
 
-        dispatcher.putMessageListener("core.identity.auth-password-result", Void.class, (s, o) -> {
-            sessionRef.set(s);
+        dispatcher.putMessageListener("core.identity.auth-password-result", (om, session, msg) -> {
+            sessionRef.set(session);
             authenticated.countDown();
         });
 
-        dispatcher.putMessageListener("core.error.authentication-failed", AuthenticationFailed.class, (s, e) -> {
+        dispatcher.putMessageListener("core.error.authentication-failed", (om, session, msg) -> {
             sessionRef.set(null);
             authenticated.countDown();
         });

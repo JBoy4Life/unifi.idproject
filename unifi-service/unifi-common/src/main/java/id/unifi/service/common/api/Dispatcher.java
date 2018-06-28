@@ -13,6 +13,7 @@ import id.unifi.service.common.api.errors.InvalidParameterFormat;
 import id.unifi.service.common.api.errors.MarshallableError;
 import id.unifi.service.common.api.errors.MissingParameter;
 import id.unifi.service.common.security.Token;
+import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.common.util.HexEncoded;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -29,7 +30,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class Dispatcher<S> {
@@ -43,10 +43,11 @@ public class Dispatcher<S> {
     private final Function<Session, S> sessionDataCreator;
     private final ConcurrentMap<Session, S> sessionDataStore;
     private final Set<SessionListener<S>> sessionListeners;
-    private final Map<String, PayloadConsumer> messageListeners;
+    private final Map<String, WireMessageListener> messageListeners;
+    private final SubscriptionManager subscriptionManager;
 
-    public interface PayloadConsumer {
-        void accept(ObjectMapper om, Session session, JsonNode node);
+    public interface WireMessageListener {
+        void accept(ObjectMapper om, Session session, Message message) throws JsonProcessingException;
     }
 
     public interface SessionListener<S> {
@@ -56,7 +57,8 @@ public class Dispatcher<S> {
 
     public Dispatcher(ServiceRegistry serviceRegistry,
                       Class<S> sessionDataType,
-                      Function<Session, S> sessionDataCreator) {
+                      Function<Session, S> sessionDataCreator,
+                      SubscriptionManager subscriptionManager) {
         this.serviceRegistry = serviceRegistry;
         this.sessionDataType = sessionDataType;
         this.sessionDataCreator = sessionDataCreator;
@@ -64,6 +66,29 @@ public class Dispatcher<S> {
 
         this.sessionListeners = new CopyOnWriteArraySet<>();
         this.messageListeners = new ConcurrentHashMap<>();
+
+        this.subscriptionManager = subscriptionManager;
+        if (subscriptionManager != null) {
+            messageListeners.put("core.protocol.unsubscribe", (om, session, msg) -> {
+                subscriptionManager.removeSubscription(session, msg.correlationId);
+            });
+
+            sessionListeners.add(new SessionListener<>() {
+                public void onSessionCreated(Session session, S sessionData) {
+                    subscriptionManager.addSession(session);
+                }
+
+                public void onSessionDropped(Session session) {
+                    subscriptionManager.removeSession(session);
+                }
+            });
+        }
+    }
+
+    public Dispatcher(ServiceRegistry serviceRegistry,
+                      Class<S> sessionDataType,
+                      Function<Session, S> sessionDataCreator) {
+        this(serviceRegistry, sessionDataType, sessionDataCreator, null);
     }
 
     public void dispatch(Session session, MessageStream stream, Protocol protocol, Channel returnChannel) {
@@ -75,7 +100,7 @@ public class Dispatcher<S> {
 
             var messageListener = messageListeners.get(message.messageType);
             if (messageListener != null) {
-                messageListener.accept(mapper, session, message.payload);
+                messageListener.accept(mapper, session, message);
                 return;
             }
 
@@ -125,15 +150,8 @@ public class Dispatcher<S> {
         session.getRemote().sendBytes(ByteBuffer.wrap(byteMessage));
     }
 
-    public <T> void putMessageListener(String messageType, Type type, BiConsumer<Session, T> listener) {
-        messageListeners.put(messageType, (mapper, session, node) -> {
-            try {
-                T payload = mapper.readValue(mapper.treeAsTokens(node), mapper.constructType(type));
-                listener.accept(session, payload);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    public <T> void putMessageListener(String messageType, WireMessageListener consumer) {
+        messageListeners.put(messageType, consumer);
     }
 
     public void createSession(Session session) {
@@ -209,16 +227,26 @@ public class Dispatcher<S> {
                 break;
 
             case MULTI:
-                MessageListener<Object> listenerParam = (messageType, payloadObj) -> {
-                    var payloadNode = mapper.valueToTree(payloadObj);
-                    var response = new Message(
-                            CURRENT_PROTOCOL_VERSION,
-                            message.releaseVersion,
-                            message.correlationId,
-                            messageType,
-                            payloadNode);
-                    log.trace("Multi-response message: {}", response);
-                    sendPayload(returnChannel, mapper, protocol, response);
+                var listenerParam = new MessageListener<>() {
+                    public void accept(String messageType, Object payload) {
+                        var payloadNode = mapper.valueToTree(payload);
+                        var response = new Message(
+                                CURRENT_PROTOCOL_VERSION,
+                                message.releaseVersion,
+                                message.correlationId,
+                                messageType,
+                                payloadNode);
+                        log.trace("Multi-response message: {}", response);
+                        sendPayload(returnChannel, mapper, protocol, response);
+                    }
+
+                    public Session getSession() {
+                        return session;
+                    }
+
+                    public byte[] getCorrelationId() {
+                        return message.correlationId;
+                    }
                 };
 
                 try {
