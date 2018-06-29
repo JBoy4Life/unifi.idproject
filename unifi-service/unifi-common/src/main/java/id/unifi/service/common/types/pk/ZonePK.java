@@ -1,5 +1,7 @@
 package id.unifi.service.common.types.pk;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Objects;
 
 public final class ZonePK {
@@ -11,6 +13,11 @@ public final class ZonePK {
         this.clientId = clientId;
         this.siteId = siteId;
         this.zoneId = zoneId;
+    }
+
+    @JsonIgnore
+    public SitePK getSite() {
+        return new SitePK(clientId, siteId);
     }
 
     public boolean equals(Object o) {

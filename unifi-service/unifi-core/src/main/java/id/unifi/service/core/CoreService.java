@@ -16,6 +16,8 @@ import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
+import id.unifi.service.common.subscriptions.InMemorySubscriptionManager;
+import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
@@ -76,7 +78,8 @@ public class CoreService {
         var dbProvider = new DatabaseProvider();
         dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
 
-        var detectionSubscriber = new DetectionSubscriber();
+        var subscriptionManager = new InMemorySubscriptionManager();
+        var detectionSubscriber = new DetectionSubscriber(subscriptionManager);
         var detectionPersistence = new DetectionPersistence(dbProvider);
 
         var attendanceMatcher = new AttendanceMatcher(dbProvider);
@@ -91,12 +94,13 @@ public class CoreService {
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
                 MqConfig.class, config.mq(),
+                SubscriptionManager.class, subscriptionManager,
                 DetectionSubscriber.class, detectionSubscriber,
                 DetectionProcessor.class, detectionProcessor,
                 SessionTokenStore.class, new InMemorySessionTokenStore(864000),
                 EmailSenderProvider.class, new LoggingEmailSender()));
 
-        startApiService(config.apiServiceListenEndpoint(), componentHolder);
+        startApiService(config.apiServiceListenEndpoint(), componentHolder, subscriptionManager);
         startAgentService(componentHolder, config.agentServiceListenEndpoint());
     }
 
@@ -123,13 +127,16 @@ public class CoreService {
         agentServer.start();
     }
 
-    private static void startApiService(HostAndPort apiEndpoint, ComponentHolder componentHolder) throws Exception {
+    private static void startApiService(HostAndPort apiEndpoint,
+                                        ComponentHolder componentHolder,
+                                        SubscriptionManager subscriptionManager) throws Exception {
         var registry = new ServiceRegistry(
                 Map.of(
                         "core", "id.unifi.service.core.services",
                         "attendance", "id.unifi.service.attendance.services"),
                 componentHolder);
-        var dispatcher = new Dispatcher<>(registry, OperatorSessionData.class, s -> new OperatorSessionData());
+        var dispatcher = new Dispatcher<>(
+                registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager);
         var apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
         var apiServer = new HttpServer(
                 apiServerSocket,

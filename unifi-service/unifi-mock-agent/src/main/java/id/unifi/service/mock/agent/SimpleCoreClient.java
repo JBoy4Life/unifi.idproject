@@ -5,7 +5,6 @@ import id.unifi.service.common.api.Dispatcher;
 import static id.unifi.service.common.api.Protocol.MSGPACK;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
-import id.unifi.service.common.api.errors.AuthenticationFailed;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.core.agent.ReaderManager;
 import id.unifi.service.core.agent.config.AgentFullConfig;
@@ -50,12 +49,12 @@ public class SimpleCoreClient {
         }));
         var registry = new ServiceRegistry(Map.of("core", "id.unifi.service.core.agent.services"), componentHolder);
         this.dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
-        dispatcher.putMessageListener("core.detection.process-raw-detections-result", Void.class, (s, o) -> {});
+        dispatcher.putMessageListener("core.detection.process-raw-detections-result", (om, session, msg) -> {});
 
-        dispatcher.putMessageListener("core.identity.auth-password-result", Void.class,
-                (s, o) -> authenticationQueue.offer(true));
-        dispatcher.putMessageListener("core.error.authentication-failed", AuthenticationFailed.class,
-                (s, e) -> authenticationQueue.offer(false));
+        dispatcher.putMessageListener("core.identity.auth-password-result",
+                (om, session, msg) -> authenticationQueue.offer(true));
+        dispatcher.putMessageListener("core.error.authentication-failed",
+                (om, session, msg) -> authenticationQueue.offer(false));
     }
 
     public AgentFullConfig connect() {
