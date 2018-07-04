@@ -39,7 +39,6 @@ public class ImpinjReaderController implements Closeable {
     private static final String METRIC_NAME_PREFIX = "id.unifi.service.rfid-provider";
     private static final int INTERVAL_BETWEEN_RECONNECTIONS_MILLIS = 5_000;
 
-
     private final TagReportListener impinjTagReportListener;
     private final ReaderFullConfig<ReaderConfig> fullConfig;
     private final ReaderConfig config;
