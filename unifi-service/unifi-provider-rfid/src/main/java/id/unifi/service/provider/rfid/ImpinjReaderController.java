@@ -142,6 +142,7 @@ public class ImpinjReaderController implements Closeable {
             antennaConnected.replaceAll((n, c) -> false);
             var reader = new ImpinjReader();
             var lostLatch = new CountDownLatch(1);
+            boolean disconnectedOperation = config.disconnectedOperation.orElse(false);
             try {
                 log.info("Configuring reader {}", fullConfig);
                 reader.setConnectionLostListener(r -> lostLatch.countDown());
@@ -158,10 +159,15 @@ public class ImpinjReaderController implements Closeable {
                 var featureSet = reader.queryFeatureSet();
                 var readerSn = checkSerialNumber(featureSet);
                 reader.setName(readerSn);
-                applySettings(reader);
+
+                if (disconnectedOperation) {
+                    log.info("Attempting to resume from disconnected operation");
+                    reader.resumeEventsAndReports();
+                }
 
                 log.info("Starting detection on {}/{}", readerName, featureSet.getModelName());
-                reader.start();
+                applySettings(reader);
+
                 lostLatch.await();
                 log.info("Lost connection to reader {}", fullConfig);
                 reader.disconnect();
@@ -169,7 +175,7 @@ public class ImpinjReaderController implements Closeable {
             } catch (InterruptedException e) {
                 log.info("Stopping reader {}", fullConfig);
                 try {
-                    reader.stop();
+                    if (!disconnectedOperation) reader.stop();
                 } catch (OctaneSdkException e1) {
                     log.error("Error while stopping reader {}", reader, e);
                 }
@@ -198,7 +204,7 @@ public class ImpinjReaderController implements Closeable {
         var settings = reader.queryDefaultSettings();
 
         settings.getLowDutyCycle().setIsEnabled(false);
-        settings.setHoldReportsOnDisconnect(true);
+        settings.setHoldReportsOnDisconnect(config.disconnectedOperation.orElse(false));
         settings.getKeepalives().setEnabled(true);
         settings.getKeepalives().setPeriodInMs(KEEPALIVE_INTERVAL_MILLIS);
 
@@ -207,7 +213,6 @@ public class ImpinjReaderController implements Closeable {
         config.session.ifPresent(settings::setSession);
         config.tagPopulationEstimate.ifPresent(settings::setTagPopulationEstimate);
         config.txFrequencies.ifPresent(freqs -> settings.setTxFrequenciesInMhz(new ArrayList<>(freqs)));
-        //config.detectableTypes.ifPresent(...);
         config.filter.ifPresent(filter -> {
             var filters = new FilterSettings();
             var tagFilter = new TagFilter();
@@ -246,7 +251,10 @@ public class ImpinjReaderController implements Closeable {
             }
         }
 
+        settings.getAutoStart().setMode(AutoStartMode.Immediate);
+
         reader.applySettings(settings);
+        reader.saveSettings();
     }
 
     private void onAntennaEvent(AntennaEvent e) {
