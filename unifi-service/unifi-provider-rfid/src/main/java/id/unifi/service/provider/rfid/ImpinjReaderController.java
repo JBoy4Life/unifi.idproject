@@ -33,13 +33,12 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class ImpinjReaderController implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger(ImpinjReaderController.class);
-
     private static final int DEFAULT_LLRP_PORT = 5084;
     private static final int KEEPALIVE_INTERVAL_MILLIS = 10_000;
     private static final int MAX_HEALTHY_KEEPALIVE_INTERVAL_MILLIS = 20_000;
     private static final String METRIC_NAME_PREFIX = "id.unifi.service.rfid-provider";
     private static final int INTERVAL_BETWEEN_RECONNECTIONS_MILLIS = 5_000;
+
 
     private final TagReportListener impinjTagReportListener;
     private final ReaderFullConfig<ReaderConfig> fullConfig;
@@ -48,6 +47,7 @@ public class ImpinjReaderController implements Closeable {
     private final CountDownLatch connectionCloseLatch;
     private final MetricRegistry registry;
 
+    private final Logger log;
     private final Set<String> metricNames;
     private final Map<Integer, Boolean> antennaConnected;
     private final HostAndPort endpoint;
@@ -59,14 +59,16 @@ public class ImpinjReaderController implements Closeable {
     ImpinjReaderController(ReaderFullConfig<ReaderConfig> fullConfig,
                            Consumer<SiteDetectionReport> detectionConsumer,
                            MetricRegistry registry) {
+        this.endpoint = fullConfig.endpoint.get().withDefaultPort(DEFAULT_LLRP_PORT);
+        this.readerName = fullConfig.readerSn.orElse("?") + "/" + endpoint;
+        this.log = LoggerFactory.getLogger(
+                ImpinjReaderController.class.getName() + ":[" + readerName.replaceAll("\\.", "_") + "]");
         this.fullConfig = fullConfig;
         this.config = fullConfig.config.orElse(ReaderConfig.empty);
         this.registry = registry;
         var configuredPortNumbers = config.ports.map(Map::keySet).orElse(Set.of());
         this.antennaConnected = new ConcurrentHashMap<>(
                 configuredPortNumbers.stream().collect(toMap(n -> n, n -> false)));
-        this.endpoint = fullConfig.endpoint.get().withDefaultPort(DEFAULT_LLRP_PORT);
-        this.readerName = fullConfig.readerSn.orElse("?") + "/" + endpoint;
 
         // Register health and detection rate metrics
         this.metricNames = new HashSet<>();
@@ -132,7 +134,7 @@ public class ImpinjReaderController implements Closeable {
         // TODO: Synchronize properly
         closing = true;
         metricNames.forEach(registry::remove);
-        log.info("Disconnecting from reader {}", fullConfig);
+        log.info("Disconnecting from reader");
         connectionThread.interrupt();
         Uninterruptibles.awaitUninterruptibly(connectionCloseLatch);
     }
@@ -144,9 +146,9 @@ public class ImpinjReaderController implements Closeable {
             var lostLatch = new CountDownLatch(1);
             boolean disconnectedOperation = config.disconnectedOperation.orElse(false);
             try {
-                log.info("Configuring reader {}", fullConfig);
+                log.info("Configuring reader: {}", fullConfig);
                 reader.setConnectionLostListener(r -> lostLatch.countDown());
-                reader.setConnectionCloseListener((r, e) -> log.info("Connection closed {} {}", fullConfig));
+                reader.setConnectionCloseListener((r, e) -> log.info("Connection closed"));
                 reader.setAntennaChangeListener((r, e) -> onAntennaEvent(e));
                 reader.setKeepaliveListener((r, e) -> lastKeepaliveMillis = System.currentTimeMillis());
                 reader.setTagReportListener(impinjTagReportListener);
@@ -165,22 +167,22 @@ public class ImpinjReaderController implements Closeable {
                     reader.resumeEventsAndReports();
                 }
 
-                log.info("Starting detection on {}/{}", readerName, featureSet.getModelName());
+                log.info("Starting detection ({})", featureSet.getModelName());
                 applySettings(reader);
 
                 lostLatch.await();
-                log.info("Lost connection to reader {}", fullConfig);
+                log.info("Lost connection to reader");
                 reader.disconnect();
-                log.info("Disconnected from reader {}", fullConfig);
+                log.info("Disconnected from reader");
             } catch (InterruptedException e) {
-                log.info("Stopping reader {}", fullConfig);
                 try {
+                    log.info("Stopping reader");
                     if (!disconnectedOperation) reader.stop();
                 } catch (OctaneSdkException e1) {
                     log.error("Error while stopping reader {}", reader, e);
                 }
                 reader.disconnect();
-                log.info("Reader disconnected {}", fullConfig);
+                log.info("Disconnected from reader");
                 connectionCloseLatch.countDown();
                 return;
             } catch (Exception e) {
@@ -261,12 +263,12 @@ public class ImpinjReaderController implements Closeable {
         boolean connected;
         switch (e.getState()) {
             case AntennaConnected:
-                log.info("Antenna {} reconnected to reader {}.", e.getPortNumber(), readerName);
+                log.info("Antenna {} reconnected to reader.", e.getPortNumber());
                 connected = true;
                 break;
 
             case AntennaDisconnected:
-                log.info("Antenna {} disconnected from reader {}.", e.getPortNumber(), readerName);
+                log.info("Antenna {} disconnected from reader.", e.getPortNumber());
                 connected = false;
                 break;
 
@@ -308,7 +310,7 @@ public class ImpinjReaderController implements Closeable {
                 }
                 antennaConnected.put(portNumber, status.isConnected());
             } else if (status.isConnected()) {
-                log.warn("Antenna {} on reader {} isn't configured.", portNumber, readerName);
+                log.warn("Antenna {} isn't configured.", portNumber);
             }
         });
     }
