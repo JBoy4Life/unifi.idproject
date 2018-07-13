@@ -1,4 +1,4 @@
-package id.unifi.service.core.agent.setup;
+package id.unifi.service.core.agent.logger;
 
 import id.unifi.service.common.detection.SiteDetectionReport;
 

@@ -6,6 +6,7 @@ import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import id.unifi.service.core.agent.config.ConfigAdapter;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -37,7 +38,11 @@ public class CoreClient {
     private final Thread connectThread;
     private final byte[] password;
 
-    CoreClient(URI serviceUri, String clientId, String agentId, byte[] password, ComponentHolder componentHolder) {
+    CoreClient(URI serviceUri,
+               String clientId,
+               String agentId,
+               byte[] password,
+               ConfigAdapter configAdapter) {
         this.serviceUri = serviceUri;
         this.clientId = clientId;
         this.agentId = agentId;
@@ -46,6 +51,7 @@ public class CoreClient {
         pendingReports = new ArrayBlockingQueue<>(100_000);
         sessionRef = new AtomicReference<>();
 
+        var componentHolder = new ComponentHolder(Map.of(ConfigAdapter.class, configAdapter));
         var registry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agent.services"),
                 componentHolder);

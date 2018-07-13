@@ -6,35 +6,31 @@ import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Nullable;
 import com.statemachinesystems.envy.Prefix;
-import id.unifi.service.common.api.ComponentHolder;
+import id.unifi.service.common.config.HexByteArrayValueParser;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.util.MetricUtils;
-import static id.unifi.service.core.agent.DefaultReaderManager.getDetectableTypes;
-import static id.unifi.service.core.agent.DefaultReaderManager.getRollup;
 import id.unifi.service.core.agent.config.AgentFullConfig;
+import id.unifi.service.core.agent.config.ConfigAdapter;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getConfigObjectMapper;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
-import id.unifi.service.common.config.HexByteArrayValueParser;
+import id.unifi.service.core.agent.config.ProductionConfigWrapper;
+import id.unifi.service.core.agent.logger.DetectionLogger;
+import id.unifi.service.core.agent.logger.NullDetectionLogger;
 import id.unifi.service.core.agent.setup.CsvDetectionLogger;
-import id.unifi.service.core.agent.setup.DetectionLogger;
 import id.unifi.service.core.agent.setup.GenerateSetupMode;
-import id.unifi.service.provider.rfid.RfidProvider;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.toList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.SynchronousQueue;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class CoreAgentService {
     private static final Logger log = LoggerFactory.getLogger(CoreAgentService.class);
@@ -83,69 +79,41 @@ public class CoreAgentService {
             return;
         }
 
+        var productionMode = mode == AgentMode.PRODUCTION;
+
         var registry = new MetricRegistry();
         var jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
 
-        var reportQueue = new SynchronousQueue<SiteDetectionReport>();
-        Consumer<SiteDetectionReport> detectionConsumer = report -> {
-            try {
-                reportQueue.put(report);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        };
-
-        AgentConfigPersistence persistence;
-        Optional<DetectionLogger> detectionLogger;
-        if (mode == AgentMode.PRODUCTION) {
-            persistence = new AgentConfigFilePersistence();
-            detectionLogger = Optional.empty();
-        } else { // AgentMode.TEST_SETUP
-            var setupFilePath = Paths.get(args[0]);
-            AgentFullConfig setupAgentConfig;
-            try (var reader = Files.newBufferedReader(setupFilePath, UTF_8)) {
-                setupAgentConfig = getSetupObjectMapper().readValue(reader, AgentFullConfig.class);
-            }
-            logServiceConfig(setupAgentConfig);
-
-            persistence = new AgentConfigNoopPersistence(setupAgentConfig);
-            detectionLogger = Optional.of(new CsvDetectionLogger());
-        }
-
-        var readerManager = new DefaultReaderManager(
-                persistence,
-                new RfidProvider(detectionConsumer, registry),
-                    mode == AgentMode.PRODUCTION ? Duration.ofSeconds(10) : Duration.ZERO);
-
-        Optional<CoreClient> coreClient;
-        if (mode == AgentMode.PRODUCTION) {
-            var componentHolder = new ComponentHolder(Map.of(ReaderManager.class, readerManager));
-            coreClient = Optional.of(new CoreClient(config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(), componentHolder));
+        Optional<Function<ConfigAdapter, CoreClient>> coreClientFactory;
+        if (productionMode) {
+            coreClientFactory = Optional.of(configAdapter -> {
+                var configWrapper = new ProductionConfigWrapper(
+                        new AgentConfigFilePersistence(), Duration.ofSeconds(10), configAdapter);
+                return new CoreClient(
+                        config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(),
+                        configWrapper);
+            });
         } else {
             log.info("Running in {} mode. Not connecting to a server.", mode);
-            coreClient = Optional.empty();
+            coreClientFactory = Optional.empty();
         }
 
-        var detectionProcessingThread = new Thread(() -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    var report = reportQueue.take();
-                    var filteredReport = new SiteDetectionReport(report.readerSn,
-                            report.detections.stream()
-                                    .filter(d -> getDetectableTypes().contains(d.detectable.detectableType))
-                                    .collect(toList()));
+        DetectionLogger detectionLogger = productionMode ? new NullDetectionLogger() : new CsvDetectionLogger();
 
-                    getRollup().process(filteredReport).forEach(rolledUpReport -> {
-                        coreClient.ifPresent(c -> c.sendRawDetections(rolledUpReport));
-                        detectionLogger.ifPresent(w -> w.log(rolledUpReport));
-                    });
-                }
-            } catch (InterruptedException ignored) {}
+        var agent = CoreAgent.create(coreClientFactory, detectionLogger, registry);
 
-        });
-        detectionProcessingThread.start();
-}
+        if (!productionMode) configureFromSetupFile(agent, Paths.get(args[0]));
+    }
+
+    private static void configureFromSetupFile(CoreAgent agent, Path setupFilePath) throws IOException {
+        AgentFullConfig setupAgentConfig;
+        try (var reader = Files.newBufferedReader(setupFilePath, UTF_8)) {
+            setupAgentConfig = getSetupObjectMapper().readValue(reader, AgentFullConfig.class);
+        }
+        logServiceConfig(setupAgentConfig);
+        agent.configure(setupAgentConfig, true);
+    }
 
     private static void logServiceConfig(AgentFullConfig setupAgentConfig) throws JsonProcessingException {
         var serviceConfig = setupAgentConfig.compactForService();

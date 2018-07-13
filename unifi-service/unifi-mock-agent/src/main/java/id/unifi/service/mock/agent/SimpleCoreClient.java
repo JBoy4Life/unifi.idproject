@@ -6,8 +6,8 @@ import static id.unifi.service.common.api.Protocol.MSGPACK;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
 import id.unifi.service.common.detection.SiteDetectionReport;
-import id.unifi.service.core.agent.ReaderManager;
 import id.unifi.service.core.agent.config.AgentFullConfig;
+import id.unifi.service.core.agent.config.ConfigAdapter;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -43,7 +43,8 @@ public class SimpleCoreClient {
         this.password = password;
         this.configured = new CountDownLatch(1);
         this.authenticationQueue = new ArrayBlockingQueue<>(1);
-        var componentHolder = new ComponentHolder(Map.of(ReaderManager.class, (ReaderManager) config -> {
+        var componentHolder = new ComponentHolder(Map.of(ConfigAdapter.class,
+                (ConfigAdapter) (config, authoritative) -> {
             this.config = config;
             configured.countDown();
         }));
