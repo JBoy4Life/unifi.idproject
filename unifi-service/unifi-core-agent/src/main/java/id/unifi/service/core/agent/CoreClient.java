@@ -16,11 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,8 +25,6 @@ public class CoreClient {
     private static final Logger log = LoggerFactory.getLogger(CoreClient.class);
 
     private final Dispatcher<Boolean> dispatcher;
-    private final BlockingQueue<SiteDetectionReport> pendingReports;
-    private final Thread sendThread;
     private final URI serviceUri;
     private final String clientId;
     private final String agentId;
@@ -48,7 +43,6 @@ public class CoreClient {
         this.agentId = agentId;
         this.password = password;
 
-        pendingReports = new ArrayBlockingQueue<>(100_000);
         sessionRef = new AtomicReference<>();
 
         var componentHolder = new ComponentHolder(Map.of(ConfigAdapter.class, configAdapter));
@@ -71,46 +65,6 @@ public class CoreClient {
 
         connectThread = new Thread(this::maintainConnection);
         connectThread.start();
-
-        sendThread = new Thread(this::takeAndSend);
-        sendThread.setDaemon(true);
-        sendThread.start();
-    }
-
-    private void takeAndSend() {
-        while (true) {
-            List<SiteDetectionReport> reports;
-            try {
-                if (pendingReports.isEmpty()) {
-                    reports = List.of(pendingReports.take());
-                } else {
-                    reports = new ArrayList<>(200);
-                    pendingReports.drainTo(reports, 200);
-                }
-            } catch (InterruptedException e) {
-                continue;
-            }
-            Map<String, Object> params = Map.of("reports", reports);
-            while (true) {
-                try {
-                    var session = sessionRef.get();
-                    if (session == null) throw new IOException("No session");
-                    dispatcher.request(
-                            session,
-                            Protocol.MSGPACK,
-                            "core.detection.process-raw-detections",
-                            params);
-                    break;
-                } catch (WebSocketException | IOException e) {
-                    log.info("Couldn't send detection report to server, retrying soon...");
-                    try {
-                        Thread.sleep(5_000);
-                    } catch (InterruptedException e1) {
-                        return;
-                    }
-                }
-            }
-        }
     }
 
     private void maintainConnection() {
@@ -152,13 +106,29 @@ public class CoreClient {
         }
     }
 
-    public void sendRawDetections(SiteDetectionReport report) {
-        try {
-            pendingReports.put(report);
-        } catch (InterruptedException ignored) {}
-        var reportsSize = pendingReports.size();
-        if (reportsSize % 500 == 0 && reportsSize != 0) {
-            log.info("Pending reports: {}", reportsSize);
+    public void sendDetectionReports(List<SiteDetectionReport> reports, Runnable ackCallback) {
+        Map<String, Object> params = Map.of("reports", reports);
+        while (true) {
+            try {
+                var session = sessionRef.get();
+                if (session == null) throw new IOException("No session");
+                dispatcher.request(
+                        session,
+                        Protocol.MSGPACK,
+                        "core.detection.process-raw-detections",
+                        params);
+                ackCallback.run(); // TODO: wait for response
+                break;
+            } catch (WebSocketException | IOException e) {
+                log.info("Couldn't send detection report to server, retrying soon...");
+                try {
+                    Thread.sleep(5_000);
+                } catch (InterruptedException e1) {
+                    log.info("Interrupted while waiting to send detection reports");
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ import com.statemachinesystems.envy.Nullable;
 import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.common.config.HexByteArrayValueParser;
 import id.unifi.service.common.config.HostAndPortValueParser;
+import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.util.MetricUtils;
 import id.unifi.service.core.agent.config.AgentFullConfig;
@@ -15,6 +16,10 @@ import id.unifi.service.core.agent.config.ConfigAdapter;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getConfigObjectMapper;
 import static id.unifi.service.core.agent.config.ConfigSerialization.getSetupObjectMapper;
 import id.unifi.service.core.agent.config.ProductionConfigWrapper;
+import id.unifi.service.core.agent.consumer.DetectionConsumer;
+import id.unifi.service.core.agent.consumer.InMemoryDetectionConsumer;
+import id.unifi.service.core.agent.consumer.MqDetectionConsumer;
+import id.unifi.service.core.agent.consumer.SiteDetectionReportConsumer;
 import id.unifi.service.core.agent.logger.DetectionLogger;
 import id.unifi.service.core.agent.logger.NullDetectionLogger;
 import id.unifi.service.core.agent.setup.CsvDetectionLogger;
@@ -41,6 +46,11 @@ public class CoreAgentService {
         GENERATE_SETUP
     }
 
+    interface AgentMqConfig extends MqConfig {
+        @Default("false")
+        boolean enabled();
+    }
+
     @Prefix("unifi")
     interface Config {
         @Default("false")
@@ -57,6 +67,9 @@ public class CoreAgentService {
 
         @Default("ws://localhost:8001/agents/msgpack")
         URI serviceUri();
+
+        @Nullable
+        AgentMqConfig mq();
     }
 
     public static void main(String[] args) throws IOException {
@@ -101,9 +114,21 @@ public class CoreAgentService {
 
         DetectionLogger detectionLogger = productionMode ? new NullDetectionLogger() : new CsvDetectionLogger();
 
-        var agent = CoreAgent.create(coreClientFactory, detectionLogger, registry);
+        Function<SiteDetectionReportConsumer, DetectionConsumer> detectionConsumerFactory = config.mq().enabled()
+                ? consumer -> createMqDetectionConsumer(config, consumer)
+                : InMemoryDetectionConsumer::create;
+
+        var agent = CoreAgent.create(coreClientFactory, detectionLogger, registry, detectionConsumerFactory);
 
         if (!productionMode) configureFromSetupFile(agent, Paths.get(args[0]));
+    }
+
+    private static DetectionConsumer createMqDetectionConsumer(Config config, SiteDetectionReportConsumer consumer) {
+        try {
+            return MqDetectionConsumer.create(config.mq(), consumer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void configureFromSetupFile(CoreAgent agent, Path setupFilePath) throws IOException {

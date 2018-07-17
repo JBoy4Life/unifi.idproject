@@ -6,6 +6,8 @@ import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.core.agent.config.AgentConfig;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import id.unifi.service.core.agent.config.ConfigAdapter;
+import id.unifi.service.core.agent.consumer.DetectionConsumer;
+import id.unifi.service.core.agent.consumer.SiteDetectionReportConsumer;
 import id.unifi.service.core.agent.logger.DetectionLogger;
 import id.unifi.service.core.agent.rollup.RollupUtils;
 import id.unifi.service.provider.rfid.RfidProvider;
@@ -26,6 +28,7 @@ public class CoreAgent {
     private final Consumer<SiteDetectionReport> rolledUpConsumer;
     private final BlockingQueue<AgentFullConfig> configQueue;
     private final Thread configThread;
+    private final DetectionConsumer detectionConsumer;
 
     private volatile State state; // init (-> configuring -> running -> stopping)*
     private RfidProvider rfidProvider;
@@ -36,21 +39,26 @@ public class CoreAgent {
 
     public static CoreAgent create(Optional<Function<ConfigAdapter, CoreClient>> coreClientFactory,
                                    DetectionLogger detectionLogger,
-                                   MetricRegistry registry) {
-        var agent = new CoreAgent(coreClientFactory, detectionLogger, registry);
+                                   MetricRegistry registry,
+                                   Function<SiteDetectionReportConsumer, DetectionConsumer> detectionConsumerFactory) {
+        var agent = new CoreAgent(coreClientFactory, detectionLogger, registry, detectionConsumerFactory);
         agent.configThread.start();
         return agent;
     }
 
     private CoreAgent(Optional<Function<ConfigAdapter, CoreClient>> coreClientFactory,
                       DetectionLogger detectionLogger,
-                      MetricRegistry registry) {
+                      MetricRegistry registry,
+                      Function<SiteDetectionReportConsumer, DetectionConsumer> detectionConsumerFactory) {
         var coreClient = coreClientFactory.map(factory -> factory.apply(this::configure));
+        this.detectionConsumer = coreClient.isPresent()
+                ? detectionConsumerFactory.apply(coreClient.get()::sendDetectionReports)
+                : report -> {};
         this.state = State.INIT;
         this.registry = registry;
         this.rfidProvider = null;
-        this.rolledUpConsumer = report -> {                               
-            coreClient.ifPresent(c -> c.sendRawDetections(report));
+        this.rolledUpConsumer = report -> {
+            detectionConsumer.accept(report);
             detectionLogger.log(report);
         };
         this.configQueue = new ArrayBlockingQueue<>(1);
