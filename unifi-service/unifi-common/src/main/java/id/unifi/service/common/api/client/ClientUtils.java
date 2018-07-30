@@ -19,11 +19,10 @@ public class ClientUtils {
     }
 
     public static <T> Future<T> awaitResponse(String responseMessageType,
-                                              //TypeReference<T> typeReference,
                                               Consumer<CancellableWireMessageListener> dispatcherCall) {
         var future = new CompletableFuture<T>();
 
-        TypeReference<Object> typeReference = new TypeReference<>() {}; // TODO: investigate
+        TypeReference<Object> typeReference = new TypeReference<>() {}; // TODO: support responses
 
         dispatcherCall.accept((om, session, message) -> {
             try {
