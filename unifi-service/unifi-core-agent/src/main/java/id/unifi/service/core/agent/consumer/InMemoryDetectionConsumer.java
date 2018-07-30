@@ -26,24 +26,28 @@ public class InMemoryDetectionConsumer implements DetectionConsumer {
         this.callback = callback;
         this.reportsQueue = new ArrayBlockingQueue<>(QUEUE_CAPACITY);
         this.forwarderThread = new Thread(this::runForwardLoop);
-
     }
 
     private void start() {
-        forwarderThread.start();
         log.info("Starting in-memory detection consumer");
-
+        forwarderThread.start();
     }
 
     private void runForwardLoop() {
         while (!Thread.currentThread().isInterrupted()) {
             var reports = drainQueue(reportsQueue);
-            if (!reports.isEmpty()) callback.accept(reports, () -> {});
+            if (!reports.isEmpty()) callback.accept(reports, () -> {}); // may block
         }
         log.info("Detection consumer thread interrupted, stopping");
     }
 
     public void accept(SiteDetectionReport report) {
-        reportsQueue.offer(report);
+        var accepted = reportsQueue.offer(report);
+        var queueSize = reportsQueue.size();
+        if (queueSize > 0 && queueSize % 5000 == 0 && accepted) {
+            log.info("Reports queue size: " + queueSize);
+            if (reportsQueue.remainingCapacity() == 0)
+                log.warn("Reports queue full. Incoming reports will be discarded!");
+        }
     }
 }
