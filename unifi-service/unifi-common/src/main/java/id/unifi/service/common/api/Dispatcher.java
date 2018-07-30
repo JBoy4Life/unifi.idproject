@@ -20,10 +20,12 @@ import org.eclipse.jetty.websocket.api.StatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -44,10 +46,16 @@ public class Dispatcher<S> {
     private final ConcurrentMap<Session, S> sessionDataStore;
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, WireMessageListener> messageListeners;
+    private final Map<ByteBuffer, CancellableWireMessageListener> responseListeners;
     private final SubscriptionManager subscriptionManager;
 
     public interface WireMessageListener {
         void accept(ObjectMapper om, Session session, Message message) throws JsonProcessingException;
+    }
+
+    public interface CancellableWireMessageListener {
+        // return false to unsubscribe
+        boolean accept(ObjectMapper om, Session session, Message message) throws JsonProcessingException;
     }
 
     public interface SessionListener<S> {
@@ -83,6 +91,7 @@ public class Dispatcher<S> {
                 }
             });
         }
+        this.responseListeners = new HashMap<>();
     }
 
     public Dispatcher(ServiceRegistry serviceRegistry,
@@ -98,9 +107,17 @@ public class Dispatcher<S> {
         try {
             message = parseMessage(stream, mapper);
 
-            var messageListener = messageListeners.get(message.messageType);
-            if (messageListener != null) {
-                messageListener.accept(mapper, session, message);
+            var correlationIdBytes = ByteBuffer.wrap(message.correlationId);
+            var responseListener = responseListeners.get(correlationIdBytes);
+            if (responseListener != null) {
+                var moreMessagesExpected = responseListener.accept(mapper, session, message);
+                if (!moreMessagesExpected) responseListeners.remove(correlationIdBytes);
+                return;
+            }
+
+            var messageTypeListener = messageListeners.get(message.messageType);
+            if (messageTypeListener != null) {
+                messageTypeListener.accept(mapper, session, message);
                 return;
             }
 
@@ -129,15 +146,24 @@ public class Dispatcher<S> {
     public void request(Session session,
                         Protocol protocol,
                         String messageType,
-                        Map<String, Object> params) throws IOException {
+                        Map<String, Object> params) {
+        request(session, protocol, messageType, params, null);
+    }
+
+    public void request(Session session,
+                        Protocol protocol,
+                        String messageType,
+                        Map<String, Object> params,
+                        @Nullable CancellableWireMessageListener listener) {
         log.debug("Requesting using {} in {}", protocol, session);
         var mapper = getObjectMapper(protocol);
 
+        var correlationId = new Token().raw;
         var payload = mapper.valueToTree(params);
         var message = new Message(
                 CURRENT_PROTOCOL_VERSION,
                 CURRENT_PROTOCOL_VERSION,
-                new Token().raw,
+                correlationId,
                 messageType,
                 payload);
         byte[] byteMessage;
@@ -147,7 +173,14 @@ public class Dispatcher<S> {
             throw new RuntimeException(e);
         }
 
-        session.getRemote().sendBytes(ByteBuffer.wrap(byteMessage));
+        var correlationIdBytes = ByteBuffer.wrap(correlationId);
+        if (listener != null) responseListeners.put(correlationIdBytes, listener);
+
+        try {
+            session.getRemote().sendBytes(ByteBuffer.wrap(byteMessage));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public <T> void putMessageListener(String messageType, WireMessageListener consumer) {

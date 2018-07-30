@@ -124,11 +124,7 @@ public class CoreAgentService {
     }
 
     private static DetectionConsumer createMqDetectionConsumer(Config config, SiteDetectionReportConsumer consumer) {
-        try {
-            return MqDetectionConsumer.create(config.mq(), consumer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return MqDetectionConsumer.create(config.mq(), consumer);
     }
 
     private static void configureFromSetupFile(CoreAgent agent, Path setupFilePath) throws IOException {

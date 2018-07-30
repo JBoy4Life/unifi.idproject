@@ -46,7 +46,7 @@ public class MqUtils {
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
-                T unmarshalled = mapper.readValue(body, type);
+                T unmarshalled = unmarshal(body, type);
                 try {
                     consumer.accept(new Tagged<>(unmarshalled, envelope.getDeliveryTag()));
                 } catch (InterruptedException e) {
@@ -54,6 +54,10 @@ public class MqUtils {
                 }
             }
         };
+    }
+
+    public static <T> T unmarshal(byte[] body, TypeReference<T> type) throws IOException {
+        return mapper.readValue(body, type);
     }
 
     public static <T> byte[] marshal(T value) {

@@ -1,8 +1,11 @@
 package id.unifi.service.core.agent.consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.Iterables;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_BASIC;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.detection.SiteDetectionReport;
@@ -22,15 +25,17 @@ public class MqDetectionConsumer implements DetectionConsumer {
 
     private static final TypeReference<SiteDetectionReport> SITE_DETECTION_REPORT_TYPE = new TypeReference<>() {};
     private static final String OUTBOUND_QUEUE_NAME = "core-agent.report.outbound";
-    private static final int PREFETCH_COUNT = 100;
+    private static final int MAX_REPORTS = 100;
 
     private final BlockingQueue<Tagged<SiteDetectionReport>> reportsQueue;
     private final MqConfig config;
     private final SiteDetectionReportConsumer consumer;
+    private Connection connection;
     private Channel channel;
+    private Channel pubChannel;
     private Thread forwarderThread;
 
-    public static MqDetectionConsumer create(MqConfig config, SiteDetectionReportConsumer consumer) throws IOException {
+    public static MqDetectionConsumer create(MqConfig config, SiteDetectionReportConsumer consumer) {
         var detectionConsumer = new MqDetectionConsumer(config, consumer);
         detectionConsumer.start();
         return detectionConsumer;
@@ -39,17 +44,37 @@ public class MqDetectionConsumer implements DetectionConsumer {
     private MqDetectionConsumer(MqConfig config, SiteDetectionReportConsumer consumer) {
         this.config = config;
         this.consumer = consumer;
-        this.reportsQueue = new ArrayBlockingQueue<>(PREFETCH_COUNT);
-        this.channel = null;
-        this.forwarderThread = new Thread(this::runForwardLoop);
+        this.reportsQueue = new ArrayBlockingQueue<>(MAX_REPORTS);
+        this.connection = null;
+        this.forwarderThread = new Thread(this::runForwardLoop, "mq-detection-forwarder");
     }
 
-    private void start() throws IOException {
-        var connection = MqUtils.connect(config);
-        this.channel = connection.createChannel();
-        channel.queueDeclare(OUTBOUND_QUEUE_NAME, true, false, false, null);
-        channel.basicConsume(OUTBOUND_QUEUE_NAME,
-                MqUtils.unmarshallingConsumer(SITE_DETECTION_REPORT_TYPE, channel, reportsQueue::put));
+    private void start() {
+        this.connection = MqUtils.connect(config);
+        try {
+            this.channel = connection.createChannel();
+            this.pubChannel = connection.createChannel();
+            channel.basicQos(MAX_REPORTS * 2); // Always have another batch ready
+            channel.queueDeclare(OUTBOUND_QUEUE_NAME, true, false, false, null);
+            channel.basicConsume(OUTBOUND_QUEUE_NAME,
+                    new DefaultConsumer(channel) {
+                        public void handleDelivery(String consumerTag,
+                                                   Envelope envelope,
+                                                   AMQP.BasicProperties properties,
+                                                   byte[] body) throws IOException {
+                            var unmarshalled = MqUtils.unmarshal(body, SITE_DETECTION_REPORT_TYPE);
+                            try {
+                                reportsQueue.put(new Tagged<>(unmarshalled, envelope.getDeliveryTag()));
+                            } catch (InterruptedException e) {
+                                throw new AssertionError("Unexpected consumer thread interrupt");
+                            }
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        connection.addShutdownListener(cause -> log.error("MQ connection closed:", cause));
         forwarderThread.start();
         log.info("Starting RabbitMQ detection consumer on {}", config.endpoint());
     }
@@ -59,25 +84,21 @@ public class MqDetectionConsumer implements DetectionConsumer {
             var taggedReports = drainQueue(reportsQueue);
             if (!taggedReports.isEmpty()) {
                 var reports = taggedReports.stream().map(r -> r.payload).collect(toList());
-                consumer.accept(reports, ackCallback(Iterables.getLast(taggedReports)));
+                consumer.accept(reports, () -> taggedReports.forEach(t -> {
+                    try {
+                        channel.basicAck(t.deliveryTag, false);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
             }
         }
         log.info("Detection consumer thread interrupted, stopping");
     }
 
-    private Runnable ackCallback(Tagged<SiteDetectionReport> report) {
-        return () -> {
-            try {
-                channel.basicAck(report.deliveryTag, true);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
-
     public void accept(SiteDetectionReport report) {
         try {
-            channel.basicPublish("", OUTBOUND_QUEUE_NAME, PERSISTENT_BASIC, MqUtils.marshal(report));
+            pubChannel.basicPublish("", OUTBOUND_QUEUE_NAME, PERSISTENT_BASIC, MqUtils.marshal(report));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
