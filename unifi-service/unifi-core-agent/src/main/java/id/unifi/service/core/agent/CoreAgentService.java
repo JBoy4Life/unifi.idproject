@@ -105,7 +105,7 @@ public class CoreAgentService {
                         new AgentConfigFilePersistence(), Duration.ofSeconds(10), configAdapter);
                 return new CoreClient(
                         config.serviceUri(), config.clientId(), config.agentId(), config.agentPassword(),
-                        configWrapper);
+                        configWrapper, registry);
             });
         } else {
             log.info("Running in {} mode. Not connecting to a server.", mode);
@@ -116,7 +116,7 @@ public class CoreAgentService {
 
         Function<SiteDetectionReportConsumer, DetectionConsumer> detectionConsumerFactory = config.mq().enabled()
                 ? consumer -> createMqDetectionConsumer(config, consumer)
-                : InMemoryDetectionConsumer::create;
+                : consumer -> InMemoryDetectionConsumer.create(registry, consumer);
 
         var agent = CoreAgent.create(coreClientFactory, detectionLogger, registry, detectionConsumerFactory);
 

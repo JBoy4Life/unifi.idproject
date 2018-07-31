@@ -1,5 +1,7 @@
 package id.unifi.service.core.agent;
 
+import com.codahale.metrics.MetricRegistry;
+import static com.codahale.metrics.MetricRegistry.name;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.Protocol;
@@ -9,6 +11,7 @@ import static id.unifi.service.common.api.client.ClientUtils.awaitResponse;
 import static id.unifi.service.common.api.client.ClientUtils.oneOffWireMessageListener;
 import id.unifi.service.common.api.client.UnmarshalledError;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import static id.unifi.service.core.agent.Common.METRIC_NAME_PREFIX;
 import id.unifi.service.core.agent.config.ConfigAdapter;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -45,7 +48,8 @@ public class CoreClient {
                String clientId,
                String agentId,
                byte[] password,
-               ConfigAdapter configAdapter) {
+               ConfigAdapter configAdapter,
+               MetricRegistry registry) {
         this.serviceUri = serviceUri;
         this.clientId = clientId;
         this.agentId = agentId;
@@ -55,16 +59,18 @@ public class CoreClient {
         authenticated = new CountDownLatch(1);
 
         var componentHolder = new ComponentHolder(Map.of(ConfigAdapter.class, configAdapter));
-        var registry = new ServiceRegistry(
+        var serviceRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agent.services"),
                 componentHolder);
-        dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
+        dispatcher = new Dispatcher<>(serviceRegistry, Boolean.class, t -> true);
         dispatcher.putMessageListener("core.detection.process-raw-detections-result",
                 (om, session, msg) -> log.trace("Confirmed detection"));
 
         connectThread = new Thread(this::maintainConnection);
         connectThread.start();
+
         unackedReports = new ConcurrentHashMap<>();
+        registry.gauge(name(METRIC_NAME_PREFIX, "unacked-reports"), () -> unackedReports::size);
     }
 
     private void maintainConnection() {

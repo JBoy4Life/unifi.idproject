@@ -1,7 +1,10 @@
 package id.unifi.service.core.agent.consumer;
 
+import com.codahale.metrics.MetricRegistry;
+import static com.codahale.metrics.MetricRegistry.name;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import static id.unifi.service.common.mq.MqUtils.drainQueue;
+import static id.unifi.service.core.agent.Common.METRIC_NAME_PREFIX;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,16 +19,17 @@ public class InMemoryDetectionConsumer implements DetectionConsumer {
     private final SiteDetectionReportConsumer callback;
     private final Thread forwarderThread;
 
-    public static InMemoryDetectionConsumer create(SiteDetectionReportConsumer consumer) {
-        var detectionConsumer = new InMemoryDetectionConsumer(consumer);
+    public static InMemoryDetectionConsumer create(MetricRegistry registry, SiteDetectionReportConsumer consumer) {
+        var detectionConsumer = new InMemoryDetectionConsumer(registry, consumer);
         detectionConsumer.start();
         return detectionConsumer;
     }
 
-    private InMemoryDetectionConsumer(SiteDetectionReportConsumer callback) {
+    private InMemoryDetectionConsumer(MetricRegistry registry, SiteDetectionReportConsumer callback) {
         this.callback = callback;
         this.reportsQueue = new ArrayBlockingQueue<>(QUEUE_CAPACITY);
         this.forwarderThread = new Thread(this::runForwardLoop);
+        registry.gauge(name(METRIC_NAME_PREFIX, "outbound-queue-length"), () -> reportsQueue::size);
     }
 
     private void start() {

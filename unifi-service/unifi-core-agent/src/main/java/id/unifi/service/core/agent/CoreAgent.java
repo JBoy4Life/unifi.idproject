@@ -1,8 +1,10 @@
 package id.unifi.service.core.agent;
 
 import com.codahale.metrics.MetricRegistry;
+import static com.codahale.metrics.MetricRegistry.name;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.detection.SiteRfidDetection;
+import static id.unifi.service.core.agent.Common.METRIC_NAME_PREFIX;
 import id.unifi.service.core.agent.config.AgentConfig;
 import id.unifi.service.core.agent.config.AgentFullConfig;
 import id.unifi.service.core.agent.config.ConfigAdapter;
@@ -24,6 +26,7 @@ import java.util.function.Predicate;
 
 public class CoreAgent {
     private static final Logger log = LoggerFactory.getLogger(CoreAgent.class);
+
     private final MetricRegistry registry;
     private final Consumer<SiteDetectionReport> rolledUpConsumer;
     private final BlockingQueue<AgentFullConfig> configQueue;
@@ -55,7 +58,10 @@ public class CoreAgent {
                 ? detectionConsumerFactory.apply(coreClient.get()::sendDetectionReports)
                 : report -> {};
         this.state = State.INIT;
+
         this.registry = registry;
+        registry.gauge(name(METRIC_NAME_PREFIX, "state"), () -> () -> state.ordinal()); // expose state as an integer
+
         this.rfidProvider = null;
         this.rolledUpConsumer = report -> {
             detectionConsumer.accept(report);
