@@ -14,7 +14,7 @@ public class SiteDetectionReport {
     }
 
     public String toString() {
-        return "RfidReaderDetectionReport{" +
+        return "SiteDetectionReport{" +
                 "readerSn='" + readerSn + '\'' +
                 ", detections=" + detections +
                 '}';
