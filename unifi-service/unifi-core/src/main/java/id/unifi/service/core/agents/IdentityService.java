@@ -37,7 +37,6 @@ import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -112,15 +111,8 @@ public class IdentityService {
             return new AgentFullConfig<>(rawAgentConfig, readerConfigs);
         });
 
-        try {
             agentDispatcher.request(
-                    session,
-                    Protocol.MSGPACK,
-                    "core.config.set-agent-config",
-                    Map.of("config", agentFullConfig));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                    session, Protocol.MSGPACK, "core.config.set-agent-config", Map.of("config", agentFullConfig));
     }
 
     private JsonNode splicePortConfig(JsonNode configNode, Set<Integer> enabledPortNumbers) {
