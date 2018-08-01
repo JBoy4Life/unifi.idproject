@@ -6,8 +6,6 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import './index.scss'
-import logo from 'assets/images/ucl-logo-2.png'
-import unifilogo from 'assets/images/unifi-logo.svg'
 import { loginRequest } from 'redux/modules/user'
 import { clientIsValidRedir, userIsNotAuthenticatedRedir } from 'hocs/auth'
 import { currentClientSelector } from 'redux/selectors'
