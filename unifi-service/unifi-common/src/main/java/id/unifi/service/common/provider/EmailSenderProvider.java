@@ -13,5 +13,5 @@ public interface EmailSenderProvider {
         }
     }
 
-    void send(String address, EmailMessage message);
+    void send(String name, String address, EmailMessage message);
 }

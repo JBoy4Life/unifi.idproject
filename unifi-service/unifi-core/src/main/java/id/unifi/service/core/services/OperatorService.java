@@ -355,7 +355,7 @@ public class OperatorService {
             message = emailRenderer.renderPasswordResetInstructions(operatorInfo, token);
         }
 
-        emailSender.send(operatorInfo.email, message);
+        emailSender.send(operatorInfo.name, operatorInfo.email, message);
     }
 
     private void recordAuthAttempt(OperatorPK operator, boolean successful) {
