@@ -49,7 +49,10 @@ class LiveView extends PureComponent {
     const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
     listSites({ clientId })
       .then((result) => {
-        const { siteId } = this.props
+        const sortedSites = result.payload.sort((a, b) => a.description > b.description
+          ? 1
+          : (a.description === b.description ? 0 : -1)) // FIXME
+        const { siteId } = sortedSites[0]
         listZones({ clientId, siteId })
         listHolders({ clientId, with: ['image'] })
         listenToSubscriptions({ clientId, siteId })
