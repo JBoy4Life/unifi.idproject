@@ -72,7 +72,7 @@ export default class WebSocketProtocol {
     }
   }
 
-  request(content, params) {
+  request(content) {
     // console.log('request data', content)
     if (this.correlations[content.correlationId]) {
       return this.correlations[content.correlationId].resource
@@ -83,17 +83,17 @@ export default class WebSocketProtocol {
         resolve, reject, content,
       }
       // console.log('sending content', content)
-      this.ws.send(content, params)
+      this.ws.send(content)
     })
 
     this.correlations[content.correlationId].resource = resource
     return resource
   }
 
-  subscribe(content, params, callback) {
+  subscribe(content, callback) {
     this.correlations[content.correlationId] = {
       callback, content,
     }
-    this.ws.send(content, params)
+    this.ws.send(content)
   }
 }
