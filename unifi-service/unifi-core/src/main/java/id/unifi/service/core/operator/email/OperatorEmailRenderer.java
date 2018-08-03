@@ -3,6 +3,7 @@ package id.unifi.service.core.operator.email;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 import com.statemachinesystems.envy.Default;
+import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.types.OperatorInfo;
@@ -22,6 +23,7 @@ public class OperatorEmailRenderer {
     private final Template textInvitationTemplate;
     private final Template textPasswordResetRequestedTemplate;
 
+    @Prefix("unifi")
     private interface Config {
         @Default("local.unifi.id:3000")
         String webServerTopDomain();
