@@ -9,7 +9,7 @@ var env = require("env-variable")({
 });
 
 import Capsule from "./capsule";
-import getImageFromUrl from "./getImageFromUrl";
+import getImageFromUrl from "./lib/getImageFromUrl";
 import Log from "./log";
 import UnifiWsClient from "./lib/unifi-ws-client";
 import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
