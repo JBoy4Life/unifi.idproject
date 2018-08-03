@@ -13,6 +13,7 @@ import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.mq.MqUtils;
 import id.unifi.service.common.provider.EmailSenderProvider;
+import org.simplejavamail.MailException;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.Mailer;
 import org.simplejavamail.mailer.MailerBuilder;
@@ -30,6 +31,7 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     private static final String OUTBOUND_QUEUE_NAME = "core.smtp.outbound";
     private static final int PREFETCH_COUNT = 20;
     private static final int MESSAGE_TTL_MILLIS = 86_400_000;
+    private static final int WAIT_ON_FAILURE_MILLIS = 10_000;
 
     private final Mailer mailer;
     private final Config config;
@@ -106,11 +108,13 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
                     throw new RuntimeException(ioe);
                 }
             } catch (Exception e) {
+                log.error("Failed to send a message to {}", tagged.payload.recipientAddress, e);
                 try {
                     channel.basicReject(tagged.deliveryTag, true);
                 } catch (IOException ioe) {
                     throw new RuntimeException(ioe);
                 }
+                Thread.sleep(WAIT_ON_FAILURE_MILLIS);
             }
         });
 
@@ -129,6 +133,14 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
                 .withHTMLText(message.htmlBody)
                 .withPlainText(message.textBody)
                 .buildEmail();
+
+        try {
+            mailer.validate(email);
+        } catch (MailException e) {
+            log.warn("Validation failed, discarding email", e);
+            return;
+        }
+
         mailer.sendMail(email);
     }
 }
