@@ -9,7 +9,7 @@ var env = require("env-variable")({
 });
 
 import Capsule from "./capsule";
-//import getImageFromUrl from "./getImageFromUrl";
+import getImageFromUrl from "./getImageFromUrl";
 import Log from "./log";
 import UnifiWsClient from "./lib/unifi-ws-client";
 import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
@@ -60,8 +60,6 @@ async function fullSync() {
                 clientReference: person.id.toString(),
                 name: `${person.firstName} ${person.lastName}`,
                 image: getImageFromUrl(person.pictureURL),
-                //image: getImageFromUrl(person.pictureURL),
-                image: null,
                 metadata: JSON.stringify({
                     "homesite": person.club,
                     "membertype": person.memberType
