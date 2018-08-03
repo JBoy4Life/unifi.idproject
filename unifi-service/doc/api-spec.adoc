@@ -27,6 +27,8 @@ Request format:
 }
 ----
 
+`correlationId` can be left empty if you are experimenting interactively with a tool like `ws`.
+
 Response format:
 
 ----
