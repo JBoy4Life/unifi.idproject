@@ -21,11 +21,11 @@ bundle common unifi_environment {
 
     # Application Specific
     ## Papertrail
-      "papertrail_destination_host" string => "logs4.papertrailapp.com";
-      "papertrail_destination_port" int=> "21561";
+      "papertrail_destination_host"  string => getenv("UNIFI_PAPERTRAIL_HOST", "100");
+      "papertrail_destination_port"  string => getenv("UNIFI_PAPERTRAIL_PORT", "5");
       "papertrail_destination_proto" string => "udp";
     ## Librato
-      "appoptics_api_key" string => "2d07d9a16da96aae7d699de96718b661064cb4d11ae2de90b69693fcb4972b08";
+      "appoptics_api_key" string => getenv("UNIFI_APPOPTICS_APIKEY", "50");
     ## NTP
       "ntp_server_type" string => "pool";
       "ntp_server" string => "1.uk.pool.ntp.org";
@@ -33,32 +33,28 @@ bundle common unifi_environment {
 
 bundle common unifi {
   vars:
-    any::
-      "hostname"
-          string => execresult("/bin/hostname -f", "noshell");
-      "parts"
-          slist => splitstring("$(hostname)", "\\.", "3");
       "unifi_env"
-          string => nth("parts", 2);
-      "unifi_role"
-          string => nth("parts", 1);
+          string => getenv("UNIFI_ENV", 20);
+      "unifi_roles"
+          slist => splitstring(getenv("UNIFI_ROLES", 20), ",", "5");
       "unifi_nodeid"
-          string => nth("parts", 0);
+          string => getenv("UNIFI_NODEID", 20);
+      "unifi_clientid"
+          string => getenv("UNIFI_CLIENTID", 20);
   classes:
-    any::
       "unifi_env_$(unifi_env)"
           expression => "any";
-      "unifi_role_$(unifi_role)"
+      "unifi_role_$(unifi_roles)"
           expression => "any";
       "unifi_nodeid_$(unifi_nodeid)"
           expression => "any";
+      "unifi_clientid_$(unifi_clientid)"
+          expression => "any";
   reports:
-    any::
-      "Detected hostname: $(hostname)";
-      "Detected parts: $(parts)";
       "Detected unifi.id environment: $(unifi_env).";
-      "Detected unifi.id role: $(unifi_role).";
+      "Detected unifi.id role: $(unifi_roles).";
       "Detected unifi.id node ID: $(unifi_nodeid).";
+      "Detected unifi.id client ID: $(unifi_clientid).";
       "Detected we are a policy server: $(is_policy_server).";
 }
 
@@ -78,17 +74,10 @@ bundle agent unifi_role {
       "unifi_role_agent";
     unifi_role_db::
       "unifi_role_db"; 
-    ## Monolithic roles assumes all roles
-    unifi_role_monolithic::
-      "unifi_baseline";
-      "unifi_role_app";
-      "unifi_role_services";
-      "unifi_role_db";
 }
 
 bundle agent unifi_baseline {
   vars:
-    any::
       "baseline_packages"
           slist => {
               "ack",
@@ -96,21 +85,19 @@ bundle agent unifi_baseline {
               "debconf-utils",
               "git",
               "net-tools",
+              "tcpdump",
               "vim"
           };
   packages:
-    any::
       "$(baseline_packages)"
           policy => "present",
           package_module => apt_get;
-  
-  # Install/Configure some common tools
   methods:
     any::
-      # Install Chrony in place of traditional NTP client, recommended for performance (and backwards compatible with ntp.conf)
       "chrony";
       "collectd";
       "syslogng";
+    !unifi_env_local::
       "unifi_apt_s3";
 }
 
@@ -122,6 +109,7 @@ bundle agent unifi_role_app {
 
 bundle agent unifi_role_services {
   methods:
+      "rabbitmq";
       "oracle_java_jdk";
   packages:
       "maven"
@@ -131,7 +119,10 @@ bundle agent unifi_role_services {
 
 bundle agent unifi_role_agent {
   methods:
+    any::
+      "rabbitmq";
       "oracle_java_jdk";
+    !unifi_env_local::
       "unifi_core_agent";
 }
 
@@ -421,7 +412,7 @@ bundle agent syslogng {
 
     # Included from environment
       "papertrail_destination_host" string => "$(unifi_environment.papertrail_destination_host)";
-      "papertrail_destination_port" int => "$(unifi_environment.papertrail_destination_port)";
+      "papertrail_destination_port" string => "$(unifi_environment.papertrail_destination_port)";
       "papertrail_destination_proto" string => "$(unifi_environment.papertrail_destination_proto)";
 
   packages:
@@ -530,4 +521,11 @@ bundle agent collectd {
       perms => mo("644","root"),
       action => if_elapsed("60"),
       classes   => if_repaired( "restart_collectd" );
+}
+
+bundle agent rabbitmq {
+  packages:
+    "rabbitmq-server"
+        policy => "present",
+        package_module => apt_get;
 }
