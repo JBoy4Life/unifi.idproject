@@ -14,20 +14,17 @@ import java.util.stream.Collectors;
 
 public class RfidProvider implements DetectionProvider {
     private static final Logger log = LoggerFactory.getLogger(RfidProvider.class);
-    private final Consumer<SiteDetectionReport> detectionConsumer;
     private List<ImpinjReaderController> controllers;
-    private MetricRegistry registry;
 
-    public RfidProvider(Consumer<SiteDetectionReport> detectionConsumer, MetricRegistry registry) {
-        this.detectionConsumer = detectionConsumer;
-        this.registry = registry;
-        this.controllers = List.of();
-    }
-
-    public synchronized void configure(List<ReaderFullConfig<ReaderConfig>> readers) {
-        controllers.forEach(ImpinjReaderController::close);
+    public RfidProvider(List<ReaderFullConfig<ReaderConfig>> readers,
+                        Consumer<SiteDetectionReport> detectionConsumer,
+                        MetricRegistry registry) {
         controllers = readers.stream()
                 .map(r -> new ImpinjReaderController(r, detectionConsumer, registry))
                 .collect(Collectors.toList());
+    }
+
+    public synchronized void close() {
+        controllers.forEach(ImpinjReaderController::close);
     }
 }

@@ -4,6 +4,7 @@ import com.opencsv.CSVWriter;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import static id.unifi.service.common.util.TimeUtils.UNIX_TIMESTAMP;
 import static id.unifi.service.common.util.TimeUtils.filenameFormattedLocalDateTimeNow;
+import id.unifi.service.core.agent.logger.DetectionLogger;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -59,7 +60,7 @@ public class CsvDetectionLogger implements DetectionLogger {
     @Nullable
     private CSVWriter createWriter(Path logFilePath) {
         try {
-            log.info("Writing detections to {}", logFilePath);
+            log.info("Writing detections to {}", logFilePath.toAbsolutePath());
             var writer = new CSVWriter(Files.newBufferedWriter(logFilePath, UTF_8, WRITE, CREATE));
             writer.writeNext(HEADERS);
             return writer;
