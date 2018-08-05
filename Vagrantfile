@@ -59,8 +59,8 @@ Go forth and develop!
 MSG
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "debian/contrib-stretch64" # contrib includes vbox guest additions
-  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+  config.vm.box = "generic/debian9"
+  config.vm.synced_folder ".", "/vagrant"
   config.vm.hostname = "unifi-services.box"
   config.vm.provision :shell, :inline => $preboot_script
   # config.vm.provision :reload
@@ -68,6 +68,7 @@ Vagrant.configure("2") do |config|
 
   # Sometimes, bridging to the public network does not acquire an IPv4 address.
   # Forwarding ports will always work.
+  config.vm.network "public_network"
   config.vm.network "forwarded_port", guest: 3000, host: 3000 # unifi-web
   config.vm.network "forwarded_port", guest: 8000, host: 8000 # unifi-service
 
