@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
 public class SmtpEmailSenderProvider implements EmailSenderProvider {
     private static final Logger log = LoggerFactory.getLogger(SmtpEmailSenderProvider.class);
@@ -47,20 +48,22 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
         String password();
 
         @Default("info@unifi.id")
-        String defaultSenderAddress();
+        String defaultFromAddress();
 
         @Default("30 seconds")
         Duration sessionTimeout();
     }
 
     public static class FullEmailMessage {
-        public final String recipientName;
-        public final String recipientAddress;
+        public final Optional<String> fromAddress;
+        public final String toName;
+        public final String toAddress;
         public final EmailMessage message;
 
-        public FullEmailMessage(String recipientName, String recipientAddress, EmailMessage message) {
-            this.recipientName = recipientName;
-            this.recipientAddress = recipientAddress;
+        public FullEmailMessage(Optional<String> fromAddress, String toName, String toAddress, EmailMessage message) {
+            this.fromAddress = fromAddress;
+            this.toName = toName;
+            this.toAddress = toAddress;
             this.message = message;
         }
     }
@@ -68,7 +71,7 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     public SmtpEmailSenderProvider(MqConfig mqConfig) {
         this.config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
         log.info("Starting SMTP email sender with server: {}, username: {}, default sender: {}",
-                config.server(), config.username(), config.defaultSenderAddress());
+                config.server(), config.username(), config.defaultFromAddress());
 
         this.mailer = MailerBuilder
                 .withSMTPServer(
@@ -89,8 +92,16 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
         }
     }
 
-    public void send(String name, String address, EmailMessage message) {
-        var fullMessage = new FullEmailMessage(name, address, message);
+    public void queue(String fromAddress, String toName, String toAddress, EmailMessage message) {
+        queue(Optional.of(fromAddress), toName, toAddress, message);
+    }
+
+    public void queue(String toName, String toAddress, EmailMessage message) {
+        queue(Optional.empty(), toName, toAddress, message);
+    }
+
+    private void queue(Optional<String> fromAddress, String toName, String toAddress, EmailMessage message) {
+        var fullMessage = new FullEmailMessage(fromAddress, toName, toAddress, message);
         try {
             channel.basicPublish("", OUTBOUND_QUEUE_NAME, PERSISTENT_BASIC, MqUtils.marshal(fullMessage));
         } catch (IOException e) {
@@ -101,14 +112,14 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     private void initMq() throws IOException {
         var consumer = MqUtils.unmarshallingConsumer(EMAIL_MESSAGE_TYPE, channel, tagged -> {
             try {
-                sendNow(tagged.payload);
+                send(tagged.payload);
                 try {
                     channel.basicAck(tagged.deliveryTag, false);
                 } catch (IOException ioe) {
                     throw new RuntimeException(ioe);
                 }
             } catch (Exception e) {
-                log.error("Failed to send a message to {}", tagged.payload.recipientAddress, e);
+                log.error("Failed to send a message to {}", tagged.payload.toAddress, e);
                 try {
                     channel.basicReject(tagged.deliveryTag, true);
                 } catch (IOException ioe) {
@@ -123,12 +134,12 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
         channel.basicConsume(OUTBOUND_QUEUE_NAME, consumer);
     }
 
-    private void sendNow(FullEmailMessage fullMessage) {
-        log.debug("Sending email to {}", fullMessage.recipientAddress);
+    private void send(FullEmailMessage fullMessage) {
+        log.debug("Sending email to {}", fullMessage.toAddress);
         var message = fullMessage.message;
         var email = EmailBuilder.startingBlank()
-                .from(config.defaultSenderAddress())
-                .to(fullMessage.recipientName, fullMessage.recipientAddress)
+                .from(fullMessage.fromAddress.orElse(config.defaultFromAddress()))
+                .to(fullMessage.toName, fullMessage.toAddress)
                 .withSubject(message.subject)
                 .withHTMLText(message.htmlBody)
                 .withPlainText(message.textBody)
