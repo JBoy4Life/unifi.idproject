@@ -109,6 +109,7 @@ bundle agent unifi_role_app {
 
 bundle agent unifi_role_services {
   methods:
+      "rabbitmq";
       "oracle_java_jdk";
   packages:
       "maven"
@@ -119,6 +120,7 @@ bundle agent unifi_role_services {
 bundle agent unifi_role_agent {
   methods:
     any::
+      "rabbitmq";
       "oracle_java_jdk";
     !unifi_env_local::
       "unifi_core_agent";
@@ -519,4 +521,11 @@ bundle agent collectd {
       perms => mo("644","root"),
       action => if_elapsed("60"),
       classes   => if_repaired( "restart_collectd" );
+}
+
+bundle agent rabbitmq {
+  packages:
+    "rabbitmq-server"
+        policy => "present",
+        package_module => apt_get;
 }
