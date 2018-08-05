@@ -13,5 +13,7 @@ public interface EmailSenderProvider {
         }
     }
 
-    void send(String address, EmailMessage message);
+    void queue(String fromAddress, String toName, String toAddress, EmailMessage message);
+
+    void queue(String toName, String toAddress, EmailMessage message);
 }
