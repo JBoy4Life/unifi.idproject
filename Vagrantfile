@@ -13,7 +13,7 @@ sudo dpkg -i cfengine-community*.deb
 
 # Set up the environment.
 sudo echo "DefaultEnvironment=UNIFI_ENV=local" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_ROLES=service,agent,db" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_ROLES=services,agent,db" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_NODEID=vagrant" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_CLIENTID=test-club" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/systemd/system.conf
@@ -21,7 +21,7 @@ sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_PORT=12345" >> /etc/systemd/syste
 sudo echo "DefaultEnvironment=UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/systemd/system.conf
 
 sudo echo "UNIFI_ENV=local" >> /etc/environment
-sudo echo "UNIFI_ROLES=service,agent,db" >> /etc/environment
+sudo echo "UNIFI_ROLES=services,agent,db" >> /etc/environment
 sudo echo "UNIFI_NODEID=vagrant" >> /etc/environment
 sudo echo "UNIFI_CLIENTID=test-club" >> /etc/environment
 sudo echo "UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/environment
