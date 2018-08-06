@@ -14,11 +14,15 @@
     "rules": {
         "indent": [
             "warn",
-            4
+            4,
+            {"SwitchCase": 1}
         ],
         "linebreak-style": [
             "warn",
             "unix"
+        ],
+        "no-unused-vars": [
+            "warn"
         ],
         "quotes": [
             "warn",
