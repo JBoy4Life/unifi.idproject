@@ -19,16 +19,17 @@ public class ReaderConfig {
     public final Optional<Boolean> enableFastId;
     public final Optional<List<Double>> txFrequencies;
     public final Optional<DetectableFilter> filter;
+    public final Optional<Boolean> disconnectedOperation;
     public final Optional<Map<Integer, AntennaConfig>> ports;
 
     public static final ReaderConfig empty =
             new ReaderConfig(Optional.empty(), Optional.empty(), OptionalInt.empty(), OptionalInt.empty(),
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     public static ReaderConfig fromPortNumbers(List<Integer> portNumbers) {
         var ports = portNumbers.stream().collect(toUnmodifiableMap(identity(), n -> AntennaConfig.empty));
         return new ReaderConfig(Optional.empty(), Optional.empty(), OptionalInt.empty(), OptionalInt.empty(),
-                Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(ports));
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(ports));
     }
 
     public ReaderConfig(Optional<ReaderMode> readerMode,
@@ -38,6 +39,7 @@ public class ReaderConfig {
                         Optional<Boolean> enableFastId,
                         Optional<List<Double>> txFrequencies,
                         Optional<DetectableFilter> filter,
+                        Optional<Boolean> disconnectedOperation,
                         Optional<Map<Integer, AntennaConfig>> ports) {
         this.readerMode = readerMode;
         this.searchMode = searchMode;
@@ -46,12 +48,14 @@ public class ReaderConfig {
         this.enableFastId = enableFastId;
         this.txFrequencies = txFrequencies;
         this.filter = filter;
+        this.disconnectedOperation = disconnectedOperation;
         this.ports = ports;
     }
 
     public ReaderConfig copyWithPorts(Optional<Map<Integer, AntennaConfig>> newPorts) {
         return new ReaderConfig(
-                readerMode, searchMode, session, tagPopulationEstimate, enableFastId, txFrequencies, filter, newPorts);
+                readerMode, searchMode, session, tagPopulationEstimate, enableFastId, txFrequencies, filter,
+                disconnectedOperation, newPorts);
     }
 
     public boolean equals(Object o) {
@@ -65,12 +69,14 @@ public class ReaderConfig {
                 Objects.equals(enableFastId, that.enableFastId) &&
                 Objects.equals(txFrequencies, that.txFrequencies) &&
                 Objects.equals(filter, that.filter) &&
+                Objects.equals(disconnectedOperation, that.disconnectedOperation) &&
                 Objects.equals(ports, that.ports);
     }
 
     public int hashCode() {
         return Objects.hash(
-                readerMode, searchMode, session, tagPopulationEstimate, enableFastId, txFrequencies, filter, ports);
+                readerMode, searchMode, session, tagPopulationEstimate, enableFastId, txFrequencies, filter,
+                disconnectedOperation, ports);
     }
 
     public String toString() {
@@ -82,6 +88,7 @@ public class ReaderConfig {
                 ", enableFastId=" + enableFastId +
                 ", txFrequencies=" + txFrequencies +
                 ", filter=" + filter +
+                ", disconnectedOperation=" + disconnectedOperation +
                 ", ports=" + ports +
                 '}';
     }

@@ -26,7 +26,7 @@ Log.info(`Configuration: ${JSON.stringify(config)}`);
 
 
 async function fullSync() {
-    Log.info(`Full sync started at ${new Date()}`);
+    Log.notice(`Full sync started at ${new Date()}`);
 
     // Get the Capsule data.
     const capsule = new Capsule(config.apiKey);
@@ -60,31 +60,33 @@ async function fullSync() {
                 clientReference: person.id.toString(),
                 name: `${person.firstName} ${person.lastName}`,
                 image: getImageFromUrl(person.pictureURL),
-                metadata: JSON.stringify({
+                metadata: {
                     "homesite": person.club,
-                    "membertype": person.memberType
-                })
+                    "membertype": person.memberType,
+                    "company": (person.organisation !== undefined && person.organisation !== null ? person.organisation.name : null),
+                    "position": person.jobTitle
+                }
             };
             let mifare;
             if (person.mifareNumber !== undefined) {
                 mifare = {
-                    detectableId: person.mifareNumber,
-                    description: ""
+                    "detectableId": person.mifareNumber,
+                    "description": ""
                 };
             }
             else {
-                Log.debug(`Skipping person: No Mifare. Data: "${JSON.stringify(person)}"`);
+                Log.debug(`Skipping person: No Mifare. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                 return;
             }
             let uhf;
             if (person.mifareNumber in mifareUhfMappings) {
                 uhf = {
-                    detectableId: mifareUhfMappings[person.mifareNumber],
-                    description: ""
+                    "detectableId": mifareUhfMappings[person.mifareNumber],
+                    "description": ""
                 };
             }
             else {
-                Log.warning(`Skipping person: No matching UHF found. Data: ${JSON.stringify(person)}`);
+                Log.warning(`Skipping person: No matching UHF found. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                 return;
             }
 
@@ -113,7 +115,7 @@ async function fullSync() {
                 let errorEncountered = false;
                 Object.keys(unifiPrimaryKeys).forEach((key) => {
                     if (unifiPrimaryKeys[key].length > 64) {
-                        Log.error(`Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}`);
+                        Log.error(`Key '${key.replace("_", ".")}' longer than 64 characters (${unifiPrimaryKeys[key]}). Person will not be added. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                         errorEncountered = true;
                     }
                 });
@@ -124,7 +126,7 @@ async function fullSync() {
             // End processing this person if there's an error with the
             // primary keys.
             if (primaryKeysInvalid) {
-                Log.warning(`Skipping person: Primary key value invalid. Data: ${JSON.stringify(person)}`);
+                Log.warning(`Skipping person: Primary key value invalid. clientReference: ${holder.clientReference}, name: ${holder.name}`);
                 return;
             }
 
@@ -252,7 +254,7 @@ async function fullSync() {
         });
     });
 
-    Log.info(`Full sync ended at ${new Date()}`);
+    Log.notice(`Full sync ended at ${new Date()}`);
     // Queue up the next sync in 10 minutes.
     setTimeout(fullSync, 600000);
 }

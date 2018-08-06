@@ -4,19 +4,21 @@ import com.google.common.net.HostAndPort;
 import id.unifi.service.common.api.MessageListener;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.rfid.RfidReader;
 import id.unifi.service.common.rfid.RfidReaderStatus;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.types.pk.SitePK;
+import id.unifi.service.common.types.pk.ZonePK;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.SITE;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
-import id.unifi.service.core.site.ResolvedDetection;
+import id.unifi.service.core.site.ResolvedSiteDetection;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -72,10 +74,40 @@ public class SiteService {
     }
 
     @ApiOperation
-    public void subscribeDetections(String clientId,
+    public void subscribeDetections(OperatorSessionData session,
+                                    String clientId,
                                     String siteId,
-                                    MessageListener<List<ResolvedDetection>> listener) {
-        detectionSubscriber.addListener(new SitePK(clientId, siteId), listener);
+                                    MessageListener<List<ResolvedSiteDetection>> listener) {
+        authorize(session, clientId);
+        var site = new SitePK(clientId, siteId);
+        
+        var siteExists = db.execute(sql ->
+                sql.fetchExists(SITE, SITE.CLIENT_ID.eq(site.clientId).and(SITE.SITE_ID.eq(site.siteId))));
+        if (!siteExists) {
+            throw new NotFound("site");
+        }
+
+        detectionSubscriber.addListener(site, listener);
+    }
+
+    @ApiOperation
+    public void subscribeZoneDetections(OperatorSessionData session,
+                                        String clientId,
+                                        String siteId,
+                                        String zoneId,
+                                        MessageListener<List<ResolvedSiteDetection>> listener) {
+        authorize(session, clientId);
+        var zone = new ZonePK(clientId, siteId, zoneId);
+
+        var zoneExists = db.execute(sql ->
+                sql.fetchExists(ZONE, ZONE.CLIENT_ID.eq(zone.clientId)
+                        .and(ZONE.SITE_ID.eq(zone.siteId))
+                        .and(ZONE.ZONE_ID.eq(zone.zoneId))));
+        if (!zoneExists) {
+            throw new NotFound("zone");
+        }
+
+        detectionSubscriber.addListener(zone, listener);
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {

@@ -1,21 +1,25 @@
 import Console from "console";
 
-function Log() {};
+function Log() {}
 
-Log.debug = function debug(message) {
-    Console.debug(`[DEBUG] ${message}`);
+Log.debug = function (message) {
+    // Console.debug(`<7>[DEBUG] ${message}`);
 };
 
-Log.error = function error(message) {
-    Console.error(`[ERROR] ${message}`);
+Log.error = function (message) {
+    Console.error(`<3>[ERROR] ${message}`);
 };
 
-Log.info = function info(message) {
-    Console.info(`[INFO] ${message}`);
+Log.info = function (message) {
+    Console.info(`<6>[INFO] ${message}`);
 };
 
-Log.warning = function warning(message) {
-    Console.warn(`[WARNING] ${message}`);
+Log.notice = function (message) {
+    Console.log(`<5>[NOTICE] ${message}`);
+};
+
+Log.warning = function (message) {
+    Console.warn(`<4>[WARNING] ${message}`);
 };
 
 export default Log;
