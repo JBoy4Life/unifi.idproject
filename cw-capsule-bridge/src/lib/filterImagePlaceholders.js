@@ -5,10 +5,10 @@ var ignoreUrlContains = "facehub";
 function filterPlaceholders (pictureURL) {
     if (pictureURL.includes(ignoreUrlContains)) {
         Log.info(`SKIPPING PLACEHOLDER IMAGE "${pictureURL}"`);
-        return true;
+        return false;
     }
     else {
-        return false;
+        return true;
     }
 }
 

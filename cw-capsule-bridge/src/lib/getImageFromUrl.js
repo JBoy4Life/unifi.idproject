@@ -1,17 +1,21 @@
-import filterPlaceholders from "./filterPlaceholders";
+import Axios from "axios";
+import btoa from "btoa";
+import filterImagePlaceholders from "./filterImagePlaceholders";
+import Log from "./../log";
 
-function getImageFromUrl(pictureURL) {
-    if(filterPlaceholders(pictureURL)) {
-        return;
-    }
-    var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-    var oReq = new XMLHttpRequest();
-
-    oReq.open("GET", pictureURL, true);
-    oReq.responseType = "arraybuffer";
-
-    return oReq.response;
-
+async function getImageFromUrl (pictureURL) {
+    return new Promise((resolve) => {
+        if (filterImagePlaceholders(pictureURL)) {
+            Axios.get(pictureURL, {
+                responseType: "arraybuffer"
+            }).then((response) => {
+                resolve(btoa(response.data));
+            }).catch((error) => {
+                Log.error(`${JSON.stringify(error)}`);
+                resolve(null);
+            });
+        }
+    });
 }
 
 export default getImageFromUrl;
