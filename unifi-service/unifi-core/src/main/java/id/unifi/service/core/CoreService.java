@@ -34,6 +34,10 @@ import id.unifi.service.core.processing.DetectionProcessor;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
 import id.unifi.service.dbcommon.DatabaseProvider;
+import id.unifi.service.core.sms.AwsSmsSenderProvider;
+import id.unifi.service.core.sms.LoggingSmsSenderProvider;
+import id.unifi.service.core.sms.SmsSenderProvider;
+import id.unifi.service.core.util.RegionsValueParser;
 import static java.net.InetSocketAddress.createUnresolved;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
@@ -70,6 +74,9 @@ public class CoreService {
 
         @Nullable
         String smtpServer();
+
+        @Default("false")
+        boolean smsEnabled();
     }
 
     public static void main(String[] args) throws Exception {
@@ -84,7 +91,8 @@ public class CoreService {
         log.info("Starting unifi.id Core");
         VersionInfo.log();
 
-        var config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
+        var config = Envy.configure(Config.class, UnifiConfigSource.get(),
+                HostAndPortValueParser.instance, RegionsValueParser.instance);
 
         var registry = new MetricRegistry();
         var jmxReporter = MetricUtils.createJmxReporter(registry);
@@ -109,6 +117,10 @@ public class CoreService {
                 ? new SmtpEmailSenderProvider(config.mq())
                 : new LoggingEmailSender();
 
+        var smsSenderProvider = config.smsEnabled()
+                ? new AwsSmsSenderProvider(config.mq())
+                : new LoggingSmsSenderProvider();
+
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
@@ -117,7 +129,8 @@ public class CoreService {
                 DetectionSubscriber.class, detectionSubscriber,
                 DetectionProcessor.class, detectionProcessor,
                 SessionTokenStore.class, new InMemorySessionTokenStore(864000),
-                EmailSenderProvider.class, emailSenderProvider));
+                EmailSenderProvider.class, emailSenderProvider,
+                SmsSenderProvider.class, smsSenderProvider));
 
         startApiService(config.apiServiceListenEndpoint(), componentHolder, subscriptionManager);
         startAgentService(componentHolder, config.agentServiceListenEndpoint());
