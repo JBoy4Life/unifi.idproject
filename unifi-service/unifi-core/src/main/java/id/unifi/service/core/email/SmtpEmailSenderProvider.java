@@ -141,7 +141,7 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     }
 
     private void send(FullEmailMessage fullMessage) {
-        log.debug("Sending email to {}", fullMessage.toAddress);
+        log.trace("Sending email to {}", fullMessage.toAddress);
         mailer.sendMail(buildSimpleJavaMailEmail(fullMessage));
     }
 
