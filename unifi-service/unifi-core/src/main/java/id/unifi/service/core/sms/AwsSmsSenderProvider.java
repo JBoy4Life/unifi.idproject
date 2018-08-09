@@ -140,7 +140,7 @@ public class AwsSmsSenderProvider implements SmsSenderProvider {
                         new MessageAttributeValue()
                                 .withStringValue(fullMessage.promotional ? "Promotional" : "Transactional")
                                 .withDataType("String"))));
-        log.debug("SMS for {} queued in AWS SNS, messageId: {}", fullMessage.phoneNumber, result.getMessageId());
+        log.trace("SMS for {} queued in AWS SNS, messageId: {}", fullMessage.phoneNumber, result.getMessageId());
     }
 
     private static Optional<Regions> getRegion(Config config) {
