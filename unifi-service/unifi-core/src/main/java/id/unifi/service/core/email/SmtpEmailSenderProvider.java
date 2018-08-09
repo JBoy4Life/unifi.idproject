@@ -13,7 +13,7 @@ import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
 import id.unifi.service.common.mq.MqUtils;
 import id.unifi.service.common.provider.EmailSenderProvider;
-import org.simplejavamail.MailException;
+import org.simplejavamail.email.Email;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.Mailer;
 import org.simplejavamail.mailer.MailerBuilder;
@@ -55,12 +55,12 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     }
 
     public static class FullEmailMessage {
-        public final Optional<String> fromAddress;
+        public final String fromAddress;
         public final String toName;
         public final String toAddress;
         public final EmailMessage message;
 
-        public FullEmailMessage(Optional<String> fromAddress, String toName, String toAddress, EmailMessage message) {
+        public FullEmailMessage(String fromAddress, String toName, String toAddress, EmailMessage message) {
             this.fromAddress = fromAddress;
             this.toName = toName;
             this.toAddress = toAddress;
@@ -101,7 +101,10 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     }
 
     private void queue(Optional<String> fromAddress, String toName, String toAddress, EmailMessage message) {
-        var fullMessage = new FullEmailMessage(fromAddress, toName, toAddress, message);
+        var fullMessage =
+                new FullEmailMessage(fromAddress.orElse(config.defaultFromAddress()), toName, toAddress, message);
+        mailer.validate(buildSimpleJavaMailEmail(fullMessage));
+
         try {
             channel.basicPublish("", OUTBOUND_QUEUE_NAME, PERSISTENT_BASIC, MqUtils.marshal(fullMessage));
         } catch (IOException e) {
@@ -136,22 +139,17 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
 
     private void send(FullEmailMessage fullMessage) {
         log.debug("Sending email to {}", fullMessage.toAddress);
+        mailer.sendMail(buildSimpleJavaMailEmail(fullMessage));
+    }
+
+    private static Email buildSimpleJavaMailEmail(FullEmailMessage fullMessage) {
         var message = fullMessage.message;
-        var email = EmailBuilder.startingBlank()
-                .from(fullMessage.fromAddress.orElse(config.defaultFromAddress()))
+        return EmailBuilder.startingBlank()
+                .from(fullMessage.fromAddress)
                 .to(fullMessage.toName, fullMessage.toAddress)
                 .withSubject(message.subject)
                 .withHTMLText(message.htmlBody)
                 .withPlainText(message.textBody)
                 .buildEmail();
-
-        try {
-            mailer.validate(email);
-        } catch (MailException e) {
-            log.warn("Validation failed, discarding email", e);
-            return;
-        }
-
-        mailer.sendMail(email);
     }
 }
