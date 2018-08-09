@@ -2,9 +2,9 @@ package id.unifi.service.core.email;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.net.HostAndPort;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import static com.rabbitmq.client.MessageProperties.PERSISTENT_BASIC;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
 import com.statemachinesystems.envy.Prefix;
@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
 
 public class SmtpEmailSenderProvider implements EmailSenderProvider {
@@ -32,6 +31,10 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
     private static final String OUTBOUND_QUEUE_NAME = "core.smtp.outbound";
     private static final int PREFETCH_COUNT = 20;
     private static final int MESSAGE_TTL_MILLIS = 86_400_000;
+    private static final AMQP.BasicProperties messageProps = new AMQP.BasicProperties.Builder()
+            .deliveryMode(2) // persistent
+            .expiration(Long.toString(MESSAGE_TTL_MILLIS))
+            .build();
     private static final int WAIT_ON_FAILURE_MILLIS = 10_000;
 
     private final Mailer mailer;
@@ -106,7 +109,7 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
         mailer.validate(buildSimpleJavaMailEmail(fullMessage));
 
         try {
-            channel.basicPublish("", OUTBOUND_QUEUE_NAME, PERSISTENT_BASIC, MqUtils.marshal(fullMessage));
+            channel.basicPublish("", OUTBOUND_QUEUE_NAME, messageProps, MqUtils.marshal(fullMessage));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -132,7 +135,7 @@ public class SmtpEmailSenderProvider implements EmailSenderProvider {
             }
         });
 
-        channel.queueDeclare(OUTBOUND_QUEUE_NAME, true, false, false, Map.of("x-message-ttl", MESSAGE_TTL_MILLIS));
+        channel.queueDeclare(OUTBOUND_QUEUE_NAME, true, false, false, null);
         channel.basicQos(PREFETCH_COUNT);
         channel.basicConsume(OUTBOUND_QUEUE_NAME, consumer);
     }
