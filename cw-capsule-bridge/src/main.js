@@ -9,6 +9,7 @@ var env = require("env-variable")({
 });
 
 import Capsule from "./capsule";
+import getImageFromUrl from "./lib/getImageFromUrl";
 import Log from "./log";
 import UnifiWsClient from "./lib/unifi-ws-client";
 import mifareUhfMappings from "./res/mifare-uhf-mappings.json";
@@ -52,14 +53,14 @@ async function fullSync() {
         Log.debug(`${JSON.stringify(authResponse)}`);
         Log.debug(`Collected ${persons.length} persons.`);
 
-        persons.forEach((person) => {
+        persons.forEach(async (person) => {
 
             // Define values here that will be sent through the unifi.id API.
             let holder = {
-                "clientReference": person.id.toString(),
-                "name": `${person.firstName} ${person.lastName}`,
-                "image": null,
-                "metadata": {
+                clientReference: person.id.toString(),
+                name: `${person.firstName} ${person.lastName}`,
+                image: await getImageFromUrl(person.pictureURL),
+                metadata: {
                     "homesite": person.club,
                     "membertype": person.memberType,
                     "company": (person.organisation !== undefined && person.organisation !== null ? person.organisation.name : null),

@@ -14,10 +14,10 @@ try {
 import Log from "./log";
 
 const CAPSULE_PARTIES_URI = "https://api.capsulecrm.com/api/v2/parties?perPage=100&embed=tags,fields,organisation";
-const CAPSULE_FIELD_CLUB         = 368576,
-      CAPSULE_FIELD_MEMBERTYPE   = 231465,
-      CAPSULE_FIELD_MIFARENUMBER = 216824,
-      CAPSULE_FIELD_RTCONTACTID  = 371942;
+const CAPSULE_FIELD_CLUB         = 368576;
+const CAPSULE_FIELD_MEMBERTYPE   = 231465;
+const CAPSULE_FIELD_MIFARENUMBER = 216824;
+const CAPSULE_FIELD_RTCONTACTID  = 371942;
 
 export default class Capsule {
     constructor(apiKey) {
