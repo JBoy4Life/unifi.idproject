@@ -61,6 +61,7 @@ export const siteIdSelector = fp.compose(
 )
 export const zonesInfoSelector = modelSelector('zonesInfo', {})
 export const liveDiscoverySelector = modelSelector('liveDiscovery', [])
+export const sitesInfoSelector = modelSelector('sitesList', [])
 
 
 

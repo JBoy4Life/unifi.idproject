@@ -17,7 +17,7 @@ import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-import { siteIdSelector, zonesInfoSelector } from 'redux/selectors'
+import { siteIdSelector, sitesInfoSelector, zonesInfoSelector } from 'redux/selectors'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
@@ -31,6 +31,11 @@ const zonesSelector = fp.compose(
     )(zonesInfo)
   ),
   zonesInfoSelector
+)
+
+const sitesSelector = fp.compose(
+  fp.sortBy('description'),
+  sitesInfoSelector
 )
 
 class LiveView extends PureComponent {
@@ -49,10 +54,7 @@ class LiveView extends PureComponent {
     const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
     listSites({ clientId })
       .then((result) => {
-        const sortedSites = result.payload.sort((a, b) => a.description > b.description
-          ? 1
-          : (a.description === b.description ? 0 : -1)) // FIXME
-        const { siteId } = sortedSites[0]
+        const siteId = this.state.queryParams.site
         listZones({ clientId, siteId })
         listHolders({ clientId, with: ['image'] })
         listenToSubscriptions({ clientId, siteId })
@@ -119,6 +121,20 @@ class LiveView extends PureComponent {
     })
   }
 
+  handleSiteChange = (siteId) => {
+    const { listZones, clientId } = this.props
+    this.setURLHref({
+      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
+    })
+
+    // TODO: This currently reloads the page. Instead we should resubscribe to
+    //  detections with the new site (and end the old subscription) to obviate
+    //  the need for this.
+    window.location.reload()
+    // listZones({ clientId, siteId })
+    // listenToSubscriptions({ clientId, siteId })
+  }
+
   handleZoneChange = (zoneId) => {
     this.setURLHref({
       ...this.state.queryParams, zone: encodeURIComponent(zoneId),
@@ -126,18 +142,18 @@ class LiveView extends PureComponent {
   }
 
   render() {
-    const { itemsPerRow, queryParams: { view, zone: zoneId } } = this.state
+    const { itemsPerRow, queryParams: { view, zone: zoneId, site: siteId } } = this.state
 
     const {
       discoveredList,
-      zones
+      zones,
+      sites
     } = this.props
 
-    const zoneItems = fp.compose(
-      fp.reverse,
-      fp.sortBy('firstDetectionTime'),
-      fp.filter(item => item.zone.zoneId === zoneId)
-    )(discoveredList)
+    const zoneItems = (
+      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : []))
+        .sort(item => item.firstDetectionTime) // Reverse chronological order
+    )
 
     return (
       <PageContainer>
@@ -146,9 +162,22 @@ class LiveView extends PureComponent {
             <div className="live-view">
 
               <ZoneFilter
+                onZoneChange={this.handleSiteChange}
+                zoneId={siteId}
+                zones={sites}
+                placeholder="Select a site"
+                idKey="siteId"
+                nameKey="description"
+              />
+
+              <ZoneFilter
                 onZoneChange={this.handleZoneChange}
                 zoneId={zoneId}
                 zones={zones}
+                placeholder="Select a zone"
+                idKey="zoneId"
+                nameKey="name"
+                disabled={siteId === undefined ? 'true' : false}
               />
 
               <ViewModeHeader
@@ -170,7 +199,8 @@ class LiveView extends PureComponent {
 export const selector = createStructuredSelector({
   discoveredList: getDiscoveredList,
   siteId: siteIdSelector,
-  zones: zonesSelector
+  zones: zonesSelector,
+  sites: sitesSelector
 })
 
 export const actions = {

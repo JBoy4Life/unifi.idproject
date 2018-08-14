@@ -18,15 +18,16 @@ const ZoneFilter = props => (
       <Col sm={12}>
         <Select
           showSearch
+          disabled={props.disabled}
           value={props.zoneId}
           style={{ width: '100%' }}
-          placeholder="Select a zone"
+          placeholder={props.placeholder}
           optionFilterProp="children"
           onChange={props.onZoneChange}
           filterOption={handleFilterOption}
         >
           {props.zones.map((zone, index) => (
-            <Option value={zone.zoneId} key={index}>{zone.name}</Option>
+            <Option value={zone[props.idKey]} key={index}>{zone[props.nameKey]}</Option>
           ))}
         </Select>
       </Col>
