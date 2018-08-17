@@ -1,9 +1,9 @@
 #!/bin/sh
 
-for process in $(ps aux | grep "[j]ava" | awk '{print $2}'); do
+printf "%s\\n" "Ending any existing \`unifi-core\` and \`unifi-mock-agent\` processes..."
+for process in $(ps -xo "pid,args" | grep -E '(\bunifi-core\b|\bunifi-mock-agent\b)' | awk '{print $1}'); do
 	kill -9 "$process"
 done
-printf "%s\\n" "WARNING: This has ended any existing Java processes. Sorry."
 
 mkdir -p "${HOME:?}/logs"
 
