@@ -151,8 +151,15 @@ class LiveView extends PureComponent {
     } = this.props
 
     const zoneItems = (
-      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : []))
-        .sort(item => item.firstDetectionTime) // Reverse chronological order
+      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
+        // Sort by reverse chronological order
+        .sort((item1, item2) => (
+          item1.detectionTime < item2.detectionTime
+            ? 1
+            : item1.detectionTime === item2.detectionTime
+              ? 0
+              : -1
+        ))
     )
 
     return (
