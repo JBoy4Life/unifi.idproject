@@ -2,7 +2,6 @@ package id.unifi.service.common.api.http;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Streams;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import com.google.common.net.MediaType;
@@ -13,8 +12,6 @@ import id.unifi.service.common.api.errors.NotAcceptable;
 import id.unifi.service.common.api.errors.UnsupportedMediaType;
 import id.unifi.service.common.security.Token;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toUnmodifiableMap;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
@@ -27,14 +24,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class HttpUtils {
     private static final Logger log = LoggerFactory.getLogger(HttpUtils.class);
@@ -83,13 +81,10 @@ public class HttpUtils {
         return queryParamsMultimap.toStringArrayMap();
     }
 
-    public static Map<String, String> getPathParams(HttpSpec httpSpec, String path) {
-        return Streams.zip(httpSpec.segments.stream(), stream(slashSplitter.split(path)),
-                (segment, value) -> segment.isParam()
-                        ? Map.entry(segment.getParamName(), URLDecoder.decode(value, UTF_8))
-                        : null)
-                .filter(Objects::nonNull)
-                .collect(toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+    public static List<String> decodePathSegments(String urlEncodedPath) {
+        return Arrays.stream(slashSplitter.split(urlEncodedPath))
+                .map(s -> URLDecoder.decode(s, UTF_8))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static Protocol protocolFromContentType(List<Protocol> protocols, String contentType) {

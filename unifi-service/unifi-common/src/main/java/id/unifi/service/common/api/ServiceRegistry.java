@@ -9,9 +9,12 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.UnknownMessageType;
 import id.unifi.service.common.api.http.HttpSpec;
+import static id.unifi.service.common.api.http.HttpUtils.decodePathSegments;
+import id.unifi.service.common.api.http.PathNode;
 import id.unifi.service.common.api.http.PathSegment;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.eclipse.jetty.http.HttpMethod;
@@ -30,7 +33,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -38,8 +40,9 @@ import java.util.stream.Stream;
 public class ServiceRegistry {
     private static final Logger log = LoggerFactory.getLogger(ServiceRegistry.class);
     private final ComponentHolder componentProvider;
+    private final Map<HttpMethod, PathNode> operationUrlPathTree;
 
-    static class Operation {
+    public static class Operation {
         final Class<?> cls;
         final Map<String, Param> params;
         final InvocationType invocationType;
@@ -92,6 +95,19 @@ public class ServiceRegistry {
         this.componentProvider = componentHolder;
         this.serviceInstances = createServiceInstances(services.values());
         this.operations = preloadOperations(services);
+        this.operationUrlPathTree = generateUrlPathTree(operations.values());
+    }
+    private Map<HttpMethod, PathNode> generateUrlPathTree(Collection<Operation> operations) {
+        var byMethod = new HashMap<HttpMethod, PathNode>();
+        for (var operation : operations) {
+            var httpSpec = operation.httpSpec;
+            if (httpSpec == null) continue;
+            var node = byMethod.computeIfAbsent(httpSpec.method, m -> new PathNode());
+            for (var segment : httpSpec.segments) node = node.addMapping(segment);
+            node.setOperation(operation);
+        }
+
+        return byMethod;
     }
 
     public Object invokeRpc(Operation operation, Object[] params) {
@@ -127,24 +143,22 @@ public class ServiceRegistry {
         return operation;
     }
 
-    public Operation getOperationFromUrlPath(HttpMethod method, String path) {
-        return operations.values().stream().filter(o ->
-                o.httpSpec != null
-                        && o.httpSpec.method.equals(method)
-                        && matches(o.httpSpec.segments, path))
-                .findFirst().orElse(null);
-    }
+    public OperationMatch getOperationFromUrlPath(HttpMethod method, String urlEncodedPath) {
+        var node = operationUrlPathTree.get(method);
+        if (node == null) return null;
 
-    private boolean matches(List<PathSegment> segments, String urlEncodedPath) {
-        var pathSegments = urlEncodedPath.split("/");
-        if (segments.size() != pathSegments.length) return false;
+        var pathParams = new HashMap<String, String>();
+        var segments = decodePathSegments(urlEncodedPath);
+        for (var segment : segments) {
+            var match = node.match(segment);
+            if (match == null) return null;
 
-        for (var i = 0; i < segments.size(); i++) {
-            var segment = segments.get(i);
-            if (!segment.isParam() && !pathSegments[i].equals(segment.getValue())) return false;
+            if (match.paramName != null) pathParams.put(match.paramName, match.paramValue);
+            node = match.node;
         }
-        log.trace("Match found: {} maps to {}", urlEncodedPath, segments);
-        return true;
+
+        var operation = node.getOperation();
+        return operation == null ? null : new OperationMatch(operation, unmodifiableMap(pathParams));
     }
 
     private static Map<Class<?>, ApiService> discoverServices(ClassPath classPath, String packageName) {
@@ -252,5 +266,15 @@ public class ServiceRegistry {
         var type = (ParameterizedType) lastParamType;
         if (type.getRawType() != MessageListener.class) return null;
         return type.getActualTypeArguments()[0];
+    }
+
+    public static class OperationMatch {
+        public final Operation operation;
+        public final Map<String, String> pathParams;
+
+        public OperationMatch(Operation operation, Map<String, String> pathParams) {
+            this.operation = operation;
+            this.pathParams = pathParams;
+        }
     }
 }

@@ -12,6 +12,7 @@ import id.unifi.service.common.api.errors.InternalServerError;
 import id.unifi.service.common.api.errors.InvalidParameterFormat;
 import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.MissingParameter;
+import id.unifi.service.common.api.errors.NotFound;
 import static id.unifi.service.common.api.http.HttpUtils.*;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.subscriptions.SubscriptionManager;
@@ -168,13 +169,18 @@ public class Dispatcher<S> {
                 throw new AssertionError("Expected path prefix '" + servletPrefix + "', got: " + requestPath);
             var path = requestPath.substring(servletPrefix.length());
 
-            var operation = serviceRegistry.getOperationFromUrlPath(HttpMethod.valueOf(request.getMethod()), path);
-            if (operation == null) {
-                context.complete();
-                return;
+
+            HttpMethod method;
+            try {
+                method = HttpMethod.valueOf(request.getMethod());
+            } catch (IllegalArgumentException e) {
+                throw new NotFound("operation");
             }
 
-            log.trace("Dispatching {} /{}, as {}", request.getMethod(), path, operation);
+            var operationMatch = serviceRegistry.getOperationFromUrlPath(method, path);
+            if (operationMatch == null) throw new NotFound("operation");
+
+            log.trace("Dispatching {} /{}, as {}", request.getMethod(), path, operationMatch.operation);
 
             protocol = determineProtocol(protocols, request);
             mapper = getObjectMapper(protocol);
@@ -187,8 +193,8 @@ public class Dispatcher<S> {
                     ? mapper.readTree(request.getInputStream())
                     : mapper.readTree(request.getReader());
 
-            var paramGetter = paramGetter(mapper, getPathParams(operation.httpSpec, path), queryParams, bodyJson);
-            processRequest(sessionData, channel, mapper, protocol, paramGetter, operation);
+            var paramGetter = paramGetter(mapper, operationMatch.pathParams, queryParams, bodyJson);
+            processRequest(sessionData, channel, mapper, protocol, paramGetter, operationMatch.operation);
         } catch (Exception e) {
             try {
                 respondWithThrowable(protocol, mapper, response, e);
