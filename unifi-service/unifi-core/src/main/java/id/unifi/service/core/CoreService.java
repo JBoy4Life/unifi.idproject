@@ -12,8 +12,10 @@ import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
-import id.unifi.service.common.api.Protocol;
+import static id.unifi.service.common.api.Protocol.JSON;
+import static id.unifi.service.common.api.Protocol.MSGPACK;
 import id.unifi.service.common.api.ServiceRegistry;
+import id.unifi.service.common.api.http.HttpUtils;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
@@ -33,18 +35,20 @@ import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.processing.DetectionProcessor;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.core.sms.AwsSmsSenderProvider;
 import id.unifi.service.core.sms.LoggingSmsSenderProvider;
 import id.unifi.service.core.sms.SmsSenderProvider;
 import id.unifi.service.core.util.RegionsValueParser;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.net.InetSocketAddress.createUnresolved;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -151,12 +155,8 @@ public class CoreService {
         });
 
         var agentServerSocket = createUnresolved(agentEndpoint.getHost(), agentEndpoint.getPort());
-        var agentServer = new HttpServer(
-                agentServerSocket,
-                "/agents",
-                agentDispatcher,
-                Set.of(Protocol.MSGPACK));
-        agentServer.start();
+        var agentServer = new HttpServer(agentServerSocket, "/agents", agentDispatcher, List.of(MSGPACK));
+        agentServer.start(false);
     }
 
     private static void startApiService(HostAndPort apiEndpoint,
@@ -167,14 +167,15 @@ public class CoreService {
                         "core", "id.unifi.service.core.services",
                         "attendance", "id.unifi.service.attendance.services"),
                 componentHolder);
+        var sessionTokenStore = componentHolder.get(SessionTokenStore.class);
         var dispatcher = new Dispatcher<>(
-                registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager);
+                registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager,
+                request -> Optional.ofNullable(request.getHeader("authorization"))
+                        .flatMap(HttpUtils::extractAuthToken)
+                        .flatMap(t -> sessionTokenStore.get(t).map(op -> new OperatorSessionData(op, t)))
+                        .orElseGet(OperatorSessionData::new));
         var apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
-        var apiServer = new HttpServer(
-                apiServerSocket,
-                "/service",
-                dispatcher,
-                Set.of(Protocol.JSON, Protocol.MSGPACK));
-        apiServer.start();
+        var apiServer = new HttpServer(apiServerSocket, "/service", dispatcher, List.of(JSON, MSGPACK));
+        apiServer.start(true);
     }
 }

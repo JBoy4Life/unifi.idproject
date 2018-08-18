@@ -1,6 +1,6 @@
 package id.unifi.service.common.api;
 
-import id.unifi.service.common.api.errors.MarshallableError;
+import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.ValidationFailure;
 import id.unifi.service.common.api.errors.ValidationFailure.Issue;
 import id.unifi.service.common.api.errors.ValidationFailure.ValidationError;
@@ -42,7 +42,7 @@ public class Validation {
         return v(field, value == null ? null : validator.apply(value));
     }
 
-    public static ValidationDef v(@Nullable Issue result, Supplier<MarshallableError> immediateError) {
+    public static ValidationDef v(@Nullable Issue result, Supplier<AbstractMarshallableError> immediateError) {
         return new ValidationDef(null, result, immediateError);
     }
 
@@ -71,11 +71,11 @@ public class Validation {
     public static class ValidationDef {
         private final String field;
         private final Issue issue;
-        private final Supplier<MarshallableError> immediateError;
+        private final Supplier<AbstractMarshallableError> immediateError;
 
         private ValidationDef(@Nullable String field,
                               Issue issue,
-                              @Nullable Supplier<MarshallableError> immediateError) {
+                              @Nullable Supplier<AbstractMarshallableError> immediateError) {
             this.field = field;
             this.issue = issue;
             this.immediateError = immediateError;

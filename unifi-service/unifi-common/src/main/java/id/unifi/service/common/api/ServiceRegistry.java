@@ -3,10 +3,18 @@ package id.unifi.service.common.api;
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import com.google.common.reflect.ClassPath;
+import static id.unifi.service.common.api.InvocationType.MULTI;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.UnknownMessageType;
+import id.unifi.service.common.api.http.HttpSpec;
+import id.unifi.service.common.api.http.PathSegment;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
+import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +25,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -36,19 +46,22 @@ public class ServiceRegistry {
         final String resultMessageType;
         final Type resultType;
         final Method method;
+        final HttpSpec httpSpec;
 
         private Operation(Class<?> cls,
-                  Method method,
-                  Map<String, Param> params,
-                  InvocationType invocationType,
-                  Type resultType,
-                  @Nullable String resultMessageType) {
+                          Method method,
+                          Map<String, Param> params,
+                          InvocationType invocationType,
+                          Type resultType,
+                          @Nullable String resultMessageType,
+                          HttpSpec httpSpec) {
             this.cls = cls;
             this.method = method;
             this.params = params;
             this.invocationType = invocationType;
             this.resultType = resultType;
             this.resultMessageType = resultMessageType;
+            this.httpSpec = httpSpec;
         }
     }
 
@@ -94,7 +107,7 @@ public class ServiceRegistry {
     }
 
     public void invokeMulti(Operation operation, Object[] params, MessageListener<?> listenerParam) {
-        var allParams = Stream.concat(Arrays.stream(params), Stream.of(listenerParam)).toArray();
+        var allParams = Stream.concat(stream(params), Stream.of(listenerParam)).toArray();
         try {
             operation.method.invoke(serviceInstances.get(operation.cls), allParams);
         } catch (IllegalAccessException e) {
@@ -112,6 +125,26 @@ public class ServiceRegistry {
             throw new UnknownMessageType(messageType);
         }
         return operation;
+    }
+
+    public Operation getOperationFromUrlPath(HttpMethod method, String path) {
+        return operations.values().stream().filter(o ->
+                o.httpSpec != null
+                        && o.httpSpec.method.equals(method)
+                        && matches(o.httpSpec.segments, path))
+                .findFirst().orElse(null);
+    }
+
+    private boolean matches(List<PathSegment> segments, String urlEncodedPath) {
+        var pathSegments = urlEncodedPath.split("/");
+        if (segments.size() != pathSegments.length) return false;
+
+        for (var i = 0; i < segments.size(); i++) {
+            var segment = segments.get(i);
+            if (!segment.isParam() && !pathSegments[i].equals(segment.getValue())) return false;
+        }
+        log.trace("Match found: {} maps to {}", urlEncodedPath, segments);
+        return true;
     }
 
     private static Map<Class<?>, ApiService> discoverServices(ClassPath classPath, String packageName) {
@@ -148,6 +181,7 @@ public class ServiceRegistry {
                     var operationAnnotation = method.getAnnotation(ApiOperation.class);
                     if (operationAnnotation == null) continue;
 
+                    var restAnnotation = method.getAnnotation(HttpMatch.class);
                     var operationName = operationAnnotation.name().isEmpty()
                             ? LOWER_CAMEL.to(LOWER_HYPHEN, method.getName())
                             : operationAnnotation.name();
@@ -156,13 +190,16 @@ public class ServiceRegistry {
                     var methodParams = method.getParameters();
 
                     var multiReturnType = getMultiResponseReturnType(returnType, methodParams);
-                    var invocationType = multiReturnType != null ? InvocationType.MULTI : InvocationType.RPC;
+                    var invocationType = multiReturnType != null ? MULTI : InvocationType.RPC;
                     Map<String, Param> params;
                     switch (invocationType) {
                         case MULTI:
+                            if (restAnnotation != null)
+                                throw new RuntimeException("Unexpected " + HttpMatch.class +
+                                        " annotation for multi-response operation: " + restAnnotation);
                             params = preloadParams(Arrays.copyOfRange(methodParams, 0, methodParams.length - 1));
                             operations.put(messageType,
-                                    new Operation(cls, method, params, InvocationType.MULTI, multiReturnType, null));
+                                    new Operation(cls, method, params, MULTI, multiReturnType, null, null));
                             break;
                         case RPC:
                             var annotatedResultType = operationAnnotation.resultType();
@@ -171,8 +208,22 @@ public class ServiceRegistry {
                                     : annotatedResultType.startsWith(".") ? operationNamespace + annotatedResultType : annotatedResultType;
 
                             params = preloadParams(methodParams);
-                            operations.put(messageType,
-                                    new Operation(cls, method, params, InvocationType.RPC, returnType, resultTypeName));
+
+                            HttpSpec httpSpec;
+                            if (restAnnotation != null) {
+                                var path = restAnnotation.path();
+                                var segments = stream(path.split("/"))
+                                        .map(s -> (s.startsWith(":"))
+                                                ? PathSegment.param(URLDecoder.decode(s.substring(1), UTF_8))
+                                                : PathSegment.value(URLDecoder.decode(s, UTF_8)))
+                                        .collect(toUnmodifiableList());
+                                httpSpec = new HttpSpec(restAnnotation.method(), segments);
+                            } else {
+                                httpSpec = null;
+                            }
+
+                            operations.put(messageType, new Operation(
+                                    cls, method, params, InvocationType.RPC, returnType, resultTypeName, httpSpec));
                             break;
                     }
                 }

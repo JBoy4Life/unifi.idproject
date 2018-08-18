@@ -10,24 +10,29 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
 import id.unifi.service.common.api.errors.InternalServerError;
 import id.unifi.service.common.api.errors.InvalidParameterFormat;
-import id.unifi.service.common.api.errors.MarshallableError;
+import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.MissingParameter;
+import static id.unifi.service.common.api.http.HttpUtils.*;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.common.util.HexEncoded;
+import static javax.servlet.AsyncContext.ASYNC_REQUEST_URI;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,18 +41,17 @@ import java.util.function.Function;
 
 public class Dispatcher<S> {
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
-    private static final Random random = new SecureRandom();
 
     private static final Message.Version CURRENT_PROTOCOL_VERSION = new Message.Version(1, 0, 0);
 
     private final ServiceRegistry serviceRegistry;
     private final Class<S> sessionDataType;
     private final Function<Session, S> sessionDataCreator;
+    private final Function<HttpServletRequest, S> httpSessionDataCreator;
     private final ConcurrentMap<Session, S> sessionDataStore;
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, WireMessageListener> messageListeners;
     private final Map<ByteBuffer, CancellableWireMessageListener> responseListeners;
-    private final SubscriptionManager subscriptionManager;
 
     public interface WireMessageListener {
         void accept(ObjectMapper om, Session session, Message message) throws JsonProcessingException;
@@ -66,16 +70,17 @@ public class Dispatcher<S> {
     public Dispatcher(ServiceRegistry serviceRegistry,
                       Class<S> sessionDataType,
                       Function<Session, S> sessionDataCreator,
-                      SubscriptionManager subscriptionManager) {
+                      SubscriptionManager subscriptionManager,
+                      Function<HttpServletRequest, S> httpSessionDataCreator) {
         this.serviceRegistry = serviceRegistry;
         this.sessionDataType = sessionDataType;
         this.sessionDataCreator = sessionDataCreator;
+        this.httpSessionDataCreator = httpSessionDataCreator;
         this.sessionDataStore = new ConcurrentHashMap<>();
 
         this.sessionListeners = new CopyOnWriteArraySet<>();
         this.messageListeners = new ConcurrentHashMap<>();
 
-        this.subscriptionManager = subscriptionManager;
         if (subscriptionManager != null) {
             messageListeners.put("core.protocol.unsubscribe", (om, session, msg) -> {
                 subscriptionManager.removeSubscription(session, msg.correlationId);
@@ -92,6 +97,13 @@ public class Dispatcher<S> {
             });
         }
         this.responseListeners = new HashMap<>();
+    }
+
+    public Dispatcher(ServiceRegistry serviceRegistry,
+                      Class<S> sessionDataType,
+                      Function<Session, S> sessionDataCreator,
+                      SubscriptionManager subscriptionManager) {
+        this(serviceRegistry, sessionDataType, sessionDataCreator, subscriptionManager, null);
     }
 
     public Dispatcher(ServiceRegistry serviceRegistry,
@@ -123,7 +135,7 @@ public class Dispatcher<S> {
 
             var operation = serviceRegistry.getOperation(message.messageType);
             processRequest(session, returnChannel, mapper, protocol, message, operation);
-        } catch (MarshallableError e) {
+        } catch (AbstractMarshallableError e) {
             if (message != null) {
                 sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
             } else {
@@ -139,6 +151,49 @@ public class Dispatcher<S> {
                 sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, new InternalServerError()));
             } else {
                 session.close(StatusCode.BAD_PAYLOAD, "Couldn't process payload");
+            }
+        }
+    }
+
+    public void dispatch(List<Protocol> protocols, AsyncContext context) throws IOException {
+        var request = (HttpServletRequest) context.getRequest();
+        var response = (HttpServletResponse) context.getResponse();
+        Protocol protocol = null;
+        ObjectMapper mapper = null;
+
+        try {
+            var requestPath = (String) request.getAttribute(ASYNC_REQUEST_URI);
+            var servletPrefix = request.getServletPath() + "/";
+            if (!requestPath.startsWith(servletPrefix))
+                throw new AssertionError("Expected path prefix '" + servletPrefix + "', got: " + requestPath);
+            var path = requestPath.substring(servletPrefix.length());
+
+            var operation = serviceRegistry.getOperationFromUrlPath(HttpMethod.valueOf(request.getMethod()), path);
+            if (operation == null) {
+                context.complete();
+                return;
+            }
+
+            log.trace("Dispatching {} /{}, as {}", request.getMethod(), path, operation);
+
+            protocol = determineProtocol(protocols, request);
+            mapper = getObjectMapper(protocol);
+            var channel = createChannel(protocol, context);
+
+            var sessionData = httpSessionDataCreator.apply(request);
+
+            var queryParams = getQueryParameters(request.getQueryString());
+            var bodyJson = protocol.isBinary()
+                    ? mapper.readTree(request.getInputStream())
+                    : mapper.readTree(request.getReader());
+
+            var paramGetter = paramGetter(mapper, getPathParams(operation.httpSpec, path), queryParams, bodyJson);
+            processRequest(sessionData, channel, mapper, protocol, paramGetter, operation);
+        } catch (Exception e) {
+            try {
+                respondWithThrowable(protocol, mapper, response, e);
+            } finally {
+                context.complete();
             }
         }
     }
@@ -211,32 +266,7 @@ public class Dispatcher<S> {
         var sessionData = sessionDataStore.get(session);
         if (sessionData == null) return; // Ignore dead sessions
 
-        var params = operation.params.entrySet().stream().map(entry -> {
-            var type = entry.getValue().type;
-            if (type == Session.class)
-                return session;
-            if (type == ObjectMapper.class)
-                return mapper;
-            if (type == sessionDataType)
-                return sessionData;
-
-            var name = entry.getKey();
-            try {
-                var paramNode = message.payload.get(name);
-                if (paramNode == null || paramNode.isNull()) {
-                    if (entry.getValue().nullable) {
-                        return null;
-                    } else {
-                        throw new MissingParameter(name, type.getTypeName());
-                    }
-                }
-                return readValue(mapper, type, paramNode);
-            } catch (JsonProcessingException e) {
-                throw new InvalidParameterFormat(name, e.getMessage());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).toArray();
+        var params = getParams(mapper, operation, session, sessionData, message.payload::get);
 
         switch (operation.invocationType) {
             case RPC:
@@ -252,7 +282,7 @@ public class Dispatcher<S> {
                             operation.resultMessageType,
                             payload);
                     log.trace("Response message: {}", rpcResponse);
-                } catch (MarshallableError e) {
+                } catch (AbstractMarshallableError e) {
                     rpcResponse = errorMessage(mapper, message, e);
                 }
 
@@ -284,11 +314,59 @@ public class Dispatcher<S> {
 
                 try {
                     serviceRegistry.invokeMulti(operation, params, listenerParam);
-                } catch (MarshallableError e) {
+                } catch (AbstractMarshallableError e) {
                     sendPayload(returnChannel, mapper, protocol, errorMessage(mapper, message, e));
                 }
                 break;
         }
+    }
+
+    private void processRequest(S sessionData,
+                                Channel channel,
+                                ObjectMapper mapper,
+                                Protocol protocol,
+                                Function<String, JsonNode> getParam,
+                                ServiceRegistry.Operation operation) {
+        var params = getParams(mapper, operation, null, sessionData, getParam);
+        var result = serviceRegistry.invokeRpc(operation, params);
+        var payload = mapper.valueToTree(result);
+        log.trace("Response payload: {}", payload);
+        sendPayload(channel, mapper, protocol, payload);
+    }
+
+    private Object[] getParams(ObjectMapper mapper,
+                               ServiceRegistry.Operation operation,
+                               @Nullable Session session,
+                               S sessionData,
+                               Function<String, JsonNode> getParam) {
+        return operation.params.entrySet().stream().map(entry -> {
+            var type = entry.getValue().type;
+
+            if (type == Session.class) {
+                if (session != null) return session;
+                throw new AssertionError("Unexpected null session. Trying to expose a subscription call via HTTP?");
+            }
+
+            if (type == ObjectMapper.class) return mapper;
+            if (type == sessionDataType) return sessionData;
+
+            var name = entry.getKey();
+            try {
+                var paramNode = getParam.apply(name);
+                if (paramNode == null || paramNode.isNull()) {
+                    if (entry.getValue().nullable) {
+                        return null;
+                    } else {
+                        throw new MissingParameter(name, type.getTypeName());
+                    }
+                }
+                return readValue(mapper, type, paramNode);
+            } catch (JsonProcessingException e) {
+                throw new InvalidParameterFormat(name, e.getMessage());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).toArray();
     }
 
     private static <T> T readValue(ObjectMapper mapper, Type type, JsonNode paramNode) throws IOException {
@@ -306,7 +384,7 @@ public class Dispatcher<S> {
         }
     }
 
-    private static Message errorMessage(ObjectMapper mapper, Message message, MarshallableError e) {
+    private static Message errorMessage(ObjectMapper mapper, Message message, AbstractMarshallableError e) {
         return new Message(
                 CURRENT_PROTOCOL_VERSION,
                 message.releaseVersion,
@@ -326,7 +404,7 @@ public class Dispatcher<S> {
     private static void sendPayload(Channel channel,
                                     ObjectMapper mapper,
                                     Protocol protocol,
-                                    Message payload) {
+                                    Object payload) {
         if (protocol.isBinary()) {
             byte[] binaryPayload;
             try {
@@ -348,11 +426,5 @@ public class Dispatcher<S> {
             log.trace("Sending marshalled message: {}", stringPayload);
             channel.send(stringPayload);
         }
-    }
-
-    private static byte[] generateCorrelationId() {
-        var id = new byte[16];
-        random.nextBytes(id);
-        return id;
     }
 }

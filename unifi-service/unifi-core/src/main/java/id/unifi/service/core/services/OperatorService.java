@@ -7,12 +7,11 @@ import static id.unifi.service.common.api.Validation.*;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.api.errors.AuthenticationFailed;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.AuthInfo;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
@@ -23,8 +22,6 @@ import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.types.OperatorInfo;
 import id.unifi.service.common.types.pk.OperatorPK;
-import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
-import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR;
@@ -33,6 +30,11 @@ import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
+import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
+import static org.eclipse.jetty.http.HttpMethod.POST;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -159,6 +161,7 @@ public class OperatorService {
     }
 
     @ApiOperation
+    @HttpMatch(path = "operators/auth-password", method = POST)
     public AuthInfo authPassword(OperatorSessionData session, String clientId, String username, String password) {
         validateAll(
                 v(shortId(clientId), AuthenticationFailed::new),

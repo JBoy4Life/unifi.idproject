@@ -1,8 +1,8 @@
 package id.unifi.service.common.api.client;
 
-import id.unifi.service.common.api.errors.MarshallableError;
+import id.unifi.service.common.api.errors.AbstractMarshallableError;
 
-public class UnmarshalledError extends MarshallableError {
+public class UnmarshalledError extends AbstractMarshallableError {
     private final String protocolMessageType;
 
     public UnmarshalledError(String protocolMessageType, String message) {
