@@ -125,7 +125,8 @@ public class ImpinjReaderController implements Closeable {
 
         this.connectionCloseLatch = new CountDownLatch(1);
 
-        connectionThread = new Thread(this::configureFromScratch, "reader-" + fullConfig.readerSn + "-connection");
+        connectionThread = new Thread(this::configureFromScratch,
+                "reader-" + fullConfig.readerSn.orElse("?") + "-connection");
         connectionThread.start();
     }
 
@@ -156,8 +157,14 @@ public class ImpinjReaderController implements Closeable {
                 lastKeepaliveMillis = System.currentTimeMillis();
                 if (Thread.interrupted()) throw new InterruptedException();
 
+                // Set name early if available, sometimes the reader starts sending reports on querying status
+                fullConfig.readerSn.ifPresent(reader::setName);
+
+                log.trace("Updating antenna status");
                 updateAntennaStatus(reader);
+                log.trace("Querying reader features");
                 var featureSet = reader.queryFeatureSet();
+                log.trace("Checking S/N");
                 var readerSn = checkSerialNumber(featureSet);
                 reader.setName(readerSn);
 

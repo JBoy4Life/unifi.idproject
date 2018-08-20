@@ -1,110 +1,76 @@
 package id.unifi.service.core.agent;
 
+import com.codahale.metrics.MetricRegistry;
+import static com.codahale.metrics.MetricRegistry.name;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.Protocol;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.WebSocketDelegate;
+import static id.unifi.service.common.api.client.ClientUtils.awaitResponse;
+import static id.unifi.service.common.api.client.ClientUtils.oneOffWireMessageListener;
+import id.unifi.service.common.api.client.UnmarshalledError;
 import id.unifi.service.common.detection.SiteDetectionReport;
+import static id.unifi.service.core.agent.Common.METRIC_NAME_PREFIX;
+import id.unifi.service.core.agent.config.ConfigAdapter;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CoreClient {
     private static final Logger log = LoggerFactory.getLogger(CoreClient.class);
+    private static final int AUTH_TIMEOUT_SECONDS = 30;
 
     private final Dispatcher<Boolean> dispatcher;
-    private final BlockingQueue<SiteDetectionReport> pendingReports;
-    private final Thread sendThread;
     private final URI serviceUri;
     private final String clientId;
     private final String agentId;
     private final AtomicReference<Session> sessionRef;
-    private CountDownLatch authenticated;
+    private volatile CountDownLatch authenticated;
     private final Thread connectThread;
     private final byte[] password;
+    private final Map<List<SiteDetectionReport>, Runnable> unackedReports;
 
-    CoreClient(URI serviceUri, String clientId, String agentId, byte[] password, ComponentHolder componentHolder) {
+    CoreClient(URI serviceUri,
+               String clientId,
+               String agentId,
+               byte[] password,
+               ConfigAdapter configAdapter,
+               MetricRegistry registry) {
         this.serviceUri = serviceUri;
         this.clientId = clientId;
         this.agentId = agentId;
         this.password = password;
 
-        pendingReports = new ArrayBlockingQueue<>(100_000);
         sessionRef = new AtomicReference<>();
+        authenticated = new CountDownLatch(1);
 
-        var registry = new ServiceRegistry(
+        var componentHolder = new ComponentHolder(Map.of(ConfigAdapter.class, configAdapter));
+        var serviceRegistry = new ServiceRegistry(
                 Map.of("core", "id.unifi.service.core.agent.services"),
                 componentHolder);
-        dispatcher = new Dispatcher<>(registry, Boolean.class, t -> true);
+        dispatcher = new Dispatcher<>(serviceRegistry, Boolean.class, t -> true);
         dispatcher.putMessageListener("core.detection.process-raw-detections-result",
                 (om, session, msg) -> log.trace("Confirmed detection"));
-
-        dispatcher.putMessageListener("core.identity.auth-password-result", (om, session, msg) -> {
-            sessionRef.set(session);
-            authenticated.countDown();
-        });
-
-        dispatcher.putMessageListener("core.error.authentication-failed", (om, session, msg) -> {
-            sessionRef.set(null);
-            authenticated.countDown();
-        });
 
         connectThread = new Thread(this::maintainConnection);
         connectThread.start();
 
-        sendThread = new Thread(this::takeAndSend);
-        sendThread.setDaemon(true);
-        sendThread.start();
-    }
-
-    private void takeAndSend() {
-        while (true) {
-            List<SiteDetectionReport> reports;
-            try {
-                if (pendingReports.isEmpty()) {
-                    reports = List.of(pendingReports.take());
-                } else {
-                    reports = new ArrayList<>(200);
-                    pendingReports.drainTo(reports, 200);
-                }
-            } catch (InterruptedException e) {
-                continue;
-            }
-            Map<String, Object> params = Map.of("reports", reports);
-            while (true) {
-                try {
-                    var session = sessionRef.get();
-                    if (session == null) throw new IOException("No session");
-                    dispatcher.request(
-                            session,
-                            Protocol.MSGPACK,
-                            "core.detection.process-raw-detections",
-                            params);
-                    break;
-                } catch (WebSocketException | IOException e) {
-                    log.info("Couldn't send detection report to server, retrying soon...");
-                    try {
-                        Thread.sleep(5_000);
-                    } catch (InterruptedException e1) {
-                        return;
-                    }
-                }
-            }
-        }
+        unackedReports = new ConcurrentHashMap<>();
+        registry.gauge(name(METRIC_NAME_PREFIX, "unacked-reports"), () -> unackedReports::size);
     }
 
     private void maintainConnection() {
@@ -116,24 +82,48 @@ public class CoreClient {
                 var delegate = new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
                 var sessionFuture = client.connect(delegate, serviceUri, request);
                 log.info("Waiting for connection to service");
-                Session session;
-                session = sessionFuture.get();
+                var session = sessionFuture.get();
 
-                log.info("Connection to service established ({}), authenticating", serviceUri);
-                authenticated = new CountDownLatch(1);
-                dispatcher.request(session, Protocol.MSGPACK, "core.identity.auth-password",
-                        Map.of("clientId", clientId, "agentId", agentId, "password", password));
+                log.info("Connection to service established ({}), authenticating as clientId: {}, agentId: {}, password {}",
+                        serviceUri, clientId, agentId, password.length > 0 ? "non-empty" : "empty");
+                var authFuture = awaitResponse("core.identity.auth-password-result", listener ->
+                        dispatcher.request(session, Protocol.MSGPACK, "core.identity.auth-password",
+                                Map.of("clientId", clientId, "agentId", agentId, "password", password), listener));
 
-                authenticated.await();
-                if (sessionRef.get() == null) {
-                    // Authentication failed; FIXME: build a proper client
-                    log.error("Agent authentication failed");
+                try {
+                    authFuture.get(AUTH_TIMEOUT_SECONDS, SECONDS);
+                    sessionRef.set(session);
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof UnmarshalledError) {
+                        var cause = (UnmarshalledError) e.getCause();
+                        sessionRef.set(null);
+                        if (cause.getProtocolMessageType().equals("core.error.authentication-failed")) {
+                            log.error("Agent authentication failed: {}", cause.getMessage());
+                            session.close();
+                        } else {
+                            log.error("Error authenticating agent", cause);
+                        }
+                    }
+                    log.error("Error authenticating agent", e.getCause());
+                } catch (TimeoutException e) {
+                    log.error("Agent authentication timed out");
                     session.close();
                 }
+
+                if (sessionRef.get() != null) {
+                    log.info("Sending {} unacked reports from previous session", unackedReports.size());
+                    unackedReports.forEach(this::dispatchReports);
+                }
+
+                authenticated.countDown();
+
                 var closeCode = delegate.awaitClose();
                 log.info("Connection closed (WebSocket code {})", closeCode);
             } catch (Exception e) {
                 log.error("Can't establish connection to server ({})", serviceUri);
+            } finally {
+                if (authenticated.getCount() == 0)
+                    authenticated = new CountDownLatch(1);
             }
 
             try {
@@ -146,13 +136,38 @@ public class CoreClient {
         }
     }
 
-    public void sendRawDetections(SiteDetectionReport report) {
+    /**
+     * Sends detections reports to the service and runs `ackCallback`, retrying if necessary.
+     * May block.
+     * @param reports list of detection reports
+     * @param ackCallback runnable to call when the service has acknowledged the receipt
+     */
+    public void sendDetectionReports(List<SiteDetectionReport> reports, Runnable ackCallback) {
         try {
-            pendingReports.put(report);
-        } catch (InterruptedException ignored) {}
-        var reportsSize = pendingReports.size();
-        if (reportsSize % 500 == 0 && reportsSize != 0) {
-            log.info("Pending reports: {}", reportsSize);
+            authenticated.await();
+            unackedReports.put(reports, ackCallback);
+            dispatchReports(reports, ackCallback);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error("Couldn't send detection report to server, disconnecting", e);
+            var session = sessionRef.get();
+            if (session != null) session.close();
         }
+    }
+
+    private void dispatchReports(List<SiteDetectionReport> reports, Runnable ackCallback) {
+        var session = requireNonNull(sessionRef.get());
+        Map<String, Object> params = Map.of("reports", reports);
+        dispatcher.request(session, Protocol.MSGPACK, "core.detection.process-raw-detections", params,
+                oneOffWireMessageListener((om, s, message) -> {
+                    if (message.messageType.equals("core.detection.process-raw-detections-result")) {
+                        ackCallback.run();
+                        unackedReports.remove(reports);
+                    } else {
+                        log.error("Unexpected response to report, disconnecting: {}", message);
+                        session.close();
+                    }
+                }));
     }
 }

@@ -6,29 +6,26 @@
     "extends": "eslint:recommended",
     "parserOptions": {
         "sourceType": "module",
-        "ecmaVersion": "2017",
-        "ecmaFeatures": {
+        "ecmaVersion": 2017,
+	"ecmaFeatures": {
             "experimentalObjectRestSpread": true
         }
     },
     "rules": {
         "indent": [
             "warn",
-            4
+            4,
+            {"SwitchCase": 1}
         ],
         "linebreak-style": [
-            "error",
+            "warn",
             "unix"
         ],
-        "no-console": [
-            "off"
-        ],
         "no-unused-vars": [
-            "warn",
-            "all"
+            "warn"
         ],
         "quotes": [
-            "error",
+            "warn",
             "double"
         ],
         "semi": [

@@ -15,6 +15,9 @@ import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.detection.DetectionMatch;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeoutException;
 
 public class MqUtils {
@@ -43,7 +46,7 @@ public class MqUtils {
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
-                T unmarshalled = mapper.readValue(body, type);
+                T unmarshalled = unmarshal(body, type);
                 try {
                     consumer.accept(new Tagged<>(unmarshalled, envelope.getDeliveryTag()));
                 } catch (InterruptedException e) {
@@ -53,11 +56,32 @@ public class MqUtils {
         };
     }
 
+    public static <T> T unmarshal(byte[] body, TypeReference<T> type) throws IOException {
+        return mapper.readValue(body, type);
+    }
+
     public static <T> byte[] marshal(T value) {
         try {
             return mapper.writeValueAsBytes(value);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> List<T> drainQueue(BlockingQueue<T> queue) {
+        try {
+            var size = queue.size();
+            if (size <= 1) {
+                var element = queue.take();
+                return List.of(element);
+            } else {
+                List<T> taggedReports = new ArrayList<>(size);
+                queue.drainTo(taggedReports, size);
+                return taggedReports;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return List.of();
         }
     }
 

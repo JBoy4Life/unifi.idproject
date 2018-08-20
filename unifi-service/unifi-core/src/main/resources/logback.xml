@@ -1,6 +1,10 @@
 <configuration>
     <jmxConfigurator />
 
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- see http://logback.qos.ch/manual/layouts.html#ClassicPatternLayout -->

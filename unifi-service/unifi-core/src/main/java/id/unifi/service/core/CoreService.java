@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.net.HostAndPort;
 import com.statemachinesystems.envy.Default;
 import com.statemachinesystems.envy.Envy;
+import com.statemachinesystems.envy.Nullable;
 import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.attendance.AttendanceMatcher;
 import id.unifi.service.attendance.AttendanceProcessor;
@@ -16,34 +17,47 @@ import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.MqConfig;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.subscriptions.InMemorySubscriptionManager;
-import id.unifi.service.common.subscriptions.SubscriptionManager;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.InMemorySessionTokenStore;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.operator.SessionTokenStore;
 import id.unifi.service.common.provider.EmailSenderProvider;
 import id.unifi.service.common.provider.LoggingEmailSender;
+import id.unifi.service.common.subscriptions.InMemorySubscriptionManager;
+import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.common.util.MetricUtils;
 import id.unifi.service.common.version.VersionInfo;
 import id.unifi.service.core.agents.IdentityService;
 import static id.unifi.service.core.db.Core.CORE;
+import id.unifi.service.core.email.SmtpEmailSenderProvider;
 import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.processing.DetectionProcessor;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import id.unifi.service.core.sms.AwsSmsSenderProvider;
+import id.unifi.service.core.sms.LoggingSmsSenderProvider;
+import id.unifi.service.core.sms.SmsSenderProvider;
+import id.unifi.service.core.util.RegionsValueParser;
 import static java.net.InetSocketAddress.createUnresolved;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 public class CoreService {
     static {
         // Prefer IPv4, otherwise 0.0.0.0 gets interpreted as IPv6 broadcast
         System.setProperty("java.net.preferIPv4Stack", "true");
+
+        // Redirect j.u.l logs to slf4j
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+
     }
 
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
@@ -57,9 +71,17 @@ public class CoreService {
         HostAndPort agentServiceListenEndpoint();
 
         MqConfig mq();
+
+        @Nullable
+        String smtpServer();
+
+        @Default("false")
+        boolean smsEnabled();
     }
 
     public static void main(String[] args) throws Exception {
+        LogManager.getLogManager().getLogger("").setLevel(Level.ALL);
+        
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)
                     .error("Uncaught exception in thread '" + t.getName() + "'", e);
@@ -69,7 +91,8 @@ public class CoreService {
         log.info("Starting unifi.id Core");
         VersionInfo.log();
 
-        var config = Envy.configure(Config.class, UnifiConfigSource.get(), HostAndPortValueParser.instance);
+        var config = Envy.configure(Config.class, UnifiConfigSource.get(),
+                HostAndPortValueParser.instance, RegionsValueParser.instance);
 
         var registry = new MetricRegistry();
         var jmxReporter = MetricUtils.createJmxReporter(registry);
@@ -90,6 +113,14 @@ public class CoreService {
                 Set.of(detectionPersistence, attendanceProcessor),
                 Set.of(detectionSubscriber));
 
+        var emailSenderProvider = config.smtpServer() != null
+                ? new SmtpEmailSenderProvider(config.mq())
+                : new LoggingEmailSender();
+
+        var smsSenderProvider = config.smsEnabled()
+                ? new AwsSmsSenderProvider(config.mq())
+                : new LoggingSmsSenderProvider();
+
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
@@ -98,7 +129,8 @@ public class CoreService {
                 DetectionSubscriber.class, detectionSubscriber,
                 DetectionProcessor.class, detectionProcessor,
                 SessionTokenStore.class, new InMemorySessionTokenStore(864000),
-                EmailSenderProvider.class, new LoggingEmailSender()));
+                EmailSenderProvider.class, emailSenderProvider,
+                SmsSenderProvider.class, smsSenderProvider));
 
         startApiService(config.apiServiceListenEndpoint(), componentHolder, subscriptionManager);
         startAgentService(componentHolder, config.agentServiceListenEndpoint());
