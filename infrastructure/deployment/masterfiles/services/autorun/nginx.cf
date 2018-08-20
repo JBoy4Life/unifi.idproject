@@ -1,0 +1,29 @@
+bundle agent nginx {
+  packages:
+      "nginx"
+          policy => "present",
+          package_module => apt_get;
+  services:
+      "nginx"
+          service_policy => "start";
+  commands: 
+    restart_nginx:: 
+      "/bin/systemctl restart nginx" 
+          contain => in_shell_and_silent; 
+  files:  
+      "/etc/nginx/."
+          perms => mo("755","root"),
+          create => "true";
+    unifi_env_local::
+      "/etc/nginx/nginx.conf"
+          comment => "Copy nginx.conf from the policy server",
+          perms => mo("644","root"),
+          copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/nginx/nginx-local.conf","$(unifi_environment.policy_filecopy_host)"),
+          action => if_elapsed("60");
+    !unifi_env_local::
+      "/etc/nginx/nginx.conf"
+          comment => "Copy nginx.conf from the policy server",
+          perms => mo("644","root"),
+          copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/nginx/nginx.conf","$(unifi_environment.policy_filecopy_host)"),
+          action => if_elapsed("60");
+}

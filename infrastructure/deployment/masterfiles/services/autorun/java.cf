@@ -1,0 +1,62 @@
+bundle agent oracle_java_jdk {
+  vars:
+      "prereq_packages"
+          slist => {
+              "software-properties-common",
+              "dirmngr",
+              "debconf-utils"
+          };
+      "java_packages" 
+          slist => {
+              "oracle-java10-installer",
+              "oracle-java10-set-default",
+          };
+      "keyserver"
+          string => "hkp://keyserver.ubuntu.com:80";
+
+      # This is listed twice as apt-key lists the key with a fingerprint with space separation
+      "import_key_fp"
+          string => "73C3DB2A";
+      "key_fp"
+          string => "73C3 DB2A";
+      "repository_url"
+          string => "http://ppa.launchpad.net/linuxuprising/java/ubuntu";
+      "ubuntu_version"
+          string => "bionic main";
+  classes:
+      "apt_key_added"
+          expression => returnszero("/usr/bin/env APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=2 /usr/bin/apt-key list | /bin/fgrep \"$(key_fp)\"", "useshell");
+      "apt_repo_added"
+          expression => returnszero("/bin/fgrep \"deb $(repository_url) $(ubuntu_version)\" /etc/apt/sources.list", "noshell");
+      "oracle_licence_accepted"
+          expression => returnszero("/usr/bin/debconf-get-selections | /bin/fgrep accepted-oracle-license | /bin/fgrep true", "useshell");
+#  files:
+#      "/etc/apt/sources.list.d/oracle-java.list"
+#          create => true,
+#          edit_line => oracle_java_apt,
+#          classes => if_repaired("sources_list_changed");
+  commands:
+    !apt_key_added::
+      "/usr/bin/env APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=2 /usr/bin/apt-key adv --keyserver $(keyserver) --recv-keys \"$(import_key_fp)\"";
+
+    !apt_repo_added::
+      "/usr/bin/add-apt-repository \"deb $(repository_url) $(ubuntu_version)\" && apt-get update"
+          contain => useshell;
+    !oracle_licence_accepted::
+      "/bin/echo"
+          arglist => {
+              "\"oracle-java10-installer shared/accepted-oracle-license-v1-1 select true\"",
+              "|",
+              "debconf-set-selections"
+          },
+          contain => useshell;
+    sources_list_changed::
+      "/usr/bin/apt-get update";
+  packages: 
+      "$(prereq_packages)"
+          policy => "present",
+          package_module => apt_get;
+      "$(java_packages)"
+          policy => "present",
+          package_module => apt_get;
+}
