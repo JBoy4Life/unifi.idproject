@@ -15,7 +15,7 @@ sudo dpkg -i cfengine-community*.deb
 sudo echo "DefaultEnvironment=UNIFI_ENV=local" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_ROLES=app,services,agent,db" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_NODEID=vagrant" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_CLIENTID=test-club" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_CLIENT_ID=test-club" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_PORT=12345" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/systemd/system.conf
@@ -27,7 +27,7 @@ sudo echo "DefaultEnvironment=UNIFI_SMS_AWS_REGION=eu-west-1" >> /etc/systemd/sy
 sudo echo "UNIFI_ENV=local" >> /etc/environment
 sudo echo "UNIFI_ROLES=app,services,agent,db" >> /etc/environment
 sudo echo "UNIFI_NODEID=vagrant" >> /etc/environment
-sudo echo "UNIFI_CLIENTID=test-club" >> /etc/environment
+sudo echo "UNIFI_CLIENT_ID=test-club" >> /etc/environment
 sudo echo "UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/environment
 sudo echo "UNIFI_PAPERTRAIL_PORT=12345" >> /etc/environment
 sudo echo "UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/environment
