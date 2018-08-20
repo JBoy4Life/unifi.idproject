@@ -1,0 +1,6 @@
+bundle agent rabbitmq {
+  packages:
+    "rabbitmq-server"
+        policy => "present",
+        package_module => apt_get;
+}

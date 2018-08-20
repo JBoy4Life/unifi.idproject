@@ -1,0 +1,46 @@
+bundle agent chrony {
+  defaults:
+    any::
+      "ntp_server_string" string => "pool 1.uk.pool.ntp.org iburst";
+      "ntp_server_type" string => "pool";
+      "ntp_server" string => "2.debian.pool.ntp.org";
+
+  vars:
+    any::
+      "ntp_server_type" string => "$(unifi_environment.ntp_server_type)";
+      "ntp_server" string => "$(unifi_environment.ntp_server)";
+      "ntp_server_string" string => "$(ntp_server_type) $(ntp_server) iburst";
+
+  packages:
+    any::
+      "chrony"
+          policy => "present",
+          package_module => apt_get;
+
+  services:
+    "chrony"
+      service_policy => "start";
+      
+  commands: 
+    restart_chrony:: 
+      "/bin/systemctl restart chrony" 
+         contain => in_shell_and_silent; 
+
+  files:
+    "/etc/chrony/."
+      perms => mo("755","root"),
+      create => "true";
+
+    "/etc/chrony/chrony.conf"
+      comment => "Replace default Debian chrony/NTP Server",
+      create => "false",
+      edit_line => chrony_pool,
+      perms => mo("644","root"),
+      action => if_elapsed("60"),
+      classes   => if_repaired( "restart_chrony" );
+}
+
+bundle edit_line chrony_pool {
+    replace_patterns:
+        "pool 2.debian.pool.ntp.org iburst" replace_with => value($(chrony.ntp_server_string));
+}
