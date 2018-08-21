@@ -52,11 +52,11 @@ bundle common unifi {
       "unifi_env"
           string => getenv("UNIFI_ENV", 20);
       "unifi_roles"
-          slist => splitstring(getenv("UNIFI_ROLES", 20), ",", "5");
+          slist => splitstring(getenv("UNIFI_ROLES", 50), ",", "5");
       "unifi_nodeid"
           string => getenv("UNIFI_NODEID", 20);
       "unifi_clientid"
-          string => getenv("UNIFI_CLIENTID", 20);
+          string => getenv("UNIFI_CLIENT_ID", 20);
   classes:
       "unifi_env_$(unifi_env)"
           expression => "any";
