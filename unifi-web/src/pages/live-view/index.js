@@ -57,7 +57,15 @@ class LiveView extends PureComponent {
         const siteId = this.state.queryParams.site
         listZones({ clientId, siteId })
         listHolders({ clientId, with: ['image'] })
-        listenToSubscriptions({ clientId, siteId })
+        // TODO: Check if siteId matches an existing site.
+        if (siteId == undefined) {
+          if (result.payload[0] && result.payload[0].siteId != undefined) {
+            this.handleSiteChange(result.payload[0].siteId)
+          }
+        }
+        else {
+          listenToSubscriptions({ clientId, siteId })
+        }
       })
       .catch(err => console.error(err))
 
