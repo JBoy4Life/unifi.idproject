@@ -42,4 +42,6 @@ export const DIRECTORY_HOLDER_DETAIL = '/directory/:clientReference'
 export const DIRECTORY_HOLDER_NEW = '/directory/new'
 export const DIRECTORY_HOLDER_EDIT = '/directory/:clientReference/edit'
 
+export const REPORTS = '/reports'
+
 export default null

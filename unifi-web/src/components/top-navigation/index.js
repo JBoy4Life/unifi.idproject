@@ -34,6 +34,10 @@ export default class TopNavigation extends Component {
           Operators
         </Menu.Item>
 
+        <Menu.Item key="/reports">
+          Reports
+        </Menu.Item>
+
         {/*<Menu.Item key="/">*/}
           {/*Sitemap*/}
         {/*</Menu.Item>*/}

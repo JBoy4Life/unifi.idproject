@@ -7,7 +7,7 @@ import {
   Evacuation, NotFound, Sitemap, MyAccount, Login,
   Directory, LiveView, SiteManager, Operators, Navigation,
   ClientRegistry, Attendance, ForgotPassword, ResetPassword,
-  CancelPasswordReset, ChangePassword
+  CancelPasswordReset, ChangePassword, Reports
 } from '../pages'
 
 
@@ -35,6 +35,8 @@ export default ({ history }) => (
       <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
       <Route path={ROUTES.EVACUATION} component={Evacuation} />
       <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
+
+      <Route path={ROUTES.REPORTS} component={Reports} />
 
       <Redirect exact from="/" to={ROUTES.LIVE_VIEW} />
       <Redirect to={ROUTES.NOT_FOUND} component={NotFound} />
