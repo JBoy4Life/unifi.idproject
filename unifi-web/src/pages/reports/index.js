@@ -16,80 +16,43 @@ const dashboards = [
   {
     key: '/reports/july-central-working',
     label: 'July Central Working',
-    klips: [
-      {
-        id: "50203518da421deb48296ac33760b129",
-        title: "Drop-In Member Hours",
-      },
-      {
-        id: "dc3d6490a595733bd47824a843bcb921",
-        title: "Drop In Members Visits",
-      },
-      {
-        id: "f422f62777d804503204d95ecfaf2a65",
-        title: "Average Hours Per Site, Per Day, for Drop In Members",
-      },
-      {
-        id: "ac78524539a379e221c34d2183491ed0",
-        title: "July Drop In Visits By Site",
-      },
-    ]
+    published_link: '987cc85b7388c0961b3d4074388f7985/july-central-working-'
   },
   {
     key: '/reports/unifi-dashboard',
     label: 'unifi.id Dashboard',
-    klips: [
-      {
-        id: "1cf81a0a0f706e3b998ea766ca51cab3",
-        title: "Organisation Period Usage Summary",
-      },
-      {
-        id: "0d11786514cd1b823a288e2abf9c635d",
-        title: "Organisation Visits in period",
-      },
-      {
-        id: "995665b6d43eb1503ac8c26b84d41868",
-        title: "Average Hours Per Site, Per Day, for Drop In Members",
-      },
-      {
-        id: "b0d8d4750b8114f4fe4b7f13f054554f",
-        title: "Drop In Members Visits",
-      },
-      {
-        id: "308ab35add8d1d8841a064115c8b0559",
-        title: "July Drop In Visits By Site",
-      },
-    ]
+    published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
   }
 ]
 
-class Reports extends Component {
-  render() {
-    console.log(this.props);
-    return (
-      <PageContainer>
-        <PageContent>
-          <PageContent.Sidebar>
-            <LinkedSideNavigation
-              menus={dashboards} />
-          </PageContent.Sidebar>
-          <PageContent.Main>
-            {/*<Redirect exact from={ROUTES.REPORTS} to={dashboards[0].key} />*/}
-            {
-              dashboards.map( (dashboard, index) =>
-                <Route
-                  key={index}
-                  path={dashboard.key}
-                  render={() => <ReportsKlipsList klips={dashboard.klips} />}
-                />
-              )
-            }
-          </PageContent.Main>
-        </PageContent>
-      </PageContainer>
-    );
-  }
-}
+const ReportsDashboards = ({ publishedLink }) => (
+  <iframe src={`https://app.klipfolio.com/published/${publishedLink}`} />
+)
+
+const Reports = () => (
+  <PageContainer>
+    <PageContent>
+      <PageContent.Sidebar>
+        <LinkedSideNavigation
+          menus={dashboards} />
+      </PageContent.Sidebar>
+      <PageContent.Main>
+        <Switch>
+          <Redirect exact from={ROUTES.REPORTS} to={dashboards[0].key} />
+          {
+            dashboards.map( (dashboard, index) =>
+              <Route
+                key={index}
+                path={dashboard.key}
+                render={() => <ReportsDashboards publishedLink={dashboard.published_link} />}
+              />
+            )
+          }
+        </Switch>
+      </PageContent.Main>
+    </PageContent>
+  </PageContainer>
+);
 
 export default compose(
   userIsAuthenticatedRedir
