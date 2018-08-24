@@ -8,8 +8,6 @@ import { PageContainer, LinkedSideNavigation } from 'smart-components'
 
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 
-import ReportsKlipsList from './reports-klips-list'
-
 import './index.css'
 
 const dashboards = [
