@@ -57,7 +57,15 @@ class LiveView extends PureComponent {
         const siteId = this.state.queryParams.site
         listZones({ clientId, siteId })
         listHolders({ clientId, with: ['image'] })
-        listenToSubscriptions({ clientId, siteId })
+        // TODO: Check if siteId matches an existing site.
+        if (siteId == undefined) {
+          if (result.payload[0] && result.payload[0].siteId != undefined) {
+            this.handleSiteChange(result.payload[0].siteId)
+          }
+        }
+        else {
+          listenToSubscriptions({ clientId, siteId })
+        }
       })
       .catch(err => console.error(err))
 
@@ -151,8 +159,11 @@ class LiveView extends PureComponent {
     } = this.props
 
     const zoneItems = (
-      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : []))
-        .sort(item => item.firstDetectionTime) // Reverse chronological order
+      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
+        // Sort by reverse chronological order
+        .sort((item1, item2) => (
+          moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
+        ))
     )
 
     return (

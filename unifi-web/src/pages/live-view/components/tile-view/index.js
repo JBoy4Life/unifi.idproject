@@ -6,7 +6,7 @@ import { HolderGrid } from 'components'
 
 const GridItem = HolderGrid.Item
 
-const formatTime = (value) => moment.utc(value).format('LTS')
+const formatTime = (value) => moment(value).format('LTS')
 
 const TileView = ({ items, viewMode }) => (
   <HolderGrid viewMode={viewMode}>
