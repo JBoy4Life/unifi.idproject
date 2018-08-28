@@ -16,6 +16,7 @@ test-club	Test Club
 
 COPY site (client_id, site_id, description, address) FROM stdin;
 test-club	test-site	Test Site	4 Privet Drive, Little Whingeing, Surrey
+test-club	test-site-2	Test Site 2	6 Privet Drive, Little Whingeing, Surrey
 \.
 
 COPY agent (client_id, agent_id) FROM stdin;
@@ -29,6 +30,7 @@ test-club	default	\\x7363720800020001632651f10bbf2b3d4cfcdbcb2fe3a6af9371e8c4d88
 COPY reader (client_id, site_id, reader_sn, agent_id, endpoint) FROM stdin;
 test-club	test-site	37017090614	default	192.168.42.167:5084
 test-club	test-site	1001	default	127.0.0.1:5084
+test-club	test-site-2	1002	default	127.0.0.1:5085
 \.
 
 
@@ -38,6 +40,7 @@ test-club	test-site	b	Zone B
 test-club	test-site	c	Zone C	
 test-club	test-site	d	Zone D	
 test-club	test-site	e	Zone E	
+test-club	test-site-2	f	Zone F	
 \.
 
 
@@ -47,6 +50,7 @@ test-club	1001	4	test-site	b
 test-club	1001	1	test-site	c
 test-club	1001	2	test-site	d
 test-club	1001	3	test-site	e
+test-club	1002	1	test-site-2	f
 \.
 
 
