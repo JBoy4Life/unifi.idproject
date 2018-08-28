@@ -1,164 +1,139 @@
 package id.unifi.service.core.processing;
+
+import com.coreoz.wisp.schedule.Schedules;
 import id.unifi.service.common.db.Database;
 import id.unifi.service.common.db.DatabaseProvider;
 import id.unifi.service.core.CoreService;
+import org.jooq.LoaderOptionsStep;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.time.LocalTime;
-import java.time.LocalDateTime;
-import java.time.Duration;
+
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.*;
-import static java.util.concurrent.TimeUnit.*;
-
+import com.coreoz.wisp.Scheduler;
 
 public class VisitScheduler {
 
-    private static final Logger log = LoggerFactory.getLogger(CoreService.class);
+    private final static int VISIT_DAY_FROM = 1;
+    enum TimeZone {
 
-    private final ScheduledExecutorService scheduler;
+        UK("Europe/London"),
+        KR("Asia/Seoul");
+        //TODO: Possible rethink this structure, pull timezone from DB using Jooq and populate a list
+        private final String timezone;
+
+        TimeZone(final String timezone) {
+            this.timezone = timezone;
+        }
+
+        public String getTimeZone() {
+            return timezone;
+        }
+
+        public String timeZoneConversion(TimeZone region) {
+            DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm");
+
+            ZoneId clientZoneId = ZoneId.of(region.getTimeZone());
+
+            LocalDateTime visitCutOff = LocalDateTime.of(LocalDate.now(), LocalTime.of(5,0));
+            
+            ZonedDateTime clientDateTime = ZonedDateTime.of(visitCutOff, clientZoneId);
+            ZonedDateTime utcDateTime = clientDateTime.withZoneSameInstant(ZoneId.of("UTC"));
+
+            return format.format(utcDateTime);
+
+        }
+
+    }
+
+
+    private static final Logger log = LoggerFactory.getLogger(CoreService.class);
+    private static final Scheduler scheduler = new Scheduler();
     private final Database db;
-    private final static int TIME_DIFF = 26;
-    private final String detectableType = "uhf-epc";
-    private final String visitClients = "ucl-som";
-    private final String clientId = "centralworking";
+
+
 
     public VisitScheduler (DatabaseProvider dbProvider) {
-        this.scheduler = Executors.newScheduledThreadPool(1);
         this.db = dbProvider.bySchema(CORE);
     }
-    //FOR EACH CLIENT REF IN CLIENT REF
-    public void insertVisits() {
 
-        var desiredTime = LocalTime.of(5, 0);
+    public void insertVisits(String timezone) {
+        log.info("VISIT CALCULATION STARTING");
+
         var now = LocalDateTime.now();
-        var next = desiredTime.isAfter(now.toLocalTime()) ? now.with(desiredTime) : now.with(desiredTime).plusDays(1);
-        var delay = Duration.between(now, next);
-        var initDelay = delay.toHours();
+        var detectedToday = getDetectableIdsSeenToday(now);
+        var countOfVisitsInserted = 0;
 
-        Runnable insertVisits = () -> {
-            log.info("Inserting Visits");
+        for (String detectableId : detectedToday) {
 
-
-
-
-
-            List<String> detectedToday = db.execute(sql -> sql.selectDistinct(RFID_DETECTION.DETECTABLE_ID)
-                    .from(CORE.RFID_DETECTION)
-                    .where(RFID_DETECTION.DETECTION_TIME.between(now, now.minusDays(1)).and(RFID_DETECTION.DETECTABLE_TYPE.eq(detectableType)))
-                    .fetch(RFID_DETECTION.DETECTABLE_ID));
-
-            for(String detectableID : detectedToday) {
-
-
-                int checkInterpolatedMonth = db.execute(sql -> sql.selectCount()
-                        .from(CORE.VISIT)
-                        .innerJoin(ASSIGNMENT)
-                        .on(VISIT.CLIENT_REFERENCE.eq(ASSIGNMENT.CLIENT_REFERENCE))
-                        .innerJoin(CORE.CONTACT)
-                        .on(VISIT.CLIENT_REFERENCE.eq(CONTACT.CLIENT_REFERENCE))
-                        .innerJoin(CORE.CLIENT)
-                        .on(VISIT.CLIENT_ID.eq(CLIENT.CLIENT_ID))
-                        .where(ASSIGNMENT.DETECTABLE_ID.eq(detectableID).and(CORE.CONTACT.CLIENT_ID.eq(clientId)).and(VISIT.START_TIME.between(now, now.minusMonths(1)))).fetchOne(0, int.class));
-
-                int checkInterpolatedSite = db.execute(sql -> sql.selectCount()
-                        .from(CORE.VISIT)
-                        .innerJoin(ASSIGNMENT)
-                        .on(VISIT.CLIENT_REFERENCE.eq(ASSIGNMENT.CLIENT_REFERENCE))
-                        .innerJoin(CORE.CONTACT)
-                        .on(VISIT.CLIENT_REFERENCE.eq(CONTACT.CLIENT_REFERENCE))
-                        .innerJoin(CORE.CLIENT)
-                        .on(VISIT.CLIENT_ID.eq(CLIENT.CLIENT_ID))
-                        .where((CORE.CONTACT.CLIENT_ID.eq(clientId)).and(VISIT.START_TIME.between(now, now.minusMonths(1)))).fetchOne(0, int.class));
+            db.execute(sql -> sql.insertInto(CORE.VISIT).
+                    select(
+                            (DSL.select(RFID_DETECTION.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE,
+                                    RFID_DETECTION.DETECTION_TIME.minOver()
+                                            .partitionBy(RFID_DETECTION.CLIENT_ID,
+                                                    RFID_DETECTION.DETECTABLE_ID, RFID_DETECTION.READER_SN),
+                                    RFID_DETECTION.DETECTION_TIME.maxOver()
+                                            .partitionBy(RFID_DETECTION.CLIENT_ID,
+                                                    RFID_DETECTION.DETECTABLE_ID, RFID_DETECTION.READER_SN),
+                                    DSL.val("measured-day"),
+                                    READER.SITE_ID
+                            ).distinctOn(RFID_DETECTION.DETECTABLE_ID)
+                                    .from(CORE.RFID_DETECTION)
+                                    .innerJoin(CORE.READER).on(READER.READER_SN.eq(RFID_DETECTION.READER_SN))
+                                    .innerJoin(CORE.ASSIGNMENT).on(ASSIGNMENT.DETECTABLE_ID.eq(RFID_DETECTION.DETECTABLE_ID))
+                                    .where(RFID_DETECTION.DETECTION_TIME.between(now.minusDays(VISIT_DAY_FROM), now))
+                                    .and(SITE.TIME_ZONE.eq(timezone))
+                                    .and(RFID_DETECTION.DETECTABLE_ID.eq(detectableId))
+                                    .andExists(DSL.selectOne().from(CORE.CONTACT)
+                                            .where(CORE.CONTACT.CLIENT_REFERENCE.eq(ASSIGNMENT.CLIENT_REFERENCE)
+                                            )))
 
 
-
-
-                var noOfDetections = db.execute(sql -> sql.selectCount().from(CORE.RFID_DETECTION).where(RFID_DETECTION.DETECTABLE_ID.eq(detectableID)).fetchOne(0, int.class));
-
-                if(noOfDetections > 1) {
-                    //Measured Visits
-                    db.execute(sql -> sql.insertInto(CORE.VISIT).
-                            select(DSL.select(CONTACT.CLIENT_ID, HOLDER.CLIENT_REFERENCE,RFID_DETECTION.DETECTION_TIME.min(), RFID_DETECTION.DETECTION_TIME.max(), ASSIGNMENT.DETECTABLE_ID, DSL.val("measured-day"), SITE.SITE_ID)
-                                    .from(CORE.ASSIGNMENT)
-                                    .innerJoin(CORE.HOLDER).on(ASSIGNMENT.CLIENT_REFERENCE.eq(HOLDER.CLIENT_REFERENCE))
-                                    .innerJoin(CORE.RFID_DETECTION).on(ASSIGNMENT.DETECTABLE_ID.eq(RFID_DETECTION.DETECTABLE_ID))
-                                    .innerJoin(CORE.SITE).on(ASSIGNMENT.CLIENT_ID.eq(SITE.CLIENT_ID))
-                                    .innerJoin(CORE.CONTACT).on(ASSIGNMENT.CLIENT_REFERENCE.eq(CONTACT.CLIENT_REFERENCE))
-                                    .where(RFID_DETECTION.DETECTION_TIME.between(now, now.minusDays(1)))
-                                    .and(RFID_DETECTION.DETECTABLE_ID.eq(detectableID))
-                                    .groupBy(ASSIGNMENT.DETECTABLE_ID, HOLDER.CLIENT_REFERENCE, CONTACT.CLIENT_ID, SITE.SITE_ID)
-
-                            ).execute()
-
-
-
-                    );
-
-                } else if(noOfDetections == 1) {
-
-
-                    if(checkInterpolatedMonth > 7) {
-
-
-                        db.execute(sql -> sql.insertInto(CORE.VISIT).
-                                select(DSL.select(CONTACT.CLIENT_ID, HOLDER.CLIENT_REFERENCE, VISIT.START_TIME.avg(), VISIT.END_TIME.avg(), DSL.val("interpolated-day"), SITE.SITE_ID)
-                                        .from(CORE.VISIT)
-                                        .innerJoin(CORE.HOLDER).on(ASSIGNMENT.CLIENT_REFERENCE.eq(HOLDER.CLIENT_REFERENCE))
-                                        .innerJoin(CORE.RFID_DETECTION).on(ASSIGNMENT.DETECTABLE_ID.eq(RFID_DETECTION.DETECTABLE_ID))
-                                        .innerJoin(CORE.SITE).on(ASSIGNMENT.CLIENT_ID.eq(SITE.CLIENT_ID))
-                                        .innerJoin(CORE.CONTACT).on(ASSIGNMENT.CLIENT_REFERENCE.eq(CONTACT.CLIENT_REFERENCE))
-                                        .where(RFID_DETECTION.DETECTION_TIME.between(now, now.minusMonths(1)))
-                                        .and(RFID_DETECTION.DETECTABLE_ID.eq(detectableID))
-                                        .and(CONTACT.CLIENT_ID.eq(clientId))
-                                        .groupBy(ASSIGNMENT.DETECTABLE_ID, HOLDER.CLIENT_REFERENCE, CONTACT.CLIENT_ID, SITE.SITE_ID)
-                                ).execute()
-
-
-                        );
-                    } else if(checkInterpolatedSite > 30){
-                        db.execute(sql -> sql.insertInto(CORE.VISIT).
-                                select(DSL.select(CONTACT.CLIENT_ID, HOLDER.CLIENT_REFERENCE, VISIT.START_TIME.avg(), VISIT.END_TIME.avg(), DSL.val("interpolated-site"), SITE.SITE_ID)
-                                        .from(CORE.VISIT)
-                                        .innerJoin(CORE.HOLDER).on(ASSIGNMENT.CLIENT_REFERENCE.eq(HOLDER.CLIENT_REFERENCE))
-                                        .innerJoin(CORE.RFID_DETECTION).on(ASSIGNMENT.DETECTABLE_ID.eq(RFID_DETECTION.DETECTABLE_ID))
-                                        .innerJoin(CORE.SITE).on(ASSIGNMENT.CLIENT_ID.eq(SITE.CLIENT_ID))
-                                        .innerJoin(CORE.CONTACT).on(ASSIGNMENT.CLIENT_REFERENCE.eq(CONTACT.CLIENT_REFERENCE))
-                                        .where(RFID_DETECTION.DETECTION_TIME.between(now, now.minusMonths(1)))
-                                        .and(RFID_DETECTION.DETECTABLE_ID.eq(detectableID))
-                                        .and(CONTACT.CLIENT_ID.eq(clientId))
-                                        .groupBy(ASSIGNMENT.DETECTABLE_ID, HOLDER.CLIENT_REFERENCE, CONTACT.CLIENT_ID, SITE.SITE_ID)
-                                ).execute()
-
-
-                        );
-                    }
-
-                }
-            }
-
-        };
-            log.info("Thread will run after " + initDelay + " hours then 24hr intervals after that");
-
-
-        var scheduledFuture =
-                scheduler.scheduleAtFixedRate(insertVisits, initDelay, 24, HOURS );
+                    ).onConflictDoNothing().execute()
+            );
+            countOfVisitsInserted++;
+        }
+        log.info("VISITS TUPLES INSERTED " + countOfVisitsInserted);
     }
-//PSEDUOCODE FOR InterpolatedDAY
 
+    public List<String> getDetectableIdsSeenToday(LocalDateTime now) {
+        return db.execute(sql -> sql.selectDistinct(RFID_DETECTION.DETECTABLE_ID)
+                .from(CORE.RFID_DETECTION)
+                .where(RFID_DETECTION.DETECTION_TIME.between(now.minusDays(VISIT_DAY_FROM), now))
+                .groupBy(RFID_DETECTION.DETECTABLE_ID)
+                .having(RFID_DETECTION.DETECTION_TIME.count().gt(1))
+                .fetch(RFID_DETECTION.DETECTABLE_ID));
+    }
 
-    //IF NOT COUNT > 1
-    //  IF MORE THAN 4 VISITS IN TOTAL ON THE SAME DAY WEEK? (QUESTION TIM ABOUT THIS)
-    //      DURATION - AVG DURATION FROM PAST RESULTS
+    public void visitSchedule() {
+        log.info("INITIALIZING VISIT SCHEDULER");
+        //TODO: Change to a for loop with List<TimeZone>
+        TimeZone ukTimeZone = TimeZone.UK;
+        TimeZone krTimeZone = TimeZone.KR;
 
+        scheduler.schedule(
+                () -> insertVisits(ukTimeZone.getTimeZone()),
+                Schedules.executeAt(ukTimeZone.timeZoneConversion(ukTimeZone))
+        );
 
-    //ELSE//
-
- //PSEDUOCODE FOR
+        scheduler.schedule(
+                () -> insertVisits(krTimeZone.getTimeZone()),
+                Schedules.executeAt(krTimeZone.timeZoneConversion(krTimeZone))
+        );
+    }
 
 }
+
+
+
+
+
+
+
+

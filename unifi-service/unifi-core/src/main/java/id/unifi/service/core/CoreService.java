@@ -89,7 +89,7 @@ public class CoreService {
                 Set.of(detectionSubscriber));
 
         var visitScheduler = new VisitScheduler(dbProvider);
-        visitScheduler.insertVisits(); //TODO: Test
+        visitScheduler.visitSchedule(); //TODO: test with time
 
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
