@@ -1,0 +1,36 @@
+.published-ctx {
+  background-color: #fff;
+}
+
+.published-header,
+.published-header + div {
+  display: none;
+}
+
+.template-layout {
+  margin-top: 20px;
+}
+
+#c-footer {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.klip.drop-target {
+  border-radius: 0px;
+}
+
+.klip.drop-target:not(:last-child) {
+  border-bottom: 1px solid #b1bfc4;
+  padding-bottom: 20px;
+}
+
+.klip-toolbar {
+  text-align: center;
+}
+
+@media screen and (min-width: 992px) {
+  .published-ctx {
+    overflow-x: hidden;
+  }
+}

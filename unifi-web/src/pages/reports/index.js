@@ -8,7 +8,7 @@ import { PageContainer, LinkedSideNavigation } from 'smart-components'
 
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 
-import './index.css'
+import './index.scss'
 
 const dashboards = [
   {
@@ -28,7 +28,7 @@ const ReportsDashboards = ({ publishedLink }) => (
 )
 
 const Reports = () => (
-  <PageContainer>
+  <PageContainer className="reports__page">
     <PageContent>
       <PageContent.Sidebar>
         <LinkedSideNavigation
