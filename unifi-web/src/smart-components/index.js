@@ -12,6 +12,7 @@ import LinkedSideNavigation from './linked-side-navigation'
 import NavBar from './nav-bar'
 import PageContainer from './page-container'
 import UserActions from './user-actions'
+import MobileNavbar from './mobile-nav-bar'
 
 import EvacuationTable from './evacuation-status-table'
 import SiteCreationWizard from './site-creation-wizard'
@@ -34,6 +35,7 @@ export {
   NavBar,
   UserActions,
   EvacuationTable,
+  MobileNavbar,
 
   SiteCreationWizard,
   SiteWizardDetailsForm,

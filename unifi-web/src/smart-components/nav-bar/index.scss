@@ -68,4 +68,11 @@
     vertical-align: middle;
     font-size: 10px !important;
   }
+
+  .ant-menu.top-navigation,
+  .user-actions {
+    @media screen and (max-width: $break-md) {
+      display: none;
+    }
+  }
 }

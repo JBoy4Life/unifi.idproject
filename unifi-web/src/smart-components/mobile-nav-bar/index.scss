@@ -1,0 +1,46 @@
+@import "src/styles/variables";
+
+.mobile__nav-bar {
+  @media screen and (min-width: $break-md+1) {
+    display: none;
+  }
+
+  &__button-mobile {
+    color: #fff;
+    cursor: pointer;
+    font-size: 20px;
+  }
+
+  &__mobile {
+    position: fixed;
+    top: 40px;
+    right: 0px;
+    width: auto;
+    height: 100%;
+    padding: 20px;
+    background-color: #353e48;
+    z-index: 5;
+
+    .ant-menu.top-navigation,
+    .user-actions {
+      height: auto;
+      display: block;
+    }
+
+    .ant-menu.top-navigation {
+      margin-bottom: 20px;
+    }
+
+    .ant-menu-item {
+      display: block;
+      float: none;
+    }
+
+    .user-actions__menu {
+      width: auto;
+      border-color: transparent;
+      background-color: transparent;
+      color: #fff;
+    }
+  }
+}

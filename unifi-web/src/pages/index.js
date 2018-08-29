@@ -18,6 +18,8 @@ import Navigation from './navigation'
 
 import ClientRegistry from './client-registry'
 
+import Reports from './reports'
+
 export {
   Sitemap,
   NotFound,
@@ -38,4 +40,6 @@ export {
   Navigation,
 
   ClientRegistry,
+
+  Reports,
 }
