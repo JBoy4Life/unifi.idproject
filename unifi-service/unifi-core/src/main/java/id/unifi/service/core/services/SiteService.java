@@ -20,6 +20,7 @@ import id.unifi.service.core.site.ResolvedSiteDetection;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,6 +78,7 @@ public class SiteService {
     public void subscribeDetections(OperatorSessionData session,
                                     String clientId,
                                     String siteId,
+                                    @Nullable Boolean includeLastKnown,
                                     MessageListener<List<ResolvedSiteDetection>> listener) {
         authorize(session, clientId);
         var site = new SitePK(clientId, siteId);
@@ -87,7 +89,7 @@ public class SiteService {
             throw new NotFound("site");
         }
 
-        detectionSubscriber.addListener(site, listener);
+        detectionSubscriber.addListener(site, listener, Boolean.TRUE.equals(includeLastKnown));
     }
 
     @ApiOperation
@@ -95,6 +97,7 @@ public class SiteService {
                                         String clientId,
                                         String siteId,
                                         String zoneId,
+                                        @Nullable Boolean includeLastKnown,
                                         MessageListener<List<ResolvedSiteDetection>> listener) {
         authorize(session, clientId);
         var zone = new ZonePK(clientId, siteId, zoneId);
@@ -107,7 +110,7 @@ public class SiteService {
             throw new NotFound("zone");
         }
 
-        detectionSubscriber.addListener(zone, listener);
+        detectionSubscriber.addListener(zone, listener, Boolean.TRUE.equals(includeLastKnown));
     }
 
     private static OperatorPK authorize(OperatorSessionData sessionData, String clientId) {

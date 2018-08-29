@@ -34,7 +34,7 @@ public final class ZonePK {
     }
 
     public String toString() {
-        return "ZoneKey{" +
+        return "ZonePK{" +
                 "clientId='" + clientId + '\'' +
                 ", siteId='" + siteId + '\'' +
                 ", zoneId='" + zoneId + '\'' +
