@@ -26,8 +26,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 @WebSocket
@@ -53,7 +53,7 @@ public class WebSocketDelegate {
         private final Dispatcher dispatcher;
         private final Map<String, Protocol> protocolByPath;
 
-        Creator(Dispatcher<?> dispatcher, String basePath, Set<Protocol> protocols) {
+        Creator(Dispatcher<?> dispatcher, String basePath, Collection<Protocol> protocols) {
             this.dispatcher = dispatcher;
             this.protocolByPath = protocols.stream().collect(toUnmodifiableMap(p -> basePath + "/" + p, identity()));
         }

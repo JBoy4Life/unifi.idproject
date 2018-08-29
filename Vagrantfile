@@ -13,20 +13,28 @@ sudo dpkg -i cfengine-community*.deb
 
 # Set up the environment.
 sudo echo "DefaultEnvironment=UNIFI_ENV=local" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_ROLES=services,agent,db" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_ROLES=app,services,agent,db" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_NODEID=vagrant" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_CLIENTID=test-club" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_CLIENT_ID=test-club" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_PORT=12345" >> /etc/systemd/system.conf
 sudo echo "DefaultEnvironment=UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_CORE_JDBC_URL=jdbc:postgresql://localhost/unifi" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_CORE_JDBC_USER=vagrant" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_SMS_ENABLED=true" >> /etc/systemd/system.conf
+sudo echo "DefaultEnvironment=UNIFI_SMS_AWS_REGION=eu-west-1" >> /etc/systemd/system.conf
 
 sudo echo "UNIFI_ENV=local" >> /etc/environment
-sudo echo "UNIFI_ROLES=services,agent,db" >> /etc/environment
+sudo echo "UNIFI_ROLES=app,services,agent,db" >> /etc/environment
 sudo echo "UNIFI_NODEID=vagrant" >> /etc/environment
-sudo echo "UNIFI_CLIENTID=test-club" >> /etc/environment
+sudo echo "UNIFI_CLIENT_ID=test-club" >> /etc/environment
 sudo echo "UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/environment
 sudo echo "UNIFI_PAPERTRAIL_PORT=12345" >> /etc/environment
 sudo echo "UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/environment
+sudo echo "UNIFI_CORE_JDBC_URL=jdbc:postgresql://localhost/unifi" >> /etc/environment
+sudo echo "UNIFI_CORE_JDBC_USER=vagrant" >> /etc/environment
+sudo echo "UNIFI_SMS_ENABLED=true" >> /etc/environment
+sudo echo "UNIFI_SMS_AWS_REGION=eu-west-1" >> /etc/environment
 
 # Sync up the CFEngine masterfiles folder with the repo.
 sudo -u vagrant ln -sf /vagrant ~vagrant/unifi.id

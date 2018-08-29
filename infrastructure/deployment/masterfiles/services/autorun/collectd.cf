@@ -1,0 +1,58 @@
+bundle agent collectd {
+  vars:
+      "collectd_conf_dir"
+          string => "/etc/collectd";
+      "collectd_conf"
+          string => "collectd.conf";
+      "appoptics_api_key"
+          string => "$(unifi_environment.appoptics_api_key)";
+  packages:
+    any::
+      "collectd"
+        policy => "present",
+        package_module => apt_get;
+  commands: 
+    restart_collectd:: 
+      "/bin/systemctl restart collectd" 
+         contain => in_shell_and_silent; 
+  files:
+    any::
+      # Ensure we've got our local file store
+      "${unifi_environment.cfengine_local_store_dir}/."
+          perms => mo("755","root"),
+          create => "true"; 
+      "${unifi_environment.cfengine_local_store_dir}$(collectd_conf_dir)/."
+          perms => mo("755","root"),
+          create => "true"; 
+      "${unifi_environment.cfengine_local_store_dir}$(collectd_conf_dir)/collectd.conf.d/."
+          perms => mo("755","root"),
+          create => "true"; 
+      "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"
+          comment => "Copy librato/collectd template from policy server",
+          perms => mo("400","root"),
+          #copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.hst_policy_server)"),
+          copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/collectd.conf.tmpl","$(unifi_environment.policy_filecopy_host)"), 
+          action => if_elapsed("60");
+      "$(collectd_conf_dir)/collectd.conf"
+          comment => "Expand the variables on host",
+          create => "true",
+          edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.tmpl"),
+          edit_defaults => empty,
+          perms => mo("644","root"),
+          action => if_elapsed("60"),
+          classes   => if_repaired( "restart_collectd" );
+    !unifi_env_local::
+      "$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"
+          comment => "Copy librato/collectd template from policy server",
+          perms => mo("400","root"),
+          copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/collectd/librato.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
+          action => if_elapsed("60");
+      "$(collectd_conf_dir)/collectd.conf.d/librato.conf"
+          comment => "Expand the variables on host",
+          create => "true",
+          edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(collectd_conf_dir)/collectd.conf.d/librato.conf.tmpl"),
+          edit_defaults => empty,
+          perms => mo("644","root"),
+          action => if_elapsed("60"),
+          classes   => if_repaired("restart_collectd");
+}

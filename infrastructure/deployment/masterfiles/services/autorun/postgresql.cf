@@ -1,0 +1,43 @@
+bundle agent postgresql {
+  vars:
+    unifi_env_local::
+      "dbuser" string => "vagrant";
+      "dbname" string => "unifi";
+  classes:
+      "dbuser_added"
+          expression => returnszero("/usr/bin/sudo -u $(dbuser) /usr/bin/psql -c \"SELECT;\" template1", "noshell");
+      "database_created"
+          expression => returnszero("/usr/bin/sudo -u $(dbuser) /usr/bin/psql -c \"SELECT;\" $(dbname)", "noshell");
+  commands:
+    !dbuser_added::
+      "/usr/bin/createuser -s $(dbuser)"
+          contain => exec_owner("postgres");
+    !database_created::
+      "/usr/bin/createdb $(dbname)"
+          contain => exec_owner("$(dbuser)");
+  files:
+      "/etc/postgresql/.*/main/pg_hba.conf"
+          edit_line => pg_hba,
+          classes => if_repaired("pg_hba_changed");
+  packages:
+      "postgresql"
+          policy => "present",
+          package_module => apt_get;
+  services:
+    pg_hba_changed::
+      "postgresql"
+          service_policy => reload;
+}
+
+bundle edit_line pg_hba {
+  insert_lines:
+      "# Unifi.id
+local all all trust
+host all all 0.0.0.0/0 trust"
+          location => pg_hba_location;
+}
+
+body location pg_hba_location {
+  select_line_matching => "# TYPE .*";
+  before_after => "after";
+}

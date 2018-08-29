@@ -2,6 +2,7 @@ package id.unifi.service.core.services;
 
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.dbcommon.Database;
@@ -35,6 +36,7 @@ public class ClientService {
     }
 
     @ApiOperation
+    @HttpMatch(path = "clients")
     public List<ClientInfo> listClients(OperatorSessionData session, @Nullable Set<String> with) {
         log.info("Listing clients");
         authorize(session);
@@ -43,6 +45,7 @@ public class ClientService {
     }
 
     @ApiOperation
+    @HttpMatch(path = "clients/:clientId")
     public ClientInfo getClient(String clientId, @Nullable Set<String> with) {
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
                 .where(CLIENT.CLIENT_ID.eq(clientId))

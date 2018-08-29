@@ -8,6 +8,10 @@ public class OperatorSessionData {
 
     public OperatorSessionData() {}
 
+    public OperatorSessionData(OperatorPK operatorPK, Token sessionToken) {
+        setAuth(operatorPK, sessionToken);
+    }
+
     public OperatorPK getOperator() {
         var auth = this.auth;
         return auth != null ? auth.operator : null;

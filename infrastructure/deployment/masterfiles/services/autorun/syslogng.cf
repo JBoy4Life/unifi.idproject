@@ -1,0 +1,43 @@
+bundle agent syslogng {
+  vars:
+    any::
+      "syslogng_conf_dir" string => "/etc/syslog-ng";
+      "system_log_source" string => "s_src";
+      # Included from environment
+      "papertrail_destination_host" string => "$(unifi_environment.papertrail_destination_host)";
+      "papertrail_destination_port" string => "$(unifi_environment.papertrail_destination_port)";
+      "papertrail_destination_proto" string => "$(unifi_environment.papertrail_destination_proto)";
+  packages:
+    any::
+      "syslog-ng"
+          policy => "present",
+          package_module => apt_get;
+  services:
+      "syslog-ng"
+          service_policy => "start";
+  commands: 
+    restart_syslogng:: 
+      "/bin/systemctl restart syslog-ng" 
+          contain => in_shell_and_silent; 
+  files:
+    any::
+      "${unifi_environment.cfengine_local_store_dir}/."
+          perms => mo("755","root"),
+          create => "true"; 
+      "${unifi_environment.cfengine_local_store_dir}${syslogng_conf_dir}/."
+          perms => mo("755","root"),
+          create => "true"; 
+      "$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"
+          comment => "Add papertrail integration",
+          perms => mo("400","root"),
+          copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/templates/syslog-ng/papertrail.conf.tmpl","$(unifi_environment.policy_filecopy_host)"),
+          action => if_elapsed("60");
+      "$(syslogng_conf_dir)/conf.d/papertrail.conf"
+          comment => "Expand the variables on host",
+          create => "true",
+          edit_line => expand_template("$(unifi_environment.cfengine_local_store_dir)$(syslogng_conf_dir)/papertrail.conf.tmpl"),
+          edit_defaults => empty,
+          perms => mo("644","root"),
+          action => if_elapsed("60"),
+          classes   => if_repaired("restart_syslogng");
+}
