@@ -67,6 +67,7 @@ export const listenToSubscriptions = createWsAction({
   selectorKey: 'liveDiscovery',
   fields: ['clientId', 'siteId'],
   subscribe: true,
+  includeLastKnown: true,
   payloadOnSuccess: (payload, getState) => ({
     ...payload,
     data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data)
