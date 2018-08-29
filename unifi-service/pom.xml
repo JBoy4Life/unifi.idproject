@@ -71,6 +71,7 @@
         <release.plugin.version>2.5.3</release.plugin.version>
         <spotbugs.plugin.version>3.1.4</spotbugs.plugin.version>
         <hikaricp.version>3.1.0</hikaricp.version>
+        <wisp.plugin.version>1.0.0</wisp.plugin.version>
     </properties>
 
     <scm>
@@ -239,6 +240,11 @@
                 <artifactId>java-hamcrest</artifactId>
                 <version>${hamcrest.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.coreoz</groupId>
+                <artifactId>wisp</artifactId>
+                <version>${wisp.plugin.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

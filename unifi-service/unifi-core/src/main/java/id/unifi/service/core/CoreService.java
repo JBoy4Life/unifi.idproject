@@ -33,6 +33,8 @@ import static id.unifi.service.core.db.Core.CORE;
 import id.unifi.service.core.email.SmtpEmailSenderProvider;
 import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.processing.DetectionProcessor;
+import id.unifi.service.core.processing.ProcessVisit;
+import id.unifi.service.core.processing.VisitScheduler;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
 import id.unifi.service.core.sms.AwsSmsSenderProvider;
@@ -124,6 +126,10 @@ public class CoreService {
         var smsSenderProvider = config.smsEnabled()
                 ? new AwsSmsSenderProvider(config.mq())
                 : new LoggingSmsSenderProvider();
+
+        var visitProcessor = new ProcessVisit(dbProvider);
+        var visitScheduler = new VisitScheduler(dbProvider, visitProcessor);
+        visitScheduler.visitSchedule();
 
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
