@@ -26,6 +26,9 @@ const ZoneFilter = props => (
           onChange={props.onZoneChange}
           filterOption={handleFilterOption}
         >
+          {
+            props.idKey === 'zoneId' && <Option value='all'>All</Option>
+          }
           {props.zones.map((zone, index) => (
             <Option value={zone[props.idKey]} key={index}>{zone[props.nameKey]}</Option>
           ))}

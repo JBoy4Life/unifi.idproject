@@ -21,6 +21,7 @@ import { siteIdSelector, sitesInfoSelector, zonesInfoSelector } from 'redux/sele
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
+import Loading from 'components/loading'
 
 const zonesSelector = fp.compose(
   (zonesInfo) => (
@@ -52,20 +53,15 @@ class LiveView extends PureComponent {
 
   componentDidMount() {
     const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
+
     listSites({ clientId })
       .then((result) => {
-        const siteId = this.state.queryParams.site
+        const siteId = this.state.queryParams.site == undefined ? result.payload[0].siteId : this.state.queryParams.site
         listZones({ clientId, siteId })
         listHolders({ clientId, with: ['image'] })
-        // TODO: Check if siteId matches an existing site.
-        if (siteId == undefined) {
-          if (result.payload[0] && result.payload[0].siteId != undefined) {
-            this.handleSiteChange(result.payload[0].siteId)
-          }
-        }
-        else {
-          listenToSubscriptions({ clientId, siteId })
-        }
+        this.handleSiteChangeURl(siteId)
+        this.handleZoneChange('all')
+        listenToSubscriptions({ clientId, siteId })
       })
       .catch(err => console.error(err))
 
@@ -134,13 +130,14 @@ class LiveView extends PureComponent {
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
     })
+    listZones({ clientId, siteId })
+    listenToSubscriptions({ clientId, siteId })
+  }
 
-    // TODO: This currently reloads the page. Instead we should resubscribe to
-    //  detections with the new site (and end the old subscription) to obviate
-    //  the need for this.
-    window.location.reload()
-    // listZones({ clientId, siteId })
-    // listenToSubscriptions({ clientId, siteId })
+  handleSiteChangeURl = (siteId) => {
+    this.setURLHref({
+      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
+    })
   }
 
   handleZoneChange = (zoneId) => {
@@ -158,7 +155,7 @@ class LiveView extends PureComponent {
       sites
     } = this.props
 
-    const zoneItems = zoneId ? (
+    const zoneItems = zoneId && zoneId !== 'all' ? (
       discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
       // Sort by reverse chronological order
       .sort((item1, item2) => (
@@ -192,7 +189,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={siteId === undefined ? 'true' : false}
+                disabled={siteId === undefined ? true : false}
               />
 
               <ViewModeHeader
@@ -202,7 +199,9 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-              <TileView items={zoneItems} viewMode={view || 'large'} />
+              {
+                zoneItems.length === 0 ? <Loading /> : <TileView items={zoneItems} viewMode={view || 'large'} />
+              }
             </div>
           </PageContent.Main>
         </PageContent>
