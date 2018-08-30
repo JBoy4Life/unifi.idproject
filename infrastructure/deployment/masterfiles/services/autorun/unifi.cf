@@ -38,7 +38,7 @@ bundle common unifi_environment {
           string => "udp";
     ## Librato
       "appoptics_api_key"
-          string => getenv("UNIFI_APPOPTICS_APIKEY", "50");
+          string => getenv("UNIFI_APPOPTICS_APIKEY", "100");
     ## NTP
       "ntp_server_type"
           string => "pool";
