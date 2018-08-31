@@ -71,7 +71,7 @@
         <release.plugin.version>2.5.3</release.plugin.version>
         <spotbugs.plugin.version>3.1.4</spotbugs.plugin.version>
         <hikaricp.version>3.1.0</hikaricp.version>
-        <wisp.plugin.version>1.0.0</wisp.plugin.version>
+        <wisp.version>1.0.0</wisp.version>
     </properties>
 
     <scm>
@@ -244,7 +244,7 @@
             <dependency>
                 <groupId>com.coreoz</groupId>
                 <artifactId>wisp</artifactId>
-                <version>${wisp.plugin.version}</version>
+                <version>${wisp.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
