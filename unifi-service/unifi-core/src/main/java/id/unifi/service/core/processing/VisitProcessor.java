@@ -11,20 +11,19 @@ import java.util.List;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.*;
 
-public class ProcessVisit {
-    private final static int VISIT_DAY_FROM = 1;
+public class VisitProcessor {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
     private final Database db;
 
-    public ProcessVisit (DatabaseProvider dbProvider) {
+    public VisitProcessor(DatabaseProvider dbProvider) {
         this.db = dbProvider.bySchema(CORE);
     }
 
     public void insertVisits(String timeZone) {
-        log.info("VISIT CALCULATION STARTING");
+        log.info("Visit calculation starting at " + timeZone);
 
         var now = LocalDateTime.now();
-        var detectedToday = getDetectableIdsSeenToday(now);
+        var detectedToday = getDetectedDetectablesOnDate(now);
         var countOfVisitsInserted = 0;
 
         for (String detectableId : detectedToday) {
@@ -42,9 +41,9 @@ public class ProcessVisit {
                                     READER.SITE_ID
                             ).distinctOn(RFID_DETECTION.DETECTABLE_ID)
                                     .from(CORE.RFID_DETECTION)
-                                    .innerJoin(CORE.READER).on(READER.READER_SN.eq(RFID_DETECTION.READER_SN))
-                                    .innerJoin(CORE.ASSIGNMENT).on(ASSIGNMENT.DETECTABLE_ID.eq(RFID_DETECTION.DETECTABLE_ID))
-                                    .where(RFID_DETECTION.DETECTION_TIME.between(now.minusDays(VISIT_DAY_FROM), now))
+                                    .join(CORE.READER).onKey()
+                                    .join(CORE.ASSIGNMENT).onKey()
+                                    .where(RFID_DETECTION.DETECTION_TIME.between(now.minusDays(1), now))
                                     .and(SITE.TIME_ZONE.eq(timeZone))
                                     .and(RFID_DETECTION.DETECTABLE_ID.eq(detectableId))
                                     .andExists(DSL.selectOne().from(CORE.CONTACT)
@@ -56,16 +55,15 @@ public class ProcessVisit {
             );
             countOfVisitsInserted++;
         }
-        log.info("VISITS TUPLES INSERTED " + countOfVisitsInserted);
+        log.info("Visit tuples inserted for {}: {}", timeZone, countOfVisitsInserted);
     }
 
-    public List<String> getDetectableIdsSeenToday(LocalDateTime now) {
-        return db.execute(sql -> sql.selectDistinct(RFID_DETECTION.DETECTABLE_ID)
+    private List<String> getDetectedDetectablesOnDate(LocalDateTime date) {
+        return db.execute(sql -> sql.selectDistinct()
                 .from(CORE.RFID_DETECTION)
-                .where(RFID_DETECTION.DETECTION_TIME.between(now.minusDays(VISIT_DAY_FROM), now))
+                .where(RFID_DETECTION.DETECTION_TIME.between(date.minusDays(1), date))
                 .groupBy(RFID_DETECTION.DETECTABLE_ID)
                 .having(RFID_DETECTION.DETECTION_TIME.count().gt(1))
                 .fetch(RFID_DETECTION.DETECTABLE_ID));
     }
-
 }
