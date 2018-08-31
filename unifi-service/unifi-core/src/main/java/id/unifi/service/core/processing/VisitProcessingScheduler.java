@@ -18,10 +18,10 @@ public class VisitScheduler {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
     private static final Scheduler scheduler = new Scheduler();
     private final Database db;
-    private final ProcessVisit visitProcessor;
+    private final VisitProcessor visitProcessor;
 
 
-    public VisitScheduler (DatabaseProvider dbProvider , ProcessVisit visitProcessor) {
+    public VisitScheduler (DatabaseProvider dbProvider , VisitProcessor visitProcessor) {
         this.db = dbProvider.bySchema(CORE);
         this.visitProcessor = visitProcessor;
 
@@ -39,17 +39,6 @@ public class VisitScheduler {
                     () -> visitProcessor.insertVisits(clientZone),
                     new FixedHourSchedule("05:00", ZoneId.of(clientZone))
             );
-
         }
-
     }
-
 }
-
-
-
-
-
-
-
-
