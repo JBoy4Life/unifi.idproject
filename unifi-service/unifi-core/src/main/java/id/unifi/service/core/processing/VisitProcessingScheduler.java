@@ -13,7 +13,7 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.*;
 import com.coreoz.wisp.Scheduler;
 
-public class VisitScheduler {
+public class VisitProcessingScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
     private static final Scheduler scheduler = new Scheduler();
@@ -21,14 +21,14 @@ public class VisitScheduler {
     private final VisitProcessor visitProcessor;
 
 
-    public VisitScheduler (DatabaseProvider dbProvider , VisitProcessor visitProcessor) {
+    public VisitProcessingScheduler(DatabaseProvider dbProvider , VisitProcessor visitProcessor) {
         this.db = dbProvider.bySchema(CORE);
         this.visitProcessor = visitProcessor;
 
     }
 
     public void visitSchedule() {
-        log.info("INITIALIZING VISIT SCHEDULER");
+        log.info("Initializing visit scheduler");
 
 
         List<String> clientZoneIds = db.execute(sql ->
