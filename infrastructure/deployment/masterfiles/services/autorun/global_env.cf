@@ -1,0 +1,30 @@
+bundle agent global_env(name, value)
+{
+  files:
+      "/etc/environment"
+          edit_line => etc_env($(name), $(value));
+      "/etc/systemd/system.conf"
+          edit_line => system_conf($(name), $(value)),
+          classes   => if_repaired("system_conf_changed");
+      "/etc/profile"
+          edit_line => etc_profile($(name), $(value));
+  commands:
+    system_conf_changed::
+      "/sbin/systemctl daemon-reload"
+          contain => exec_owner("root");
+}
+
+bundle edit_line etc_env(name, value) {
+  insert_lines:
+      "$(name)=$(value)";
+}
+
+bundle edit_line system_conf(name, value) {
+  insert_lines:
+      "DefaultEnvironment=$(name)=$(value)";
+}
+
+bundle edit_line etc_profile(name, value) {
+  insert_lines:
+      "export $(name)=$(value)";
+}

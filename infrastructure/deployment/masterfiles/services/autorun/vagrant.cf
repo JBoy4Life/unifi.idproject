@@ -15,27 +15,3 @@ bundle agent vagrant_vm
        "any" usebundle => global_env("UNIFI_SMS_ENABLED",      "true");
        "any" usebundle => global_env("UNIFI_SMS_AWS_REGION",   "eu-west-1");
 }
-
-bundle agent global_env(name, value)
-{
-  files:
-      "/etc/environment"
-          edit_line => etc_env($(name), $(value));
-      "/etc/systemd/system.conf"
-          edit_line => system_conf($(name), $(value)),
-          classes   => if_repaired("system_conf_changed");
-  commands:
-    system_conf_changed::
-      "/sbin/systemctl daemon-reload"
-          contain => exec_owner("root");
-}
-
-bundle edit_line etc_env(name, value) {
-  insert_lines:
-      "$(name)=$(value)";
-}
-
-bundle edit_line system_conf(name, value) {
-  insert_lines:
-      "DefaultEnvironment=$(name)=$(value)";
-}
