@@ -82,7 +82,7 @@ public class CoreClient {
                 var request = new ClientUpgradeRequest();
                 var delegate = new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
                 var sessionFuture = client.connect(delegate, serviceUri, request);
-                log.info("Waiting for connection to service");
+                log.info("Waiting for connection to service at {}", serviceUri);
 
                 // Need to add explicit timeout until https://github.com/eclipse/jetty.project/issues/2875 is fixed
                 var session = sessionFuture.get(CONNECT_TIMEOUT_SECONDS, SECONDS);
