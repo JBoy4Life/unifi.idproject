@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CoreClient {
     private static final Logger log = LoggerFactory.getLogger(CoreClient.class);
     private static final int AUTH_TIMEOUT_SECONDS = 30;
+    private static final int CONNECT_TIMEOUT_SECONDS = 30;
 
     private final Dispatcher<Boolean> dispatcher;
     private final URI serviceUri;
@@ -75,14 +76,16 @@ public class CoreClient {
 
     private void maintainConnection() {
         while (true) {
+            var client = new WebSocketClient();
             try {
-                var client = new WebSocketClient();
                 client.start();
                 var request = new ClientUpgradeRequest();
                 var delegate = new WebSocketDelegate(dispatcher, Protocol.MSGPACK);
                 var sessionFuture = client.connect(delegate, serviceUri, request);
                 log.info("Waiting for connection to service");
-                var session = sessionFuture.get();
+
+                // Need to add explicit timeout until https://github.com/eclipse/jetty.project/issues/2875 is fixed
+                var session = sessionFuture.get(CONNECT_TIMEOUT_SECONDS, SECONDS);
 
                 log.info("Connection to service established ({}), authenticating as clientId: {}, agentId: {}, password {}",
                         serviceUri, clientId, agentId, password.length > 0 ? "non-empty" : "empty");
@@ -120,19 +123,23 @@ public class CoreClient {
                 var closeCode = delegate.awaitClose();
                 log.info("Connection closed (WebSocket code {})", closeCode);
             } catch (Exception e) {
-                log.error("Can't establish connection to server ({})", serviceUri);
+                log.error("Can't establish connection to server ({})", serviceUri, e);
             } finally {
                 if (authenticated.getCount() == 0)
                     authenticated = new CountDownLatch(1);
             }
 
             try {
+                client.stop();
                 log.info("Reconnecting in 10 seconds");
                 Thread.sleep(10_000);
             } catch (InterruptedException e) {
                 log.info("Connection thread interrupted, stopping");
                 break;
+            } catch (Exception e) {
+                log.error("Failed to stop client", e);
             }
+
         }
     }
 
