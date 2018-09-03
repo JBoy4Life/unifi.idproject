@@ -5,6 +5,7 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
+import _ from 'lodash'
 
 import * as ROUTES from 'config/routes'
 import TileView from './components/tile-view'
@@ -161,9 +162,17 @@ class LiveView extends PureComponent {
         moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
       ))
     ) : (
-      discoveredList.sort((item1, item2) => (
-        moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-      ))
+      siteId !== 'all' ? (
+        discoveredList.filter(item => ( item.zone ? _.find(zones, {zoneId: item.zone.zoneId}) : false))
+        // Sort by reverse chronological order
+        .sort((item1, item2) => (
+          moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
+        ))
+      ) : (
+        discoveredList.sort((item1, item2) => (
+          moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
+        ))
+      )
     )
 
     return (
@@ -188,7 +197,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={siteId === undefined ? true : false}
+                disabled={siteId === 'all' ? true : false}
               />
 
               <ViewModeHeader
