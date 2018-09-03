@@ -60,7 +60,6 @@ class LiveView extends PureComponent {
         listZones({ clientId, siteId })
         listHolders({ clientId, with: ['image'] })
         this.handleSiteChangeURl(siteId)
-        this.handleZoneChange('all')
         listenToSubscriptions({ clientId, siteId })
       })
       .catch(err => console.error(err))
@@ -128,7 +127,7 @@ class LiveView extends PureComponent {
   handleSiteChange = (siteId) => {
     const { listZones, clientId } = this.props
     this.setURLHref({
-      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
+      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
     })
     listZones({ clientId, siteId })
     listenToSubscriptions({ clientId, siteId })
@@ -136,7 +135,7 @@ class LiveView extends PureComponent {
 
   handleSiteChangeURl = (siteId) => {
     this.setURLHref({
-      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
+      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
     })
   }
 
