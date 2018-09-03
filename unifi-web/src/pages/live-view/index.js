@@ -56,29 +56,28 @@ class LiveView extends PureComponent {
     listSites({ clientId })
       .then((result) => {
         const siteId = this.state.queryParams.site
-        listZones({ clientId, siteId })
-        listHolders({ clientId, with: ['image'] })
-        // TODO: Check if siteId matches an existing site.
-        if (siteId == undefined) {
-          if (result.payload[0] && result.payload[0].siteId != undefined) {
-            this.handleSiteChange(result.payload[0].siteId)
-          }
-        }
-        else {
-          listenToSubscriptions({ clientId, siteId })
-        }
+        listZones({ clientId, siteId }).then(() => {
+          listHolders({ clientId, with: ['image'] }).then(() => {
+            // Make sure we show tiles only after metadata has been fetched to
+            // avoid reading undefined properties.
+            // TODO: Fetch metadata in parallel
+            this.setShowZoneItems()
+            // TODO: Check if siteId matches an existing site.
+            if (siteId == undefined) {
+              if (result.payload[0] && result.payload[0].siteId != undefined) {
+                this.handleSiteChange(result.payload[0].siteId)
+              }
+            }
+            else {
+              listenToSubscriptions({ clientId, siteId })
+            }
+          }).catch(err => console.error(err))
+        })
       })
-      .catch(err => console.error(err))
-
     this.timerId = window.setInterval(
       this.props.clearInactiveEntities,
       ZONE_ENTITIES_VALIDATE_INTERVAL
     )
-
-    /** QUICK FIX BECAUSE OF includeLastKnown **/
-    setTimeout(() => {
-      this.setShowZoneItems()
-    }, 2000)
   }
 
   componentWillReceiveProps(nextProps) {
