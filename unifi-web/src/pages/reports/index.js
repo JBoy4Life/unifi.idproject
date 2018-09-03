@@ -22,12 +22,13 @@ const reports = [
     key: '/reports/unifi-dashboard',
     label: 'unifi.id Dashboard',
     published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
-  }, {
+  },
+  {
     name: 'unifi.test-club.dashboard',
     key: '/reports/test-club',
-    label: 'unifi.id Dashboard',
+    label: 'Test Club Dashboard',
     published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
-  },
+  }
 ]
 
 const ReportsDashboards = ({ publishedLink }) => (
@@ -43,10 +44,7 @@ class Reports extends Component {
   }
 
   componentWillMount() {
-    console.log(this.props.clientId)
-    this.setState({
-      reportsList: this.filterReportsByClientId(this.props.clientId)
-    })
+    this.setState({ reportsList: this.filterReportsByClientId(this.props.clientId) })
   }
 
   filterReportsByClientId = (clientId) => reports.filter( report => report.name.split('.')[1] === clientId )
@@ -61,18 +59,22 @@ class Reports extends Component {
               menus={reportsList} />
           </PageContent.Sidebar>
           <PageContent.Main>
-            <Switch>
-              <Redirect exact from={ROUTES.REPORTS} to={reportsList[0].key} />
-              {
-                reportsList.map( (dashboard, index) =>
-                  <Route
-                    key={index}
-                    path={dashboard.key}
-                    render={() => <ReportsDashboards publishedLink={dashboard.published_link} />}
-                  />
-                )
-              }
-            </Switch>
+            {
+              reportsList.length > 0 && (
+                <Switch>
+                  <Redirect exact from={ROUTES.REPORTS} to={reportsList[0].key} />
+                  {
+                    reportsList.map( (dashboard, index) =>
+                      <Route
+                        key={index}
+                        path={dashboard.key}
+                        render={() => <ReportsDashboards publishedLink={dashboard.published_link} />}
+                      />
+                    )
+                  }
+                </Switch>
+              )
+            }
           </PageContent.Main>
         </PageContent>
       </PageContainer>
