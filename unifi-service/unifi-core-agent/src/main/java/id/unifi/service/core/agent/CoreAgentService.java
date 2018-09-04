@@ -94,6 +94,21 @@ public class CoreAgentService {
 
         var productionMode = mode == AgentMode.PRODUCTION;
 
+        if (config.production()) { // Production mode explicitly set, run a few sanity checks on the config
+            var foundWarnings = false;
+
+            if (!config.serviceUri().getScheme().equals("wss")) {
+                foundWarnings = true;
+                log.warn("Service URI scheme should be 'wss' in production");
+            }
+            if (config.agentPassword().length == 0) {
+                foundWarnings = true;
+                log.warn("Agent password shouldn't be empty in production");
+            }
+
+            if (!foundWarnings) log.info("Production config sanity checks passed");
+        }
+
         var registry = new MetricRegistry();
         var jmxReporter = MetricUtils.createJmxReporter(registry);
         jmxReporter.start();
