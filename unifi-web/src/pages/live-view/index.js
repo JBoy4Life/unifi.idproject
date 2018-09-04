@@ -182,6 +182,7 @@ class LiveView extends PureComponent {
         ))
       )
     )
+    const selectedSite = sites.find(site => site.siteId === siteId)
 
     return (
       <PageContainer>
@@ -215,7 +216,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-            { showZoneItems ? <TileView items={zoneItems} viewMode={view || 'large'} /> : <Loading />}
+            { showZoneItems ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite && selectedSite.timeZone} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
