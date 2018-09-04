@@ -62,7 +62,7 @@ public class SiteService {
         authorize(session, clientId);
         return db.execute(sql -> sql.selectFrom(SITE)
                 .where(SITE.CLIENT_ID.eq(clientId))
-                .fetch(r -> new SiteInfo(r.getSiteId(), r.getDescription(), r.getAddress())));
+                .fetch(r -> new SiteInfo(r.getSiteId(), r.getDescription(), r.getAddress(), r.getTimeZone())));
     }
 
     @ApiOperation
@@ -135,11 +135,13 @@ public class SiteService {
         public final String siteId;
         public final String description;
         public final String address;
+        public final String timeZone;
 
-        SiteInfo(String siteId, String description, String address) {
+        SiteInfo(String siteId, String description, String address, String timeZone) {
             this.siteId = siteId;
             this.description = description;
             this.address = address;
+            this.timeZone = timeZone;
         }
     }
 }
