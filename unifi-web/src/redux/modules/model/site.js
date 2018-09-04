@@ -65,9 +65,11 @@ export const listenToSubscriptions = createWsAction({
   type: ZONE_ENTITIES_SUBSCRIBE,
   messageType: 'core.site.subscribe-detections',
   selectorKey: 'liveDiscovery',
-  fields: ['clientId', 'siteId'],
+  fields: ['clientId', 'siteId', 'includeLastKnown'],
+  defaultParams: {
+    includeLastKnown: true
+  },
   subscribe: true,
-  includeLastKnown: true,
   payloadOnSuccess: (payload, getState) => ({
     ...payload,
     data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data)

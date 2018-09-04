@@ -48,7 +48,8 @@ class LiveView extends PureComponent {
       queryParams: {
         view: 'large',
         ...parseQueryString(this.props.location.search)
-      }
+      },
+      showZoneItems: false
     }
   }
 
@@ -69,6 +70,11 @@ class LiveView extends PureComponent {
       this.props.clearInactiveEntities,
       ZONE_ENTITIES_VALIDATE_INTERVAL
     )
+
+    /** QUICK FIX BECAUSE OF includeLastKnown **/
+    setTimeout(() => {
+      this.setShowZoneItems()
+    }, 2000)
   }
 
   componentWillReceiveProps(nextProps) {
@@ -82,6 +88,8 @@ class LiveView extends PureComponent {
   componentWillUnmount() {
     this.timerId && window.clearInterval(this.timerId)
   }
+
+  setShowZoneItems = () => this.setState({ showZoneItems: true })
 
   setURLHref(params) {
     const { history } = this.props
@@ -147,7 +155,7 @@ class LiveView extends PureComponent {
   }
 
   render() {
-    const { itemsPerRow, queryParams: { view, zone: zoneId, site: siteId } } = this.state
+    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId } } = this.state
 
     const {
       discoveredList,
@@ -207,9 +215,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-              {
-                zoneItems.length === 0 ? <Loading /> : <TileView items={zoneItems} viewMode={view || 'large'} />
-              }
+            { showZoneItems ? <TileView items={zoneItems} viewMode={view || 'large'} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
