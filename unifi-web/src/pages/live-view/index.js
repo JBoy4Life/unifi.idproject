@@ -49,7 +49,7 @@ class LiveView extends PureComponent {
         view: 'large',
         ...parseQueryString(this.props.location.search)
       },
-      showZoneItems: false
+      showZoneItems: false,
     }
   }
 
@@ -140,7 +140,8 @@ class LiveView extends PureComponent {
   }
 
   handleSiteChange = (siteId) => {
-    const { listZones, clientId } = this.props
+    const { listZones, clientId, listenToSubscriptions } = this.props
+    
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
     })
