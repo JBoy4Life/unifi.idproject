@@ -5,7 +5,6 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
-import _ from 'lodash'
 
 import * as ROUTES from 'config/routes'
 import TileView from './components/tile-view'
@@ -141,7 +140,7 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
-    
+
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
     })
@@ -170,6 +169,7 @@ class LiveView extends PureComponent {
       sites
     } = this.props
 
+    /** THIS NEEDS TO BE IMPROVED **/
     const zoneItems = zoneId && zoneId !== 'all' ? (
       discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
       // Sort by reverse chronological order
