@@ -52,6 +52,8 @@ public class ImpinjReaderController implements Closeable {
     private final HostAndPort endpoint;
     private final String readerName;
 
+    private boolean detectionsStarted; // used by Impinj report listener thread
+
     private volatile boolean closing; // writes on connection thread
     private volatile long lastKeepaliveMillis; // writes on connection thread
 
@@ -89,6 +91,11 @@ public class ImpinjReaderController implements Closeable {
         }
 
         this.impinjTagReportListener = (reader, report) -> {
+            if (!detectionsStarted) {
+                log.info("First detection report arrived");
+                detectionsStarted = true;
+            }
+
             log.trace("Report received {}: {} tags", reader.getAddress(), report.getTags().size());
             try {
                 var detections = report.getTags().stream().flatMap(tag -> {
