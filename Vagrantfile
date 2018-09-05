@@ -54,9 +54,9 @@ Vagrant.configure("2") do |config|
 
   # Sometimes, bridging to the public network does not acquire an IPv4 address.
   # Forwarding ports will always work.
-  config.vm.network "public_network"
-  # config.vm.network "forwarded_port", guest: 3000, host: 3000 # unifi-web
-  # config.vm.network "forwarded_port", guest: 8000, host: 8000 # unifi-service
+  # config.vm.network "public_network"
+  config.vm.network "forwarded_port", guest: 3000, host: 3000 # unifi-web
+  config.vm.network "forwarded_port", guest: 8000, host: 8000 # unifi-service
 
   config.vm.post_up_message = $post_up_msg
 end
