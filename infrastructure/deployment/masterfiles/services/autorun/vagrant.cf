@@ -12,6 +12,6 @@ bundle agent vagrant_vm
        "any" usebundle => global_env("UNIFI_APPOPTICS_APIKEY", "cafebabedeadbeefb00b1e5");
        "any" usebundle => global_env("UNIFI_CORE_JDBC_URL",    "jdbc:postgresql://localhost/unifi");
        "any" usebundle => global_env("UNIFI_CORE_JDBC_USER",   "vagrant");
-       "any" usebundle => global_env("UNIFI_SMS_ENABLED",      "true");
+       "any" usebundle => global_env("UNIFI_SMS_ENABLED",      "false");
        "any" usebundle => global_env("UNIFI_SMS_AWS_REGION",   "eu-west-1");
 }
