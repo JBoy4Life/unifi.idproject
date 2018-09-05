@@ -213,7 +213,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={siteId === 'all' ? true : false}
+                disabled={siteId === 'all'}
               />
 
               <ViewModeHeader
