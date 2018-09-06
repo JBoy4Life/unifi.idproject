@@ -54,7 +54,7 @@ class LiveView extends PureComponent {
   }
 
   componentDidMount() {
-    const { listSites, listenToSubscriptions, clientId } = this.props
+    const { listZones, listHolders, listSites, listenToSubscriptions, clientId } = this.props
 
     listSites({ clientId })
       .then((result) => {
@@ -71,7 +71,11 @@ class LiveView extends PureComponent {
 
         // Make sure we show tiles only after metadata has been fetched to
         // avoid reading undefined properties.
-        this.getHoldersAndZones(clientId, siteId)
+        Promise.all([
+          listZones({ clientId, siteId }),
+          listHolders({ clientId, with: ['image'] }),
+        ]).then(() => this.setShowZoneItems())
+        .catch(err => console.error(err))
       })
     this.timerId = window.setInterval(
       this.props.clearInactiveEntities,
@@ -89,16 +93,6 @@ class LiveView extends PureComponent {
 
   componentWillUnmount() {
     this.timerId && window.clearInterval(this.timerId)
-  }
-
-  getHoldersAndZones = (clientId, siteId) => {
-    const { listZones, listHolders } = this.props
-
-    return Promise.all([
-      listZones({ clientId, siteId }),
-      listHolders({ clientId, with: ['image'] }),
-    ]).then(() => this.setShowZoneItems())
-    .catch(err => console.error(err))
   }
 
   setShowZoneItems = () => this.setState({ showZoneItems: true })
@@ -146,14 +140,13 @@ class LiveView extends PureComponent {
   }
 
   handleSiteChange = (siteId) => {
-    const { clientId, listenToSubscriptions } = this.props
-    this.setState({ showZoneItems: false })
+    const { listZones, clientId, listenToSubscriptions } = this.props
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
     })
 
+    listZones({ clientId, siteId })
     listenToSubscriptions({ clientId, siteId })
-    this.getHoldersAndZones(clientId, siteId)
   }
 
   handleSiteChangeURl = (siteId) => {
