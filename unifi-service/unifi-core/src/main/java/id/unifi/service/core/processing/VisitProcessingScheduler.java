@@ -3,41 +3,35 @@ package id.unifi.service.core.processing;
 import com.coreoz.wisp.schedule.FixedHourSchedule;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
-import id.unifi.service.core.CoreService;
 import org.jooq.Record1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.ZoneId;
-import java.util.List;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.*;
 import com.coreoz.wisp.Scheduler;
 
 public class VisitProcessingScheduler {
-
-    private static final Logger log = LoggerFactory.getLogger(CoreService.class);
+    private static final Logger log = LoggerFactory.getLogger(VisitProcessor.class);
     private static final Scheduler scheduler = new Scheduler();
+    private static final String VISIT_CUTOFF_TIME = "12:24"; //TODO: CHANGE TO '05:00' WHEN TESTING IS OVER;
     private final Database db;
     private final VisitProcessor visitProcessor;
 
-
-    public VisitProcessingScheduler(DatabaseProvider dbProvider , VisitProcessor visitProcessor) {
-        this.db = dbProvider.bySchema(CORE);
+    public VisitProcessingScheduler(DatabaseProvider dbProvider, VisitProcessor visitProcessor) {
+        this.db = dbProvider.bySchema(CORE, CORE);
         this.visitProcessor = visitProcessor;
-
     }
 
-    public void visitSchedule() {
+    public void scheduleVisitJob() {
         log.info("Initializing visit scheduler");
-
-
-        List<String> clientZoneIds = db.execute(sql ->
+        var clientZoneIds = db.execute(sql ->
                 sql.selectDistinct(SITE.TIME_ZONE).from(SITE).fetch(Record1::value1));
 
         for (var clientZone : clientZoneIds) {
             scheduler.schedule(
                     () -> visitProcessor.insertVisits(clientZone),
-                    new FixedHourSchedule("05:00", ZoneId.of(clientZone))
+                    new FixedHourSchedule(VISIT_CUTOFF_TIME, ZoneId.of(clientZone))
             );
         }
     }

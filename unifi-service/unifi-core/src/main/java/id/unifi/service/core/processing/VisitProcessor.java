@@ -6,6 +6,8 @@ import id.unifi.service.core.CoreService;
 import id.unifi.service.core.db.Keys;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
+import id.unifi.service.dbcommon.DatabaseUtils;
+import org.jooq.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,22 +21,23 @@ import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.common.util.TimeUtils.utcLocalFromZoned;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.*;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectOne;
-import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.*;
 
 public class VisitProcessor {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
+    private static final String VISIT_CUTOFF_TIME = "05:00";
     private final Database db;
+    private static Field[] detectablePkArray = {RFID_DETECTION.CLIENT_ID, RFID_DETECTION.DETECTABLE_ID,
+            RFID_DETECTION.DETECTABLE_TYPE};
 
     public VisitProcessor(DatabaseProvider dbProvider) {
-        this.db = dbProvider.bySchema(CORE);
+        this.db = dbProvider.bySchema(CORE, CORE);
     }
 
     public void insertVisits(String timeZone) {
         log.info("Visit calculation starting at {}", timeZone);
         var now = ZonedDateTime.now(ZoneId.of(timeZone));
-        var endTime = now.with(LocalTime.parse("05:00"));
+        var endTime = now.with(LocalTime.parse(VISIT_CUTOFF_TIME));
         var startTime = endTime.minusDays(1);
         var detectedYesterday = getDetectedDetectables(startTime.toInstant(), endTime.toInstant());
 
@@ -51,10 +54,15 @@ public class VisitProcessor {
                                                         RFID_DETECTION.DETECTABLE_ID, RFID_DETECTION.READER_SN),
                                         val("measured-day"),
                                         READER.SITE_ID
-                                ).distinctOn(Keys.DETECTABLE_PKEY.getFieldsArray())
+                                ).distinctOn(detectablePkArray)
                                         .from(CORE.RFID_DETECTION)
-                                        .join(CORE.READER).onKey()
-                                        .join(CORE.ASSIGNMENT).onKey()
+                                        .innerJoin(CORE.READER).on(RFID_DETECTION.CLIENT_ID.eq(READER.CLIENT_ID)
+                                                .and(RFID_DETECTION.READER_SN.eq(READER.READER_SN)))
+                                        .innerJoin(CORE.ASSIGNMENT).on(RFID_DETECTION.DETECTABLE_ID.eq(ASSIGNMENT.DETECTABLE_ID)
+                                                .and(RFID_DETECTION.DETECTABLE_TYPE.eq(ASSIGNMENT.DETECTABLE_TYPE)
+                                                        .and(RFID_DETECTION.CLIENT_ID.eq(ASSIGNMENT.CLIENT_ID))))
+                                        .innerJoin(CORE.SITE).on(RFID_DETECTION.CLIENT_ID.eq(SITE.CLIENT_ID)
+                                                .and(READER.SITE_ID.eq(SITE.SITE_ID)))
                                         .where(RFID_DETECTION.DETECTION_TIME.between(utcLocalFromZoned(startTime),
                                                 utcLocalFromZoned(endTime)))
                                         .and(SITE.TIME_ZONE.eq(timeZone))
@@ -72,10 +80,10 @@ public class VisitProcessor {
     }
 
     private List<DetectablePK> getDetectedDetectables(Instant from, Instant to) {
-        return db.execute(sql -> sql.selectDistinct()
+        return db.execute(sql -> sql.selectDistinct(detectablePkArray)
                 .from(CORE.RFID_DETECTION)
                 .where(RFID_DETECTION.DETECTION_TIME.between(utcLocalFromInstant(from), utcLocalFromInstant(to)))
-                .groupBy(Keys.DETECTABLE_PKEY.getFieldsArray())
+                .groupBy(detectablePkArray)
                 .having(RFID_DETECTION.DETECTION_TIME.count().gt(1))
                 .fetch(r -> new DetectablePK(r.get(RFID_DETECTION.CLIENT_ID),
                         r.get(RFID_DETECTION.DETECTABLE_ID),
