@@ -161,7 +161,7 @@ class LiveView extends PureComponent {
     })
   }
 
-  orderByDetectionTime = (list) => (
+  orderByDescDetectionTime = (list) => (
     _.orderBy(list, ['detectionTime'], ['desc'])
   )
 
@@ -184,7 +184,7 @@ class LiveView extends PureComponent {
       list = this.filterByZoneSite(list, zones)
     }
 
-    return this.orderByDetectionTime(list)
+    return this.orderByDescDetectionTime(list)
   }
 
   render() {
