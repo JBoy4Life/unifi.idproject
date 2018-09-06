@@ -161,18 +161,16 @@ class LiveView extends PureComponent {
     })
   }
 
-  momentCompare = (list) => (
-    list.sort((item1, item2) => (
-      moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-    ))
+  orderByDetectionTime = (list) => (
+    _.orderBy(list, ['detectionTime'], ['desc'])
   )
 
   filterByZone = (list, zoneId) => (
-    list.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
+    list.filter(item => item.zone && item.zone.zoneId === zoneId)
   )
 
   filterByZoneSite = (list, zones) => (
-    list.filter(item => ( item.zone ? _.find(zones, {zoneId: item.zone.zoneId}) : false))
+    list.filter(item => ( item.zone && _.find(zones, {zoneId: item.zone.zoneId}) ))
   )
 
   generateZoneItems = (discoveredList) => {
@@ -186,7 +184,7 @@ class LiveView extends PureComponent {
       list = this.filterByZoneSite(list, zones)
     }
 
-    return this.momentCompare(list)
+    return this.orderByDetectionTime(list)
   }
 
   render() {
@@ -233,7 +231,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-            { showZoneItems ? <TileView items={this.momentCompare(zoneItems)} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
+            { showZoneItems ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
