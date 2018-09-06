@@ -224,7 +224,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-            { showZoneItems ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite && selectedSite.timeZone} /> : <Loading />}
+            { showZoneItems ? <TileView items={this.momentCompare(zoneItems)} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
