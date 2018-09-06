@@ -47,7 +47,7 @@ bundle common unifi_environment {
 }
 
 # Set appropriate Unifi.id-specific classes.
-bundle common unifi {
+bundle common unifi_classes {
   vars:
       "unifi_env"
           string => getenv("UNIFI_ENV", 20);
@@ -75,11 +75,7 @@ bundle common unifi {
 }
 
 # Dispatch based on node roles.
-bundle agent unifi_role {
-  meta:
-    "tags" slist => {
-        "autorun"
-    };
+bundle agent unifi {
   methods:
     any::
       "unifi_baseline";
