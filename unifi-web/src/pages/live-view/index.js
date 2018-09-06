@@ -161,6 +161,34 @@ class LiveView extends PureComponent {
     })
   }
 
+  momentCompare = (list) => (
+    list.sort((item1, item2) => (
+      moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
+    ))
+  )
+
+  filterByZone = (list, zoneId) => (
+    list.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
+  )
+
+  filterByZoneSite = (list, zones) => (
+    list.filter(item => ( item.zone ? _.find(zones, {zoneId: item.zone.zoneId}) : false))
+  )
+
+  generateZoneItems = (discoveredList) => {
+    const { queryParams: { zone: zoneId, site: siteId } } = this.state
+    const { zones } = this.props
+    let list = discoveredList
+
+    if (zoneId !== 'all') {
+      list = this.filterByZone(list, zoneId)
+    } else if (siteId !== 'all') {
+      list = this.filterByZoneSite(list, zones)
+    }
+
+    return this.momentCompare(list)
+  }
+
   render() {
     const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId } } = this.state
 
@@ -170,26 +198,7 @@ class LiveView extends PureComponent {
       sites
     } = this.props
 
-    /** THIS NEEDS TO BE IMPROVED **/
-    const zoneItems = zoneId && zoneId !== 'all' ? (
-      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
-      // Sort by reverse chronological order
-      .sort((item1, item2) => (
-        moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-      ))
-    ) : (
-      siteId !== 'all' ? (
-        discoveredList.filter(item => ( item.zone ? _.find(zones, {zoneId: item.zone.zoneId}) : false))
-        // Sort by reverse chronological order
-        .sort((item1, item2) => (
-          moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-        ))
-      ) : (
-        discoveredList.sort((item1, item2) => (
-          moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-        ))
-      )
-    )
+    const zoneItems = this.generateZoneItems(discoveredList)
     const selectedSite = sites.find(site => site.siteId === siteId)
 
     return (
