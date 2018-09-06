@@ -5,6 +5,7 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
+import _ from 'lodash'
 
 import * as ROUTES from 'config/routes'
 import TileView from './components/tile-view'
