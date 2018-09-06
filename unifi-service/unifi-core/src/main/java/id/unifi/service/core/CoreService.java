@@ -119,6 +119,10 @@ public class CoreService {
                 Set.of(detectionPersistence, attendanceProcessor),
                 Set.of(detectionSubscriber));
 
+        var visitProcessor = new VisitProcessor(dbProvider);
+        var visitScheduler = new VisitProcessingScheduler(dbProvider, visitProcessor);
+        visitScheduler.scheduleVisitJob();
+
         var emailSenderProvider = config.smtpServer() != null
                 ? new SmtpEmailSenderProvider(config.mq())
                 : new LoggingEmailSender();
@@ -126,10 +130,6 @@ public class CoreService {
         var smsSenderProvider = config.smsEnabled()
                 ? new AwsSmsSenderProvider(config.mq())
                 : new LoggingSmsSenderProvider();
-
-        var visitProcessor = new VisitProcessor(dbProvider);
-        var visitScheduler = new VisitProcessingScheduler(dbProvider, visitProcessor);
-        visitScheduler.visitSchedule();
 
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
