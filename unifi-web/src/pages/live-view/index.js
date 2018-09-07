@@ -50,6 +50,7 @@ class LiveView extends PureComponent {
         ...parseQueryString(this.props.location.search)
       },
       showZoneItems: false,
+      disableZonesList: true
     }
   }
 
@@ -67,6 +68,10 @@ class LiveView extends PureComponent {
         }
         else {
           listZones({ clientId, siteId })
+          .then(() =>
+            this.setState({ disableZonesList: false }),
+          )
+          .catch(err => console.error(err))
           listenToSubscriptions({ clientId, siteId })
         }
 
@@ -140,9 +145,20 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
+    this.setState({
+      showZoneItems: false,
+      disableZonesList: true
+    })
 
     this.handleSiteChangeURL(siteId)
     listZones({ clientId, siteId })
+    .then(() =>
+      this.setState({
+        disableZonesList: false,
+        showZoneItems: true
+      }),
+    )
+    .catch(err => console.error(err))
     listenToSubscriptions({ clientId, siteId })
   }
 
@@ -185,7 +201,7 @@ class LiveView extends PureComponent {
   }
 
   render() {
-    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId } } = this.state
+    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId }, disableZonesList } = this.state
 
     const {
       discoveredList,
@@ -218,7 +234,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={siteId === 'all'}
+                disabled={disableZonesList}
               />
 
               <ViewModeHeader
@@ -228,7 +244,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-            { showZoneItems ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
+            { showZoneItems && !disableZonesList ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
