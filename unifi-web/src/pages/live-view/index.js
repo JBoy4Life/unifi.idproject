@@ -12,7 +12,7 @@ import ViewModeHeader from './components/view-mode-header'
 import ZoneFilter from './components/zone-filter'
 import { getDiscoveredList } from './utils/helpers'
 import { listHolders } from 'redux/modules/model/holder'
-import { listSites, listZones, listenToSubscriptions } from 'redux/modules/model/site'
+import { listSites, listZones, listenToSubscriptions, unsubscribeToSubscriptions } from 'redux/modules/model/site'
 import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
@@ -150,6 +150,13 @@ class LiveView extends PureComponent {
     // listenToSubscriptions({ clientId, siteId })
   }
 
+  unsubscribeSubscriptions= () => {
+    const { unsubscribeToSubscriptions, discoveredList  } = this.props
+    const correlationId = discoveredList[0].correlationId
+    console.log(correlationId)
+    unsubscribeToSubscriptions({ correlationId })
+  }
+
   handleZoneChange = (zoneId) => {
     this.setURLHref({
       ...this.state.queryParams, zone: encodeURIComponent(zoneId),
@@ -177,7 +184,7 @@ class LiveView extends PureComponent {
       ))
     )
     const selectedSite = sites.find(site => site.siteId === siteId)
-
+    console.log(discoveredList)
     return (
       <PageContainer>
         <PageContent>
@@ -230,7 +237,8 @@ export const actions = {
   listHolders,
   listSites,
   listZones,
-  listenToSubscriptions
+  listenToSubscriptions,
+  unsubscribeToSubscriptions
 }
 
 export default compose(
