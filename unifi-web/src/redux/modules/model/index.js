@@ -19,6 +19,6 @@ export default handleActions({
   },
 
   [API_SUBSCRIBE_UPDATE]: (state, { payload }) => ({
-    ...set(state, payload.selectorKey, payload.data)
+    ...set(state, payload.selectorKey, payload.data, payload.correlationId)
   }),
 }, {});

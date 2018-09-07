@@ -70,9 +70,10 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
         data: data.payload,
         actionType: action.type,
         messageType: action.socketSubscribe.messageType,
-        selectorKey: action.selectorKey
+        selectorKey: action.selectorKey,
+        correlationId: data.correlationId
       }
-
+      
       store.dispatch({
         type: API_SUBSCRIBE_UPDATE,
         payload: action.payloadOnSuccess ? action.payloadOnSuccess(payload, store.getState) : payload
