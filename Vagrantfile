@@ -5,60 +5,38 @@ set -eu
 # Basic hygiene.
 apt-get -y update
 apt-get -y upgrade
-apt-get -y install curl rsync
+apt-get -y install apt-transport-https
 
-# Get CFEngine from the official site, not the Debian repository.
-curl -O https://cfengine-package-repos.s3.amazonaws.com/community_binaries/Community-3.10.4/agent_deb_x86_64/cfengine-community_3.10.4-1_amd64-debian4.deb
-sudo dpkg -i cfengine-community*.deb
+# Get CFEngine from the official repository.
+wget -qO- https://cfengine-package-repos.s3.amazonaws.com/pub/gpg.key | apt-key add -
+echo "deb https://cfengine-package-repos.s3.amazonaws.com/pub/apt/packages stable main" > /etc/apt/sources.list.d/cfengine-community.list
+apt-get -y update
+apt-get -y install rsync cfengine-community
 
 # Set up the environment.
-sudo echo "DefaultEnvironment=UNIFI_ENV=local" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_ROLES=app,services,agent,db" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_NODEID=vagrant" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_CLIENT_ID=test-club" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_PAPERTRAIL_PORT=12345" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_CORE_JDBC_URL=jdbc:postgresql://localhost/unifi" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_CORE_JDBC_USER=vagrant" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_SMS_ENABLED=true" >> /etc/systemd/system.conf
-sudo echo "DefaultEnvironment=UNIFI_SMS_AWS_REGION=eu-west-1" >> /etc/systemd/system.conf
-
-sudo echo "UNIFI_ENV=local" >> /etc/environment
-sudo echo "UNIFI_ROLES=app,services,agent,db" >> /etc/environment
-sudo echo "UNIFI_NODEID=vagrant" >> /etc/environment
-sudo echo "UNIFI_CLIENT_ID=test-club" >> /etc/environment
-sudo echo "UNIFI_PAPERTRAIL_HOST=logs5.papertrail.com" >> /etc/environment
-sudo echo "UNIFI_PAPERTRAIL_PORT=12345" >> /etc/environment
-sudo echo "UNIFI_APPOPTICS_APIKEY=cafebabecbeafbeabfaefbaebcdcbdc329842893" >> /etc/environment
-sudo echo "UNIFI_CORE_JDBC_URL=jdbc:postgresql://localhost/unifi" >> /etc/environment
-sudo echo "UNIFI_CORE_JDBC_USER=vagrant" >> /etc/environment
-sudo echo "UNIFI_SMS_ENABLED=true" >> /etc/environment
-sudo echo "UNIFI_SMS_AWS_REGION=eu-west-1" >> /etc/environment
+echo "DefaultEnvironment=UNIFI_ENV=local" >> /etc/systemd/system.conf
+echo "DefaultEnvironment=UNIFI_ROLES=app,services,agent,db" >> /etc/systemd/system.conf
+echo "DefaultEnvironment=UNIFI_NODEID=vagrant" >> /etc/systemd/system.conf
+echo "DefaultEnvironment=UNIFI_CLIENT_ID=test-club" >> /etc/systemd/system.conf
+cat /etc/systemd/system.conf | grep UNIFI | cut -d "=" -f 2- > /etc/environment
+cat /etc/systemd/system.conf | grep UNIFI | sed -e "s/DefaultEnvironment=/export /g" >> /etc/profile
 
 # Sync up the CFEngine masterfiles folder with the repo.
 sudo -u vagrant ln -sf /vagrant ~vagrant/unifi.id
-sudo rsync -vrlpxE /vagrant/infrastructure/deployment/masterfiles/* /var/cfengine/masterfiles/
+rsync -vrlpxE /vagrant/infrastructure/deployment/masterfiles/* /var/cfengine/masterfiles/
+cf-agent -B $(ip -o addr show eth0 | cut -d " " -f 7 | cut -d "/" -f 1)
+cf-agent -Kf failsafe.cf
 PREBOOT
 
 $post_up_msg = <<MSG
-unifi.id services development VM
-================================
+unifi.id development VM
+=======================
 
 Now run `vagrant ssh` to get into the VM.
 
-You will want to bootstrap and force convergence on the machine the first time:
-
-    sudo -i
-
-    # Manually load the environment because sudo nukes it.
-    $(cat /etc/environment | while read line; do echo "export $line"; done)
-
-    # Bootstrap against self.
-    cf-agent --bootstrap <vm_network_ip>
-
-    # Keep running the below until you see 100% convergence.
-    cf-agent -Kf failsafe.cf && cf-agent -vKf promises.cf
+Keep running the below as `sudo -i` until you see 100% convergence.
+    
+    cf-agent -vKf promises.cf | grep compliance
 
 Any time you modify CFE stuff, you can rsync and repeated-converge again.
 
@@ -76,7 +54,7 @@ Vagrant.configure("2") do |config|
 
   # Sometimes, bridging to the public network does not acquire an IPv4 address.
   # Forwarding ports will always work.
-  config.vm.network "public_network"
+  # config.vm.network "public_network"
   config.vm.network "forwarded_port", guest: 3000, host: 3000 # unifi-web
   config.vm.network "forwarded_port", guest: 8000, host: 8000 # unifi-service
 
