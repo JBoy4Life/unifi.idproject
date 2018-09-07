@@ -141,15 +141,13 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
-    this.setURLHref({
-      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
-    })
-
+    
+    this.handleSiteChangeURL(siteId)
     listZones({ clientId, siteId })
     listenToSubscriptions({ clientId, siteId })
   }
 
-  handleSiteChangeURl = (siteId) => {
+  handleSiteChangeURL = (siteId) => {
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
     })
