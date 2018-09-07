@@ -14,6 +14,7 @@ import { ZONE_ENTITIES_INACTIVE_THRESHOLD } from 'config/constants'
 export const SITES_LIST_FETCH = 'unifi.SITES_LIST_FETCH'
 export const ZONE_ENTITIES_CLEAR_INACTIVE = 'unifi.ZONE_ENTITIES_CLEAR_INACTIVE'
 export const ZONE_ENTITIES_SUBSCRIBE = 'unifi.ZONE_ENTITIES_SUBSCRIBE'
+export const ZONE_ENTITIES_UNSUBSCRIBE = 'unifi.ZONE_ENTITIES_UNSUBSCRIBE'
 export const ZONE_LIST_FETCH = 'unifi.ZONE_LIST_FETCH'
 
 // ------------------------------------
@@ -24,21 +25,27 @@ const filterOutInactiveEntities = (liveDiscovery) =>
     return moment().diff(moment(item.detectionTime)) < ZONE_ENTITIES_INACTIVE_THRESHOLD
   })
 
-const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries) =>
-  unionBy(
-    newDiscoveries.map(item => {
-      const foundItem = find(currentDiscoveries, { clientReference: item.clientReference })
-      return foundItem && item.zoneId === foundItem.zoneId ? {
-        ...item,
-        firstDetectionTime: foundItem.firstDetectionTime
-      } : {
-        ...item,
-        firstDetectionTime: item.detectionTime
-      }
-    }),
-    currentDiscoveries,
-    'clientReference'
+const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries, id) => {
+  return (
+    unionBy(
+      newDiscoveries.map(item => {
+        const foundItem = find(currentDiscoveries, { clientReference: item.clientReference })
+        return foundItem && item.zoneId === foundItem.zoneId ? {
+          ...item,
+          firstDetectionTime: foundItem.firstDetectionTime,
+          correlationId: id
+        } : {
+          ...item,
+          firstDetectionTime: item.detectionTime,
+          correlationId: id
+        }
+      }),
+      currentDiscoveries,
+      'clientReference'
+    )
   )
+}
+
 
 // ------------------------------------
 // Action Creators
@@ -72,8 +79,14 @@ export const listenToSubscriptions = createWsAction({
   subscribe: true,
   payloadOnSuccess: (payload, getState) => ({
     ...payload,
-    data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data)
+    data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data, payload.correlationId)
   })
+})
+
+export const unsubscribeToSubscriptions = createWsAction({
+  type: ZONE_ENTITIES_UNSUBSCRIBE,
+  messageType: 'core.protocol.unsubscribe',
+  fields: 'correlationId',
 })
 
 export const clearInactiveEntities = () => (dispatch, getState) =>
