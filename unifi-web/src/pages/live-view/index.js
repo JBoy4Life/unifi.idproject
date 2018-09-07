@@ -66,13 +66,13 @@ class LiveView extends PureComponent {
           }
         }
         else {
+          listZones({ clientId, siteId })
           listenToSubscriptions({ clientId, siteId })
         }
 
         // Make sure we show tiles only after metadata has been fetched to
         // avoid reading undefined properties.
         Promise.all([
-          listZones({ clientId, siteId }),
           listHolders({ clientId, with: ['image'] }),
         ]).then(() => this.setShowZoneItems())
         .catch(err => console.error(err))
