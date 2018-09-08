@@ -4,6 +4,8 @@ bundle agent collectd {
           string => "/etc/collectd";
       "collectd_conf"
           string => "collectd.conf";
+      "appoptics_api_user"
+          string => "$(unifi_environment.appoptics_api_user)";
       "appoptics_api_key"
           string => "$(unifi_environment.appoptics_api_key)";
   packages:
