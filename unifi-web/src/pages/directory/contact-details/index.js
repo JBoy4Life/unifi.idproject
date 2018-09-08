@@ -23,7 +23,7 @@ class ContactDetails extends Component {
   componentDidMount() {
     const { clientId, getHolder, listDetectables, match } = this.props
     const { clientReference } = match.params
-    getHolder({ clientId, clientReference, with: ['image', 'detectable-type'] })
+    getHolder({ clientId, clientReference, with: ['metadata', 'image', 'detectable-type'] })
     listDetectables({ clientId, assignment: clientReference })
   }
 
@@ -31,6 +31,18 @@ class ContactDetails extends Component {
     const { holder, detectablesList, match } = this.props
     const { clientReference } = match.params
     const detectables = fp.filter({ assignment: clientReference })(detectablesList)
+    const metadata = (holder && holder.metadata)
+      ? Object.keys(holder.metadata)
+        .map((value) => (
+          [value, holder.metadata[value]]))
+        .map(
+          (value) => (value
+            ? <div className={bemE('metadata-item')}>
+                <h4 className={bemE('metadata-key')}>{value[0]}</h4>
+                <p className={bemE('metadata-value')}>{value[1] ? value[1].toString() : 'null'}</p>
+              </div>
+            : null))
+      : []
     const editUrl = ROUTES.DIRECTORY_HOLDER_EDIT.replace(':clientReference', clientReference)
 
     return holder ? (
@@ -54,6 +66,8 @@ class ContactDetails extends Component {
               <div>{item.description}</div>
             </div>
           ))}
+          {metadata.length > 0 && <h3 className={bemE('dt-title')}>Metadata</h3>}
+          {metadata}
         </Col>
       </Row>
     ) : null

@@ -25,6 +25,21 @@
     text-transform: uppercase;
   }
 
+  &__metadata-item {
+    border: 1px solid #b1bfc4;
+    margin-bottom: 20px;
+    padding: 8px;
+  }
+
+  &__metadata-key {
+    font-size: 16px;
+    font-style: italic;
+  }
+
+  &__metadata-value {
+    font-size: 14px;
+  }
+
   &__edit-link {
     float: right;
     color: $unifi-secondary-color;
