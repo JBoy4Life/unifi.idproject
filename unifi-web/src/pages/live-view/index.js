@@ -50,7 +50,7 @@ class LiveView extends PureComponent {
         ...parseQueryString(this.props.location.search)
       },
       showZoneItems: false,
-      disableZonesList: true
+      showZonesList: false
     }
   }
 
@@ -68,9 +68,7 @@ class LiveView extends PureComponent {
         }
         else {
           listZones({ clientId, siteId })
-          .then(() =>
-            this.setState({ disableZonesList: false }),
-          )
+          .then(() => this.setShowZonesList())
           .catch(err => console.error(err))
           listenToSubscriptions({ clientId, siteId })
         }
@@ -100,6 +98,8 @@ class LiveView extends PureComponent {
   }
 
   setShowZoneItems = () => this.setState({ showZoneItems: true })
+
+  setShowZonesList = () => this.setState({ showZonesList: true })
 
   setURLHref(params) {
     const { history } = this.props
@@ -147,14 +147,14 @@ class LiveView extends PureComponent {
     const { listZones, clientId, listenToSubscriptions } = this.props
     this.setState({
       showZoneItems: false,
-      disableZonesList: true
+      showZonesList: false
     })
 
     this.handleSiteChangeURL(siteId)
     listZones({ clientId, siteId })
     .then(() =>
       this.setState({
-        disableZonesList: false,
+        showZonesList: true,
         showZoneItems: true
       }),
     )
@@ -201,7 +201,7 @@ class LiveView extends PureComponent {
   }
 
   render() {
-    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId }, disableZonesList } = this.state
+    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId }, showZonesList } = this.state
 
     const {
       discoveredList,
@@ -225,6 +225,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a site"
                 idKey="siteId"
                 nameKey="description"
+                disabled={!showZoneItems}
               />
 
               <ZoneFilter
@@ -234,7 +235,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={disableZonesList}
+                disabled={!showZoneItems || !showZonesList}
               />
 
               <ViewModeHeader
@@ -244,7 +245,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-            { showZoneItems && !disableZonesList ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
+            { showZoneItems && showZonesList ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
