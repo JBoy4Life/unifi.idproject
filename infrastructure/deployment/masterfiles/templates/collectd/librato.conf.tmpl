@@ -2,8 +2,8 @@
 <Plugin "write_http">
   <Node "AppOptics">
     URL "https://api.appoptics.com/v1/measurements"
-    User "$(collectd.appoptics_api_key)"
-    Password ""
+    User "$(collectd.appoptics_api_user)"
+    Password "$(collectd.appoptics_api_key)"
     Format "JSON"
   </Node>
 </Plugin>

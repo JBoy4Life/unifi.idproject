@@ -37,6 +37,8 @@ bundle common unifi_environment {
       "papertrail_destination_proto"
           string => "udp";
     ## Librato
+      "appoptics_api_user"
+          string => getenv("UNIFI_APPOPTICS_USER", "100");
       "appoptics_api_key"
           string => getenv("UNIFI_APPOPTICS_APIKEY", "100");
     ## NTP
