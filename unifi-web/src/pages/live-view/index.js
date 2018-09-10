@@ -12,7 +12,8 @@ import ViewModeHeader from './components/view-mode-header'
 import ZoneFilter from './components/zone-filter'
 import { getDiscoveredList } from './utils/helpers'
 import { listHolders } from 'redux/modules/model/holder'
-import { listSites, listZones, listenToSubscriptions, unsubscribeToSubscriptions } from 'redux/modules/model/site'
+import { listSites, listZones, listenToSubscriptions } from 'redux/modules/model/site'
+import { unsubscribeToSubscriptions } from 'redux/modules/websocket'
 import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
@@ -137,22 +138,22 @@ class LiveView extends PureComponent {
   }
 
   handleSiteChange = (siteId) => {
-    const { listZones, clientId } = this.props
+    const { listZones, clientId, listenToSubscriptions } = this.props
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
     })
-
+    this.unsubscribeSubscriptions()
     // TODO: This currently reloads the page. Instead we should resubscribe to
     //  detections with the new site (and end the old subscription) to obviate
     //  the need for this.
-    window.location.reload()
-    // listZones({ clientId, siteId })
-    // listenToSubscriptions({ clientId, siteId })
+    // window.location.reload()
+    listZones({ clientId, siteId })
+    listenToSubscriptions({ clientId, siteId })
   }
 
   unsubscribeSubscriptions= () => {
     const { unsubscribeToSubscriptions, discoveredList  } = this.props
-    const correlationId = discoveredList[0].correlationId
+    const correlationId = discoveredList.length > 0 ? discoveredList[0].correlationId : ''
     console.log(correlationId)
     unsubscribeToSubscriptions({ correlationId })
   }
@@ -184,7 +185,7 @@ class LiveView extends PureComponent {
       ))
     )
     const selectedSite = sites.find(site => site.siteId === siteId)
-    console.log(discoveredList)
+    // console.log(discoveredList)
     return (
       <PageContainer>
         <PageContent>

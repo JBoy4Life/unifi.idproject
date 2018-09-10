@@ -11,7 +11,8 @@ import {
   API_FAIL,
   API_PENDING,
   API_SUCCESS,
-  API_SUBSCRIBE_UPDATE
+  API_SUBSCRIBE_UPDATE,
+  API_UNSUBSCRIBE
 } from 'redux/api/constants'
 
 const socketApiMiddleware = socketClient => store => next => (action) => {
@@ -73,10 +74,19 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
         selectorKey: action.selectorKey,
         correlationId: data.correlationId
       }
-      
+
       store.dispatch({
         type: API_SUBSCRIBE_UPDATE,
         payload: action.payloadOnSuccess ? action.payloadOnSuccess(payload, store.getState) : payload
+      })
+    })
+  }
+
+  if (action.socketUnsubscribe) {
+    console.log(action.socketUnsubscribe)
+    socketClient.unsubscribe(action.socketUnsubscribe, (data) => {
+      store.dispatch({
+        type: API_UNSUBSCRIBE,
       })
     })
   }

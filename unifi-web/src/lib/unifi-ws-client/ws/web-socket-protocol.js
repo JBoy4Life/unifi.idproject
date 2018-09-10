@@ -96,4 +96,11 @@ export default class WebSocketProtocol {
     }
     this.ws.send(content)
   }
+
+  unsubscribe(content, callback) {
+    this.correlations[content.correlationId] = {
+      callback, content,
+    }
+    this.ws.send(content)
+  }
 }

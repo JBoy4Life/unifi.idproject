@@ -25,6 +25,15 @@ class UnifiWsClient extends WSProtocol {
     })
     return super.subscribe(pack.content, callback)
   }
+
+  unsubscribe(content, callback) {
+    const pack = {
+      ...versions,
+      ...content,
+      correlationId: content.payload.correlationId
+    }
+    return super.unsubscribe(pack, callback)
+  }
 }
 
 export default UnifiWsClient
