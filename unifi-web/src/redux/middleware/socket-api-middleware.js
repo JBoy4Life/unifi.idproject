@@ -83,12 +83,7 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
   }
 
   if (action.socketUnsubscribe) {
-    console.log(action.socketUnsubscribe)
-    socketClient.unsubscribe(action.socketUnsubscribe, (data) => {
-      store.dispatch({
-        type: API_UNSUBSCRIBE,
-      })
-    })
+    socketClient.unsubscribe(action.socketUnsubscribe)
   }
 
   return next(action)
