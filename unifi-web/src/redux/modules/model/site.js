@@ -24,7 +24,7 @@ const filterOutInactiveEntities = (liveDiscovery) =>
     return moment().diff(moment(item.detectionTime)) < ZONE_ENTITIES_INACTIVE_THRESHOLD
   })
 
-const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries, id) => {
+const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries, correlationId) => {
   return (
     unionBy(
       newDiscoveries.map(item => {
@@ -32,11 +32,11 @@ const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries, id) => {
         return foundItem && item.zoneId === foundItem.zoneId ? {
           ...item,
           firstDetectionTime: foundItem.firstDetectionTime,
-          correlationId: id
+          correlationId: correlationId
         } : {
           ...item,
           firstDetectionTime: item.detectionTime,
-          correlationId: id
+          correlationId: correlationId
         }
       }),
       currentDiscoveries,

@@ -139,10 +139,12 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
+
+    this.unsubscribeSubscriptions()
+
     this.setURLHref({
       ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
     })
-    this.unsubscribeSubscriptions()
     // TODO: This currently reloads the page. Instead we should resubscribe to
     //  detections with the new site (and end the old subscription) to obviate
     //  the need for this.
@@ -153,9 +155,10 @@ class LiveView extends PureComponent {
 
   unsubscribeSubscriptions= () => {
     const { unsubscribeToSubscriptions, discoveredList  } = this.props
-    const correlationId = discoveredList.length > 0 ? discoveredList[0].correlationId : ''
-    console.log(correlationId)
-    unsubscribeToSubscriptions({ correlationId })
+    if (discoveredList.length > 0) {
+      const correlationId = discoveredList[0].correlationId
+      unsubscribeToSubscriptions({ correlationId })
+    }
   }
 
   handleZoneChange = (zoneId) => {
@@ -185,7 +188,7 @@ class LiveView extends PureComponent {
       ))
     )
     const selectedSite = sites.find(site => site.siteId === siteId)
-    // console.log(discoveredList)
+
     return (
       <PageContainer>
         <PageContent>
