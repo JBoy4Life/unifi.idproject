@@ -8,16 +8,11 @@ export default ({
   defaultParams, // default paramater values in case fields are missing in payload
   selectorKey,
   subscribe = false,
-  unsubscribe = false,
   payloadOnSuccess,
   payloadOnFail
 }) => (payload, formSubmit) => {
   // payload: action parameter that are passed to action creator
-  let wsType = 'socketRequest'
-  if (subscribe)
-    wsType = 'socketSubscribe';
-  else if (unsubscribe)
-    wsType = 'socketUnsubscribe'
+  const wsType = subscribe ? 'socketSubscribe' : 'socketRequest'
 
   const requestPayload = {
     messageType,

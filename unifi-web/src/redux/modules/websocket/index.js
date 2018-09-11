@@ -9,12 +9,14 @@ export const API_SUBSCRIBE_UPDATE = 'unifi.API_SUBSCRIBE_UPDATE'
 
 export const ZONE_ENTITIES_UNSUBSCRIBE = 'unifi.ZONE_ENTITIES_UNSUBSCRIBE'
 
-export const unsubscribeToSubscriptions = createWsAction({
-  type: ZONE_ENTITIES_UNSUBSCRIBE,
-  messageType: 'core.protocol.unsubscribe',
-  fields: ['correlationId'],
-  unsubscribe: true
-})
+export const unsubscribeToSubscriptions = ({correlationId}) => (dispatch, getState) =>
+  dispatch({
+    type: ZONE_ENTITIES_UNSUBSCRIBE,
+    socketUnsubscribe: {
+      messageType: 'core.protocol.unsubscribe',
+      correlationId: correlationId
+    }
+  })
 
 export default handleActions({
   [API_PENDING]: (state, { payload }) => ({
