@@ -55,7 +55,7 @@ class LiveView extends PureComponent {
   }
 
   componentDidMount() {
-    const { listZones, listHolders, listSites, listenToSubscriptions, clientId } = this.props
+    const { listHolders, listSites, clientId } = this.props
 
     listSites({ clientId })
       .then((result) => {
@@ -63,14 +63,12 @@ class LiveView extends PureComponent {
         // TODO: Check if siteId matches an existing site.
         if (siteId == undefined) {
           if (result.payload[0] && result.payload[0].siteId != undefined) {
-            this.handleSiteChange(result.payload[0].siteId)
+            this.handleSiteChangeURL(result.payload[0].siteId)
+            this.listZonesAndSubscriptions(result.payload[0].siteId)
           }
         }
         else {
-          listZones({ clientId, siteId })
-          .then(() => this.setShowZonesList())
-          .catch(err => console.error(err))
-          listenToSubscriptions({ clientId, siteId })
+          this.listZonesAndSubscriptions(siteId)
         }
 
         // Make sure we show tiles only after metadata has been fetched to
@@ -100,6 +98,15 @@ class LiveView extends PureComponent {
   setShowZoneItems = () => this.setState({ showZoneItems: true })
 
   setShowZonesList = () => this.setState({ showZonesList: true })
+
+  listZonesAndSubscriptions = (siteId) => {
+    const { listZones, listenToSubscriptions, clientId } = this.props
+
+    listZones({ clientId, siteId })
+    .then(() => this.setShowZonesList())
+    .catch(err => console.error(err))
+    listenToSubscriptions({ clientId, siteId })
+  }
 
   setURLHref(params) {
     const { history } = this.props
@@ -156,7 +163,7 @@ class LiveView extends PureComponent {
       this.setState({
         showZonesList: true,
         showZoneItems: true
-      }),
+      })
     )
     .catch(err => console.error(err))
     listenToSubscriptions({ clientId, siteId })
