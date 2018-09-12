@@ -1,14 +1,13 @@
 package id.unifi.service.core.services;
 
 import id.unifi.service.common.api.annotations.ApiOperation;
+import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.NotFound;
-import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
-import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.util.ContentTypeUtils.ImageWithType;
 import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
 import static id.unifi.service.core.db.Core.CORE;
@@ -39,12 +38,11 @@ public class ClientService {
     @HttpMatch(path = "clients")
     public List<ClientInfo> listClients(OperatorSessionData session, @Nullable Set<String> with) {
         log.info("Listing clients");
-        authorize(session);
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
                 .fetch(ClientService::clientInfoFromRecord));
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     @HttpMatch(path = "clients/:clientId")
     public ClientInfo getClient(String clientId, @Nullable Set<String> with) {
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
@@ -69,11 +67,6 @@ public class ClientService {
                 r.get(CLIENT.CLIENT_ID),
                 r.get(CLIENT.DISPLAY_NAME),
                 fieldValueOpt(r, CLIENT_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))));
-    }
-
-    private static OperatorPK authorize(OperatorSessionData sessionData) {
-        return Optional.ofNullable(sessionData.getOperator())
-                .orElseThrow(Unauthorized::new);
     }
 
     public static class ClientInfo {

@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.Validation;
 import static id.unifi.service.common.api.Validation.*;
+import id.unifi.service.common.api.access.AccessManager;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
+import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.AlreadyExists;
@@ -79,6 +81,7 @@ public class OperatorService {
     private final EmailSenderProvider emailSender;
     private final SessionTokenStore sessionTokenStore;
     private final VerticalConfigManager verticalConfigManager;
+    private final AccessManager<OperatorSessionData> accessManager;
     private final Config config;
 
     private interface Config {
@@ -93,7 +96,8 @@ public class OperatorService {
                            OperatorEmailRenderer emailRenderer,
                            EmailSenderProvider emailSender,
                            SessionTokenStore sessionTokenStore,
-                           VerticalConfigManager verticalConfigManager) {
+                           VerticalConfigManager verticalConfigManager,
+                           AccessManager<OperatorSessionData> accessManager) {
         this.config = config;
         this.db = dbProvider.bySchema(CORE);
         this.passwordReset = passwordReset;
@@ -102,6 +106,7 @@ public class OperatorService {
         this.emailSender = emailSender;
         this.sessionTokenStore = sessionTokenStore;
         this.verticalConfigManager = verticalConfigManager;
+        this.accessManager = accessManager;
     }
 
     @ApiOperation
@@ -111,13 +116,12 @@ public class OperatorService {
                                  String name,
                                  String email,
                                  boolean invite) {
-        authorize(session, clientId);
+        var onboarder = authorize(session, clientId);
         validateAll(
                 v("username", shortId(username)),
                 v("name", shortString(name)),
                 v("email", email(email))
         );
-        var onboarder = session.getOperator();
         db.execute(sql -> {
             try {
                 sql.insertInto(OPERATOR)
@@ -160,7 +164,7 @@ public class OperatorService {
         }
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     @HttpMatch(path = "operators/auth-password", method = POST)
     public AuthInfo authPassword(OperatorSessionData session, String clientId, String username, String password) {
         validateAll(
@@ -178,22 +182,24 @@ public class OperatorService {
         }
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public AuthInfo authToken(OperatorSessionData session, Token sessionToken) {
         var operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
-            session.setAuth(operator.get(), sessionToken);
-            return new AuthInfo(getOperatorInfo(operator.get().clientId, operator.get().username),
+            var pk = operator.get();
+            session.setAuth(pk, sessionToken);
+            return new AuthInfo(getOperatorInfo(pk.clientId, pk.username),
                     sessionToken,
                     Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
-                    verticalConfigManager.getClientSideConfig(operator.get().clientId));
+                    accessManager.getPermissions(pk),
+                    verticalConfigManager.getClientSideConfig(pk.clientId));
         } else {
             session.setAuth(null, null);
             throw new AuthenticationFailed();
         }
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public void invalidateAuthToken(OperatorSessionData session) {
         var sessionToken = session.getSessionToken();
         if (sessionToken != null) {
@@ -222,16 +228,26 @@ public class OperatorService {
         return getOperatorInfo(clientId, username);
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PERMISSIONED_NOT_CHECKED)
     public void requestPasswordReset(OperatorSessionData session, String clientId, String username) {
+        var invitee = new OperatorPK(clientId, username);
+        var operator = session.getOperator();
+
         Optional<OperatorPK> onboarder;
-        if (session.getOperator() != null) { // Authorized invitation or reset request for someone password
-            var operator = authorize(session, clientId);
-            onboarder = Optional.of(operator);
-        } else { // Reset request for my own password
+        if (operator == null || operator.equals(invitee)) {
+            // Request resetting my own password; allow without access restrictions
             onboarder = Optional.empty();
+        } else {
+            // Requesting reset on behalf of another operator, check access
+            if (!accessManager.isAllowed("core.operator.request-password-reset", operator)) throw new Unauthorized();
+
+            // Now check we're under the expected `clientId` as usual
+            authorize(session, clientId);
+
+            onboarder = Optional.of(operator);
         }
 
+        // TODO: Should return an error if inviting an inactive operator
         db.execute(sql -> {
             if (isOperatorActive(sql, clientId, username))
                 requestPasswordSet(sql, clientId, username, onboarder);
@@ -239,7 +255,7 @@ public class OperatorService {
         });
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public PasswordResetInfo getPasswordReset(String clientId, String username, TimestampedToken token) {
         return db.execute(sql -> {
             var tokenHash =
@@ -253,7 +269,7 @@ public class OperatorService {
         });
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public AuthInfo setPassword(OperatorSessionData session,
                                 String clientId,
                                 String username,
@@ -270,7 +286,7 @@ public class OperatorService {
         });
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public void cancelPasswordReset(String clientId,
                                     String username,
                                     TimestampedToken token) {
@@ -279,7 +295,7 @@ public class OperatorService {
 
     @ApiOperation
     public void changePassword(OperatorSessionData session, String currentPassword, String password) {
-        var operator = authorize(session);
+        var operator = session.getOperator();
         if (passwordMatches(operator.clientId, operator.username, currentPassword)) {
             db.execute(sql -> {
                 setPassword(sql, operator.clientId, operator.username, password);
@@ -295,9 +311,11 @@ public class OperatorService {
         sessionTokenStore.put(sessionToken, operator);
         session.setAuth(operator, sessionToken);
         recordAuthAttempt(operator, true);
+
         return new AuthInfo(getOperatorInfo(operator.clientId, operator.username),
                 sessionToken,
                 Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                accessManager.getPermissions(operator),
                 verticalConfigManager.getClientSideConfig(operator.clientId));
     }
 

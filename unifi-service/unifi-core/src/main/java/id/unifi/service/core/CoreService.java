@@ -12,6 +12,7 @@ import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.common.api.ComponentHolder;
 import id.unifi.service.common.api.Dispatcher;
 import id.unifi.service.common.api.HttpServer;
+import id.unifi.service.common.api.access.AccessManager;
 import static id.unifi.service.common.api.Protocol.JSON;
 import static id.unifi.service.common.api.Protocol.MSGPACK;
 import id.unifi.service.common.api.ServiceRegistry;
@@ -31,6 +32,7 @@ import id.unifi.service.common.version.VersionInfo;
 import id.unifi.service.core.agents.IdentityService;
 import static id.unifi.service.core.db.Core.CORE;
 import id.unifi.service.core.email.SmtpEmailSenderProvider;
+import id.unifi.service.core.permissions.DefaultAccessManager;
 import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.processing.DetectionProcessor;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
@@ -125,10 +127,13 @@ public class CoreService {
                 ? new AwsSmsSenderProvider(config.mq())
                 : new LoggingSmsSenderProvider();
 
+        var accessManager = new DefaultAccessManager(dbProvider);
+
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
                 MqConfig.class, config.mq(),
+                AccessManager.class, accessManager,
                 SubscriptionManager.class, subscriptionManager,
                 DetectionSubscriber.class, detectionSubscriber,
                 DetectionProcessor.class, detectionProcessor,
@@ -136,7 +141,7 @@ public class CoreService {
                 EmailSenderProvider.class, emailSenderProvider,
                 SmsSenderProvider.class, smsSenderProvider));
 
-        startApiService(config.apiServiceListenEndpoint(), componentHolder, subscriptionManager);
+        startApiService(config.apiServiceListenEndpoint(), componentHolder, subscriptionManager, accessManager);
         startAgentService(componentHolder, config.agentServiceListenEndpoint());
     }
 
@@ -161,15 +166,20 @@ public class CoreService {
 
     private static void startApiService(HostAndPort apiEndpoint,
                                         ComponentHolder componentHolder,
-                                        SubscriptionManager subscriptionManager) throws Exception {
+                                        SubscriptionManager subscriptionManager,
+                                        AccessManager<OperatorSessionData> accessManager) throws Exception {
         var registry = new ServiceRegistry(
                 Map.of(
                         "core", "id.unifi.service.core.services",
                         "attendance", "id.unifi.service.attendance.services"),
                 componentHolder);
+
+        accessManager.updateOperationList(registry.getPermissionedOperations());
+
         var sessionTokenStore = componentHolder.get(SessionTokenStore.class);
         var dispatcher = new Dispatcher<>(
                 registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager,
+                accessManager,
                 request -> Optional.ofNullable(request.getHeader("authorization"))
                         .flatMap(HttpUtils::extractAuthToken)
                         .flatMap(t -> sessionTokenStore.get(t).map(op -> new OperatorSessionData(op, t)))
