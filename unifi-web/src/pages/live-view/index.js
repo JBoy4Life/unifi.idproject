@@ -45,6 +45,7 @@ class LiveView extends PureComponent {
   constructor(props) {
     super(props)
 
+    this.zoneItemsLength = 0
     this.state = {
       queryParams: {
         view: 'large',
@@ -180,8 +181,8 @@ class LiveView extends PureComponent {
   }
 
   unsubscribeSubscriptions= () => {
-    const { unsubscribeToSubscriptions, correlationId  } = this.props
-    if (correlationId !== undefined ) {
+    const { unsubscribeToSubscriptions, correlationId } = this.props
+    if (correlationId !== undefined && this.zoneItemsLength > 0) {
       unsubscribeToSubscriptions({ correlationId })
     }
   }
@@ -215,6 +216,7 @@ class LiveView extends PureComponent {
       list = this.filterByZoneSite(list, zones)
     }
 
+    this.zoneItemsLength = list.length
     return this.orderByDescDetectionTime(list)
   }
 
