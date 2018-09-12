@@ -218,6 +218,7 @@ class LiveView extends PureComponent {
 
     const zoneItems = this.generateZoneItems(discoveredList)
     const selectedSite = sites.find(site => site.siteId === siteId)
+    const filterDisableState = !showZoneItems || !showZonesList
 
     return (
       <PageContainer>
@@ -232,7 +233,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a site"
                 idKey="siteId"
                 nameKey="description"
-                disabled={!showZoneItems}
+                disabled={filterDisableState}
               />
 
               <ZoneFilter
@@ -242,7 +243,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={!showZoneItems || !showZonesList}
+                disabled={filterDisableState}
               />
 
               <ViewModeHeader
