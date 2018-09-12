@@ -62,8 +62,10 @@ export const siteIdSelector = fp.compose(
 export const zonesInfoSelector = modelSelector('zonesInfo', {})
 export const liveDiscoverySelector = modelSelector('liveDiscovery', [])
 export const sitesInfoSelector = modelSelector('sitesList', [])
-
-
+export const correlationIdSelector = fp.compose(
+  fp.get('correlationId'),
+  modelSelector('liveDiscovery[0]', null)
+)
 
 // ------------------------------------
 // User module selectors

@@ -19,7 +19,7 @@ import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-import { siteIdSelector, sitesInfoSelector, zonesInfoSelector } from 'redux/selectors'
+import { siteIdSelector, sitesInfoSelector, zonesInfoSelector, correlationIdSelector } from 'redux/selectors'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
@@ -93,6 +93,7 @@ class LiveView extends PureComponent {
   }
 
   componentWillUnmount() {
+    this.unsubscribeSubscriptions()
     this.timerId && window.clearInterval(this.timerId)
   }
 
@@ -153,6 +154,8 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
+    this.unsubscribeSubscriptions()
+
     this.setState({
       showZoneItems: false,
       showZonesList: false
@@ -177,9 +180,8 @@ class LiveView extends PureComponent {
   }
 
   unsubscribeSubscriptions= () => {
-    const { unsubscribeToSubscriptions, discoveredList  } = this.props
-    if (discoveredList.length > 0) {
-      const correlationId = discoveredList[0].correlationId
+    const { unsubscribeToSubscriptions, correlationId  } = this.props
+    if (correlationId !== undefined ) {
       unsubscribeToSubscriptions({ correlationId })
     }
   }
@@ -217,7 +219,16 @@ class LiveView extends PureComponent {
   }
 
   render() {
-    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId }, showZonesList } = this.state
+    const {
+      showZoneItems,
+      itemsPerRow,
+      queryParams: {
+        view,
+        zone: zoneId,
+        site: siteId
+      },
+      showZonesList
+    } = this.state
 
     const {
       discoveredList,
@@ -275,7 +286,8 @@ export const selector = createStructuredSelector({
   discoveredList: getDiscoveredList,
   siteId: siteIdSelector,
   zones: zonesSelector,
-  sites: sitesSelector
+  sites: sitesSelector,
+  correlationId: correlationIdSelector
 })
 
 export const actions = {
