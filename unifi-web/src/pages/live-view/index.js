@@ -5,6 +5,7 @@ import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { withRouter } from 'react-router-dom'
+import _ from 'lodash'
 
 import * as ROUTES from 'config/routes'
 import TileView from './components/tile-view'
@@ -22,6 +23,7 @@ import { siteIdSelector, sitesInfoSelector, zonesInfoSelector } from 'redux/sele
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
+import Loading from 'components/loading'
 
 const zonesSelector = fp.compose(
   (zonesInfo) => (
@@ -48,32 +50,33 @@ class LiveView extends PureComponent {
         view: 'large',
         ...parseQueryString(this.props.location.search)
       },
-      showZoneItems: false
+      showZoneItems: false,
+      showZonesList: false
     }
   }
 
   componentDidMount() {
-    const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
+    const { listHolders, listSites, clientId } = this.props
+
     listSites({ clientId })
       .then((result) => {
         const siteId = this.state.queryParams.site
         // TODO: Check if siteId matches an existing site.
         if (siteId == undefined) {
           if (result.payload[0] && result.payload[0].siteId != undefined) {
-            this.handleSiteChange(result.payload[0].siteId)
+            this.handleSiteChangeURL(result.payload[0].siteId)
+            this.listZonesAndSubscriptions(result.payload[0].siteId)
           }
         }
         else {
-          listenToSubscriptions({ clientId, siteId })
+          this.listZonesAndSubscriptions(siteId)
         }
 
         // Make sure we show tiles only after metadata has been fetched to
         // avoid reading undefined properties.
-        Promise.all([
-          listZones({ clientId, siteId }),
-          listHolders({ clientId, with: ['image'] }),
-        ]).then(() => this.setShowZoneItems())
-          .catch(err => console.error(err))
+        listHolders({ clientId, with: ['image'] })
+        .then(() => this.setShowZoneItems())
+        .catch(err => console.error(err))
       })
     this.timerId = window.setInterval(
       this.props.clearInactiveEntities,
@@ -94,6 +97,17 @@ class LiveView extends PureComponent {
   }
 
   setShowZoneItems = () => this.setState({ showZoneItems: true })
+
+  setShowZonesList = () => this.setState({ showZonesList: true })
+
+  listZonesAndSubscriptions = (siteId) => {
+    const { listZones, listenToSubscriptions, clientId } = this.props
+
+    listZones({ clientId, siteId })
+    .then(() => this.setShowZonesList())
+    .catch(err => console.error(err))
+    listenToSubscriptions({ clientId, siteId })
+  }
 
   setURLHref(params) {
     const { history } = this.props
@@ -139,18 +153,27 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
-
-    this.unsubscribeSubscriptions()
-
-    this.setURLHref({
-      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: null,
+    this.setState({
+      showZoneItems: false,
+      showZonesList: false
     })
-    // TODO: This currently reloads the page. Instead we should resubscribe to
-    //  detections with the new site (and end the old subscription) to obviate
-    //  the need for this.
-    // window.location.reload()
+
+    this.handleSiteChangeURL(siteId)
     listZones({ clientId, siteId })
+    .then(() =>
+      this.setState({
+        showZonesList: true,
+        showZoneItems: true
+      })
+    )
+    .catch(err => console.error(err))
     listenToSubscriptions({ clientId, siteId })
+  }
+
+  handleSiteChangeURL = (siteId) => {
+    this.setURLHref({
+      ...this.state.queryParams, site: encodeURIComponent(siteId), zone: 'all',
+    })
   }
 
   unsubscribeSubscriptions= () => {
@@ -167,8 +190,34 @@ class LiveView extends PureComponent {
     })
   }
 
+  orderByDescDetectionTime = (list) => (
+    _.orderBy(list, ['detectionTime'], ['desc'])
+  )
+
+  filterByZone = (list, zoneId) => (
+    list.filter(item => item.zone && item.zone.zoneId === zoneId)
+  )
+
+  filterByZoneSite = (list, zones) => (
+    list.filter(item => ( item.zone && _.find(zones, {zoneId: item.zone.zoneId}) ))
+  )
+
+  generateZoneItems = (discoveredList) => {
+    const { queryParams: { zone: zoneId, site: siteId } } = this.state
+    const { zones } = this.props
+    let list = discoveredList
+
+    if (zoneId !== 'all') {
+      list = this.filterByZone(list, zoneId)
+    } else if (siteId !== 'all') {
+      list = this.filterByZoneSite(list, zones)
+    }
+
+    return this.orderByDescDetectionTime(list)
+  }
+
   render() {
-    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId } } = this.state
+    const { showZoneItems, itemsPerRow, queryParams: { view, zone: zoneId, site: siteId }, showZonesList } = this.state
 
     const {
       discoveredList,
@@ -176,18 +225,9 @@ class LiveView extends PureComponent {
       sites
     } = this.props
 
-    const zoneItems = zoneId && zoneId !== 'all' ? (
-      discoveredList.filter(item => (item.zone ? item.zone.zoneId === zoneId : false))
-      // Sort by reverse chronological order
-      .sort((item1, item2) => (
-        moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-      ))
-    ) : (
-      discoveredList.sort((item1, item2) => (
-        moment(item2.detectionTime).unix() - moment(item1.detectionTime).unix()
-      ))
-    )
+    const zoneItems = this.generateZoneItems(discoveredList)
     const selectedSite = sites.find(site => site.siteId === siteId)
+    const filterDisableState = !showZoneItems || !showZonesList
 
     return (
       <PageContainer>
@@ -202,6 +242,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a site"
                 idKey="siteId"
                 nameKey="description"
+                disabled={filterDisableState}
               />
 
               <ZoneFilter
@@ -211,7 +252,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={siteId === undefined ? 'true' : false}
+                disabled={filterDisableState}
               />
 
               <ViewModeHeader
@@ -221,7 +262,7 @@ class LiveView extends PureComponent {
                 resultCount={zoneItems.length}
               />
 
-            { showZoneItems && <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite && selectedSite.timeZone} /> }
+            { showZoneItems && showZonesList ? <TileView items={zoneItems} viewMode={view || 'large'} timeZone={selectedSite.timeZone} /> : <Loading />}
             </div>
           </PageContent.Main>
         </PageContent>
