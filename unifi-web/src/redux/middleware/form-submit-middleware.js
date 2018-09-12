@@ -12,14 +12,11 @@ import pick from 'lodash/pick'
 const formSubmitMiddleware = store => next => (action) => {
   if (action.payload && action.payload.formSubmit) {
     const { onSuccess, onFail } = action.payload.formSubmit
-    if (action.type.includes('FULFILLED') && onSuccess) {
+    if (onSuccess && action.type.endsWith('_SUCCESS')) {
       onSuccess(action.payload)
-    }
-
-    if (action.type.includes('REJECTED') && onFail) {
+    } else if (onFail && action.type.endsWith('_FAIL')) {
       onFail(action.payload)
     }
-    delete action.payload.formSubmit
   }
 
   return next(action)

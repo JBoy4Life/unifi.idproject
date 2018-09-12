@@ -18,7 +18,7 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
   if (action.socketRequest) {
     const metaFields = {
       actionType: action.type,
-      formSubmit: action.socketRequest.formSubmit,
+      formSubmit: action.formSubmit,
       messageType: action.socketRequest.messageType,
       selectorKey: action.selectorKey
     }
