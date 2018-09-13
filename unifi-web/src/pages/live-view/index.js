@@ -65,8 +65,9 @@ class LiveView extends PureComponent {
         // TODO: Check if siteId matches an existing site.
         if (siteId == undefined) {
           if (result.payload[0] && result.payload[0].siteId != undefined) {
-            this.handleSiteChangeURL(result.payload[0].siteId)
-            this.listZonesAndSubscriptions(result.payload[0].siteId)
+            const resultSiteId = result.payload[0].siteId
+            this.handleSiteChangeURL(resultSiteId)
+            this.listZonesAndSubscriptions(resultSiteId)
           }
         }
         else {
@@ -200,7 +201,7 @@ class LiveView extends PureComponent {
   )
 
   filterByZoneSite = (list, zones) => (
-    list.filter(item => ( item.zone && _.find(zones, {zoneId: item.zone.zoneId}) ))
+    list.filter(item => item.zone && _.find(zones, {zoneId: item.zone.zoneId}) )
   )
 
   generateZoneItems = (discoveredList) => {
@@ -237,7 +238,7 @@ class LiveView extends PureComponent {
 
     const zoneItems = this.generateZoneItems(discoveredList)
     const selectedSite = sites.find(site => site.siteId === siteId)
-    const filterDisableState = !showZoneItems || !showZonesList
+    const dropdownDisableState = !showZoneItems || !showZonesList
 
     return (
       <PageContainer>
@@ -252,7 +253,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a site"
                 idKey="siteId"
                 nameKey="description"
-                disabled={filterDisableState}
+                disabled={dropdownDisableState}
               />
 
               <ZoneFilter
@@ -262,7 +263,7 @@ class LiveView extends PureComponent {
                 placeholder="Select a zone"
                 idKey="zoneId"
                 nameKey="name"
-                disabled={filterDisableState}
+                disabled={dropdownDisableState}
               />
 
               <ViewModeHeader

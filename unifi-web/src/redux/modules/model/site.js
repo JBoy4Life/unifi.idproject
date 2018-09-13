@@ -24,26 +24,21 @@ const filterOutInactiveEntities = (liveDiscovery) =>
     return moment().diff(moment(item.detectionTime)) < ZONE_ENTITIES_INACTIVE_THRESHOLD
   })
 
-const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries, correlationId) => {
-  return (
-    unionBy(
-      newDiscoveries.map(item => {
-        const foundItem = find(currentDiscoveries, { clientReference: item.clientReference })
-        return foundItem && item.zoneId === foundItem.zoneId ? {
-          ...item,
-          firstDetectionTime: foundItem.firstDetectionTime,
-          correlationId: correlationId
-        } : {
-          ...item,
-          firstDetectionTime: item.detectionTime,
-          correlationId: correlationId
-        }
-      }),
-      currentDiscoveries,
-      'clientReference'
-    )
+const mergeDiscoveryUpdate = (currentDiscoveries, newDiscoveries) =>
+  unionBy(
+    newDiscoveries.map(item => {
+      const foundItem = find(currentDiscoveries, { clientReference: item.clientReference })
+      return foundItem && item.zoneId === foundItem.zoneId ? {
+        ...item,
+        firstDetectionTime: foundItem.firstDetectionTime
+      } : {
+        ...item,
+        firstDetectionTime: item.detectionTime
+      }
+    }),
+    currentDiscoveries,
+    'clientReference'
   )
-}
 
 
 // ------------------------------------
@@ -78,7 +73,7 @@ export const listenToSubscriptions = createWsAction({
   subscribe: true,
   payloadOnSuccess: (payload, getState) => ({
     ...payload,
-    data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data, payload.correlationId)
+    data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data)
   })
 })
 
