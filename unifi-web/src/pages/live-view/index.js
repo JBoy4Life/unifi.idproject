@@ -19,11 +19,12 @@ import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
 import { parseQueryString, jsonToQueryString } from 'utils/helpers'
-import { siteIdSelector, sitesInfoSelector, zonesInfoSelector, correlationIdSelector } from 'redux/selectors'
+import { siteIdSelector, sitesInfoSelector, zonesInfoSelector } from 'redux/selectors'
 import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
 import Loading from 'components/loading'
+import { correlationId } from 'lib/unifi-ws-client'
 
 const zonesSelector = fp.compose(
   (zonesInfo) => (
@@ -93,7 +94,7 @@ class LiveView extends PureComponent {
   }
 
   componentWillUnmount() {
-    this.unsubscribeSubscriptions()
+    this.unsubscribe()
     this.timerId && window.clearInterval(this.timerId)
   }
 
@@ -154,7 +155,7 @@ class LiveView extends PureComponent {
 
   handleSiteChange = (siteId) => {
     const { listZones, clientId, listenToSubscriptions } = this.props
-    this.unsubscribeSubscriptions()
+    this.unsubscribe()
 
     this.setState({
       showZoneItems: false,
@@ -179,11 +180,9 @@ class LiveView extends PureComponent {
     })
   }
 
-  unsubscribeSubscriptions= () => {
-    const { unsubscribeToSubscriptions, correlationId } = this.props
-    if (correlationId !== undefined) {
-      unsubscribeToSubscriptions({ correlationId })
-    }
+  unsubscribe = () => {
+    const { unsubscribeToSubscriptions } = this.props
+    unsubscribeToSubscriptions({ correlationId })
   }
 
   handleZoneChange = (zoneId) => {
@@ -287,7 +286,6 @@ export const selector = createStructuredSelector({
   siteId: siteIdSelector,
   zones: zonesSelector,
   sites: sitesSelector,
-  correlationId: correlationIdSelector
 })
 
 export const actions = {

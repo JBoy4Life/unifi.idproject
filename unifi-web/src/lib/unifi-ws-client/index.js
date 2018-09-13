@@ -6,6 +6,8 @@ const versions = {
   releaseVersion: '1.0.0'
 }
 
+export let correlationId = '';
+
 class UnifiWsClient extends WSProtocol {
   request(content, callback) {
     const pack = new WSPackage({
@@ -23,6 +25,7 @@ class UnifiWsClient extends WSProtocol {
       ...versions,
       ...content
     })
+    correlationId = pack.content.correlationId
     return super.subscribe(pack.content, callback)
   }
 
