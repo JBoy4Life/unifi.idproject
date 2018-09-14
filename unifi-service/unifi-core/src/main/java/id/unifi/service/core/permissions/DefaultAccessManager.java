@@ -74,7 +74,7 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
         log.info("Inserted {} new operations", operationsInserted);
     }
 
-    public boolean authorize(String operationName, OperatorSessionData session, boolean accessTypeAlreadyChecked) {
+    public boolean isAuthorized(String operationName, OperatorSessionData session, boolean accessTypeAlreadyChecked) {
         if (permissionedOperations == null)
             throw new IllegalStateException("Cannot authorize without list of permissioned operations");
 

@@ -279,7 +279,7 @@ public class Dispatcher<S> {
         var sessionData = sessionDataStore.get(session);
         if (sessionData == null) return; // Ignore dead sessions
 
-        if (!accessManager.authorize(message.messageType, sessionData)) throw new Unauthorized();
+        if (!accessManager.isAuthorized(message.messageType, sessionData)) throw new Unauthorized();
 
         var params = getParams(mapper, operation, session, sessionData, message.payload::get);
 
@@ -342,7 +342,7 @@ public class Dispatcher<S> {
                                 Protocol protocol,
                                 Function<String, JsonNode> getParam,
                                 ServiceRegistry.Operation operation) {
-        if (!accessManager.authorize(operation.messageType, sessionData)) throw new Unauthorized();
+        if (!accessManager.isAuthorized(operation.messageType, sessionData)) throw new Unauthorized();
         var params = getParams(mapper, operation, null, sessionData, getParam);
         var result = serviceRegistry.invokeRpc(operation, params);
         var payload = mapper.valueToTree(result);
@@ -367,7 +367,7 @@ public class Dispatcher<S> {
                 // TODO: Capture operator in session; reading mutable session data several times (here and in
                 // service impl) may yield different operators -> potential vulnerability
                 return (AccessChecker) () -> {
-                    if (!accessManager.authorize(operation.messageType, sessionData, true)) throw new Unauthorized();
+                    if (!accessManager.isAuthorized(operation.messageType, sessionData, true)) throw new Unauthorized();
                 };
             }
 
