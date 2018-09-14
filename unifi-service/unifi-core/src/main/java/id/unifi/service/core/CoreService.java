@@ -16,6 +16,7 @@ import id.unifi.service.common.api.access.AccessManager;
 import static id.unifi.service.common.api.Protocol.JSON;
 import static id.unifi.service.common.api.Protocol.MSGPACK;
 import id.unifi.service.common.api.ServiceRegistry;
+import id.unifi.service.common.api.access.NullAccessManager;
 import id.unifi.service.common.api.http.HttpUtils;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.MqConfig;
@@ -83,6 +84,9 @@ public class CoreService {
 
         @Default("false")
         boolean smsEnabled();
+
+        @Default("false")
+        boolean permissionsEnabled();
     }
 
     public static void main(String[] args) throws Exception {
@@ -127,7 +131,9 @@ public class CoreService {
                 ? new AwsSmsSenderProvider(config.mq())
                 : new LoggingSmsSenderProvider();
 
-        var accessManager = new DefaultAccessManager(dbProvider);
+        var accessManager = config.permissionsEnabled()
+                ? new DefaultAccessManager(dbProvider)
+                : new NullAccessManager<OperatorSessionData>();
 
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
@@ -178,8 +184,7 @@ public class CoreService {
 
         var sessionTokenStore = componentHolder.get(SessionTokenStore.class);
         var dispatcher = new Dispatcher<>(
-                registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager,
-                accessManager,
+                registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager, accessManager,
                 request -> Optional.ofNullable(request.getHeader("authorization"))
                         .flatMap(HttpUtils::extractAuthToken)
                         .flatMap(t -> sessionTokenStore.get(t).map(op -> new OperatorSessionData(op, t)))
