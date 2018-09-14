@@ -135,6 +135,9 @@ public class CoreService {
                 ? new DefaultAccessManager(dbProvider)
                 : new NullAccessManager<OperatorSessionData>();
 
+        if (!config.permissionsEnabled())
+            log.warn("Permission checks are disabled");
+
         var componentHolder = new ComponentHolder(Map.of(
                 MetricRegistry.class, registry,
                 DatabaseProvider.class, dbProvider,
