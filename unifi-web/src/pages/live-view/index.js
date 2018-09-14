@@ -14,7 +14,7 @@ import ZoneFilter from './components/zone-filter'
 import { getDiscoveredList } from './utils/helpers'
 import { listHolders } from 'redux/modules/model/holder'
 import { listSites, listZones, listenToSubscriptions } from 'redux/modules/model/site'
-import { unsubscribeToSubscriptions } from 'redux/modules/websocket'
+import { unsubscribe } from 'redux/modules/websocket'
 import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
 import { PageContent } from 'components'
@@ -182,8 +182,8 @@ class LiveView extends PureComponent {
   }
 
   unsubscribe = () => {
-    const { unsubscribeToSubscriptions } = this.props
-    unsubscribeToSubscriptions({ correlationId })
+    const { unsubscribe } = this.props
+    unsubscribe({ correlationId })
   }
 
   handleZoneChange = (zoneId) => {
@@ -294,7 +294,7 @@ export const actions = {
   listSites,
   listZones,
   listenToSubscriptions,
-  unsubscribeToSubscriptions
+  unsubscribe
 }
 
 export default compose(
