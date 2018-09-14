@@ -49,7 +49,7 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
                                 .stream()
                                 .map(Record1::value1)
                                 .collect(toSet())
-                )));;
+                )));
     }
 
     public void updateOperationList(Collection<ServiceRegistry.Operation> permissionedOperations) {

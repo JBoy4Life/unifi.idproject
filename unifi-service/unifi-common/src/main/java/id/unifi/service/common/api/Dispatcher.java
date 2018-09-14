@@ -57,7 +57,7 @@ public class Dispatcher<S> {
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, WireMessageListener> messageListeners;
     private final Map<ByteBuffer, CancellableWireMessageListener> responseListeners;
-    private AccessManager<S> accessManager;
+    private final AccessManager<S> accessManager;
 
     public interface WireMessageListener {
         void accept(ObjectMapper om, Session session, Message message) throws JsonProcessingException;
