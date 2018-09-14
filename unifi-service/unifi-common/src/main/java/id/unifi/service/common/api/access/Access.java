@@ -3,7 +3,7 @@ package id.unifi.service.common.api.access;
 public enum Access {
     /**
      *  Permissioned operation;
-     *  requests approved by access control only if the user has been granted the corresponding permission.
+     *  requests approved by access control only if the operator has been granted the corresponding permission.
      */
     PERMISSIONED,
 
