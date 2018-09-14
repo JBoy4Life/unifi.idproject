@@ -20,4 +20,6 @@ public class NullAccessManager<S> implements AccessManager<S> {
     public boolean isAllowed(String operationName, OperatorPK operator) {
         return true;
     }
+
+    public void invalidatePermissionsCache(OperatorPK operator) {}
 }

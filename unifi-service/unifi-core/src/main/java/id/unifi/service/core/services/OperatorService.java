@@ -1,13 +1,15 @@
 package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.collect.Sets;
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.Validation;
 import static id.unifi.service.common.api.Validation.*;
+import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.access.AccessManager;
+import static id.unifi.service.common.api.access.AccessUtils.subsumesOperation;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
-import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.AlreadyExists;
@@ -26,10 +28,9 @@ import id.unifi.service.common.types.OperatorInfo;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Tables.OPERATOR;
-import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
-import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
+import static id.unifi.service.core.db.Tables.*;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
+import id.unifi.service.core.db.tables.records.PermissionRecord;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import id.unifi.service.dbcommon.Database;
@@ -51,10 +52,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 @ApiService("operator")
@@ -200,6 +204,20 @@ public class OperatorService {
     }
 
     @ApiOperation(access = Access.PUBLIC)
+    public AuthInfo getAuthInfo(OperatorSessionData session) {
+        var sessionToken = session.getSessionToken();
+        var operator = Optional.ofNullable(sessionToken).flatMap(sessionTokenStore::get);
+
+        return operator.map(op -> new AuthInfo(
+                getOperatorInfo(op.clientId, op.username),
+                sessionToken,
+                Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                accessManager.getPermissions(op),
+                verticalConfigManager.getClientSideConfig(op.clientId))
+        ).orElseThrow(() -> new NotFound("session"));
+    }
+
+    @ApiOperation(access = Access.PUBLIC)
     public void invalidateAuthToken(OperatorSessionData session) {
         var sessionToken = session.getSessionToken();
         if (sessionToken != null) {
@@ -306,11 +324,91 @@ public class OperatorService {
         }
     }
 
+    @ApiOperation(access = Access.PERMISSIONED_NOT_CHECKED, description = "Lists permissions for an operator")
+    public Set<String> listPermissions(OperatorSessionData session, String clientId, String username) {
+        var operator = authorize(session, clientId);
+
+        if (!username.equals(operator.username) && !accessManager.isAllowed("core.operator.list-permissions", operator))
+            throw new Unauthorized();
+
+        return accessManager.getPermissions(new OperatorPK(clientId, username));
+    }
+
+    @ApiOperation(description = "Grants and revokes specified permissions")
+    public void editPermissions(OperatorSessionData session,
+                                String clientId,
+                                String username,
+                                @Nullable Set<String> grant,
+                                @Nullable Set<String> revoke) {
+        var operator = authorize(session, clientId);
+
+        validateAll(
+                v("grant|revoke", atLeastOneNonNull(grant, revoke)),
+                v("grant|revoke", disjoint(grant, revoke))
+        );
+
+        var subjectOperator = new OperatorPK(clientId, username);
+        var operatorPermissions = accessManager.getPermissions(operator);
+
+        if (grant == null) grant = Set.of();
+        if (revoke == null) revoke = Set.of();
+
+        var operations = Sets.union(grant, revoke);
+
+        // An operator can only grant/revoke permissions they themselves have
+        if (!subsumesAllOperations(operatorPermissions, operations)) throw new Unauthorized();
+
+        var grantRecords = createPermissionRecords(clientId, username, grant);
+        var revokeRecords = createPermissionRecords(clientId, username, revoke);
+
+        db.execute(sql -> {
+            grantPermissions(sql, grantRecords);
+            sql.batchDelete(revokeRecords).execute();
+            accessManager.invalidatePermissionsCache(subjectOperator);
+            return null;
+        });
+    }
+
+    @ApiOperation(description = "Grants permissions on all operations from a role")
+    public void applyRole(OperatorSessionData session, String clientId, String username, String role) {
+        var operator = authorize(session, clientId);
+        var subjectOperator = new OperatorPK(clientId, username);
+        var operatorPermissions = accessManager.getPermissions(operator);
+
+        db.execute(sql -> {
+            if (!sql.fetchExists(ROLE, ROLE.ROLE_.eq(role)))
+                throw new NotFound("role");
+
+            var operations = sql.select(ROLE_OPERATION.OPERATION)
+                    .from(ROLE_OPERATION)
+                    .where(ROLE_OPERATION.ROLE.eq(role))
+                    .fetch(ROLE_OPERATION.OPERATION);
+
+            if (!subsumesAllOperations(operatorPermissions, operations)) throw new Unauthorized();
+
+            grantPermissions(sql, createPermissionRecords(clientId, username, operations));
+            accessManager.invalidatePermissionsCache(subjectOperator);
+
+            return null;
+        });
+    }
+
+    @ApiOperation(description = "Lists permissioned operations")
+    public List<String> listPermissionValues(OperatorSessionData session) {
+        authorize(session);
+
+        return db.execute(sql -> sql.select(OPERATION.OPERATION_)
+                .from(OPERATION)
+                .where(OPERATION.OPERATION_.notLike("%*")) // Ignore wildcards
+                .fetch(OPERATION.OPERATION_));
+    }
+
     private AuthInfo approveAuthAttempt(OperatorSessionData session, OperatorPK operator) {
         var sessionToken = new Token();
         sessionTokenStore.put(sessionToken, operator);
         session.setAuth(operator, sessionToken);
         recordAuthAttempt(operator, true);
+        accessManager.invalidatePermissionsCache(operator);
 
         return new AuthInfo(getOperatorInfo(operator.clientId, operator.username),
                 sessionToken,
@@ -325,6 +423,30 @@ public class OperatorService {
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
                 .fetchOne(OperatorService::operatorFromRecord));
+    }
+
+    private static void grantPermissions(DSLContext sql, PermissionRecord[] grantRecords) {
+        try {
+            sql.loadInto(PERMISSION)
+                    .onDuplicateKeyIgnore()
+                    .loadRecords(grantRecords)
+                    .fields(PERMISSION.fields())
+                    .execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static boolean subsumesAllOperations(Set<String> operatorPermissions, Collection<String> operations) {
+        return operations.stream().allMatch(o -> subsumesOperation(operatorPermissions, o));
+    }
+
+    private static PermissionRecord[] createPermissionRecords(String clientId,
+                                                              String username,
+                                                              Collection<String> operations) {
+        return operations.stream()
+                .map(operation -> new PermissionRecord(clientId, username, operation))
+                .toArray(PermissionRecord[]::new);
     }
 
     private static boolean isOperatorActive(DSLContext sql, String clientId, String username) {

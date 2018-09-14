@@ -14,4 +14,6 @@ public interface AccessManager<S> {
     boolean authorize(String messageType, S sessionData);
 
     boolean isAllowed(String operationName, OperatorPK operator);
+
+    void invalidatePermissionsCache(OperatorPK operator);
 }
