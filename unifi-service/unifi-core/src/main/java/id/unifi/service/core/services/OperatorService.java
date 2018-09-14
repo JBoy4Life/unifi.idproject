@@ -6,6 +6,7 @@ import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.Validation;
 import static id.unifi.service.common.api.Validation.*;
 import id.unifi.service.common.api.access.Access;
+import id.unifi.service.common.api.access.AccessChecker;
 import id.unifi.service.common.api.access.AccessManager;
 import static id.unifi.service.common.api.access.AccessUtils.subsumesOperation;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
@@ -247,7 +248,10 @@ public class OperatorService {
     }
 
     @ApiOperation(access = Access.PERMISSIONED_NOT_CHECKED)
-    public void requestPasswordReset(OperatorSessionData session, String clientId, String username) {
+    public void requestPasswordReset(OperatorSessionData session,
+                                     String clientId,
+                                     String username,
+                                     AccessChecker accessChecker) {
         var invitee = new OperatorPK(clientId, username);
         var operator = session.getOperator();
 
@@ -257,7 +261,7 @@ public class OperatorService {
             onboarder = Optional.empty();
         } else {
             // Requesting reset on behalf of another operator, check access
-            if (!accessManager.isAllowed("core.operator.request-password-reset", operator)) throw new Unauthorized();
+            accessChecker.authorize();
 
             // Now check we're under the expected `clientId` as usual
             authorize(session, clientId);
@@ -325,12 +329,12 @@ public class OperatorService {
     }
 
     @ApiOperation(access = Access.PERMISSIONED_NOT_CHECKED, description = "Lists permissions for an operator")
-    public Set<String> listPermissions(OperatorSessionData session, String clientId, String username) {
+    public Set<String> listPermissions(OperatorSessionData session,
+                                       String clientId,
+                                       String username,
+                                       AccessChecker accessChecker) {
         var operator = authorize(session, clientId);
-
-        if (!username.equals(operator.username) && !accessManager.isAllowed("core.operator.list-permissions", operator))
-            throw new Unauthorized();
-
+        if (!username.equals(operator.username)) accessChecker.authorize();
         return accessManager.getPermissions(new OperatorPK(clientId, username));
     }
 

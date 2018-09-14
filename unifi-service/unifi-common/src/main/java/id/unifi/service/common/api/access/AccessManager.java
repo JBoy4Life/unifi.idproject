@@ -11,9 +11,11 @@ public interface AccessManager<S> {
 
     Set<String> getPermissions(OperatorPK operator);
 
-    boolean authorize(String messageType, S sessionData);
+    default boolean authorize(String messageType, S sessionData) {
+        return authorize(messageType, sessionData, false);
+    }
 
-    boolean isAllowed(String operationName, OperatorPK operator);
+    boolean authorize(String operation, S sessionData, boolean accessTypeAlreadyChecked);
 
     void invalidatePermissionsCache(OperatorPK operator);
 }

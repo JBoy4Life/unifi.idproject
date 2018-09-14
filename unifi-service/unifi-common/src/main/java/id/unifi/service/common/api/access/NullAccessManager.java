@@ -13,11 +13,7 @@ public class NullAccessManager<S> implements AccessManager<S> {
         return Set.of();
     }
 
-    public boolean authorize(String messageType, S sessionData) {
-        return true;
-    }
-
-    public boolean isAllowed(String operationName, OperatorPK operator) {
+    public boolean authorize(String operation, S sessionData, boolean accessTypeAlreadyChecked) {
         return true;
     }
 

@@ -75,21 +75,19 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
         log.info("Inserted {} new operations", operationsInserted);
     }
 
-    public boolean authorize(String operationName, OperatorSessionData session) {
+    public boolean authorize(String operationName, OperatorSessionData session, boolean accessTypeAlreadyChecked) {
         if (permissionedOperations == null)
             throw new IllegalStateException("Cannot authorize without list of permissioned operations");
 
         var operator = session.getOperator();
-        var operation = permissionedOperations.get(operationName);
-        return operation == null || operation.access == Access.PERMISSIONED_NOT_CHECKED
-                || (operator != null && subsumesOperation(getPermissions(operator), operationName));
-    }
 
-    public boolean isAllowed(String operationName, OperatorPK operator) {
-        if (permissionedOperations == null)
-            throw new IllegalStateException("Cannot authorize without list of permissioned operations");
-
-        return subsumesOperation(getPermissions(operator), operationName);
+        if (accessTypeAlreadyChecked) {
+            return operator != null && subsumesOperation(getPermissions(operator), operationName);
+        } else {
+            var operation = permissionedOperations.get(operationName);
+            return operation == null || operation.access == Access.PERMISSIONED_NOT_CHECKED
+                    || (operator != null && subsumesOperation(getPermissions(operator), operationName));
+        }
     }
 
     public Set<String> getPermissions(OperatorPK operator) {
