@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 public class Validation {
     private static final int SHORT_STRING_MAX_LENGTH = 64;
-    private static final Pattern shortIdPattern = Pattern.compile("^[a-zA-Z0-9._-]+$");
+    private static final Pattern shortIdPattern = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     public static void validateAll(ValidationDef... validationDefs) {
         List<ValidationError> validationErrors = new ArrayList<>();
