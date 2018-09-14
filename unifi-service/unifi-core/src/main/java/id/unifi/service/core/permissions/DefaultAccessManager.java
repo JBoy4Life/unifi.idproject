@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -61,17 +62,24 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
 
         var operationsInserted = db.execute(sql -> {
             var inserted = 0;
-            for (var messageType : operationNames) {
+            for (var operationName : operationNames) {
+                var description = getDescription(operationName);
                 inserted += sql.insertInto(OPERATION)
-                        .set(OPERATION.OPERATION_, messageType)
-                        .set(OPERATION.DESCRIPTION, "") // TODO: fill in
-                        .onConflictDoNothing()
+                        .set(OPERATION.OPERATION_, operationName)
+                        .set(OPERATION.DESCRIPTION, description)
+                        .onConflict()
+                        .doUpdate()
+                        .set(OPERATION.DESCRIPTION, description)
                         .execute();
             }
             return inserted;
         });
 
-        log.info("Inserted {} new operations", operationsInserted);
+        log.info("Inserted/updated {} operations", operationsInserted);
+    }
+
+    private String getDescription(String operationName) {
+        return Optional.ofNullable(this.permissionedOperations.get(operationName)).map(o -> o.description).orElse("");
     }
 
     public boolean isAuthorized(String operationName, OperatorSessionData session, boolean accessTypeAlreadyChecked) {
