@@ -30,8 +30,9 @@ import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.*;
+import static id.unifi.service.core.db.tables.Operator.OPERATOR;
+import static id.unifi.service.core.db.tables.Permission.PERMISSION;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
-import id.unifi.service.core.db.tables.records.PermissionRecord;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import id.unifi.service.dbcommon.Database;
@@ -44,16 +45,12 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.SelectField;
 import org.jooq.TableField;
-import org.jooq.impl.DSL;
-import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -351,23 +348,20 @@ public class OperatorService {
                 v("grant|revoke", disjoint(grant, revoke))
         );
 
+        Set<String> operationsToGrant = grant != null ? grant : Set.of();
+        Set<String> operationsToRevoke = revoke != null ? revoke : Set.of();
+
         var subjectOperator = new OperatorPK(clientId, username);
         var operatorPermissions = accessManager.getPermissions(operator);
 
-        if (grant == null) grant = Set.of();
-        if (revoke == null) revoke = Set.of();
-
-        var operations = Sets.union(grant, revoke);
+        var operations = Sets.union(operationsToGrant, operationsToRevoke);
 
         // An operator can only grant/revoke permissions they themselves have
         if (!subsumesAllOperations(operatorPermissions, operations)) throw new Unauthorized();
 
-        var grantRecords = createPermissionRecords(clientId, username, grant);
-        var revokeRecords = createPermissionRecords(clientId, username, revoke);
-
         db.execute(sql -> {
-            grantPermissions(sql, grantRecords);
-            sql.batchDelete(revokeRecords).execute();
+            grantPermissions(sql, clientId, username, operator.username, operationsToGrant);
+            revokePermissions(sql, clientId, username, operator.username, operationsToRevoke);
             accessManager.invalidatePermissionsCache(subjectOperator);
             return null;
         });
@@ -390,7 +384,7 @@ public class OperatorService {
 
             if (!subsumesAllOperations(operatorPermissions, operations)) throw new Unauthorized();
 
-            grantPermissions(sql, createPermissionRecords(clientId, username, operations));
+            grantPermissions(sql, clientId, username, operator.username, operations);
             accessManager.invalidatePermissionsCache(subjectOperator);
 
             return null;
@@ -405,6 +399,30 @@ public class OperatorService {
                 .from(OPERATION)
                 .where(OPERATION.OPERATION_.notLike("%*")) // Ignore wildcards
                 .fetch(OPERATION.OPERATION_));
+    }
+
+    private static void revokePermissions(DSLContext sql,
+                                          String clientId,
+                                          String username,
+                                          String revokedBy,
+                                          Collection<String> operations) {
+        // jOOQ doesn't support DML CTEs yet https://github.com/jOOQ/jOOQ/issues/4474
+        var query = sql.query("WITH d as ({0}) {1}",
+                deleteFrom(PERMISSION)
+                        .where(PERMISSION.CLIENT_ID.eq(clientId))
+                        .and(PERMISSION.USERNAME.eq(username))
+                        .and(PERMISSION.OPERATION.in(operations))
+                        .returning(),
+                insertInto(PERMISSION_HISTORY).select(select(
+                        field("client_id"),
+                        field("username"),
+                        field("operation"),
+                        field("granted_by"),
+                        val(revokedBy),
+                        field("since"),
+                        currentLocalDateTime()
+                ).from(table("d"))));
+        query.execute();
     }
 
     private AuthInfo approveAuthAttempt(OperatorSessionData session, OperatorPK operator) {
@@ -429,28 +447,19 @@ public class OperatorService {
                 .fetchOne(OperatorService::operatorFromRecord));
     }
 
-    private static void grantPermissions(DSLContext sql, PermissionRecord[] grantRecords) {
-        try {
-            sql.loadInto(PERMISSION)
-                    .onDuplicateKeyIgnore()
-                    .loadRecords(grantRecords)
-                    .fields(PERMISSION.fields())
-                    .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static void grantPermissions(DSLContext sql,
+                                         String clientId,
+                                         String username,
+                                         String grantedBy,
+                                         Collection<String> operations) {
+        var q = sql.insertInto(PERMISSION,
+                PERMISSION.CLIENT_ID, PERMISSION.USERNAME, PERMISSION.OPERATION, PERMISSION.GRANTED_BY);
+        for (var operation : operations) q = q.values(clientId, username, operation, grantedBy);
+        q.onConflictDoNothing().execute();
     }
 
     private static boolean subsumesAllOperations(Set<String> operatorPermissions, Collection<String> operations) {
         return operations.stream().allMatch(o -> subsumesOperation(operatorPermissions, o));
-    }
-
-    private static PermissionRecord[] createPermissionRecords(String clientId,
-                                                              String username,
-                                                              Collection<String> operations) {
-        return operations.stream()
-                .map(operation -> new PermissionRecord(clientId, username, operation))
-                .toArray(PermissionRecord[]::new);
     }
 
     private static boolean isOperatorActive(DSLContext sql, String clientId, String username) {
@@ -481,7 +490,7 @@ public class OperatorService {
                 .doUpdate()
                 .set(OPERATOR_PASSWORD.PASSWORD_HASH, hash)
                 .set(OPERATOR_PASSWORD.ALGORITHM, SecretHashing.SCRYPT_FORMAT_NAME)
-                .set(OPERATOR_PASSWORD.SINCE, DSL.currentLocalDateTime())
+                .set(OPERATOR_PASSWORD.SINCE, currentLocalDateTime())
                 .execute();
     }
 

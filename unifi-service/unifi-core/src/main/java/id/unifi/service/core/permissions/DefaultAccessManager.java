@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import id.unifi.service.common.api.ServiceRegistry;
 import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.access.AccessManager;
-import static id.unifi.service.common.api.access.AccessUtils.getAllSubsumingOperations;
+import id.unifi.service.common.api.access.AccessUtils;
 import static id.unifi.service.common.api.access.AccessUtils.subsumesOperation;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DefaultAccessManager implements AccessManager<OperatorSessionData> {
     private static final Logger log = LoggerFactory.getLogger(DefaultAccessManager.class);
@@ -57,7 +56,7 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
         this.permissionedOperations = permissionedOperations.stream().collect(toMap(o -> o.messageType, identity()));
 
         var operationNames = this.permissionedOperations.keySet().stream()
-                .flatMap(o -> Stream.of(getAllSubsumingOperations(o)))
+                .flatMap(AccessUtils::getAllSubsumingOperations)
                 .collect(Collectors.toUnmodifiableSet());
 
         var operationsInserted = db.execute(sql -> {
