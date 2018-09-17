@@ -97,18 +97,6 @@ public class ServiceRegistry {
         this.operations = preloadOperations(services);
         this.operationUrlPathTree = generateUrlPathTree(operations.values());
     }
-    private Map<HttpMethod, PathNode> generateUrlPathTree(Collection<Operation> operations) {
-        var byMethod = new HashMap<HttpMethod, PathNode>();
-        for (var operation : operations) {
-            var httpSpec = operation.httpSpec;
-            if (httpSpec == null) continue;
-            var node = byMethod.computeIfAbsent(httpSpec.method, m -> new PathNode());
-            for (var segment : httpSpec.segments) node = node.addMapping(segment);
-            node.setOperation(operation);
-        }
-
-        return byMethod;
-    }
 
     public Object invokeRpc(Operation operation, Object[] params) {
         try {
@@ -159,6 +147,19 @@ public class ServiceRegistry {
 
         var operation = node.getOperation();
         return operation == null ? null : new OperationMatch(operation, unmodifiableMap(pathParams));
+    }
+
+    private Map<HttpMethod, PathNode> generateUrlPathTree(Collection<Operation> operations) {
+        var byMethod = new HashMap<HttpMethod, PathNode>();
+        for (var operation : operations) {
+            var httpSpec = operation.httpSpec;
+            if (httpSpec == null) continue;
+            var node = byMethod.computeIfAbsent(httpSpec.method, m -> new PathNode());
+            for (var segment : httpSpec.segments) node = node.addMapping(segment);
+            node.setOperation(operation);
+        }
+
+        return byMethod;
     }
 
     private static Map<Class<?>, ApiService> discoverServices(ClassPath classPath, String packageName) {
