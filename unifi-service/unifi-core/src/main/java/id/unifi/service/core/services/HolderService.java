@@ -61,7 +61,9 @@ public class HolderService {
 
     private static final Map<? extends TableField<HolderRecord, ?>, Function<FieldChanges, ?>> editables = Map.of(
             HOLDER.NAME, c -> c.name,
-            HOLDER.ACTIVE, c -> c.active);
+            HOLDER.ACTIVE, c -> c.active,
+            HOLDER.NOTE, c -> c.note
+    );
 
 
     public HolderService(DatabaseProvider dbProvider) {
@@ -240,6 +242,7 @@ public class HolderService {
         return new HolderInfo(
                 r.get(HOLDER.CLIENT_REFERENCE),
                 r.get(HOLDER.NAME),
+                r.get(HOLDER.NOTE),
                 HolderType.fromString(r.get(HOLDER.HOLDER_TYPE)),
                 r.get(HOLDER.ACTIVE),
                 fieldValueOpt(r, HOLDER_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))),
@@ -277,6 +280,7 @@ public class HolderService {
     public static class HolderInfo {
         public final String clientReference;
         public final String name;
+        public final String note;
         public final HolderType holderType;
         public final boolean active;
         public final Optional<ImageWithType> image;
@@ -284,12 +288,14 @@ public class HolderService {
 
         public HolderInfo(String clientReference,
                           String name,
+                          String note,
                           HolderType holderType,
                           boolean active,
                           Optional<ImageWithType> image,
                           Optional<Map<String, Object>> metadata) {
             this.clientReference = clientReference;
             this.name = name;
+            this.note = note;
             this.holderType = holderType;
             this.active = active;
             this.image = image;
@@ -313,6 +319,7 @@ public class HolderService {
 
     public static class FieldChanges {
         public String name;
+        public String note;
         public Boolean active;
         public Optional<byte[]> image;
         public Map<String, Object> metadata;
@@ -321,7 +328,7 @@ public class HolderService {
 
         void validate() {
             validateAll(
-                    v("name|active|image|metadata", atLeastOneNonNull(name, active, image, metadata)),
+                    v("name|note|active|image|metadata", atLeastOneNonNull(name, note, active, image, metadata)),
                     v("name", name, Validation::shortString)
             );
         }
