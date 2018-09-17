@@ -114,6 +114,7 @@ public class HolderService {
                           String clientReference,
                           HolderType holderType,
                           String name,
+                          String note,
                           @Nullable Boolean active,
                           @Nullable byte[] image,
                           @Nullable Map<String, Object> metadata) {
@@ -129,6 +130,7 @@ public class HolderService {
                         .set(HOLDER.HOLDER_TYPE, holderType.toString())
                         .set(HOLDER.NAME, name)
                         .set(HOLDER.ACTIVE, active != null ? active : true)
+                        .set(HOLDER.NOTE, note)
                         .execute();
 
                 // TODO: validate metadata
