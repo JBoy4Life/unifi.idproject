@@ -116,7 +116,7 @@ public class HolderService {
                           String clientReference,
                           HolderType holderType,
                           String name,
-                          String note,
+                          @Nullable String note,
                           @Nullable Boolean active,
                           @Nullable byte[] image,
                           @Nullable Map<String, Object> metadata) {
