@@ -8,6 +8,7 @@ export default ({
   defaultParams, // default paramater values in case fields are missing in payload
   selectorKey,
   subscribe = false,
+  component,
   payloadOnSuccess,
   payloadOnFail
 }) => (payload, formSubmit) => {
@@ -19,8 +20,11 @@ export default ({
     payload: {
       ...(fields ? pick(defaultParams, fields) : defaultParams),
       ...(fields ? pick(payload, fields) : payload),
-    }
+    },
   }
+
+  if (subscribe && component)
+    requestPayload.component = component
 
   return {
     type,

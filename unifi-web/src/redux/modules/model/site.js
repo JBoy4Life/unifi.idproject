@@ -71,6 +71,7 @@ export const listenToSubscriptions = createWsAction({
     includeLastKnown: true
   },
   subscribe: true,
+  component: 'live-view',
   payloadOnSuccess: (payload, getState) => ({
     ...payload,
     data: mergeDiscoveryUpdate(liveDiscoverySelector(getState()), payload.data)

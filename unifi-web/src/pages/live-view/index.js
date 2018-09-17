@@ -24,7 +24,7 @@ import { userIsAuthenticatedRedir } from 'hocs/auth'
 import { withClientId } from 'hocs'
 import { ZONE_ENTITIES_VALIDATE_INTERVAL } from 'config/constants'
 import Loading from 'components/loading'
-import { correlationId } from 'lib/unifi-ws-client'
+import { getCorrelationId } from 'lib/unifi-ws-client/utils/helpers'
 
 const zonesSelector = fp.compose(
   (zonesInfo) => (
@@ -183,7 +183,12 @@ class LiveView extends PureComponent {
 
   unsubscribe = () => {
     const { unsubscribe } = this.props
-    unsubscribe({ correlationId })
+    getCorrelationId('live-view').forEach( correlationId =>
+      unsubscribe({
+        correlationId: correlationId,
+        component: 'live-view'
+      })
+    )
   }
 
   handleZoneChange = (zoneId) => {

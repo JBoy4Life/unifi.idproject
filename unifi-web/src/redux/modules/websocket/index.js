@@ -6,12 +6,13 @@ export const API_PENDING = 'unifi.API_REQUEST_PENDING'
 export const API_SUBSCRIBE_UPDATE = 'unifi.API_SUBSCRIBE_UPDATE'
 export const API_UNSUBSCRIBE = 'unifi.API_UNSUBSCRIBE'
 
-export const unsubscribe = ({correlationId}) => (dispatch, getState) =>
+export const unsubscribe = ({correlationId, component}) => (dispatch, getState) =>
   dispatch({
     type: API_UNSUBSCRIBE,
     socketUnsubscribe: {
       messageType: 'core.protocol.unsubscribe',
-      correlationId: correlationId
+      correlationId: correlationId,
+      component: component
     }
   })
 
