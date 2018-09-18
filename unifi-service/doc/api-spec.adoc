@@ -4,7 +4,7 @@ JSON or MessagePack (TBD) over a WebSocket.
 
 Most "short" identifier fields, e.g. username, email, clientReference, can be up to 64 characters long and are case-preserving unless specified otherwise. A character is a Unicode code point as per the PostgreSQL definition, and no (de)normalization takes place.
 
-clientId and username have to match `^[a-zA-Z0-9._-]{1,64}$`.
+clientId and username have to match `^[a-zA-Z0-9_-]{1,64}$`.
 
 JSON representation of non-native types:
 
@@ -45,7 +45,7 @@ Response format:
 
 In addition to single request-response interactions, multiple responses are sent for some requests.
 
-These have types matching `*.*.subscribe-*` by convention.
+These have types matching `+*.*.subscribe-*+` by convention.
 
 The flow is as follows:
 
@@ -58,7 +58,7 @@ Subscriptions are dropped on disconnection, so clients need to resubscribe after
 
 == List/get options
 
-Some `*.*.list-*` and `*.*.get-*` message types support the following functionality:
+Some `+*.*.list-*+` and `+*.*.get-*+` message types support the following functionality:
 
 === Filter (list only)
 
