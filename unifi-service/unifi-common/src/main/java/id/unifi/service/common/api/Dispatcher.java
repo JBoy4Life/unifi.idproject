@@ -17,6 +17,7 @@ import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.MissingParameter;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
+import static id.unifi.service.common.api.errors.UnauthorizedReason.PERMISSION;
 import static id.unifi.service.common.api.http.HttpUtils.*;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.subscriptions.SubscriptionManager;
@@ -279,7 +280,7 @@ public class Dispatcher<S> {
         var sessionData = sessionDataStore.get(session);
         if (sessionData == null) return; // Ignore dead sessions
 
-        if (!accessManager.isAuthorized(message.messageType, sessionData)) throw new Unauthorized();
+        if (!accessManager.isAuthorized(message.messageType, sessionData)) throw new Unauthorized(PERMISSION);
 
         var params = getParams(mapper, operation, session, sessionData, message.payload::get);
 
@@ -342,7 +343,7 @@ public class Dispatcher<S> {
                                 Protocol protocol,
                                 Function<String, JsonNode> getParam,
                                 ServiceRegistry.Operation operation) {
-        if (!accessManager.isAuthorized(operation.messageType, sessionData)) throw new Unauthorized();
+        if (!accessManager.isAuthorized(operation.messageType, sessionData)) throw new Unauthorized(PERMISSION);
         var params = getParams(mapper, operation, null, sessionData, getParam);
         var result = serviceRegistry.invokeRpc(operation, params);
         var payload = mapper.valueToTree(result);
@@ -367,7 +368,8 @@ public class Dispatcher<S> {
                 // TODO: Capture operator in session; reading mutable session data several times (here and in
                 // service impl) may yield different operators -> potential vulnerability
                 return (AccessChecker) () -> {
-                    if (!accessManager.isAuthorized(operation.messageType, sessionData, true)) throw new Unauthorized();
+                    if (!accessManager.isAuthorized(operation.messageType, sessionData, true))
+                        throw new Unauthorized(PERMISSION);
                 };
             }
 
