@@ -19,8 +19,11 @@ import org.jooq.Record;
 import org.jooq.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @ApiService("client")
 public class ClientService {
@@ -38,11 +41,9 @@ public class ClientService {
         log.info("Listing clients");
         authorize(session);
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
-
                 .fetch(ClientService::clientInfoFromRecord));
     }
 
-    // creating operators goes into the logs of the server
     @ApiOperation
     @HttpMatch(path = "clients/:clientId")
     public ClientInfo getClient(String clientId, @Nullable Set<String> with) {
@@ -63,14 +64,12 @@ public class ClientService {
         return tables;
     }
 
-
     private static ClientInfo clientInfoFromRecord(Record r) {
         return new ClientInfo(
                 r.get(CLIENT.CLIENT_ID),
                 r.get(CLIENT.DISPLAY_NAME),
                 fieldValueOpt(r, CLIENT_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))));
     }
-
 
     private static OperatorPK authorize(OperatorSessionData sessionData) {
         return Optional.ofNullable(sessionData.getOperator())

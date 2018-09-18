@@ -19,7 +19,7 @@ import static org.jooq.impl.DSL.*;
 
 public class VisitProcessor {
     private static final Logger log = LoggerFactory.getLogger(CoreService.class);
-    private static final String VISIT_CUTOFF_TIME = "05:00";
+    private static final String VISIT_CALCULATION_TIME = "05:00";
     private final Database db;
 
     public VisitProcessor(DatabaseProvider dbProvider) {
@@ -29,7 +29,7 @@ public class VisitProcessor {
     public void insertVisits(String timeZone) {
         log.info("Visit calculation starting at {}", timeZone);
         var now = ZonedDateTime.now(ZoneId.of(timeZone));
-        var endTime = now.with(LocalTime.parse(VISIT_CUTOFF_TIME));
+        var endTime = now.with(LocalTime.parse(VISIT_CALCULATION_TIME));
         var startTime = endTime.minusDays(1);
 
         db.execute(sql -> {
