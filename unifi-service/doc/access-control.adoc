@@ -47,7 +47,7 @@ Permissions can be granted on operations directly (e.g. `core.site.list-sites`) 
 A request is fulfilled if at least one of the operations granted to the authenticated operator subsumes the requested
 operation. The "subsumes" relation is defined as follows:
 
-- `+<vertical>.<service>.*+` subsumes - `+<vertical>.<service>.<operation>+`
+- `+<vertical>.<service>.*+` subsumes `+<vertical>.<service>.<operation>+`
 - `+<vertical>.*.*+` subsumes `+<vertical>.<service>.*+`
 - The relation is reflexive and transitive. (It is also a partial order.)
 
