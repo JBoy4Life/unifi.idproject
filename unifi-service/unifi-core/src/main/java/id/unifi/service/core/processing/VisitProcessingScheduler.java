@@ -20,12 +20,12 @@ import static id.unifi.service.core.db.Tables.*;
 public class VisitProcessingScheduler {
     private static final Logger log = LoggerFactory.getLogger(VisitProcessor.class);
     private static final Scheduler scheduler = new Scheduler();
-    private static final String VISIT_CUTOFF_TIME = "05:00";
+    private static final String VISIT_CALCULATION_TIME = "05:00";
     private final Database db;
     private final VisitProcessor visitProcessor;
 
     public VisitProcessingScheduler(DatabaseProvider dbProvider, VisitProcessor visitProcessor) {
-        this.db = dbProvider.bySchema(CORE, CORE);
+        this.db = dbProvider.bySchema(CORE);
         this.visitProcessor = visitProcessor;
     }
 
@@ -37,7 +37,7 @@ public class VisitProcessingScheduler {
         for (var clientZone : clientZoneIds) {
             scheduler.schedule(
                     () -> visitProcessor.insertVisits(clientZone),
-                    new FixedHourSchedule(VISIT_CUTOFF_TIME, ZoneId.of(clientZone))
+                    new FixedHourSchedule(VISIT_CALCULATION_TIME, ZoneId.of(clientZone))
             );
         }
     }

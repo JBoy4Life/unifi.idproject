@@ -1,4 +1,4 @@
-CREATE TABLE core.visit(
+CREATE TABLE core.visit (
   client_id          CITEXT NOT NULL,
   client_reference   CITEXT NOT NULL,
   start_time         TIMESTAMP NOT NULL,
@@ -14,7 +14,8 @@ CREATE TABLE core.visit(
     FOREIGN KEY (client_id, client_reference)
     REFERENCES core.contact,
 
-CHECK(calculation_method IN ('interpolated-day',
- 'interpolated-month', 'interpolated-site',
- 'interpolated-night', 'measured-day', 'measured-night'))
+  CHECK (calculation_method IN ('interpolated-day',
+   'interpolated-month', 'interpolated-site',
+   'interpolated-night', 'measured-day', 'measured-night')),
+  CHECK (end_time >= start_time)
 );

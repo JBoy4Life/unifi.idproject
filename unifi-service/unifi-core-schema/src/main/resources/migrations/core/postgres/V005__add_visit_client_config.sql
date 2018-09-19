@@ -1,0 +1,1 @@
+ALTER TABLE core.client_config ADD COLUMN visit_calculation_enabled BOOLEAN NOT NULL DEFAULT TRUE;
