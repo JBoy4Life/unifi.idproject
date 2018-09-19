@@ -3,6 +3,7 @@
 == Useful links
 
 - link:doc/api-spec.adoc[API Specification]
+- link:doc/access-control.adoc[Access Control]
 - link:doc/min-requirements.adoc[Minimum Requirements]
 
 == Build dependencies
