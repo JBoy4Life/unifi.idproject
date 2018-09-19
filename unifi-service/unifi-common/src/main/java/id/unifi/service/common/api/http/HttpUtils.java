@@ -3,6 +3,7 @@ package id.unifi.service.common.api.http;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import static com.google.common.net.HttpHeaders.ACCEPT;
+import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import com.google.common.net.MediaType;
 import id.unifi.service.common.api.Channel;
@@ -178,13 +179,26 @@ public class HttpUtils {
         }
     }
 
-    public static Optional<Token> extractAuthToken(String authorizationHeader) {
-        var matcher = authorizationPattern.matcher(authorizationHeader);
-        if (!matcher.matches()) return Optional.empty();
-        try {
-            return Optional.of(new Token(base64.decode(matcher.group(1))));
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
+    public static Optional<Token> extractAuthToken(HttpServletRequest request) {
+        var authorizationHeader = request.getHeader(AUTHORIZATION);
+        if (authorizationHeader != null) {
+            var matcher = authorizationPattern.matcher(authorizationHeader);
+            if (!matcher.matches()) return Optional.empty();
+            try {
+                return Optional.of(new Token(base64.decode(matcher.group(1))));
+            } catch (IllegalArgumentException e) {
+                return Optional.empty();
+            }
+        } else {
+            return Optional.ofNullable(getQueryParameters(request.getQueryString()).get("_sessionToken"))
+                    .flatMap(t -> t.length > 0 ? Optional.of(t[0]) : Optional.empty())
+                    .flatMap(t -> {
+                        try {
+                            return Optional.of(new Token(base64.decode(t)));
+                        } catch (IllegalArgumentException e) {
+                            return Optional.empty();
+                        }
+                    });
         }
     }
 }
