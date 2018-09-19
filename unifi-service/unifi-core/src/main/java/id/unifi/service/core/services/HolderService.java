@@ -2,6 +2,7 @@ package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import id.unifi.service.common.HolderType;
 import id.unifi.service.common.api.Protocol;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
@@ -11,6 +12,7 @@ import static id.unifi.service.common.api.Validation.v;
 import static id.unifi.service.common.api.Validation.validateAll;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
@@ -46,6 +48,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
+import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,6 +101,27 @@ public class HolderService {
                 .where(HOLDER.CLIENT_ID.eq(clientId))
                 .and(HOLDER.CLIENT_REFERENCE.eq(clientReference))
                 .fetchOne(HolderService::recordToInfo));
+    }
+
+    @ApiOperation
+    @HttpMatch(path = "clients/:clientId/holders/:clientReference/image")
+    public void getHolderImage(OperatorSessionData session,
+                               String clientId,
+                               String clientReference,
+                               AsyncContext context) throws IOException {
+        authorize(session, clientId);
+        var response = (HttpServletResponse) context.getResponse();
+
+        var imageRecord = db.execute(sql -> sql.select(HOLDER_IMAGE.MIME_TYPE, HOLDER_IMAGE.IMAGE)
+                .from(HOLDER_IMAGE)
+                .where(HOLDER_IMAGE.CLIENT_ID.eq(clientId))
+                .and(HOLDER_IMAGE.CLIENT_REFERENCE.eq(clientReference))
+                .fetchOne());
+
+        if (imageRecord == null) throw new NotFound("holder_image");
+        response.setHeader(CONTENT_TYPE, imageRecord.get(HOLDER_IMAGE.MIME_TYPE));
+        response.getOutputStream().write(imageRecord.get(HOLDER_IMAGE.IMAGE));
+        context.complete();
     }
 
     @ApiOperation
