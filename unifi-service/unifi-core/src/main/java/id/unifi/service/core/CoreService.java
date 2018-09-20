@@ -33,6 +33,8 @@ import static id.unifi.service.core.db.Core.CORE;
 import id.unifi.service.core.email.SmtpEmailSenderProvider;
 import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.processing.DetectionProcessor;
+import id.unifi.service.core.processing.VisitProcessor;
+import id.unifi.service.core.processing.VisitProcessingScheduler;
 import id.unifi.service.core.processing.consumer.DetectionPersistence;
 import id.unifi.service.core.processing.listener.DetectionSubscriber;
 import id.unifi.service.core.sms.AwsSmsSenderProvider;
@@ -116,6 +118,10 @@ public class CoreService {
         var detectionProcessor = new DetectionProcessor(config.mq(), detectionMatcher,
                 Set.of(detectionPersistence, attendanceProcessor),
                 Set.of(detectionSubscriber));
+
+        var visitProcessor = new VisitProcessor(dbProvider);
+        var visitScheduler = new VisitProcessingScheduler(dbProvider, visitProcessor);
+        visitScheduler.scheduleVisitJob();
 
         var emailSenderProvider = config.smtpServer() != null
                 ? new SmtpEmailSenderProvider(config.mq())
