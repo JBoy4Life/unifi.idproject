@@ -19,3 +19,5 @@ CREATE TABLE core.visit (
    'interpolated-night', 'measured-day', 'measured-night')),
   CHECK (end_time >= start_time)
 );
+
+ALTER TABLE core.client_config ADD COLUMN visit_calculation_enabled BOOLEAN NOT NULL DEFAULT TRUE;
