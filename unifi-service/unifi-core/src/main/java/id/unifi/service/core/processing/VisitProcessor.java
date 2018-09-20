@@ -37,7 +37,7 @@ public class VisitProcessor {
         log.info("Period for visit calculation starts at:{} ends at:{}", startTime, endTime);
 
         var inserted = db.execute(sql -> sql.insertInto(CORE.VISIT).
-                select((selectDistinct(RFID_DETECTION.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE,
+                select(selectDistinct(RFID_DETECTION.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE,
                         RFID_DETECTION.DETECTION_TIME.minOver()
                                 .partitionBy(
                                         RFID_DETECTION.CLIENT_ID, READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
@@ -58,7 +58,7 @@ public class VisitProcessor {
                         .and(CLIENT_CONFIG.VISIT_CALCULATION_ENABLED.isTrue())
                         .andExists(selectOne().from(CONTACT)
                                 .where(CONTACT.CLIENT_REFERENCE.eq(ASSIGNMENT.CLIENT_REFERENCE)
-                                )))
+                                ))
                 ).onConflictDoNothing().execute());
         log.info("Visit tuples inserted for {}: {}", timeZone, inserted);
     }
