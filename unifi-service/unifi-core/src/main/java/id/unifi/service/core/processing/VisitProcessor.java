@@ -37,30 +37,29 @@ public class VisitProcessor {
         log.info("Period for visit calculation starts at:{} ends at:{}", startTime, endTime);
 
         var inserted = db.execute(sql -> sql.insertInto(CORE.VISIT).
-                 select(
-                         (selectDistinct(RFID_DETECTION.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE,
-                                 RFID_DETECTION.DETECTION_TIME.minOver()
-                                         .partitionBy(RFID_DETECTION.CLIENT_ID,
-                                                 READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
-                                 RFID_DETECTION.DETECTION_TIME.maxOver()
-                                         .partitionBy(RFID_DETECTION.CLIENT_ID,
-                                                 READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
-                                 val("measured-day"), READER.SITE_ID)
-                                 .from(RFID_DETECTION)
-                                 .join(READER).on(READER.CLIENT_ID.eq(RFID_DETECTION.CLIENT_ID),
-                                         READER.READER_SN.eq(RFID_DETECTION.READER_SN))
-                                 .join(SITE).onKey(READER__FK_READER_TO_SITE)
-                                 .join(CLIENT_CONFIG).on(RFID_DETECTION.CLIENT_ID.eq(CLIENT_CONFIG.CLIENT_ID))
-                                 .join(DETECTABLE).onKey(RFID_DETECTION__FK_RFID_DETECTION_TO_DETECTABLE)
-                                 .join(ASSIGNMENT).onKey(ASSIGNMENT__FK_ASSIGNMENT_TO_DETECTABLE)
-                                 .where(RFID_DETECTION.DETECTION_TIME
-                                         .between(utcLocalFromZoned(startTime), utcLocalFromZoned(endTime)))
-                                 .and(SITE.TIME_ZONE.eq(timeZone))
-                                 .and(CLIENT_CONFIG.VISIT_CALCULATION_ENABLED.isTrue())
-                                 .andExists(selectOne().from(CONTACT)
-                                         .where(CONTACT.CLIENT_REFERENCE.eq(ASSIGNMENT.CLIENT_REFERENCE)
-                                         )))
-                 ).onConflictDoNothing().execute());
+                select((selectDistinct(RFID_DETECTION.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE,
+                        RFID_DETECTION.DETECTION_TIME.minOver()
+                                .partitionBy(
+                                        RFID_DETECTION.CLIENT_ID, READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
+                        RFID_DETECTION.DETECTION_TIME.maxOver()
+                                .partitionBy(
+                                        RFID_DETECTION.CLIENT_ID, READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
+                        val("measured-day"), READER.SITE_ID)
+                        .from(RFID_DETECTION)
+                        .join(READER).on(READER.CLIENT_ID.eq(RFID_DETECTION.CLIENT_ID),
+                                READER.READER_SN.eq(RFID_DETECTION.READER_SN))
+                        .join(SITE).onKey(READER__FK_READER_TO_SITE)
+                        .join(CLIENT_CONFIG).on(RFID_DETECTION.CLIENT_ID.eq(CLIENT_CONFIG.CLIENT_ID))
+                        .join(DETECTABLE).onKey(RFID_DETECTION__FK_RFID_DETECTION_TO_DETECTABLE)
+                        .join(ASSIGNMENT).onKey(ASSIGNMENT__FK_ASSIGNMENT_TO_DETECTABLE)
+                        .where(RFID_DETECTION.DETECTION_TIME
+                                .between(utcLocalFromZoned(startTime), utcLocalFromZoned(endTime)))
+                        .and(SITE.TIME_ZONE.eq(timeZone))
+                        .and(CLIENT_CONFIG.VISIT_CALCULATION_ENABLED.isTrue())
+                        .andExists(selectOne().from(CONTACT)
+                                .where(CONTACT.CLIENT_REFERENCE.eq(ASSIGNMENT.CLIENT_REFERENCE)
+                                )))
+                ).onConflictDoNothing().execute());
         log.info("Visit tuples inserted for {}: {}", timeZone, inserted);
     }
 }
