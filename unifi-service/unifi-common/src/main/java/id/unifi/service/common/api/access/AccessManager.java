@@ -1,6 +1,8 @@
 package id.unifi.service.common.api.access;
 
 import id.unifi.service.common.api.ServiceRegistry;
+import id.unifi.service.common.api.errors.Unauthorized;
+import static id.unifi.service.common.api.errors.UnauthorizedReason.PERMISSION;
 import id.unifi.service.common.types.pk.OperatorPK;
 
 import java.util.Collection;
@@ -11,11 +13,15 @@ public interface AccessManager<S> {
 
     Set<String> getPermissions(OperatorPK operator);
 
-    default boolean isAuthorized(String messageType, S sessionData) {
-        return isAuthorized(messageType, sessionData, false);
+    boolean isAuthorized(String operation, S sessionData, boolean skipAccessTypeCheck);
+
+    default void ensureAuthorized(String operation, S sessionData, boolean skipAccessTypeCheck) {
+        if (!isAuthorized(operation, sessionData, skipAccessTypeCheck)) throw new Unauthorized(PERMISSION);
     }
 
-    boolean isAuthorized(String operation, S sessionData, boolean accessTypeAlreadyChecked);
+    default void ensureAuthorized(String operation, S sessionData) {
+        ensureAuthorized(operation, sessionData, false);
+    }
 
     void invalidatePermissionsCache(OperatorPK operator);
 }

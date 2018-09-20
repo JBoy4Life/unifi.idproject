@@ -5,5 +5,5 @@ package id.unifi.service.common.api.access;
  */
 @FunctionalInterface
 public interface AccessChecker {
-    void authorize();
+    void ensureAuthorized();
 }

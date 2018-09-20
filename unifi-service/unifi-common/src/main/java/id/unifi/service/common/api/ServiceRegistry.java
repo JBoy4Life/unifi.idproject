@@ -235,7 +235,7 @@ public class ServiceRegistry {
                     var methodParams = method.getParameters();
 
                     var multiReturnType = getMultiResponseReturnType(returnType, methodParams);
-                    var invocationType = multiReturnType != null ? MULTI : RPC;
+                    var invocationType = multiReturnType == null ? RPC : MULTI;
                     Map<String, Param> params;
                     Type responseType;
                     String resultTypeName;
@@ -256,9 +256,7 @@ public class ServiceRegistry {
 
                             params = preloadParams(methodParams);
                             responseType = returnType;
-                            resultTypeName = annotatedResultType.isEmpty()
-                                    ? messageType + "-result"
-                                    : annotatedResultType.startsWith(".") ? operationNamespace + annotatedResultType : annotatedResultType;
+                            resultTypeName = getResultMessageType(operationNamespace, operationName, annotatedResultType);
 
                             if (restAnnotation != null) {
                                 var path = restAnnotation.path();
@@ -283,6 +281,19 @@ public class ServiceRegistry {
             }
         }
         return operations;
+    }
+
+    private static String getResultMessageType(String operationNamespace, String operationName, String annotatedResultType) {
+        if (annotatedResultType.isEmpty()) {
+            // Default to `<vertical>.<service>.<operation>-result`
+            return operationNamespace + "." + operationName + "-result";
+        } else if (annotatedResultType.startsWith(".")) {
+            // `.<result-type>` annotation -> `<vertical>.<service>.<result-type>`
+            return operationNamespace + annotatedResultType;
+        } else {
+            // `<result-type>` annotation -> `<result-type>`
+            return annotatedResultType;
+        }
     }
 
     private static Map<String, Param> preloadParams(Parameter[] methodParameters) {

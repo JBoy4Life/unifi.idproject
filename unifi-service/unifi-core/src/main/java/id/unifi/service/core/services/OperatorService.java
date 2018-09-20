@@ -258,7 +258,7 @@ public class OperatorService {
             onboarder = Optional.empty();
         } else {
             // Requesting reset on behalf of another operator, check access
-            accessChecker.authorize();
+            accessChecker.ensureAuthorized();
 
             // Now check we're under the expected `clientId` as usual
             authorize(session, clientId);
@@ -266,7 +266,6 @@ public class OperatorService {
             onboarder = Optional.of(operator);
         }
 
-        // TODO: Should return an error if inviting an inactive operator
         db.execute(sql -> {
             if (isOperatorActive(sql, clientId, username))
                 requestPasswordSet(sql, clientId, username, onboarder);
@@ -331,7 +330,7 @@ public class OperatorService {
                                        String username,
                                        AccessChecker accessChecker) {
         var operator = authorize(session, clientId);
-        if (!username.equals(operator.username)) accessChecker.authorize();
+        if (!username.equals(operator.username)) accessChecker.ensureAuthorized();
         return accessManager.getPermissions(new OperatorPK(clientId, username));
     }
 
