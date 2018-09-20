@@ -18,7 +18,6 @@ import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
-import org.jooq.Record1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,7 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
                                 .where(PERMISSION.CLIENT_ID.eq(operator.clientId))
                                 .and(PERMISSION.USERNAME.eq(operator.username))
                                 .stream()
-                                .map(Record1::value1)
+                                .map(r -> r.get(PERMISSION.OPERATION).intern())
                                 .collect(toSet())
                 )));
     }
@@ -59,6 +58,7 @@ public class DefaultAccessManager implements AccessManager<OperatorSessionData> 
 
         var operationNames = this.permissionedOperations.keySet().stream()
                 .flatMap(AccessUtils::getAllSubsumingOperations)
+                .map(String::intern)
                 .collect(Collectors.toUnmodifiableSet());
 
         var operationsInserted = db.execute(sql -> {
