@@ -12,45 +12,55 @@ import './index.scss'
 
 const reports = [
   {
-    name: 'unifi.julycentralworking.dashboard',
-    key: '/reports/july-central-working',
-    label: 'July Central Working',
-    published_link: '987cc85b7388c0961b3d4074388f7985/july-central-working-'
-  },
-  {
     name: 'unifi.centralworking.dashboard',
     key: '/reports/unifi-dashboard',
     label: 'unifi.id Dashboard',
-    published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
+    published_link_desktop: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard',
+    published_link_mobile: '0104ba210c544c9ac71ce2e546b181a5/unificentralworkingdevmobile1'
   },
   {
     name: 'unifi.test-club.dashboard',
     key: '/reports/test-club',
     label: 'Test Club Dashboard',
-    published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
+    published_link_desktop: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard',
+    published_link_mobile: '0104ba210c544c9ac71ce2e546b181a5/unificentralworkingdevmobile1'
   }
 ]
 
 const ReportsDashboards = ({ publishedLink }) => (
-  <iframe src={`https://app.klipfolio.com/published/${publishedLink}`} />
+  <div className="iframe__container">
+    <iframe src={`https://app.klipfolio.com/published/${publishedLink}`} />
+  </div>
 )
 
 class Reports extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      reportsList: []
+      reportsList: [],
+      width: window.innerWidth
     }
   }
 
   componentWillMount() {
     this.setState({ reportsList: this.filterReportsByClientId(this.props.clientId) })
+    window.addEventListener('resize', this.handleWindowSizeChange)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleWindowSizeChange);
+  }
+
+  handleWindowSizeChange = () => {
+    this.setState({ width: window.innerWidth });
   }
 
   filterReportsByClientId = (clientId) => reports.filter( report => report.name.split('.')[1] === clientId )
 
   render() {
-    const { reportsList } = this.state
+    const { reportsList, width } = this.state
+    const publishedLink = width <= 600 ? 'published_link_mobile' : 'published_link_desktop'
+
     return (
       <PageContainer className="reports__page">
         <PageContent>
@@ -68,7 +78,7 @@ class Reports extends Component {
                       <Route
                         key={index}
                         path={dashboard.key}
-                        render={() => <ReportsDashboards publishedLink={dashboard.published_link} />}
+                        render={() => <ReportsDashboards publishedLink={dashboard[publishedLink]} />}
                       />
                     )
                   }
