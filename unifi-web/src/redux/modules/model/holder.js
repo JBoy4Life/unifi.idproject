@@ -5,6 +5,7 @@ import createWsAction from 'utils/create-ws-action'
 // ------------------------------------
 export const HOLDERS_LIST_FETCH = 'unifi.HOLDERS_LIST_FETCH'
 export const HOLDER_GET_FETCH = 'unifi.HOLDER_GET_FETCH'
+export const HOLDER_GET_CACHE = 'unifi.HOLDER_GET_CACHE'
 export const HOLDER_ADD = 'unifi.HOLDER_ADD'
 export const HOLDER_UPDATE = 'unifi.HOLDER_UPDATE'
 export const PROGRAMMES_LIST_FETCH = 'unifi.PROGRAMMES_LIST_FETCH'
@@ -26,6 +27,17 @@ export const getHolder = createWsAction({
   fields: ['clientId', 'clientReference', 'with'],
   defaultParams: {
     with: ['metadata']
+  }
+})
+
+export const cacheHolder = createWsAction({
+  type: HOLDER_GET_CACHE,
+  messageType: 'core.holder.get-holder',
+  selectorKey: 'holdersCache',
+  subKey: 'clientReference',
+  fields: ['clientId', 'clientReference', 'with'],
+  defaultParams: {
+    with: ['image', 'metadata']
   }
 })
 

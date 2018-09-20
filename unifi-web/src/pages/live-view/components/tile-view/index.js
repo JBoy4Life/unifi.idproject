@@ -1,23 +1,78 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
+import { compose } from 'redux'
+import { connect } from 'react-redux'
 import moment from 'moment-timezone'
+import { createStructuredSelector } from 'reselect'
 
 import * as ROUTES from 'config/routes'
 import { HolderGrid } from 'components'
+import { cacheHolder } from 'redux/modules/model/holder'
+import { withClientId } from 'hocs'
+import { holdersCacheSelector } from 'redux/selectors'
 
 const GridItem = HolderGrid.Item
 
 const formatTime = (value, timeZone) => moment(value).tz(timeZone).format('LTS')
 
-const TileView = ({ items, viewMode, timeZone }) => (
-  <HolderGrid viewMode={viewMode}>
-    {items.map(item => (
-      <GridItem image={item.client.image} key={item.clientReference}>
-        <GridItem.Field>{item.client.name}</GridItem.Field>
-        <GridItem.Field>ID {item.clientReference}</GridItem.Field>
-        <GridItem.Field>{formatTime(item.detectionTime, timeZone)}</GridItem.Field>
-      </GridItem>
-    ))}
-  </HolderGrid>
-)
+class TileView extends PureComponent {
+  constructor(props) {
+    super(props)
+    const {holdersCache} = this.props
+    this.cachedHolders = [...Object.keys(holdersCache)]
+  }
 
-export default TileView
+  cacheOnlyNewHolders = (holders) => {
+    const {clientId, cacheHolder} = this.props
+    this.cachedHolders = [
+      ...this.cachedHolders,
+      ...holders.map((holder) => {
+        if (! this.cachedHolders.includes(holder)) {
+          cacheHolder({clientId, clientReference: holder})
+          return holder
+        }
+      })
+    ]
+  }
+
+  componentDidMount() {
+    const {items} = this.props
+    this.cacheOnlyNewHolders(items.map((item) => item.clientReference))
+  }
+
+  componentDidUpdate() {
+    const {items} = this.props
+    this.cacheOnlyNewHolders(items.map((item) => item.clientReference))
+  }
+
+  render() {
+    const {items, viewMode, timeZone, holdersCache} = this.props
+    return (
+      <HolderGrid viewMode={viewMode}>
+        {items.map(item => (
+          <GridItem
+              image={
+                (holdersCache[item.clientReference] && holdersCache[item.clientReference].image)
+                || null}
+              key={item.clientReference}>
+            <GridItem.Field>{item.client.name}</GridItem.Field>
+            <GridItem.Field>ID: {item.clientReference}</GridItem.Field>
+            <GridItem.Field>{formatTime(item.detectionTime, timeZone)}</GridItem.Field>
+          </GridItem>))}
+      </HolderGrid>
+    )
+  }
+
+}
+
+export const selector = createStructuredSelector({
+  holdersCache: holdersCacheSelector
+})
+
+export const actions = {
+  cacheHolder
+}
+
+export default compose(
+  withClientId,
+  connect(selector, actions)
+)(TileView)
