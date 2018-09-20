@@ -12,22 +12,16 @@ import './index.scss'
 
 const reports = [
   {
-    name: 'unifi.julycentralworking.dashboard',
-    key: '/reports/july-central-working',
-    label: 'July Central Working',
-    published_link: '987cc85b7388c0961b3d4074388f7985/july-central-working-'
-  },
-  {
     name: 'unifi.centralworking.dashboard',
     key: '/reports/unifi-dashboard',
     label: 'unifi.id Dashboard',
-    published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
+    published_link: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2'
   },
   {
     name: 'unifi.test-club.dashboard',
     key: '/reports/test-club',
     label: 'Test Club Dashboard',
-    published_link: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard'
+    published_link: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2'
   }
 ]
 
