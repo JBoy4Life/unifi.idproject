@@ -18,30 +18,26 @@ class TileView extends PureComponent {
   constructor(props) {
     super(props)
     const {holdersCache} = this.props
-    this.cachedHolders = [...Object.keys(holdersCache)]
+    this.cachedHolders = new Set(Object.keys(holdersCache))
   }
 
-  cacheOnlyNewHolders = (holders) => {
+  cacheUncachedHolders = (holders) => {
     const {clientId, cacheHolder} = this.props
-    this.cachedHolders = [
-      ...this.cachedHolders,
-      ...holders.map((holder) => {
-        if (! this.cachedHolders.includes(holder)) {
-          cacheHolder({clientId, clientReference: holder})
-          return holder
-        }
-      })
-    ]
+    const uncachedHolders = holders.filter((holder) => (! this.cachedHolders.has(holder)))
+    uncachedHolders.forEach((holder) => {
+      cacheHolder({clientId, clientReference: holder})
+      this.cachedHolders.add(holder)
+    })
   }
 
   componentDidMount() {
     const {items} = this.props
-    this.cacheOnlyNewHolders(items.map((item) => item.clientReference))
+    this.cacheUncachedHolders(items.map((item) => item.clientReference))
   }
 
   componentDidUpdate() {
     const {items} = this.props
-    this.cacheOnlyNewHolders(items.map((item) => item.clientReference))
+    this.cacheUncachedHolders(items.map((item) => item.clientReference))
   }
 
   render() {
@@ -50,9 +46,7 @@ class TileView extends PureComponent {
       <HolderGrid viewMode={viewMode}>
         {items.map(item => (
           <GridItem
-              image={
-                (holdersCache[item.clientReference] && holdersCache[item.clientReference].image)
-                || null}
+              image={holdersCache[item.clientReference] && holdersCache[item.clientReference].image}
               key={item.clientReference}>
             <GridItem.Field>{item.client.name}</GridItem.Field>
             <GridItem.Field>ID: {item.clientReference}</GridItem.Field>
