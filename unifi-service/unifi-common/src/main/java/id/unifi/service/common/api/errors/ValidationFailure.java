@@ -22,7 +22,7 @@ public class ValidationFailure extends CoreMarshallableError implements HttpMars
     }
 
     public enum Issue {
-        MISSING, TOO_SHORT, TOO_LONG, BAD_FORMAT;
+        MISSING, TOO_SHORT, TOO_LONG, BAD_FORMAT, OVERLAP;
 
         private final String stringName;
 

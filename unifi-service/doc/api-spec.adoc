@@ -236,5 +236,8 @@ Set a password using a valid password reset token.
 - core.error.missing-parameter
 - core.error.not-found
 - core.error.unauthorized
+* `reason` field can be:
+** `session`: not authenticated or authenticated in an incompatible session (e.g. a different `clientId`)
+** `permisson`: no permission
 - core.error.unknown-message-type
 - core.error.validation-failure

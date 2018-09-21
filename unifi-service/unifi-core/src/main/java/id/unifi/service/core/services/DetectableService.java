@@ -6,6 +6,7 @@ import static id.unifi.service.common.api.Validation.shortString;
 import static id.unifi.service.common.api.Validation.v;
 import static id.unifi.service.common.api.Validation.validateAll;
 import id.unifi.service.common.api.annotations.ApiOperation;
+import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.api.errors.NotFound;
@@ -51,7 +52,7 @@ public class DetectableService {
         this.db = dbProvider.bySchema(CORE);
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public DetectableType[] listDetectableTypes() {
         return DetectableType.values();
     }

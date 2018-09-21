@@ -1,20 +1,21 @@
 package id.unifi.service.core.services;
 
+import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.util.ContentTypeUtils.ImageWithType;
-import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT;
 import static id.unifi.service.core.db.Tables.CLIENT_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class ClientService {
                 .fetch(ClientService::clientInfoFromRecord));
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     @HttpMatch(path = "clients/:clientId")
     public ClientInfo getClient(String clientId, @Nullable Set<String> with) {
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
