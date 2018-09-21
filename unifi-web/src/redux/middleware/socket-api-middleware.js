@@ -20,7 +20,7 @@ const socketApiMiddleware = socketClient => store => next => (action) => {
       actionType: action.type,
       formSubmit: action.formSubmit,
       messageType: action.socketRequest.messageType,
-      selectorKey: action.selectorKey
+      selectorKey: action.subKey ? `${action.selectorKey}.${action.subKey}` : action.selectorKey
     }
 
     store.dispatch({

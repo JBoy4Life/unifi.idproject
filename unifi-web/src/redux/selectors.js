@@ -41,6 +41,7 @@ export const detectablesListSelector = modelSelector('detectablesList', [])
 // ------------------------------------
 export const holdersSelector = modelSelector('holdersList', [])
 export const holderDetailsSelector = modelSelector('holderDetails', null)
+export const holdersCacheSelector = modelSelector('holdersCache', {})
 export const programmesSelector = modelSelector('programmesList', [])
 
 // ------------------------------------
