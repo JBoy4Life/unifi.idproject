@@ -41,6 +41,7 @@ public class HttpUtils {
     private static final Pattern slashSplitter = Pattern.compile("/");
     private static final Pattern authorizationPattern = Pattern.compile("[Ss]ession[Tt]oken\\s+([a-zA-z0-9+/=]+)");
     private static final Base64.Decoder base64 = Base64.getDecoder();
+    private static final String SESSION_TOKEN_QUERY_STRING_KEY = "_sessionToken";
 
     private interface IORunnable {
         void run() throws IOException;
@@ -183,22 +184,22 @@ public class HttpUtils {
         var authorizationHeader = request.getHeader(AUTHORIZATION);
         if (authorizationHeader != null) {
             var matcher = authorizationPattern.matcher(authorizationHeader);
-            if (!matcher.matches()) return Optional.empty();
-            try {
-                return Optional.of(new Token(base64.decode(matcher.group(1))));
-            } catch (IllegalArgumentException e) {
-                return Optional.empty();
-            }
-        } else {
-            return Optional.ofNullable(getQueryParameters(request.getQueryString()).get("_sessionToken"))
-                    .flatMap(t -> t.length > 0 ? Optional.of(t[0]) : Optional.empty())
-                    .flatMap(t -> {
-                        try {
-                            return Optional.of(new Token(base64.decode(t)));
-                        } catch (IllegalArgumentException e) {
-                            return Optional.empty();
-                        }
-                    });
+            if (matcher.matches()) return decodeToken(matcher.group(1));
+        }
+
+        var sessionTokens = getQueryParameters(request.getQueryString()).get(SESSION_TOKEN_QUERY_STRING_KEY);
+        if (sessionTokens != null && sessionTokens.length == 1) {
+            return decodeToken(sessionTokens[0]);
+        }
+
+        return Optional.empty();
+    }
+
+    private static Optional<Token> decodeToken(String token) {
+        try {
+            return Optional.of(new Token(base64.decode(token)));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
         }
     }
 }

@@ -338,6 +338,7 @@ public class Dispatcher<S> {
         var params = getParams(mapper, operation, null, asyncContext, sessionData, getParam);
         var result = serviceRegistry.invokeRpc(operation, params);
         if (stream(params).noneMatch(p -> p instanceof AsyncContext)) {
+            // Process response unless a non-null context was passed in, in which case application logic handles this
             var payload = mapper.valueToTree(result);
             log.trace("Response payload: {}", payload);
             sendPayload(channel, mapper, protocol, payload);
@@ -352,6 +353,7 @@ public class Dispatcher<S> {
                                Function<String, JsonNode> getParam) {
         return operation.params.entrySet().stream().map(entry -> {
             var type = entry.getValue().type;
+            var nullable = entry.getValue().nullable;
 
             if (type == Session.class) {
                 if (session != null) return session;
@@ -359,7 +361,7 @@ public class Dispatcher<S> {
             }
 
             if (type == AsyncContext.class) {
-                if (asyncContext != null) return asyncContext;
+                if (nullable || asyncContext != null) return asyncContext;
                 throw new NotFound("operation");
             }
 
@@ -370,7 +372,7 @@ public class Dispatcher<S> {
             try {
                 var paramNode = getParam.apply(name);
                 if (paramNode == null || paramNode.isNull()) {
-                    if (entry.getValue().nullable) {
+                    if (nullable) {
                         return null;
                     } else {
                         throw new MissingParameter(name, type.getTypeName());

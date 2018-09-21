@@ -105,23 +105,33 @@ public class HolderService {
 
     @ApiOperation
     @HttpMatch(path = "clients/:clientId/holders/:clientReference/image")
-    public void getHolderImage(OperatorSessionData session,
+    public ImageWithType getHolderImage(OperatorSessionData session,
                                String clientId,
                                String clientReference,
-                               AsyncContext context) throws IOException {
+                               @Nullable AsyncContext context) throws IOException {
         authorize(session, clientId);
-        var response = (HttpServletResponse) context.getResponse();
 
-        var imageRecord = db.execute(sql -> sql.select(HOLDER_IMAGE.MIME_TYPE, HOLDER_IMAGE.IMAGE)
+        var record = db.execute(sql -> sql.select(HOLDER_IMAGE.MIME_TYPE, HOLDER_IMAGE.IMAGE)
                 .from(HOLDER_IMAGE)
                 .where(HOLDER_IMAGE.CLIENT_ID.eq(clientId))
                 .and(HOLDER_IMAGE.CLIENT_REFERENCE.eq(clientReference))
-                .fetchOne());
+                .fetchOptional()).orElseThrow(() -> new NotFound("holder_image"));
+        var image = new ImageWithType(record.get(HOLDER_IMAGE.IMAGE), record.get(HOLDER_IMAGE.MIME_TYPE));
 
-        if (imageRecord == null) throw new NotFound("holder_image");
-        response.setHeader(CONTENT_TYPE, imageRecord.get(HOLDER_IMAGE.MIME_TYPE));
-        response.getOutputStream().write(imageRecord.get(HOLDER_IMAGE.IMAGE));
-        context.complete();
+        if (context != null) {
+            if (!(context.getResponse() instanceof HttpServletResponse)) {
+                throw new AssertionError("Unexpected non-HTTP context: " + context);
+            }
+
+            // HTTP servlet response exists, return image as response entity
+            var response = (HttpServletResponse) context.getResponse();
+            response.setHeader(CONTENT_TYPE, record.get(HOLDER_IMAGE.MIME_TYPE));
+            response.getOutputStream().write(record.get(HOLDER_IMAGE.IMAGE));
+            context.complete();
+            return null;
+        } else { // Return image as a standard protocol response
+            return image;
+        }
     }
 
     @ApiOperation
