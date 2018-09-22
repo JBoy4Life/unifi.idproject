@@ -70,7 +70,7 @@ class LiveView extends PureComponent {
         // avoid reading undefined properties.
         Promise.all([
           listZones({ clientId, siteId }),
-          listHolders({ clientId, with: ['image'] }),
+          listHolders({ clientId, with: [] }),
         ]).then(() => this.setShowZoneItems())
           .catch(err => console.error(err))
       })

@@ -15,15 +15,13 @@ const reports = [
     name: 'unifi.centralworking.dashboard',
     key: '/reports/unifi-dashboard',
     label: 'unifi.id Dashboard',
-    published_link_desktop: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard',
-    published_link_mobile: '0104ba210c544c9ac71ce2e546b181a5/unificentralworkingdevmobile1'
+    published_link: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2'
   },
   {
     name: 'unifi.test-club.dashboard',
     key: '/reports/test-club',
     label: 'Test Club Dashboard',
-    published_link_desktop: '80f3fec2ea433ae9aff3b48513527e93/unifiid-dashboard',
-    published_link_mobile: '0104ba210c544c9ac71ce2e546b181a5/unificentralworkingdevmobile1'
+    published_link: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2'
   }
 ]
 

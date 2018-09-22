@@ -1,9 +1,14 @@
 package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.collect.Sets;
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.Validation;
 import static id.unifi.service.common.api.Validation.*;
+import id.unifi.service.common.api.access.Access;
+import id.unifi.service.common.api.access.AccessChecker;
+import id.unifi.service.common.api.access.AccessManager;
+import static id.unifi.service.common.api.access.AccessUtils.subsumesOperation;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
@@ -24,9 +29,9 @@ import id.unifi.service.common.types.OperatorInfo;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.core.VerticalConfigManager;
 import static id.unifi.service.core.db.Core.CORE;
-import static id.unifi.service.core.db.Tables.OPERATOR;
-import static id.unifi.service.core.db.Tables.OPERATOR_LOGIN_ATTEMPT;
-import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD;
+import static id.unifi.service.core.db.Tables.*;
+import static id.unifi.service.core.db.tables.Operator.OPERATOR;
+import static id.unifi.service.core.db.tables.Permission.PERMISSION;
 import id.unifi.service.core.db.tables.records.OperatorRecord;
 import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
@@ -40,19 +45,18 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.SelectField;
 import org.jooq.TableField;
-import org.jooq.impl.DSL;
-import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 @ApiService("operator")
@@ -79,6 +83,7 @@ public class OperatorService {
     private final EmailSenderProvider emailSender;
     private final SessionTokenStore sessionTokenStore;
     private final VerticalConfigManager verticalConfigManager;
+    private final AccessManager<OperatorSessionData> accessManager;
     private final Config config;
 
     private interface Config {
@@ -93,7 +98,8 @@ public class OperatorService {
                            OperatorEmailRenderer emailRenderer,
                            EmailSenderProvider emailSender,
                            SessionTokenStore sessionTokenStore,
-                           VerticalConfigManager verticalConfigManager) {
+                           VerticalConfigManager verticalConfigManager,
+                           AccessManager<OperatorSessionData> accessManager) {
         this.config = config;
         this.db = dbProvider.bySchema(CORE);
         this.passwordReset = passwordReset;
@@ -102,6 +108,7 @@ public class OperatorService {
         this.emailSender = emailSender;
         this.sessionTokenStore = sessionTokenStore;
         this.verticalConfigManager = verticalConfigManager;
+        this.accessManager = accessManager;
     }
 
     @ApiOperation
@@ -111,13 +118,12 @@ public class OperatorService {
                                  String name,
                                  String email,
                                  boolean invite) {
-        authorize(session, clientId);
+        var onboarder = authorize(session, clientId);
         validateAll(
                 v("username", shortId(username)),
                 v("name", shortString(name)),
                 v("email", email(email))
         );
-        var onboarder = session.getOperator();
         db.execute(sql -> {
             try {
                 sql.insertInto(OPERATOR)
@@ -160,7 +166,7 @@ public class OperatorService {
         }
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     @HttpMatch(path = "operators/auth-password", method = POST)
     public AuthInfo authPassword(OperatorSessionData session, String clientId, String username, String password) {
         validateAll(
@@ -178,22 +184,38 @@ public class OperatorService {
         }
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public AuthInfo authToken(OperatorSessionData session, Token sessionToken) {
         var operator = sessionTokenStore.get(sessionToken);
         if (operator.isPresent()) {
-            session.setAuth(operator.get(), sessionToken);
-            return new AuthInfo(getOperatorInfo(operator.get().clientId, operator.get().username),
+            var pk = operator.get();
+            session.setAuth(pk, sessionToken);
+            return new AuthInfo(getOperatorInfo(pk.clientId, pk.username),
                     sessionToken,
                     Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
-                    verticalConfigManager.getClientSideConfig(operator.get().clientId));
+                    accessManager.getPermissions(pk),
+                    verticalConfigManager.getClientSideConfig(pk.clientId));
         } else {
             session.setAuth(null, null);
             throw new AuthenticationFailed();
         }
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
+    public AuthInfo getAuthInfo(OperatorSessionData session) {
+        var sessionToken = session.getSessionToken();
+        var operator = Optional.ofNullable(sessionToken).flatMap(sessionTokenStore::get);
+
+        return operator.map(op -> new AuthInfo(
+                getOperatorInfo(op.clientId, op.username),
+                sessionToken,
+                Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                accessManager.getPermissions(op),
+                verticalConfigManager.getClientSideConfig(op.clientId))
+        ).orElseThrow(() -> new NotFound("session"));
+    }
+
+    @ApiOperation(access = Access.PUBLIC)
     public void invalidateAuthToken(OperatorSessionData session) {
         var sessionToken = session.getSessionToken();
         if (sessionToken != null) {
@@ -222,14 +244,26 @@ public class OperatorService {
         return getOperatorInfo(clientId, username);
     }
 
-    @ApiOperation
-    public void requestPasswordReset(OperatorSessionData session, String clientId, String username) {
+    @ApiOperation(access = Access.PERMISSIONED_NOT_CHECKED)
+    public void requestPasswordReset(OperatorSessionData session,
+                                     String clientId,
+                                     String username,
+                                     AccessChecker accessChecker) {
+        var invitee = new OperatorPK(clientId, username);
+        var operator = session.getOperator();
+
         Optional<OperatorPK> onboarder;
-        if (session.getOperator() != null) { // Authorized invitation or reset request for someone password
-            var operator = authorize(session, clientId);
-            onboarder = Optional.of(operator);
-        } else { // Reset request for my own password
+        if (operator == null || operator.equals(invitee)) {
+            // Request resetting my own password; allow without access restrictions
             onboarder = Optional.empty();
+        } else {
+            // Requesting reset on behalf of another operator, check access
+            accessChecker.ensureAuthorized();
+
+            // Now check we're under the expected `clientId` as usual
+            authorize(session, clientId);
+
+            onboarder = Optional.of(operator);
         }
 
         db.execute(sql -> {
@@ -239,7 +273,7 @@ public class OperatorService {
         });
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public PasswordResetInfo getPasswordReset(String clientId, String username, TimestampedToken token) {
         return db.execute(sql -> {
             var tokenHash =
@@ -253,7 +287,7 @@ public class OperatorService {
         });
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public AuthInfo setPassword(OperatorSessionData session,
                                 String clientId,
                                 String username,
@@ -270,7 +304,7 @@ public class OperatorService {
         });
     }
 
-    @ApiOperation
+    @ApiOperation(access = Access.PUBLIC)
     public void cancelPasswordReset(String clientId,
                                     String username,
                                     TimestampedToken token) {
@@ -279,7 +313,7 @@ public class OperatorService {
 
     @ApiOperation
     public void changePassword(OperatorSessionData session, String currentPassword, String password) {
-        var operator = authorize(session);
+        var operator = session.getOperator();
         if (passwordMatches(operator.clientId, operator.username, currentPassword)) {
             db.execute(sql -> {
                 setPassword(sql, operator.clientId, operator.username, password);
@@ -290,14 +324,117 @@ public class OperatorService {
         }
     }
 
+    @ApiOperation(access = Access.PERMISSIONED_NOT_CHECKED, description = "Lists permissions for an operator")
+    public Set<String> listPermissions(OperatorSessionData session,
+                                       String clientId,
+                                       String username,
+                                       AccessChecker accessChecker) {
+        var operator = authorize(session, clientId);
+        if (!username.equals(operator.username)) accessChecker.ensureAuthorized();
+        return accessManager.getPermissions(new OperatorPK(clientId, username));
+    }
+
+    @ApiOperation(description = "Grants and revokes specified permissions")
+    public void editPermissions(OperatorSessionData session,
+                                String clientId,
+                                String username,
+                                @Nullable Set<String> grant,
+                                @Nullable Set<String> revoke) {
+        var operator = authorize(session, clientId);
+
+        validateAll(
+                v("grant|revoke", atLeastOneNonNull(grant, revoke)),
+                v("grant|revoke", disjoint(grant, revoke))
+        );
+
+        Set<String> operationsToGrant = grant != null ? grant : Set.of();
+        Set<String> operationsToRevoke = revoke != null ? revoke : Set.of();
+
+        var subjectOperator = new OperatorPK(clientId, username);
+        var operatorPermissions = accessManager.getPermissions(operator);
+
+        var operations = Sets.union(operationsToGrant, operationsToRevoke);
+
+        // An operator can only grant/revoke permissions they themselves have
+        if (!subsumesAllOperations(operatorPermissions, operations)) throw new Unauthorized();
+
+        db.execute(sql -> {
+            grantPermissions(sql, clientId, username, operator.username, operationsToGrant);
+            revokePermissions(sql, clientId, username, operator.username, operationsToRevoke);
+            accessManager.invalidatePermissionsCache(subjectOperator);
+            return null;
+        });
+    }
+
+    @ApiOperation(description = "Grants permissions on all operations from a role")
+    public void applyRole(OperatorSessionData session, String clientId, String username, String role) {
+        var operator = authorize(session, clientId);
+        var subjectOperator = new OperatorPK(clientId, username);
+        var operatorPermissions = accessManager.getPermissions(operator);
+
+        db.execute(sql -> {
+            if (!sql.fetchExists(ROLE, ROLE.ROLE_.eq(role)))
+                throw new NotFound("role");
+
+            var operations = sql.select(ROLE_OPERATION.OPERATION)
+                    .from(ROLE_OPERATION)
+                    .where(ROLE_OPERATION.ROLE.eq(role))
+                    .fetch(ROLE_OPERATION.OPERATION);
+
+            if (!subsumesAllOperations(operatorPermissions, operations)) throw new Unauthorized();
+
+            grantPermissions(sql, clientId, username, operator.username, operations);
+            accessManager.invalidatePermissionsCache(subjectOperator);
+
+            return null;
+        });
+    }
+
+    @ApiOperation(description = "Lists permissioned operations")
+    public List<String> listPermissionValues(OperatorSessionData session) {
+        authorize(session);
+
+        return db.execute(sql -> sql.select(OPERATION.OPERATION_)
+                .from(OPERATION)
+                .where(OPERATION.OPERATION_.notLike("%*")) // Ignore wildcards
+                .fetch(OPERATION.OPERATION_));
+    }
+
+    private static void revokePermissions(DSLContext sql,
+                                          String clientId,
+                                          String username,
+                                          String revokedBy,
+                                          Collection<String> operations) {
+        // jOOQ doesn't support DML CTEs yet https://github.com/jOOQ/jOOQ/issues/4474
+        var query = sql.query("WITH d as ({0}) {1}",
+                deleteFrom(PERMISSION)
+                        .where(PERMISSION.CLIENT_ID.eq(clientId))
+                        .and(PERMISSION.USERNAME.eq(username))
+                        .and(PERMISSION.OPERATION.in(operations))
+                        .returning(),
+                insertInto(PERMISSION_HISTORY).select(select(
+                        field("client_id"),
+                        field("username"),
+                        field("operation"),
+                        field("granted_by"),
+                        val(revokedBy),
+                        field("since"),
+                        currentLocalDateTime()
+                ).from(table("d"))));
+        query.execute();
+    }
+
     private AuthInfo approveAuthAttempt(OperatorSessionData session, OperatorPK operator) {
         var sessionToken = new Token();
         sessionTokenStore.put(sessionToken, operator);
         session.setAuth(operator, sessionToken);
         recordAuthAttempt(operator, true);
+        accessManager.invalidatePermissionsCache(operator);
+
         return new AuthInfo(getOperatorInfo(operator.clientId, operator.username),
                 sessionToken,
                 Instant.now().plusSeconds(config.sessionTokenValiditySeconds()),
+                accessManager.getPermissions(operator),
                 verticalConfigManager.getClientSideConfig(operator.clientId));
     }
 
@@ -307,6 +444,21 @@ public class OperatorService {
                 .where(OPERATOR.CLIENT_ID.eq(clientId))
                 .and(OPERATOR.USERNAME.eq(username))
                 .fetchOne(OperatorService::operatorFromRecord));
+    }
+
+    private static void grantPermissions(DSLContext sql,
+                                         String clientId,
+                                         String username,
+                                         String grantedBy,
+                                         Collection<String> operations) {
+        var q = sql.insertInto(PERMISSION,
+                PERMISSION.CLIENT_ID, PERMISSION.USERNAME, PERMISSION.OPERATION, PERMISSION.GRANTED_BY);
+        for (var operation : operations) q = q.values(clientId, username, operation, grantedBy);
+        q.onConflictDoNothing().execute();
+    }
+
+    private static boolean subsumesAllOperations(Set<String> operatorPermissions, Collection<String> operations) {
+        return operations.stream().allMatch(o -> subsumesOperation(operatorPermissions, o));
     }
 
     private static boolean isOperatorActive(DSLContext sql, String clientId, String username) {
@@ -337,7 +489,7 @@ public class OperatorService {
                 .doUpdate()
                 .set(OPERATOR_PASSWORD.PASSWORD_HASH, hash)
                 .set(OPERATOR_PASSWORD.ALGORITHM, SecretHashing.SCRYPT_FORMAT_NAME)
-                .set(OPERATOR_PASSWORD.SINCE, DSL.currentLocalDateTime())
+                .set(OPERATOR_PASSWORD.SINCE, currentLocalDateTime())
                 .execute();
     }
 

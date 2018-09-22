@@ -1,0 +1,63 @@
+= unifi.id Core Service Access Control
+
+API operations are access-controlled in the following two ways:
+
+- *Session*: Most operations require an authenticated session, often restricted to the authenticated `clientId`.
+- *Permissions*: Most core service operations require a permission to be held in order to execute it.
+
+Permissions are applicable only to the public core service API, the agent service endpoint is access-controlled by
+session only.
+
+== Sessions
+
+For core service operations that require a valid session the operator must authenticate first using a previously
+obtained session token or username and password. In addition, most operations also require the `clientId` of the
+authenticated operator to match that in the request and may impose other arbitrary requirements.
+
+The core service responds to requests using an invalid session with `core.error.unauthorized` (or 401 Unauthorized) and
+the `reason` field set to `"session"`.
+
+== Permissions
+
+For core service operations that are permissioned the operator must have a permission that allows them to run that
+operation.
+
+Some operations are partially permissioned, e.g. `core.operator.list-permissions` is always allowed for the signed-in
+operator.
+
+Some operations are public and they cannot be granted as permissions, e.g. login.
+
+The core service responds to requests missing the required permission with `core.error.unauthorized`
+(or 401 Unauthorized) and the `reason` field set to `"permission"`.
+
+=== Feature toggle
+
+Permissions are turned off by default to allow time for updating service clients. They can be turned on using
+an environment variable or other config methods: `UNIFI_PERMISSIONS_ENABLED=true`.
+
+The feature toggle should be removed when all service clients have been updated.
+
+=== Types of permissioned operations
+
+Permissions can be granted on operations directly (e.g. `core.site.list-sites`) or using a wildcard operation
+(e.g. `+core.site.*+` or `+core.*.*+`). There is no `+*.*.*+` wildcard operation.
+
+=== "Subsumes" relation
+
+A request is fulfilled if at least one of the operations granted to the authenticated operator subsumes the requested
+operation. The "subsumes" relation is defined as follows:
+
+- `+<vertical>.<service>.*+` subsumes `+<vertical>.<service>.<operation>+`
+- `+<vertical>.*.*+` subsumes `+<vertical>.<service>.*+`
+- The relation is reflexive and transitive. (It is also a partial order.)
+
+=== Granting and revoking
+
+New operators have no permissions.
+
+To grant or revoke permissions an operator needs to have all the granted/revoked permissions (either directly or via
+subsumption), and `core.operator.edit-permissions` to execute the operation itself.
+
+=== See also
+
+- https://github.com/megawarne-consulting/unifi.id/pull/278[Original permissions pull request] (contains more guidance)

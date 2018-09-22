@@ -8,8 +8,11 @@ import id.unifi.service.common.api.errors.ValidationFailure.ValidationError;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -66,6 +69,10 @@ public class Validation {
 
     public static @Nullable Issue atLeastOneNonNull(Object... values) {
         return Arrays.stream(values).noneMatch(Objects::nonNull) ? Issue.MISSING : null;
+    }
+
+    public static @Nullable <T> Issue disjoint(Collection<T> c1, Collection<T> c2) {
+        return Collections.disjoint(c1 != null ? c1 : Set.of(), c2 != null ? c2 : Set.of()) ? null : Issue.OVERLAP;
     }
 
     public static class ValidationDef {

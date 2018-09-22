@@ -1,3 +1,0 @@
-= Maven Java compiler paremeters
-
-These are required until https://github.com/jOOQ/jOOQ/issues/6486 is resolved.

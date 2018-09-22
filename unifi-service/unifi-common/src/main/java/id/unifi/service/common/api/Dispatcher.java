@@ -8,9 +8,12 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.BinaryNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
+import id.unifi.service.common.api.access.AccessChecker;
+import id.unifi.service.common.api.access.AccessManager;
+import id.unifi.service.common.api.access.NullAccessManager;
+import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.InternalServerError;
 import id.unifi.service.common.api.errors.InvalidParameterFormat;
-import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.MissingParameter;
 import id.unifi.service.common.api.errors.NotFound;
 import static id.unifi.service.common.api.http.HttpUtils.*;
@@ -53,6 +56,7 @@ public class Dispatcher<S> {
     private final Set<SessionListener<S>> sessionListeners;
     private final Map<String, WireMessageListener> messageListeners;
     private final Map<ByteBuffer, CancellableWireMessageListener> responseListeners;
+    private final AccessManager<S> accessManager;
 
     public interface WireMessageListener {
         void accept(ObjectMapper om, Session session, Message message) throws JsonProcessingException;
@@ -72,10 +76,12 @@ public class Dispatcher<S> {
                       Class<S> sessionDataType,
                       Function<Session, S> sessionDataCreator,
                       SubscriptionManager subscriptionManager,
+                      AccessManager<S> accessManager,
                       Function<HttpServletRequest, S> httpSessionDataCreator) {
         this.serviceRegistry = serviceRegistry;
         this.sessionDataType = sessionDataType;
         this.sessionDataCreator = sessionDataCreator;
+        this.accessManager = accessManager != null ? accessManager : new NullAccessManager<>();
         this.httpSessionDataCreator = httpSessionDataCreator;
         this.sessionDataStore = new ConcurrentHashMap<>();
 
@@ -104,7 +110,7 @@ public class Dispatcher<S> {
                       Class<S> sessionDataType,
                       Function<Session, S> sessionDataCreator,
                       SubscriptionManager subscriptionManager) {
-        this(serviceRegistry, sessionDataType, sessionDataCreator, subscriptionManager, null);
+        this(serviceRegistry, sessionDataType, sessionDataCreator, subscriptionManager, null, null);
     }
 
     public Dispatcher(ServiceRegistry serviceRegistry,
@@ -272,6 +278,8 @@ public class Dispatcher<S> {
         var sessionData = sessionDataStore.get(session);
         if (sessionData == null) return; // Ignore dead sessions
 
+        accessManager.ensureAuthorized(message.messageType, sessionData);
+
         var params = getParams(mapper, operation, session, sessionData, message.payload::get);
 
         switch (operation.invocationType) {
@@ -333,6 +341,7 @@ public class Dispatcher<S> {
                                 Protocol protocol,
                                 Function<String, JsonNode> getParam,
                                 ServiceRegistry.Operation operation) {
+        accessManager.ensureAuthorized(operation.messageType, sessionData);
         var params = getParams(mapper, operation, null, sessionData, getParam);
         var result = serviceRegistry.invokeRpc(operation, params);
         var payload = mapper.valueToTree(result);
@@ -351,6 +360,12 @@ public class Dispatcher<S> {
             if (type == Session.class) {
                 if (session != null) return session;
                 throw new AssertionError("Unexpected null session. Trying to expose a subscription call via HTTP?");
+            }
+
+            if (type == AccessChecker.class) {
+                // TODO: Capture operator in session; reading mutable session data several times (here and in
+                // service impl) may yield different operators -> potential vulnerability
+                return (AccessChecker) () -> accessManager.ensureAuthorized(operation.messageType, sessionData, true);
             }
 
             if (type == ObjectMapper.class) return mapper;
