@@ -15,13 +15,15 @@ const reports = [
     name: 'unifi.centralworking.dashboard',
     key: '/reports/unifi-dashboard',
     label: 'unifi.id Dashboard',
-    published_link: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2'
+    published_link_desktop: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2',
+    published_link_mobile: '7c49c3af642df0cc3ee1880a84243b36/unificentralworkingprodmobile1'
   },
   {
     name: 'unifi.test-club.dashboard',
     key: '/reports/test-club',
     label: 'Test Club Dashboard',
-    published_link: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2'
+    published_link_desktop: '498e4fc986e09a430e88054a82735e4f/unificentralworkingproddesktop2',
+    published_link_mobile: '7c49c3af642df0cc3ee1880a84243b36/unificentralworkingprodmobile1'
   }
 ]
 
@@ -34,6 +36,7 @@ const ReportsDashboards = ({ publishedLink }) => (
 class Reports extends Component {
   constructor(props) {
     super(props)
+    this.mobileWidth = 600
     this.state = {
       reportsList: [],
       width: window.innerWidth
@@ -57,7 +60,7 @@ class Reports extends Component {
 
   render() {
     const { reportsList, width } = this.state
-    const publishedLink = width <= 600 ? 'published_link_mobile' : 'published_link_desktop'
+    const publishedLink = width <= this.mobileWidth ? 'published_link_mobile' : 'published_link_desktop'
 
     return (
       <PageContainer className="reports__page">
