@@ -27,9 +27,11 @@ const reports = [
   }
 ]
 
-const ReportsDashboards = ({ publishedLink }) => (
+const getDashboardURL = (dashboardType) => `https://app.klipfolio.com/published/${dashboardType}`
+
+const ReportsDashboards = ({ dashboardType }) => (
   <div className="iframe__container">
-    <iframe src={`https://app.klipfolio.com/published/${publishedLink}`} />
+    <iframe src={getDashboardURL(dashboardType)} />
   </div>
 )
 
@@ -58,9 +60,18 @@ class Reports extends Component {
 
   filterReportsByClientId = (clientId) => reports.filter( report => report.name.split('.')[1] === clientId )
 
+  guessDashboardType = (width) => {
+    let type = 'published_link_desktop'
+
+    if (width <= this.mobileWidth)
+      type = 'published_link_mobile'
+
+    return type
+  }
+
   render() {
     const { reportsList, width } = this.state
-    const publishedLink = width <= this.mobileWidth ? 'published_link_mobile' : 'published_link_desktop'
+    const dashboardType = this.guessDashboardType(width)
 
     return (
       <PageContainer className="reports__page">
@@ -79,7 +90,7 @@ class Reports extends Component {
                       <Route
                         key={index}
                         path={dashboard.key}
-                        render={() => <ReportsDashboards publishedLink={dashboard[publishedLink]} />}
+                        render={() => <ReportsDashboards dashboardType={dashboard[dashboardType]} />}
                       />
                     )
                   }
