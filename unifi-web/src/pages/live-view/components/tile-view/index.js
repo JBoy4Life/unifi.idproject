@@ -21,7 +21,7 @@ class TileView extends PureComponent {
     this.cachedHolders = new Set(Object.keys(holdersCache))
   }
 
-  cacheUncachedHolders = (holders) => {
+  cacheHolders = (holders) => {
     const {clientId, cacheHolder} = this.props
     const uncachedHolders = holders.filter((holder) => (! this.cachedHolders.has(holder)))
     uncachedHolders.forEach((holder) => {
@@ -32,12 +32,12 @@ class TileView extends PureComponent {
 
   componentDidMount() {
     const {items} = this.props
-    this.cacheUncachedHolders(items.map((item) => item.clientReference))
+    this.cacheHolders(items.map((item) => item.clientReference))
   }
 
   componentDidUpdate() {
     const {items} = this.props
-    this.cacheUncachedHolders(items.map((item) => item.clientReference))
+    this.cacheHolders(items.map((item) => item.clientReference))
   }
 
   render() {

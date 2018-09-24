@@ -27,7 +27,7 @@ export default ({
     type,
     [wsType]: requestPayload,
     selectorKey: selectorKey || messageType,
-    subKey: subKey ? payload[subKey] : null,
+    subKey: payload[subKey] || null,
     payloadOnSuccess,
     payloadOnFail,
     formSubmit
