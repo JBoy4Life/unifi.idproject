@@ -86,7 +86,7 @@ async function fullSync() {
                 };
             }
             else {
-                Log.warning(`Skipping person: No matching UHF found. clientReference: ${holder.clientReference}, name: ${holder.name}`);
+                Log.warning(`Skipping person: No matching UHF found. clientReference: ${holder.clientReference}, MIFARE: ${mifare.detectableId}, name: ${holder.name}`);
                 return;
             }
 
