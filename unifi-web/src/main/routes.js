@@ -4,7 +4,7 @@ import { Route, Router, Switch, Redirect } from 'react-router'
 import * as ROUTES from 'config/routes'
 
 import {
-  Evacuation, NotFound, Sitemap, MyAccount, Login,
+  Evacuation, EvacuationDemo, NotFound, Sitemap, MyAccount, Login,
   Directory, LiveView, SiteManager, Operators, Navigation,
   ClientRegistry, Attendance, ForgotPassword, ResetPassword,
   CancelPasswordReset, ChangePassword, Reports
@@ -34,6 +34,7 @@ export default ({ history }) => (
 
       <Route path={ROUTES.SITE_MANAGER} component={SiteManager} />
       <Route path={ROUTES.EVACUATION} component={Evacuation} />
+      <Route path={ROUTES.EVACUATION_DEMO} component={EvacuationDemo} />
       <Route path={ROUTES.CLIENT_REGISTRY} component={ClientRegistry} />
 
       <Route path={ROUTES.REPORTS} component={Reports} />
