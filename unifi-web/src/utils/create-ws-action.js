@@ -7,6 +7,7 @@ export default ({
   fields, // accepted action parameter field names that will be picked from payload
   defaultParams, // default paramater values in case fields are missing in payload
   selectorKey,
+  subKey,
   subscribe = false,
   payloadOnSuccess,
   payloadOnFail
@@ -26,6 +27,7 @@ export default ({
     type,
     [wsType]: requestPayload,
     selectorKey: selectorKey || messageType,
+    subKey: subKey ? payload[subKey] : null,
     payloadOnSuccess,
     payloadOnFail,
     formSubmit

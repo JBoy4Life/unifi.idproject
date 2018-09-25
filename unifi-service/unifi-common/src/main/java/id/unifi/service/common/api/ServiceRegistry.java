@@ -4,6 +4,8 @@ import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import com.google.common.reflect.ClassPath;
 import static id.unifi.service.common.api.InvocationType.MULTI;
+import static id.unifi.service.common.api.InvocationType.RPC;
+import id.unifi.service.common.api.access.Access;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.annotations.HttpMatch;
@@ -15,6 +17,7 @@ import id.unifi.service.common.api.http.PathSegment;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import org.eclipse.jetty.http.HttpMethod;
@@ -34,11 +37,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ServiceRegistry {
     private static final Logger log = LoggerFactory.getLogger(ServiceRegistry.class);
+    private static final Pattern operationNamePattern = Pattern.compile("[a-z-][0-9a-z-]*");
+
     private final ComponentHolder componentProvider;
     private final Map<HttpMethod, PathNode> operationUrlPathTree;
 
@@ -46,25 +53,34 @@ public class ServiceRegistry {
         final Class<?> cls;
         final Map<String, Param> params;
         final InvocationType invocationType;
+        public final String messageType;
         final String resultMessageType;
         final Type resultType;
         final Method method;
         final HttpSpec httpSpec;
+        public final Access access;
+        public final String description;
 
         private Operation(Class<?> cls,
                           Method method,
                           Map<String, Param> params,
                           InvocationType invocationType,
                           Type resultType,
+                          String messageType,
                           @Nullable String resultMessageType,
-                          HttpSpec httpSpec) {
+                          HttpSpec httpSpec,
+                          Access access,
+                          String description) {
             this.cls = cls;
             this.method = method;
             this.params = params;
             this.invocationType = invocationType;
             this.resultType = resultType;
+            this.messageType = messageType;
             this.resultMessageType = resultMessageType;
             this.httpSpec = httpSpec;
+            this.access = access;
+            this.description = description;
         }
     }
 
@@ -121,6 +137,13 @@ public class ServiceRegistry {
                     ? (RuntimeException) e.getCause()
                     : new RuntimeException(e);
         }
+    }
+
+    public Set<Operation> getPermissionedOperations() {
+        return operations.entrySet().stream()
+                .filter(o -> o.getValue().access != Access.PUBLIC)
+                .map(Map.Entry::getValue)
+                .collect(toSet());
     }
 
     public Operation getOperation(String messageType) {
@@ -196,35 +219,45 @@ public class ServiceRegistry {
                     var operationAnnotation = method.getAnnotation(ApiOperation.class);
                     if (operationAnnotation == null) continue;
 
+                    var access = operationAnnotation.access();
+                    var description = operationAnnotation.description();
+
                     var restAnnotation = method.getAnnotation(HttpMatch.class);
                     var operationName = operationAnnotation.name().isEmpty()
                             ? LOWER_CAMEL.to(LOWER_HYPHEN, method.getName())
                             : operationAnnotation.name();
+                    if (!operationNamePattern.matcher(operationName).matches()) {
+                        throw new RuntimeException("Invalid operation name for " + method + ": " + operationName);
+                    }
+
                     var messageType = operationNamespace + "." + operationName;
                     var returnType = method.getGenericReturnType();
                     var methodParams = method.getParameters();
 
                     var multiReturnType = getMultiResponseReturnType(returnType, methodParams);
-                    var invocationType = multiReturnType != null ? MULTI : InvocationType.RPC;
+                    var invocationType = multiReturnType == null ? RPC : MULTI;
                     Map<String, Param> params;
+                    Type responseType;
+                    String resultTypeName;
+                    HttpSpec httpSpec;
                     switch (invocationType) {
                         case MULTI:
                             if (restAnnotation != null)
                                 throw new RuntimeException("Unexpected " + HttpMatch.class +
                                         " annotation for multi-response operation: " + restAnnotation);
+
                             params = preloadParams(Arrays.copyOfRange(methodParams, 0, methodParams.length - 1));
-                            operations.put(messageType,
-                                    new Operation(cls, method, params, MULTI, multiReturnType, null, null));
+                            responseType = multiReturnType;
+                            resultTypeName = null;
+                            httpSpec = null;
                             break;
                         case RPC:
                             var annotatedResultType = operationAnnotation.resultType();
-                            var resultTypeName = annotatedResultType.isEmpty()
-                                    ? messageType + "-result"
-                                    : annotatedResultType.startsWith(".") ? operationNamespace + annotatedResultType : annotatedResultType;
 
                             params = preloadParams(methodParams);
+                            responseType = returnType;
+                            resultTypeName = getResultMessageType(operationNamespace, operationName, annotatedResultType);
 
-                            HttpSpec httpSpec;
                             if (restAnnotation != null) {
                                 var path = restAnnotation.path();
                                 var segments = stream(path.split("/"))
@@ -236,15 +269,31 @@ public class ServiceRegistry {
                             } else {
                                 httpSpec = null;
                             }
-
-                            operations.put(messageType, new Operation(
-                                    cls, method, params, InvocationType.RPC, returnType, resultTypeName, httpSpec));
                             break;
+                        default:
+                            throw new IllegalArgumentException();
                     }
+
+                    operations.put(messageType, new Operation(
+                            cls, method, params, invocationType, responseType, messageType, resultTypeName, httpSpec,
+                            access, description));
                 }
             }
         }
         return operations;
+    }
+
+    private static String getResultMessageType(String operationNamespace, String operationName, String annotatedResultType) {
+        if (annotatedResultType.isEmpty()) {
+            // Default to `<vertical>.<service>.<operation>-result`
+            return operationNamespace + "." + operationName + "-result";
+        } else if (annotatedResultType.startsWith(".")) {
+            // `.<result-type>` annotation -> `<vertical>.<service>.<result-type>`
+            return operationNamespace + annotatedResultType;
+        } else {
+            // `<result-type>` annotation -> `<result-type>`
+            return annotatedResultType;
+        }
     }
 
     private static Map<String, Param> preloadParams(Parameter[] methodParameters) {
