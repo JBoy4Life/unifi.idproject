@@ -29,6 +29,8 @@ import static id.unifi.service.core.db.Tables.CONTACT;
 import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
+import static org.jooq.impl.DSL.*;
+
 import id.unifi.service.core.db.tables.records.HolderImageRecord;
 import id.unifi.service.core.db.tables.records.HolderRecord;
 import org.jooq.DSLContext;
@@ -37,10 +39,6 @@ import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Table;
 import org.jooq.TableField;
-import static org.jooq.impl.DSL.and;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.selectFrom;
-import static org.jooq.impl.DSL.value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -132,7 +130,7 @@ public class HolderService {
                         .set(HOLDER.HOLDER_TYPE, holderType.toString())
                         .set(HOLDER.NAME, name)
                         .set(HOLDER.ACTIVE, active != null ? active : true)
-                        .set(HOLDER.NOTE, note)
+                        .set(HOLDER.NOTE, note != null ? val(note) : defaultValue(String.class))
                         .execute();
 
                 // TODO: validate metadata
