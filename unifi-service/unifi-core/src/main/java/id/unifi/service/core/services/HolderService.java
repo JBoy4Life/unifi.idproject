@@ -2,6 +2,12 @@ package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.hash.Hashing;
+import static com.google.common.net.HttpHeaders.ACCEPT_ENCODING;
+import static com.google.common.net.HttpHeaders.CACHE_CONTROL;
+import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static com.google.common.net.HttpHeaders.ETAG;
+import static com.google.common.net.HttpHeaders.VARY;
 import id.unifi.service.common.HolderType;
 import id.unifi.service.common.api.Protocol;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
@@ -11,17 +17,14 @@ import static id.unifi.service.common.api.Validation.v;
 import static id.unifi.service.common.api.Validation.validateAll;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
+import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
+import id.unifi.service.common.api.http.HttpUtils;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.util.ContentTypeUtils.ImageWithType;
-import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
-import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
-import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
 import static id.unifi.service.common.util.ContentTypeUtils.validateImageFormat;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER;
@@ -31,6 +34,12 @@ import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import id.unifi.service.core.db.tables.records.HolderImageRecord;
 import id.unifi.service.core.db.tables.records.HolderRecord;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
+import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
+import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
 import org.jooq.DSLContext;
 import org.jooq.InsertOnDuplicateStep;
 import org.jooq.Record;
@@ -41,11 +50,18 @@ import static org.jooq.impl.DSL.and;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.value;
+import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.defaultValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
+import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,12 +72,16 @@ import java.util.function.Function;
 public class HolderService {
     private static final Logger log = LoggerFactory.getLogger(HolderService.class);
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
+    private static final int CACHED_IMAGE_MAX_AGE_SECONDS = 86_400;
+    private static final String IMAGE_CACHE_CONTROL_HEADER_VALUE = "private; max-age=" + CACHED_IMAGE_MAX_AGE_SECONDS;
 
     private final Database db;
 
     private static final Map<? extends TableField<HolderRecord, ?>, Function<FieldChanges, ?>> editables = Map.of(
             HOLDER.NAME, c -> c.name,
-            HOLDER.ACTIVE, c -> c.active);
+            HOLDER.ACTIVE, c -> c.active,
+            HOLDER.NOTE, c -> c.note
+    );
 
 
     public HolderService(DatabaseProvider dbProvider) {
@@ -99,6 +119,51 @@ public class HolderService {
     }
 
     @ApiOperation
+    @HttpMatch(path = "clients/:clientId/holders/:clientReference/image")
+    public ImageWithType getHolderImage(OperatorSessionData session,
+                                        String clientId,
+                                        String clientReference,
+                                        @Nullable AsyncContext context) throws IOException {
+        authorize(session, clientId);
+
+        if (context != null && !(context.getResponse() instanceof HttpServletResponse))
+            throw new AssertionError("Unexpected non-HTTP context: " + context);
+
+        var record = db.execute(sql -> sql.select(HOLDER_IMAGE.MIME_TYPE, HOLDER_IMAGE.IMAGE)
+                .from(HOLDER_IMAGE)
+                .where(HOLDER_IMAGE.CLIENT_ID.eq(clientId))
+                .and(HOLDER_IMAGE.CLIENT_REFERENCE.eq(clientReference))
+                .fetchOptional()).orElseThrow(() -> new NotFound("holder_image"));
+        var image = new ImageWithType(record.get(HOLDER_IMAGE.IMAGE), record.get(HOLDER_IMAGE.MIME_TYPE));
+
+        var eTag = Hashing.murmur3_128().hashBytes(image.data).asBytes();
+        var eTagHeader = "\"" + Base64.getEncoder().encodeToString(eTag) + "\"";
+
+        if (context != null) { // HTTP context exists, return image as response entity
+            var request = (HttpServletRequest) context.getRequest();
+            var response = (HttpServletResponse) context.getResponse();
+
+            // HTTP doesn't allow specifying a cache key, so if the session token is specified in the query string,
+            // the cached item won't survive re-authentication. Using cookies would solve this problem for browsers.
+            response.setHeader(CONTENT_TYPE, record.get(HOLDER_IMAGE.MIME_TYPE));
+            response.setHeader(VARY, ACCEPT_ENCODING);
+            response.setHeader(CACHE_CONTROL, IMAGE_CACHE_CONTROL_HEADER_VALUE);
+            response.setHeader(ETAG, eTagHeader);
+
+            if (HttpUtils.modified(request, eTag)) { // Current version not cached by client
+                response.getOutputStream().write(record.get(HOLDER_IMAGE.IMAGE));
+            } else {
+                response.setStatus(SC_NOT_MODIFIED);
+            }
+            context.complete();
+            return null;
+        } else {
+            // Return image as a standard protocol response
+            return image;
+        }
+    }
+
+    @ApiOperation
     public List<String> listMetadataValues(OperatorSessionData session, String clientId, String metadataKey) {
         authorize(session, clientId);
         return db.execute(sql -> sql
@@ -114,6 +179,7 @@ public class HolderService {
                           String clientReference,
                           HolderType holderType,
                           String name,
+                          @Nullable String note,
                           @Nullable Boolean active,
                           @Nullable byte[] image,
                           @Nullable Map<String, Object> metadata) {
@@ -129,6 +195,7 @@ public class HolderService {
                         .set(HOLDER.HOLDER_TYPE, holderType.toString())
                         .set(HOLDER.NAME, name)
                         .set(HOLDER.ACTIVE, active != null ? active : true)
+                        .set(HOLDER.NOTE, note != null ? val(note) : defaultValue(String.class))
                         .execute();
 
                 // TODO: validate metadata
@@ -238,6 +305,7 @@ public class HolderService {
         return new HolderInfo(
                 r.get(HOLDER.CLIENT_REFERENCE),
                 r.get(HOLDER.NAME),
+                r.get(HOLDER.NOTE),
                 HolderType.fromString(r.get(HOLDER.HOLDER_TYPE)),
                 r.get(HOLDER.ACTIVE),
                 fieldValueOpt(r, HOLDER_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))),
@@ -275,6 +343,7 @@ public class HolderService {
     public static class HolderInfo {
         public final String clientReference;
         public final String name;
+        public final String note;
         public final HolderType holderType;
         public final boolean active;
         public final Optional<ImageWithType> image;
@@ -282,12 +351,14 @@ public class HolderService {
 
         public HolderInfo(String clientReference,
                           String name,
+                          String note,
                           HolderType holderType,
                           boolean active,
                           Optional<ImageWithType> image,
                           Optional<Map<String, Object>> metadata) {
             this.clientReference = clientReference;
             this.name = name;
+            this.note = note;
             this.holderType = holderType;
             this.active = active;
             this.image = image;
@@ -311,6 +382,7 @@ public class HolderService {
 
     public static class FieldChanges {
         public String name;
+        public String note;
         public Boolean active;
         public Optional<byte[]> image;
         public Map<String, Object> metadata;
@@ -319,7 +391,7 @@ public class HolderService {
 
         void validate() {
             validateAll(
-                    v("name|active|image|metadata", atLeastOneNonNull(name, active, image, metadata)),
+                    v("name|note|active|image|metadata", atLeastOneNonNull(name, note, active, image, metadata)),
                     v("name", name, Validation::shortString)
             );
         }

@@ -3,7 +3,9 @@ package id.unifi.service.common.api.http;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import static com.google.common.net.HttpHeaders.ACCEPT;
+import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static com.google.common.net.HttpHeaders.IF_NONE_MATCH;
 import com.google.common.net.MediaType;
 import id.unifi.service.common.api.Channel;
 import id.unifi.service.common.api.Protocol;
@@ -12,6 +14,7 @@ import id.unifi.service.common.api.errors.NotAcceptable;
 import id.unifi.service.common.api.errors.UnsupportedMediaType;
 import id.unifi.service.common.security.Token;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
@@ -40,6 +43,7 @@ public class HttpUtils {
     private static final Pattern slashSplitter = Pattern.compile("/");
     private static final Pattern authorizationPattern = Pattern.compile("[Ss]ession[Tt]oken\\s+([a-zA-z0-9+/=]+)");
     private static final Base64.Decoder base64 = Base64.getDecoder();
+    private static final String SESSION_TOKEN_QUERY_STRING_KEY = "_sessionToken";
 
     private interface IORunnable {
         void run() throws IOException;
@@ -82,7 +86,7 @@ public class HttpUtils {
     }
 
     public static List<String> decodePathSegments(String urlEncodedPath) {
-        return Arrays.stream(slashSplitter.split(urlEncodedPath))
+        return stream(slashSplitter.split(urlEncodedPath))
                 .map(s -> URLDecoder.decode(s, UTF_8))
                 .collect(Collectors.toUnmodifiableList());
     }
@@ -178,11 +182,41 @@ public class HttpUtils {
         }
     }
 
-    public static Optional<Token> extractAuthToken(String authorizationHeader) {
-        var matcher = authorizationPattern.matcher(authorizationHeader);
-        if (!matcher.matches()) return Optional.empty();
+    public static boolean modified(HttpServletRequest request, byte[] eTag) {
+        var ifNoneMatchHeader = request.getHeader(IF_NONE_MATCH);
+        return ifNoneMatchHeader == null || stream(commaSplitter.split(ifNoneMatchHeader))
+                .filter(p -> p.startsWith("\"") && p.endsWith("\"")) // Skip weak ETags and other nonsense
+                .map(p -> p.substring(1, p.length() - 1))
+                .flatMap(encoded -> decodeBase64(encoded).stream())
+                .noneMatch(candidate -> Arrays.equals(candidate, eTag));
+    }
+
+    public static Optional<Token> extractAuthToken(HttpServletRequest request) {
+        var authorizationHeader = request.getHeader(AUTHORIZATION);
+        if (authorizationHeader != null) {
+            var matcher = authorizationPattern.matcher(authorizationHeader);
+            if (matcher.matches()) return decodeToken(matcher.group(1));
+        }
+
+        var sessionTokens = getQueryParameters(request.getQueryString()).get(SESSION_TOKEN_QUERY_STRING_KEY);
+        if (sessionTokens != null && sessionTokens.length == 1) {
+            return decodeToken(sessionTokens[0]);
+        }
+
+        return Optional.empty();
+    }
+
+    private static Optional<Token> decodeToken(String token) {
         try {
-            return Optional.of(new Token(base64.decode(matcher.group(1))));
+            return decodeBase64(token).map(Token::new);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<byte[]> decodeBase64(String encoded) {
+        try {
+            return Optional.of(base64.decode(encoded));
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }

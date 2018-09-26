@@ -194,8 +194,7 @@ public class CoreService {
         var sessionTokenStore = componentHolder.get(SessionTokenStore.class);
         var dispatcher = new Dispatcher<>(
                 registry, OperatorSessionData.class, s -> new OperatorSessionData(), subscriptionManager, accessManager,
-                request -> Optional.ofNullable(request.getHeader("authorization"))
-                        .flatMap(HttpUtils::extractAuthToken)
+                request -> HttpUtils.extractAuthToken(request)
                         .flatMap(t -> sessionTokenStore.get(t).map(op -> new OperatorSessionData(op, t)))
                         .orElseGet(OperatorSessionData::new));
         var apiServerSocket = createUnresolved(apiEndpoint.getHost(), apiEndpoint.getPort());
