@@ -32,7 +32,7 @@
         <jmdns.version>3.5.4</jmdns.version>
         <mina.version>2.0.16</mina.version>
         <velocity.version>1.7</velocity.version>            
-        <guava.version>24.1-jre</guava.version>
+        <guava.version>26.0-jre</guava.version>
         <amqp.client>5.3.0</amqp.client>
         <aws.java.sdk.version>1.11.383</aws.java.sdk.version>
         <jooq.version>3.11.5</jooq.version>

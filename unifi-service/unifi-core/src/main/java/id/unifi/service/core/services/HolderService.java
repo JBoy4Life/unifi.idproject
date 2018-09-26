@@ -2,7 +2,12 @@ package id.unifi.service.core.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.hash.Hashing;
+import static com.google.common.net.HttpHeaders.ACCEPT_ENCODING;
+import static com.google.common.net.HttpHeaders.CACHE_CONTROL;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static com.google.common.net.HttpHeaders.ETAG;
+import static com.google.common.net.HttpHeaders.VARY;
 import id.unifi.service.common.HolderType;
 import id.unifi.service.common.api.Protocol;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
@@ -16,14 +21,10 @@ import id.unifi.service.common.api.annotations.HttpMatch;
 import id.unifi.service.common.api.errors.AlreadyExists;
 import id.unifi.service.common.api.errors.NotFound;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
+import id.unifi.service.common.api.http.HttpUtils;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
 import id.unifi.service.common.util.ContentTypeUtils.ImageWithType;
-import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
-import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
-import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
 import static id.unifi.service.common.util.ContentTypeUtils.validateImageFormat;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.HOLDER_METADATA__FK_HOLDER_METADATA_TO_HOLDER;
@@ -33,6 +34,12 @@ import static id.unifi.service.core.db.Tables.HOLDER_IMAGE;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import id.unifi.service.core.db.tables.records.HolderImageRecord;
 import id.unifi.service.core.db.tables.records.HolderRecord;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static id.unifi.service.dbcommon.DatabaseUtils.fieldValueOpt;
+import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
+import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
 import org.jooq.DSLContext;
 import org.jooq.InsertOnDuplicateStep;
 import org.jooq.Record;
@@ -51,8 +58,10 @@ import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Nullable;
 import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,6 +72,8 @@ import java.util.function.Function;
 public class HolderService {
     private static final Logger log = LoggerFactory.getLogger(HolderService.class);
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {};
+    private static final int CACHED_IMAGE_MAX_AGE_SECONDS = 86_400;
+    private static final String IMAGE_CACHE_CONTROL_HEADER_VALUE = "private; max-age=" + CACHED_IMAGE_MAX_AGE_SECONDS;
 
     private final Database db;
 
@@ -110,10 +121,13 @@ public class HolderService {
     @ApiOperation
     @HttpMatch(path = "clients/:clientId/holders/:clientReference/image")
     public ImageWithType getHolderImage(OperatorSessionData session,
-                               String clientId,
-                               String clientReference,
-                               @Nullable AsyncContext context) throws IOException {
+                                        String clientId,
+                                        String clientReference,
+                                        @Nullable AsyncContext context) throws IOException {
         authorize(session, clientId);
+
+        if (context != null && !(context.getResponse() instanceof HttpServletResponse))
+            throw new AssertionError("Unexpected non-HTTP context: " + context);
 
         var record = db.execute(sql -> sql.select(HOLDER_IMAGE.MIME_TYPE, HOLDER_IMAGE.IMAGE)
                 .from(HOLDER_IMAGE)
@@ -122,18 +136,29 @@ public class HolderService {
                 .fetchOptional()).orElseThrow(() -> new NotFound("holder_image"));
         var image = new ImageWithType(record.get(HOLDER_IMAGE.IMAGE), record.get(HOLDER_IMAGE.MIME_TYPE));
 
-        if (context != null) {
-            if (!(context.getResponse() instanceof HttpServletResponse)) {
-                throw new AssertionError("Unexpected non-HTTP context: " + context);
-            }
+        var eTag = Hashing.murmur3_128().hashBytes(image.data).asBytes();
+        var eTagHeader = "\"" + Base64.getEncoder().encodeToString(eTag) + "\"";
 
-            // HTTP servlet response exists, return image as response entity
+        if (context != null) { // HTTP context exists, return image as response entity
+            var request = (HttpServletRequest) context.getRequest();
             var response = (HttpServletResponse) context.getResponse();
+
+            // HTTP doesn't allow specifying a cache key, so if the session token is specified in the query string,
+            // the cached item won't survive re-authentication. Using cookies would solve this problem for browsers.
             response.setHeader(CONTENT_TYPE, record.get(HOLDER_IMAGE.MIME_TYPE));
-            response.getOutputStream().write(record.get(HOLDER_IMAGE.IMAGE));
+            response.setHeader(VARY, ACCEPT_ENCODING);
+            response.setHeader(CACHE_CONTROL, IMAGE_CACHE_CONTROL_HEADER_VALUE);
+            response.setHeader(ETAG, eTagHeader);
+
+            if (HttpUtils.modified(request, eTag)) { // Current version not cached by client
+                response.getOutputStream().write(record.get(HOLDER_IMAGE.IMAGE));
+            } else {
+                response.setStatus(SC_NOT_MODIFIED);
+            }
             context.complete();
             return null;
-        } else { // Return image as a standard protocol response
+        } else {
+            // Return image as a standard protocol response
             return image;
         }
     }

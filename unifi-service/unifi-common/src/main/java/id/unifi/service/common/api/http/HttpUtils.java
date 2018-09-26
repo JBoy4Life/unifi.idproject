@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static com.google.common.net.HttpHeaders.IF_NONE_MATCH;
 import com.google.common.net.MediaType;
 import id.unifi.service.common.api.Channel;
 import id.unifi.service.common.api.Protocol;
@@ -13,6 +14,7 @@ import id.unifi.service.common.api.errors.NotAcceptable;
 import id.unifi.service.common.api.errors.UnsupportedMediaType;
 import id.unifi.service.common.security.Token;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
@@ -84,7 +86,7 @@ public class HttpUtils {
     }
 
     public static List<String> decodePathSegments(String urlEncodedPath) {
-        return Arrays.stream(slashSplitter.split(urlEncodedPath))
+        return stream(slashSplitter.split(urlEncodedPath))
                 .map(s -> URLDecoder.decode(s, UTF_8))
                 .collect(Collectors.toUnmodifiableList());
     }
@@ -180,6 +182,15 @@ public class HttpUtils {
         }
     }
 
+    public static boolean modified(HttpServletRequest request, byte[] eTag) {
+        var ifNoneMatchHeader = request.getHeader(IF_NONE_MATCH);
+        return ifNoneMatchHeader == null || stream(commaSplitter.split(ifNoneMatchHeader))
+                .filter(p -> p.startsWith("\"") && p.endsWith("\"")) // Skip weak ETags and other nonsense
+                .map(p -> p.substring(1, p.length() - 1))
+                .flatMap(encoded -> decodeBase64(encoded).stream())
+                .noneMatch(candidate -> Arrays.equals(candidate, eTag));
+    }
+
     public static Optional<Token> extractAuthToken(HttpServletRequest request) {
         var authorizationHeader = request.getHeader(AUTHORIZATION);
         if (authorizationHeader != null) {
@@ -197,7 +208,15 @@ public class HttpUtils {
 
     private static Optional<Token> decodeToken(String token) {
         try {
-            return Optional.of(new Token(base64.decode(token)));
+            return decodeBase64(token).map(Token::new);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<byte[]> decodeBase64(String encoded) {
+        try {
+            return Optional.of(base64.decode(encoded));
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }
