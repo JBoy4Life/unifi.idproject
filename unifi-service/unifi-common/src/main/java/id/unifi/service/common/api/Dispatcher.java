@@ -370,8 +370,8 @@ public class Dispatcher<S> {
             }
 
             if (type == AsyncContext.class) {
-                if (nullable || asyncContext != null) return asyncContext;
-                throw new NotFound("operation");
+                if (asyncContext == null && !nullable) throw new NotFound("operation");
+                return asyncContext;
             }
 
             if (type == AccessChecker.class) {
