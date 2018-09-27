@@ -461,7 +461,7 @@
                                         </forcedType>
                                         <forcedType>
                                             <userType>java.time.Instant</userType>
-                                            <converter>id.unifi.service.dbcommon.OffsetDateTimeInstantConverter</converter>
+                                            <converter>id.unifi.service.dbcommon.OffsetDateTimeToInstantConverter</converter>
                                             <!-- See https://github.com/jOOQ/jOOQ/issues/4691 about escapes -->
                                             <types>TIMESTAMP\ WITH\ TIME\ ZONE</types>
                                         </forcedType>
