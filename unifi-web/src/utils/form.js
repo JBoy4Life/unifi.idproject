@@ -8,7 +8,7 @@ export const formSubmit = (actionCreator, payload) => {
       onFail: reject
     })
   })).catch(res => {
-    const { payload } = res
+    const { data: payload } = res
     const fieldErrors = payload.errors ? payload.errors.reduce((acc, error) => {
       acc[error.field] = tr(error.issue)
       return acc
