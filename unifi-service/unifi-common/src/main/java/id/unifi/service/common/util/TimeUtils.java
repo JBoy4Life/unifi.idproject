@@ -1,10 +1,8 @@
 package id.unifi.service.common.util;
 
-import static java.time.ZoneOffset.UTC;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -18,10 +16,6 @@ public class TimeUtils {
         var nanos = BigDecimal.valueOf(instant.getNano(), 9);
         return seconds.add(nanos);
     };
-
-    public static Instant instantFromUtcLocal(@Nullable LocalDateTime date) {
-        return date == null ? null : date.toInstant(UTC);
-    }
 
     public static String filenameFormattedLocalDateTimeNow() {
         return LocalDateTime.now().truncatedTo(SECONDS).format(ISO_LOCAL_DATE_TIME).replaceAll(":", "-");
