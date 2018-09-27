@@ -9,7 +9,7 @@ import { HolderGrid } from 'components'
 import { cacheHolder } from 'redux/modules/model/holder'
 import { withClientId } from 'hocs'
 import { holdersCacheSelector, currentUserSelector } from 'redux/selectors'
-import { protocol, socketUri } from '../../../../index'
+import { socketUri } from '../../../../index'
 
 const GridItem = HolderGrid.Item
 
@@ -24,7 +24,7 @@ class TileView extends PureComponent {
 
   getHolderImageEndpoint = (holder) => {
     const {clientId, currentUser} = this.props
-    return `${protocol}://${socketUri}/api/v1/clients/${clientId}/holders/${holder}/image?_sessionToken=${encodeURIComponent(currentUser.token)}`
+    return `//${socketUri}/api/v1/clients/${clientId}/holders/${holder}/image?_sessionToken=${encodeURIComponent(currentUser.token)}`
   }
 
   cacheHolders = (holders) => {
