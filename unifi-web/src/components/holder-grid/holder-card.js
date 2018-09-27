@@ -27,7 +27,7 @@ HolderCard.Field = Field
 
 HolderCard.propTypes = {
   children: PropTypes.node,
-  image: PropTypes.object
+  image: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
 }
 
 export default HolderCard
