@@ -13,7 +13,6 @@ import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
-import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
 import static id.unifi.service.core.db.Tables.HOLDER;
@@ -38,8 +37,6 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -126,8 +123,8 @@ public class ScheduleService {
                 .fetch(r -> new BlockInfo(
                         r.get(BLOCK.BLOCK_ID),
                         r.get(BLOCK.NAME),
-                        zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                        zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                        r.get(BLOCK_TIME.START_TIME),
+                        r.get(BLOCK_TIME.END_TIME),
                         r.get(BLOCK_ZONE.SITE_ID),
                         r.get(BLOCK_ZONE.ZONE_ID))));
     }
@@ -231,8 +228,8 @@ public class ScheduleService {
                                     scheduleId,
                                     r.get(BLOCK_ID),
                                     r.get(BLOCK.NAME),
-                                    zonedFromUtcLocal(r.get(BLOCK_TIME.START_TIME)),
-                                    zonedFromUtcLocal(r.get(BLOCK_TIME.END_TIME)),
+                                    r.get(BLOCK_TIME.START_TIME),
+                                    r.get(BLOCK_TIME.END_TIME),
                                     r.get(BLOCK_ZONE.SITE_ID),
                                     r.get(BLOCK_ZONE.ZONE_ID),
                                     OverriddenStatus.fromString(r.get(STATUS)),
@@ -293,8 +290,8 @@ public class ScheduleService {
                                                              String metadataKey,
                                                              String metadataValue,
                                                              BigDecimal attendanceThreshold,
-                                                             @Nullable OffsetDateTime startTime,
-                                                             @Nullable OffsetDateTime endTime) {
+                                                             @Nullable LocalDateTime startTime,
+                                                             @Nullable LocalDateTime endTime) {
         authorize(session, clientId);
         return db.execute(sql -> {
             var attendance = sql
@@ -321,13 +318,13 @@ public class ScheduleService {
                     .fetch(r -> new ContactScheduleSummaryAttendance(r.value1(), r.value2(), r.value3(), r.value4()));
 
             // Get the start time of the first block if there is one
-            ZonedDateTime actualStartTime = null;
+            LocalDateTime actualStartTime = null;
             if (startTime == null) {
                 var scheduleIds = attendance.stream().map(a -> a.scheduleId).collect(Collectors.toSet());
-                actualStartTime = zonedFromUtcLocal(sql.select(min(BLOCK_TIME.START_TIME))
+                actualStartTime = sql.select(min(BLOCK_TIME.START_TIME))
                         .from(BLOCK_TIME)
                         .where(BLOCK_TIME.SCHEDULE_ID.in(scheduleIds))
-                        .fetchOne(Record1::value1));
+                        .fetchOne(Record1::value1);
             }
             return new LowAttendanceReport(actualStartTime, attendance);
         });
@@ -354,18 +351,10 @@ public class ScheduleService {
         });
     }
 
-    private static Condition between(@Nullable OffsetDateTime startTime, @Nullable OffsetDateTime endTime) {
-        var startCond = startTime != null
-                ? BLOCK_TIME.START_TIME.greaterOrEqual(startTime.withOffsetSameInstant(UTC).toLocalDateTime())
-                : null;
-        var endCond = endTime != null
-                ? BLOCK_TIME.START_TIME.lessOrEqual(endTime.withOffsetSameInstant(UTC).toLocalDateTime())
-                : null;
+    private static Condition between(@Nullable LocalDateTime startTime, @Nullable LocalDateTime endTime) {
+        var startCond = startTime == null ? null : BLOCK_TIME.START_TIME.greaterOrEqual(startTime);
+        var endCond = endTime == null ? null : BLOCK_TIME.START_TIME.lessOrEqual(endTime);
         return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
-    }
-
-    private static LocalDateTime utcLocalFromOffset(OffsetDateTime date) {
-        return LocalDateTime.ofInstant(date.toInstant(), UTC);
     }
 
     private static Condition metadataKeyEquals(String key, String value) {
@@ -421,8 +410,8 @@ public class ScheduleService {
                     return new ScheduleStat(
                             scheduleId,
                             scheduleName,
-                            zonedFromUtcLocal(stats.value3()),
-                            zonedFromUtcLocal(stats.value4()),
+                            stats.value3(),
+                            stats.value4(),
                             r.value3(),
                             stats.value2(),
                             Optional.ofNullable(scheduleAttendance.get(r.get(ASSIGNMENT.SCHEDULE_ID))).orElse(0),
@@ -453,8 +442,8 @@ public class ScheduleService {
     public static class ScheduleStat {
         public final String scheduleId;
         public final String name;
-        public final ZonedDateTime startTime;
-        public final ZonedDateTime endTime;
+        public final LocalDateTime startTime;
+        public final LocalDateTime endTime;
         public final int committerCount;
         public final int blockCount;
         public final int overallAttendance;
@@ -462,8 +451,8 @@ public class ScheduleService {
 
         public ScheduleStat(String scheduleId,
                             String name,
-                            ZonedDateTime startTime,
-                            ZonedDateTime endTime,
+                            LocalDateTime startTime,
+                            LocalDateTime endTime,
                             int committerCount,
                             int blockCount,
                             int overallAttendance,
@@ -482,15 +471,15 @@ public class ScheduleService {
     public static class BlockInfo {
         public final String blockId;
         public final String name;
-        public final ZonedDateTime startTime;
-        public final ZonedDateTime endTime;
+        public final LocalDateTime startTime;
+        public final LocalDateTime endTime;
         public final String siteId;
         public final String zoneId;
 
         public BlockInfo(String blockId,
                          String name,
-                         ZonedDateTime startTime,
-                         ZonedDateTime endTime,
+                         LocalDateTime startTime,
+                         LocalDateTime endTime,
                          String siteId,
                          String zoneId) {
             this.blockId = blockId;
@@ -530,8 +519,8 @@ public class ScheduleService {
         public final String scheduleId;
         public final String blockId;
         public final String name;
-        public final ZonedDateTime startTime;
-        public final ZonedDateTime endTime;
+        public final LocalDateTime startTime;
+        public final LocalDateTime endTime;
         public final String siteId;
         public final String zoneId;
         public final OverriddenStatus status;
@@ -540,8 +529,8 @@ public class ScheduleService {
         public BlockAttendance(String scheduleId,
                                String blockId,
                                String name,
-                               ZonedDateTime startTime,
-                               ZonedDateTime endTime,
+                               LocalDateTime startTime,
+                               LocalDateTime endTime,
                                String siteId,
                                String zoneId,
                                OverriddenStatus status,
@@ -619,10 +608,10 @@ public class ScheduleService {
     }
 
     public static class LowAttendanceReport {
-        public final ZonedDateTime startTime;
+        public final LocalDateTime startTime;
         public final List<ContactScheduleSummaryAttendance> attendance;
 
-        public LowAttendanceReport(@Nullable ZonedDateTime startTime,
+        public LowAttendanceReport(@Nullable LocalDateTime startTime,
                                    List<ContactScheduleSummaryAttendance> attendance) {
             this.startTime = startTime;
             this.attendance = attendance;

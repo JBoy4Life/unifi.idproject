@@ -8,12 +8,9 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.temporal.TemporalQuery;
 
 public class TimeUtils {
-    private static final ZoneId timeZoneId = ZoneId.of("Europe/London");
 
     public static final TemporalQuery<BigDecimal> UNIX_TIMESTAMP = temporal -> {
         var instant = Instant.from(temporal);
@@ -24,10 +21,6 @@ public class TimeUtils {
 
     public static Instant instantFromUtcLocal(@Nullable LocalDateTime date) {
         return date == null ? null : date.toInstant(UTC);
-    }
-
-    public static ZonedDateTime zonedFromUtcLocal(@Nullable LocalDateTime date) {
-        return date == null ? null : instantFromUtcLocal(date).atZone(timeZoneId);
     }
 
     public static String filenameFormattedLocalDateTimeNow() {

@@ -11,13 +11,14 @@ import id.unifi.service.attendance.types.pk.AssignmentPK;
 import id.unifi.service.attendance.types.pk.AttendancePK;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.types.pk.ZonePK;
-import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
+import static id.unifi.service.core.db.Tables.SITE;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.*;
+import static org.jooq.impl.DSL.field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,13 +109,16 @@ public class AttendanceMatcher {
             var rawBlocksByZone = sql
                     .select(BLOCK.CLIENT_ID, BLOCK.SCHEDULE_ID, BLOCK.BLOCK_ID,
                             BLOCK_ZONE.SITE_ID, BLOCK_ZONE.ZONE_ID,
-                            BLOCK_TIME.START_TIME,
-                            BLOCK_TIME.END_TIME)
-                    .from(BLOCK.join(BLOCK_TIME).onKey().join(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK))
+                            field("{0} AT TIME ZONE {1}", Instant.class, BLOCK_TIME.START_TIME, SITE.TIME_ZONE),
+                            field("{0} AT TIME ZONE {1}", Instant.class, BLOCK_TIME.END_TIME, SITE.TIME_ZONE))
+                    .from(BLOCK.join(BLOCK_TIME).onKey().join(BLOCK_ZONE).onKey(BLOCK_ZONE__FK_BLOCK_ZONE_TO_BLOCK)
+                            .join(SITE).on(
+                                    SITE.CLIENT_ID.eq(BLOCK_ZONE.CLIENT_ID),
+                                    SITE.SITE_ID.eq(BLOCK_ZONE.SITE_ID)))
                     .stream()
                     .collect(groupingBy(r -> new ZonePK(r.value1(), r.value4(), r.value5()),
-                            mapping(r -> new Block(instantFromUtcLocal(r.value6()).minus(DETECTION_BEFORE_BLOCK_START),
-                                            instantFromUtcLocal(r.value7()).plus(DETECTION_AFTER_BLOCK_END),
+                            mapping(r -> new Block(r.value6().minus(DETECTION_BEFORE_BLOCK_START),
+                                            r.value7().plus(DETECTION_AFTER_BLOCK_END),
                                             r.value2(),
                                             r.value3()),
                                     toMap(b -> b.detectionStartTime, Function.identity(), (a, b) -> a, TreeMap::new))));

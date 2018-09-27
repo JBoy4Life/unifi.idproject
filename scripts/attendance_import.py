@@ -1,6 +1,6 @@
 # Import script used for UCL SoM
 
-# Requires Python 2.7, pytz
+# Requires Python 2.7
 
 # Current directory must contain schedules.csv, blocks.csv and contacts.csv
 # with schedule_headers, block_headers and contacts_headers, respectively,
@@ -14,7 +14,6 @@ from __future__ import print_function
 import csv
 import sys
 import codecs
-from pytz import timezone, utc
 from uuid import uuid4
 from itertools import product
 from collections import Counter
@@ -28,7 +27,6 @@ contact_headers = frozenset(['client_reference', 'name', 'metadata', 'schedule_i
 assignment_headers = frozenset(['client_reference', 'detectable_id:mifare-csn', 'detectable_id:uhf-epc'])
 
 detectable_types = ['mifare-csn', 'uhf-epc']
-london_tz = timezone('Europe/London')
 
 
 def get_column_map(headers, first_row):
@@ -98,7 +96,7 @@ def dump(row_def, data):
 
 
 def parse_timestamp(s): # TODO: maybe support other formats
-    return london_tz.localize(datetime.strptime(s, '%d/%m/%y %H:%M')).astimezone(utc).isoformat()
+    return datetime.strptime(s, '%d/%m/%y %H:%M').isoformat()
 
 
 def analyse(schedule_names, blocks, contacts, assignments):
