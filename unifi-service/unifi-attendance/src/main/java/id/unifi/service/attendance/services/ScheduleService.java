@@ -11,11 +11,8 @@ import static id.unifi.service.attendance.db.Tables.*;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromZoned;
 import static id.unifi.service.common.util.TimeUtils.zonedFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
@@ -23,6 +20,8 @@ import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.db.tables.records.HolderRecord;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.time.ZoneOffset.UTC;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
@@ -39,6 +38,7 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -70,7 +70,7 @@ public class ScheduleService {
                         .fullJoin(ATTENDANCE_OVERRIDE)
                         .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID));
 
-    private static final CommonTableExpression<Record4<String, String, String, LocalDateTime>> ZONE_PROCESSING_STATE =
+    private static final CommonTableExpression<Record4<String, String, String, OffsetDateTime>> ZONE_PROCESSING_STATE =
             name("z").as(select(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID,
                     min(coalesce(PROCESSING_STATE.PROCESSED_UP_TO, EPOCH)).as("processed_up_to"))
                     .from((ZONE.leftJoin(ANTENNA).onKey())
@@ -293,8 +293,8 @@ public class ScheduleService {
                                                              String metadataKey,
                                                              String metadataValue,
                                                              BigDecimal attendanceThreshold,
-                                                             @Nullable ZonedDateTime startTime,
-                                                             @Nullable ZonedDateTime endTime) {
+                                                             @Nullable OffsetDateTime startTime,
+                                                             @Nullable OffsetDateTime endTime) {
         authorize(session, clientId);
         return db.execute(sql -> {
             var attendance = sql
@@ -354,10 +354,14 @@ public class ScheduleService {
         });
     }
 
-    private static Condition between(@Nullable ZonedDateTime startTime, @Nullable ZonedDateTime endTime) {
-        var startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromZoned(startTime)) : null;
-        var endCond = endTime != null ? BLOCK_TIME.START_TIME.lessOrEqual(utcLocalFromZoned(endTime)) : null;
+    private static Condition between(@Nullable OffsetDateTime startTime, @Nullable OffsetDateTime endTime) {
+        var startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromOffset(startTime)) : null;
+        var endCond = endTime != null ? BLOCK_TIME.START_TIME.lessOrEqual(utcLocalFromOffset(endTime)) : null;
         return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
+    }
+
+    private static LocalDateTime utcLocalFromOffset(OffsetDateTime date) {
+        return LocalDateTime.ofInstant(date.toInstant(), UTC);
     }
 
     private static Condition metadataKeyEquals(String key, String value) {

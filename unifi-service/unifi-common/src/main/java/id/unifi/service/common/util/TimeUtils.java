@@ -30,14 +30,6 @@ public class TimeUtils {
         return date == null ? null : instantFromUtcLocal(date).atZone(timeZoneId);
     }
 
-    public static LocalDateTime utcLocalFromInstant(Instant instant) {
-        return LocalDateTime.ofInstant(instant, UTC);
-    }
-
-    public static LocalDateTime utcLocalFromZoned(@Nullable ZonedDateTime date) {
-        return date == null ? null : utcLocalFromInstant(date.toInstant());
-    }
-
     public static String filenameFormattedLocalDateTimeNow() {
         return LocalDateTime.now().truncatedTo(SECONDS).format(ISO_LOCAL_DATE_TIME).replaceAll(":", "-");
     }

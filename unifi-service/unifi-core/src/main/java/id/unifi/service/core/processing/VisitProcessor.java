@@ -11,7 +11,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromZoned;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Keys.ASSIGNMENT__FK_ASSIGNMENT_TO_DETECTABLE;
 import static id.unifi.service.core.db.Keys.READER__FK_READER_TO_SITE;
@@ -53,7 +52,7 @@ public class VisitProcessor {
                         .join(DETECTABLE).onKey(RFID_DETECTION__FK_RFID_DETECTION_TO_DETECTABLE)
                         .join(ASSIGNMENT).onKey(ASSIGNMENT__FK_ASSIGNMENT_TO_DETECTABLE)
                         .where(RFID_DETECTION.DETECTION_TIME
-                                .between(utcLocalFromZoned(startTime), utcLocalFromZoned(endTime)))
+                                .between(startTime.toOffsetDateTime(), endTime.toOffsetDateTime()))
                         .and(SITE.TIME_ZONE.eq(timeZone))
                         .and(CLIENT_CONFIG.VISIT_CALCULATION_ENABLED.isTrue())
                         .andExists(selectOne().from(CONTACT)

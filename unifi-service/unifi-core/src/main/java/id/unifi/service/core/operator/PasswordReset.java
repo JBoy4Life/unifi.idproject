@@ -2,16 +2,16 @@ package id.unifi.service.core.operator;
 
 import com.statemachinesystems.envy.Default;
 import id.unifi.service.common.api.annotations.ApiConfigPrefix;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.security.ScryptConfig;
 import id.unifi.service.common.security.SecretHashing;
+import static id.unifi.service.common.security.SecretHashing.SCRYPT_FORMAT_NAME;
 import id.unifi.service.common.security.TimestampedToken;
 import id.unifi.service.common.security.Token;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD_RESET;
-import static id.unifi.service.common.security.SecretHashing.SCRYPT_FORMAT_NAME;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static java.time.ZoneOffset.UTC;
 import org.jooq.DSLContext;
 import org.jooq.DatePart;
 import org.jooq.Field;
@@ -103,10 +103,10 @@ public class PasswordReset {
                 .from(OPERATOR_PASSWORD_RESET)
                 .where(OPERATOR_PASSWORD_RESET.CLIENT_ID.eq(clientId))
                 .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))
-                .and(OPERATOR_PASSWORD_RESET.SINCE.eq(utcLocalFromInstant(token.timestamp)))
+                .and(OPERATOR_PASSWORD_RESET.SINCE.eq(token.timestamp.atOffset(UTC)))
                 .and(OPERATOR_PASSWORD_RESET.EXPIRY_DATE.gt(currentLocalDateTime()))
                 .fetchOptional()
                 .filter(p -> SecretHashing.check(token.token.raw, p.value1()))
-                .map(p -> new TimestampedTokenHash(p.value1(), p.value2().toInstant(ZoneOffset.UTC)));
+                .map(p -> new TimestampedTokenHash(p.value1(), p.value2().toInstant()));
     }
 }

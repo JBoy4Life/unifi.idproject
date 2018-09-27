@@ -9,25 +9,20 @@ import static id.unifi.service.attendance.db.Tables.BLOCK_ZONE;
 import static id.unifi.service.attendance.db.Tables.PROCESSING_STATE;
 import id.unifi.service.attendance.types.pk.AssignmentPK;
 import id.unifi.service.attendance.types.pk.AttendancePK;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.types.pk.ZonePK;
 import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.ANTENNA;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.util.Comparator.naturalOrder;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -99,7 +94,7 @@ public class AttendanceMatcher {
                         .set(PROCESSING_STATE.CLIENT_ID, antenna.get(ANTENNA.CLIENT_ID))
                         .set(PROCESSING_STATE.READER_SN, antenna.get(ANTENNA.READER_SN))
                         .set(PROCESSING_STATE.PORT_NUMBER, antenna.get(ANTENNA.PORT_NUMBER))
-                        .set(PROCESSING_STATE.PROCESSED_UP_TO, LocalDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
+                        .set(PROCESSING_STATE.PROCESSED_UP_TO, Instant.EPOCH.atOffset(ZoneOffset.UTC))
                         .onConflictDoNothing()
                         .execute();
                 log.info("Added initial processing state for\n{}", antenna);
