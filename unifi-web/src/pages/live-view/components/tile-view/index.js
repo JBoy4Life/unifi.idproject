@@ -54,7 +54,7 @@ class TileView extends PureComponent {
           <GridItem
               image={this.getHolderImageEndpoint(item.clientReference)}
               key={item.clientReference}>
-            <GridItem.Field>{item.client.name}</GridItem.Field>
+            <GridItem.Field>{(holdersCache[item.clientReference] && holdersCache[item.clientReference].name) || '...'}</GridItem.Field>
             <GridItem.Field>ID: {item.clientReference}</GridItem.Field>
             <GridItem.Field>{formatTime(item.detectionTime, timeZone)}</GridItem.Field>
           </GridItem>))}
