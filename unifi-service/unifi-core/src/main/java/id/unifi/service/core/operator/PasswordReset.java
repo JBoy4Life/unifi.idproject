@@ -11,7 +11,6 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.OPERATOR_PASSWORD_RESET;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
-import static java.time.ZoneOffset.UTC;
 import org.jooq.DSLContext;
 import org.jooq.DatePart;
 import org.jooq.Field;
@@ -103,10 +102,10 @@ public class PasswordReset {
                 .from(OPERATOR_PASSWORD_RESET)
                 .where(OPERATOR_PASSWORD_RESET.CLIENT_ID.eq(clientId))
                 .and(OPERATOR_PASSWORD_RESET.USERNAME.eq(username))
-                .and(OPERATOR_PASSWORD_RESET.SINCE.eq(token.timestamp.atOffset(UTC)))
+                .and(OPERATOR_PASSWORD_RESET.SINCE.eq(token.timestamp))
                 .and(OPERATOR_PASSWORD_RESET.EXPIRY_DATE.gt(currentLocalDateTime()))
                 .fetchOptional()
                 .filter(p -> SecretHashing.check(token.token.raw, p.value1()))
-                .map(p -> new TimestampedTokenHash(p.value1(), p.value2().toInstant()));
+                .map(p -> new TimestampedTokenHash(p.value1(), p.value2()));
     }
 }

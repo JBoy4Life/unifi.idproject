@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
@@ -94,7 +93,7 @@ public class AttendanceMatcher {
                         .set(PROCESSING_STATE.CLIENT_ID, antenna.get(ANTENNA.CLIENT_ID))
                         .set(PROCESSING_STATE.READER_SN, antenna.get(ANTENNA.READER_SN))
                         .set(PROCESSING_STATE.PORT_NUMBER, antenna.get(ANTENNA.PORT_NUMBER))
-                        .set(PROCESSING_STATE.PROCESSED_UP_TO, Instant.EPOCH.atOffset(ZoneOffset.UTC))
+                        .set(PROCESSING_STATE.PROCESSED_UP_TO, Instant.EPOCH)
                         .onConflictDoNothing()
                         .execute();
                 log.info("Added initial processing state for\n{}", antenna);

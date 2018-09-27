@@ -37,6 +37,7 @@ import id.unifi.service.core.operator.PasswordReset;
 import id.unifi.service.core.operator.email.OperatorEmailRenderer;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
+import static id.unifi.service.dbcommon.DatabaseUtils.CURRENT_INSTANT;
 import static id.unifi.service.dbcommon.DatabaseUtils.filterCondition;
 import static id.unifi.service.dbcommon.DatabaseUtils.getUpdateQueryFieldMap;
 import static org.eclipse.jetty.http.HttpMethod.POST;
@@ -489,7 +490,7 @@ public class OperatorService {
                 .doUpdate()
                 .set(OPERATOR_PASSWORD.PASSWORD_HASH, hash)
                 .set(OPERATOR_PASSWORD.ALGORITHM, SecretHashing.SCRYPT_FORMAT_NAME)
-                .set(OPERATOR_PASSWORD.SINCE, currentOffsetDateTime())
+                .set(OPERATOR_PASSWORD.SINCE, CURRENT_INSTANT)
                 .execute();
     }
 

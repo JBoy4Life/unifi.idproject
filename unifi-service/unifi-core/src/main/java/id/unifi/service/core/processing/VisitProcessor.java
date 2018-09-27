@@ -52,7 +52,7 @@ public class VisitProcessor {
                         .join(DETECTABLE).onKey(RFID_DETECTION__FK_RFID_DETECTION_TO_DETECTABLE)
                         .join(ASSIGNMENT).onKey(ASSIGNMENT__FK_ASSIGNMENT_TO_DETECTABLE)
                         .where(RFID_DETECTION.DETECTION_TIME
-                                .between(startTime.toOffsetDateTime(), endTime.toOffsetDateTime()))
+                                .between(startTime.toInstant(), endTime.toInstant()))
                         .and(SITE.TIME_ZONE.eq(timeZone))
                         .and(CLIENT_CONFIG.VISIT_CALCULATION_ENABLED.isTrue())
                         .andExists(selectOne().from(CONTACT)

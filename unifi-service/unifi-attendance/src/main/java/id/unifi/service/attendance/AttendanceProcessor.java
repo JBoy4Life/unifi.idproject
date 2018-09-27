@@ -18,7 +18,6 @@ import id.unifi.service.common.util.BatchBuffer;
 import static id.unifi.service.core.db.Core.CORE;
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
-import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import org.jooq.Query;
@@ -29,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -54,8 +52,8 @@ public class AttendanceProcessor implements DetectionMatchMqConsumer {
             .values((String) null, null, null, null)
             .onConflict(PROCESSING_STATE_PKEY.getFieldsArray())
             .doUpdate()
-            .set(PROCESSING_STATE.PROCESSED_UP_TO, (OffsetDateTime) null)
-            .where(PROCESSING_STATE.PROCESSED_UP_TO.lt((OffsetDateTime) null));
+            .set(PROCESSING_STATE.PROCESSED_UP_TO, (Instant) null)
+            .where(PROCESSING_STATE.PROCESSED_UP_TO.lt((Instant) null));
 
     public AttendanceProcessor(DatabaseProvider dbProvider, AttendanceMatcher attendanceMatcher) {
         this.db = dbProvider.bySchema(CORE, ATTENDANCE);
@@ -113,7 +111,7 @@ public class AttendanceProcessor implements DetectionMatchMqConsumer {
                 var stateBatch = sql.batch(insertProcessingStateQuery);
                 for (var entry : newProcessingStates.entrySet()) {
                     var antenna = entry.getKey();
-                    var processedUpTo = entry.getValue().atOffset(UTC);
+                    var processedUpTo = entry.getValue();
                     stateBatch.bind(antenna.clientId, antenna.readerSn, antenna.portNumber,
                             processedUpTo, processedUpTo, processedUpTo);
                 }

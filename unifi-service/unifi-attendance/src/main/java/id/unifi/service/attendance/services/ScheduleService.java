@@ -70,7 +70,7 @@ public class ScheduleService {
                         .fullJoin(ATTENDANCE_OVERRIDE)
                         .using(CLIENT_ID, CLIENT_REFERENCE, SCHEDULE_ID, BLOCK_ID));
 
-    private static final CommonTableExpression<Record4<String, String, String, OffsetDateTime>> ZONE_PROCESSING_STATE =
+    private static final CommonTableExpression<Record4<String, String, String, Instant>> ZONE_PROCESSING_STATE =
             name("z").as(select(ZONE.CLIENT_ID, ZONE.SITE_ID, ZONE.ZONE_ID,
                     min(coalesce(PROCESSING_STATE.PROCESSED_UP_TO, EPOCH)).as("processed_up_to"))
                     .from((ZONE.leftJoin(ANTENNA).onKey())
@@ -355,8 +355,12 @@ public class ScheduleService {
     }
 
     private static Condition between(@Nullable OffsetDateTime startTime, @Nullable OffsetDateTime endTime) {
-        var startCond = startTime != null ? BLOCK_TIME.START_TIME.greaterOrEqual(utcLocalFromOffset(startTime)) : null;
-        var endCond = endTime != null ? BLOCK_TIME.START_TIME.lessOrEqual(utcLocalFromOffset(endTime)) : null;
+        var startCond = startTime != null
+                ? BLOCK_TIME.START_TIME.greaterOrEqual(startTime.withOffsetSameInstant(UTC).toLocalDateTime())
+                : null;
+        var endCond = endTime != null
+                ? BLOCK_TIME.START_TIME.lessOrEqual(endTime.withOffsetSameInstant(UTC).toLocalDateTime())
+                : null;
         return DSL.and(Stream.of(startCond, endCond).filter(Objects::nonNull).toArray(Condition[]::new));
     }
 

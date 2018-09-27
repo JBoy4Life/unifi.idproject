@@ -42,8 +42,8 @@ public class DetectionService {
         if (startTime.isAfter(endTime)) return;
 
         var detections = db.execute(sql -> sql.selectFrom(RFID_DETECTION)
-                .where(RFID_DETECTION.DETECTION_TIME.ge(startTime))
-                .and(RFID_DETECTION.DETECTION_TIME.lt(endTime))
+                .where(RFID_DETECTION.DETECTION_TIME.ge(startTime.toInstant()))
+                .and(RFID_DETECTION.DETECTION_TIME.lt(endTime.toInstant()))
                 .and(RFID_DETECTION.CLIENT_ID.eq(clientId))
                 .fetch(DetectionService::detectionFromRecord));
 
@@ -56,7 +56,7 @@ public class DetectionService {
                 new DetectablePK(r.getClientId(), r.getDetectableId(), DetectableType.fromString(r.getDetectableType())),
                 r.getReaderSn(),
                 r.getPortNumber(),
-                r.getDetectionTime().toInstant(),
+                r.getDetectionTime(),
                 Optional.ofNullable(r.getRssi()),
                 r.getCount());
     }
