@@ -17,7 +17,7 @@ import id.unifi.service.dbcommon.DatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 @ApiService("detection")
@@ -36,14 +36,14 @@ public class DetectionService {
     @ApiOperation
     public void processFromDatabase(OperatorSessionData session,
                                     String clientId,
-                                    OffsetDateTime startTime,
-                                    OffsetDateTime endTime) {
+                                    Instant startTime,
+                                    Instant endTime) {
         authorize(session, clientId);
         if (startTime.isAfter(endTime)) return;
 
         var detections = db.execute(sql -> sql.selectFrom(RFID_DETECTION)
-                .where(RFID_DETECTION.DETECTION_TIME.ge(startTime.toInstant()))
-                .and(RFID_DETECTION.DETECTION_TIME.lt(endTime.toInstant()))
+                .where(RFID_DETECTION.DETECTION_TIME.ge(startTime))
+                .and(RFID_DETECTION.DETECTION_TIME.lt(endTime))
                 .and(RFID_DETECTION.CLIENT_ID.eq(clientId))
                 .fetch(DetectionService::detectionFromRecord));
 
