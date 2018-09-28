@@ -2,10 +2,10 @@
 Description=unifi.id Core Service
 
 [Service]
-Type=idle
-User=unifi-id
-WorkingDirectory=/home/unifi-id/unifi.id/unifi-service
-ExecStart=exec java -Dcom.sun.management.jmxremote.port=7998 -Dcom.sun.management.jmxremote.rmi.port=7998 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote=true -jar /opt/unifi/unifi-core.jar
+Type=simple
+User=unifiid
+WorkingDirectory=/opt/unifi
+ExecStart=/usr/bin/java -Dcom.sun.management.jmxremote.port=7998 -Dcom.sun.management.jmxremote.rmi.port=7998 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote=true -jar /opt/unifi/unifi-core.jar
 Restart=always
 RestartSec=5
 

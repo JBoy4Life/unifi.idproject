@@ -123,6 +123,7 @@ bundle agent unifi_role_app {
     any::
       "yarn";
       "nginx";
+      "unifi_user";
     !unifi_env_local::
       "unifi_core_web";
 }
@@ -133,6 +134,7 @@ bundle agent unifi_role_services {
     any::
       "rabbitmq";
       "oracle_java_jdk";
+      "unifi_user";
     !unifi_env_local::
       "unifi_core_services";
   packages:
@@ -147,6 +149,7 @@ bundle agent unifi_role_agent {
     any::
       "rabbitmq";
       "oracle_java_jdk";
+      "unifi_user";
     !unifi_env_local::
       "unifi_core_agent";
 }
@@ -155,6 +158,16 @@ bundle agent unifi_role_agent {
 bundle agent unifi_role_db {
   methods:
       "postgresql";
+}
+
+bundle agent unifi_user {
+  users:
+      "unifiid"
+          policy => present,
+          description => "Unifi.id System User",
+          home_dir => "/opt/unifi",
+          group_primary => "nogroup",
+          shell => "/bin/sh";
 }
 
 bundle agent unifi_apt_s3 {
