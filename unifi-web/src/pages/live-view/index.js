@@ -11,7 +11,6 @@ import TileView from './components/tile-view'
 import ViewModeHeader from './components/view-mode-header'
 import ZoneFilter from './components/zone-filter'
 import { getDiscoveredList } from './utils/helpers'
-import { listHolders } from 'redux/modules/model/holder'
 import { listSites, listZones, listenToSubscriptions } from 'redux/modules/model/site'
 import { liveViewEnabledRedir } from 'hocs/auth'
 import { PageContainer, LinkedSideNavigation } from 'smart-components'
@@ -52,7 +51,7 @@ class LiveView extends PureComponent {
   }
 
   componentDidMount() {
-    const { listSites, listZones, listHolders, listenToSubscriptions, clientId } = this.props
+    const { listSites, listZones, listenToSubscriptions, clientId } = this.props
     listSites({ clientId })
       .then((result) => {
         const siteId = this.state.queryParams.site
@@ -65,13 +64,8 @@ class LiveView extends PureComponent {
         else {
           listenToSubscriptions({ clientId, siteId })
         }
-
-        // Make sure we show tiles only after metadata has been fetched to
-        // avoid reading undefined properties.
-        Promise.all([
-          listZones({ clientId, siteId }),
-          listHolders({ clientId, with: [] }),
-        ]).then(() => this.setShowZoneItems())
+        listZones({ clientId, siteId })
+          .then(() => this.setShowZoneItems())
           .catch(err => console.error(err))
       })
     this.timerId = window.setInterval(
@@ -227,7 +221,6 @@ export const selector = createStructuredSelector({
 })
 
 export const actions = {
-  listHolders,
   listSites,
   listZones,
   listenToSubscriptions

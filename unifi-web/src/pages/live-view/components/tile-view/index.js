@@ -8,7 +8,8 @@ import * as ROUTES from 'config/routes'
 import { HolderGrid } from 'components'
 import { cacheHolder } from 'redux/modules/model/holder'
 import { withClientId } from 'hocs'
-import { holdersCacheSelector } from 'redux/selectors'
+import { holdersCacheSelector, currentUserSelector } from 'redux/selectors'
+import { socketUri } from '../../../../index'
 
 const GridItem = HolderGrid.Item
 
@@ -21,7 +22,12 @@ class TileView extends PureComponent {
     this.cachedHolders = new Set(Object.keys(holdersCache))
   }
 
-  cacheUncachedHolders = (holders) => {
+  getHolderImageEndpoint = (holder) => {
+    const {clientId, currentUser} = this.props
+    return `//${socketUri}/api/v1/clients/${clientId}/holders/${holder}/image?_sessionToken=${encodeURIComponent(currentUser.token)}`
+  }
+
+  cacheHolders = (holders) => {
     const {clientId, cacheHolder} = this.props
     const uncachedHolders = holders.filter((holder) => (! this.cachedHolders.has(holder)))
     uncachedHolders.forEach((holder) => {
@@ -32,12 +38,12 @@ class TileView extends PureComponent {
 
   componentDidMount() {
     const {items} = this.props
-    this.cacheUncachedHolders(items.map((item) => item.clientReference))
+    this.cacheHolders(items.map((item) => item.clientReference))
   }
 
   componentDidUpdate() {
     const {items} = this.props
-    this.cacheUncachedHolders(items.map((item) => item.clientReference))
+    this.cacheHolders(items.map((item) => item.clientReference))
   }
 
   render() {
@@ -46,9 +52,9 @@ class TileView extends PureComponent {
       <HolderGrid viewMode={viewMode}>
         {items.map(item => (
           <GridItem
-              image={holdersCache[item.clientReference] && holdersCache[item.clientReference].image}
+              image={this.getHolderImageEndpoint(item.clientReference)}
               key={item.clientReference}>
-            <GridItem.Field>{item.client.name}</GridItem.Field>
+            <GridItem.Field>{(holdersCache[item.clientReference] && holdersCache[item.clientReference].name) || '...'}</GridItem.Field>
             <GridItem.Field>ID: {item.clientReference}</GridItem.Field>
             <GridItem.Field>{formatTime(item.detectionTime, timeZone)}</GridItem.Field>
           </GridItem>))}
@@ -59,6 +65,7 @@ class TileView extends PureComponent {
 }
 
 export const selector = createStructuredSelector({
+  currentUser: currentUserSelector,
   holdersCache: holdersCacheSelector
 })
 

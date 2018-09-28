@@ -8,10 +8,10 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.BinaryNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import static id.unifi.service.common.api.SerializationUtils.getObjectMapper;
+import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.access.AccessChecker;
 import id.unifi.service.common.api.access.AccessManager;
 import id.unifi.service.common.api.access.NullAccessManager;
-import id.unifi.service.common.api.errors.AbstractMarshallableError;
 import id.unifi.service.common.api.errors.InternalServerError;
 import id.unifi.service.common.api.errors.InvalidParameterFormat;
 import id.unifi.service.common.api.errors.MissingParameter;
@@ -20,6 +20,7 @@ import static id.unifi.service.common.api.http.HttpUtils.*;
 import id.unifi.service.common.security.Token;
 import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.common.util.HexEncoded;
+import static java.util.Arrays.stream;
 import static javax.servlet.AsyncContext.ASYNC_REQUEST_URI;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.websocket.api.Session;
@@ -200,7 +201,7 @@ public class Dispatcher<S> {
                     : mapper.readTree(request.getReader());
 
             var paramGetter = paramGetter(mapper, operationMatch.pathParams, queryParams, bodyJson);
-            processRequest(sessionData, channel, mapper, protocol, paramGetter, operationMatch.operation);
+            processRequest(sessionData, context, channel, mapper, protocol, paramGetter, operationMatch.operation);
         } catch (Exception e) {
             try {
                 respondWithThrowable(protocol, mapper, response, e);
@@ -280,7 +281,7 @@ public class Dispatcher<S> {
 
         accessManager.ensureAuthorized(message.messageType, sessionData);
 
-        var params = getParams(mapper, operation, session, sessionData, message.payload::get);
+        var params = getParams(mapper, operation, session, null, sessionData, message.payload::get);
 
         switch (operation.invocationType) {
             case RPC:
@@ -336,30 +337,41 @@ public class Dispatcher<S> {
     }
 
     private void processRequest(S sessionData,
+                                AsyncContext asyncContext,
                                 Channel channel,
                                 ObjectMapper mapper,
                                 Protocol protocol,
                                 Function<String, JsonNode> getParam,
                                 ServiceRegistry.Operation operation) {
         accessManager.ensureAuthorized(operation.messageType, sessionData);
-        var params = getParams(mapper, operation, null, sessionData, getParam);
+        var params = getParams(mapper, operation, null, asyncContext, sessionData, getParam);
         var result = serviceRegistry.invokeRpc(operation, params);
-        var payload = mapper.valueToTree(result);
-        log.trace("Response payload: {}", payload);
-        sendPayload(channel, mapper, protocol, payload);
+        if (stream(params).noneMatch(p -> p instanceof AsyncContext)) {
+            // Process response unless a non-null context was passed in, in which case application logic handles this
+            var payload = mapper.valueToTree(result);
+            log.trace("Response payload: {}", payload);
+            sendPayload(channel, mapper, protocol, payload);
+        }
     }
 
     private Object[] getParams(ObjectMapper mapper,
                                ServiceRegistry.Operation operation,
                                @Nullable Session session,
+                               @Nullable AsyncContext asyncContext,
                                S sessionData,
                                Function<String, JsonNode> getParam) {
         return operation.params.entrySet().stream().map(entry -> {
             var type = entry.getValue().type;
+            var nullable = entry.getValue().nullable;
 
             if (type == Session.class) {
                 if (session != null) return session;
                 throw new AssertionError("Unexpected null session. Trying to expose a subscription call via HTTP?");
+            }
+
+            if (type == AsyncContext.class) {
+                if (asyncContext == null && !nullable) throw new NotFound("operation");
+                return asyncContext;
             }
 
             if (type == AccessChecker.class) {
@@ -375,7 +387,7 @@ public class Dispatcher<S> {
             try {
                 var paramNode = getParam.apply(name);
                 if (paramNode == null || paramNode.isNull()) {
-                    if (entry.getValue().nullable) {
+                    if (nullable) {
                         return null;
                     } else {
                         throw new MissingParameter(name, type.getTypeName());

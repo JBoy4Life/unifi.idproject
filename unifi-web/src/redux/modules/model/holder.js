@@ -37,7 +37,7 @@ export const cacheHolder = createWsAction({
   subKey: 'clientReference',
   fields: ['clientId', 'clientReference', 'with'],
   defaultParams: {
-    with: ['image', 'metadata']
+    with: ['metadata']
   }
 })
 

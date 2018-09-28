@@ -13,6 +13,7 @@ import './styles/less/index.less'
 import './styles/index.scss'
 
 export const clientId = window.location.hostname.split(".")[0];
+export const socketUri = process.env.SOCKET_URI;
 
 ReactDOM.render(<Loading />, document.getElementById('root'))
 

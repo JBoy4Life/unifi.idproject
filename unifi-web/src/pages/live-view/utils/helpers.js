@@ -1,6 +1,4 @@
 import { liveDiscoverySelector, zonesInfoSelector } from 'redux/selectors'
-import { holdersSelector } from 'redux/selectors'
-import { referenceMap } from 'utils/helpers'
 
 export const groupItems = (items, grouping) => {
   if (grouping === 'zones') {
@@ -30,10 +28,8 @@ export const filterItems = (items, filters, search) =>
 export const getDiscoveredList = (state) => {
   const liveDiscovery = liveDiscoverySelector(state)
   const zonesInfo = zonesInfoSelector(state)
-  const holdersInfo = referenceMap(holdersSelector(state), 'clientReference')
   return liveDiscovery.map((discovery, idx) => ({
     ...discovery,
-    client: holdersInfo[discovery.clientReference],
     zone: zonesInfo[discovery.zoneId],
     key: idx,
   }))
