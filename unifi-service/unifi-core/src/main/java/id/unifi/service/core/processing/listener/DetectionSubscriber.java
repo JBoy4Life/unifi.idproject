@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Ordering;
 import id.unifi.service.common.api.MessageListener;
+import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.detection.DetectionMatchListener;
 import id.unifi.service.common.subscriptions.SubscriptionHandler;
@@ -11,36 +13,66 @@ import id.unifi.service.common.subscriptions.SubscriptionManager;
 import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.types.pk.SitePK;
 import id.unifi.service.common.types.pk.ZonePK;
+import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
+import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
+import static id.unifi.service.core.db.Core.CORE;
+import static id.unifi.service.core.db.Tables.CLIENT_CONFIG;
+import static id.unifi.service.core.db.Tables.RFID_DETECTION;
+import id.unifi.service.core.processing.DetectionMatcher;
 import id.unifi.service.core.site.ResolvedSiteDetection;
 import id.unifi.service.core.site.SiteDetectionSubscriptionType;
 import id.unifi.service.core.site.ZoneDetectionSubscriptionType;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static java.time.Instant.now;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import org.jooq.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 
 public class DetectionSubscriber implements DetectionMatchListener {
     private static final Logger log = LoggerFactory.getLogger(DetectionSubscriber.class);
 
     private static final String SUBSCRIBE_DETECTIONS_RESULT = "core.site.subscribe-detections-result";
     private static final String SUBSCRIBE_ZONE_DETECTIONS_RESULT = "core.site.subscribe-zone-detections-result";
+    private static final Duration LAST_KNOWN_DETECTIONS_CUTOFF = Duration.ofDays(1);
+    private static final Duration LAST_KNOWN_DETECTIONS_PRELOAD_TIMEOUT = Duration.ofMinutes(1);
 
     private final Cache<DetectablePK, Boolean> recentDetectables;
     private final SubscriptionManager subscriptionManager;
     private final Map<SiteAndClientReference, String> clientReferenceZones;
     private final Map<ZonePK, Map<String, Instant>> zoneClientReferenceTimes;
+    private final CountDownLatch lastKnownPreloaded;
 
-    public DetectionSubscriber(SubscriptionManager subscriptionManager) {
+    private DetectionSubscriber(SubscriptionManager subscriptionManager) {
         this.subscriptionManager = subscriptionManager;
-        this.recentDetectables = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.SECONDS).build();
+        this.recentDetectables = CacheBuilder.newBuilder().expireAfterWrite(1, SECONDS).build();
         this.clientReferenceZones = new ConcurrentHashMap<>();
         this.zoneClientReferenceTimes = new ConcurrentHashMap<>();
+        this.lastKnownPreloaded = new CountDownLatch(1);
+    }
+
+    public static DetectionSubscriber create(SubscriptionManager subscriptionManager,
+                                             DetectionMatcher detectionMatcher,
+                                             DatabaseProvider dbProvider) {
+        var subscriber = new DetectionSubscriber(subscriptionManager);
+        subscriber.start(detectionMatcher, dbProvider);
+        return subscriber;
+    }
+
+    private void start(DetectionMatcher detectionMatcher, DatabaseProvider dbProvider) {
+        new Thread(() -> this.loadLastKnown(detectionMatcher, dbProvider.bySchema(CORE))).start();
     }
 
     public void accept(List<DetectionMatch> matches) {
@@ -72,6 +104,8 @@ public class DetectionSubscriber implements DetectionMatchListener {
         var topic = SiteDetectionSubscriptionType.topic(site);
 
         if (includeLastKnown) {
+            awaitLastKnownPreloaded();
+
             var lastKnownDetections = zoneClientReferenceTimes.entrySet().stream()
                     .filter(e -> e.getKey().getSite().equals(site))
                     .flatMap(e -> e.getValue().entrySet().stream()
@@ -94,6 +128,8 @@ public class DetectionSubscriber implements DetectionMatchListener {
         var topic = ZoneDetectionSubscriptionType.topic(zone);
 
         if (includeLastKnown) {
+            awaitLastKnownPreloaded();
+
             var lastKnownDetections = zoneClientReferenceTimes.getOrDefault(zone, Map.of()).entrySet().stream()
                     .map(e -> new ResolvedSiteDetection(e.getValue(), e.getKey(), zone.zoneId))
                     .collect(toUnmodifiableList());
@@ -105,6 +141,17 @@ public class DetectionSubscriber implements DetectionMatchListener {
         subscriptionManager.addSubscription(topic,
                 new SubscriptionHandler<>(listener.getSession(), listener.getCorrelationId(),
                         detections -> listener.accept(SUBSCRIBE_ZONE_DETECTIONS_RESULT, detections)));
+    }
+
+    private void awaitLastKnownPreloaded() {
+        try {
+            // N.B.: This is practical only if preloading takes a few seconds, roughly up to 500,000 detections
+            //       in the period between [now - cut-off] and [now].
+            if (!lastKnownPreloaded.await(LAST_KNOWN_DETECTIONS_PRELOAD_TIMEOUT.toMillis(), MILLISECONDS))
+                throw new RuntimeException("Timed out while waiting for preload");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void updateSnapshot(DetectionMatch match) {
@@ -147,6 +194,50 @@ public class DetectionSubscriber implements DetectionMatchListener {
                 clientReferenceZones.put(siteAndClientReference, zoneId);
             }
         }
+    }
+
+    private void loadLastKnown(DetectionMatcher detectionMatcher, Database db) {
+        var timestampLimit = utcLocalFromInstant(now().minus(LAST_KNOWN_DETECTIONS_CUTOFF));
+
+        log.info("Preloading last known detections");
+        var timerStart = System.currentTimeMillis();
+        db.execute(sql -> {
+            sql.select(
+                    RFID_DETECTION.CLIENT_ID,
+                    RFID_DETECTION.DETECTABLE_ID,
+                    RFID_DETECTION.DETECTABLE_TYPE,
+                    RFID_DETECTION.READER_SN,
+                    RFID_DETECTION.PORT_NUMBER,
+                    RFID_DETECTION.DETECTION_TIME)
+                    .distinctOn(RFID_DETECTION.CLIENT_ID, RFID_DETECTION.DETECTABLE_ID, RFID_DETECTION.DETECTABLE_TYPE)
+                    .from(RFID_DETECTION)
+                    .join(CLIENT_CONFIG)
+                    .using(CLIENT_CONFIG.CLIENT_ID)
+                    .where(CLIENT_CONFIG.LIVE_VIEW_ENABLED) // A bit dirty but probably matches business reqs quite well
+                    .and(RFID_DETECTION.DETECTION_TIME.gt(timestampLimit))
+                    .orderBy(
+                            RFID_DETECTION.CLIENT_ID,
+                            RFID_DETECTION.DETECTABLE_ID,
+                            RFID_DETECTION.DETECTABLE_TYPE,
+                            RFID_DETECTION.DETECTION_TIME.desc())
+                    .stream()
+                    .forEach(r -> detectionMatcher.match(getDetectionFromRecord(r)).ifPresent(this::updateSnapshot));
+            return null;
+        });
+        lastKnownPreloaded.countDown();
+        log.info("Preloaded last known detections in {} ms", System.currentTimeMillis() - timerStart);
+    }
+
+    private static Detection getDetectionFromRecord(Record r) {
+        return new Detection(
+                new DetectablePK(
+                        r.get(RFID_DETECTION.CLIENT_ID),
+                        r.get(RFID_DETECTION.DETECTABLE_ID),
+                        DetectableType.fromString(r.get(RFID_DETECTION.DETECTABLE_TYPE))),
+                r.get(RFID_DETECTION.READER_SN),
+                r.get(RFID_DETECTION.PORT_NUMBER),
+                instantFromUtcLocal(r.get(RFID_DETECTION.DETECTION_TIME)),
+                Optional.empty(), 1);
     }
 
     private static class SiteAndClientReference {

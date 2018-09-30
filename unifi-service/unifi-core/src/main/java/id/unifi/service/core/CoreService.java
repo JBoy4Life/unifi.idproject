@@ -113,14 +113,15 @@ public class CoreService {
         var dbProvider = new DatabaseProvider();
         dbProvider.bySchema(CORE, ATTENDANCE); // TODO: Migrate in a more normal way
 
+        var detectionMatcher = new DetectionMatcher(dbProvider);
+
         var subscriptionManager = new InMemorySubscriptionManager();
-        var detectionSubscriber = new DetectionSubscriber(subscriptionManager);
+        var detectionSubscriber = DetectionSubscriber.create(subscriptionManager, detectionMatcher, dbProvider);
         var detectionPersistence = new DetectionPersistence(dbProvider);
 
         var attendanceMatcher = new AttendanceMatcher(dbProvider);
         var attendanceProcessor = new AttendanceProcessor(dbProvider, attendanceMatcher);
 
-        var detectionMatcher = new DetectionMatcher(dbProvider);
         var detectionProcessor = new DetectionProcessor(config.mq(), detectionMatcher,
                 Set.of(detectionPersistence, attendanceProcessor),
                 Set.of(detectionSubscriber));
