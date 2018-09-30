@@ -126,8 +126,10 @@ public class DetectionSubscriber implements DetectionMatchListener {
         if (includeLastKnown) {
             awaitLastKnownPreloaded();
 
+            var cutoff = Instant.now().minus(LAST_KNOWN_DETECTIONS_CUTOFF);
             var lastKnownDetections = detectionSupplier.get()
                     .flatMap(e -> e.getValue().entrySet().stream()
+                            .filter(e2 -> e2.getValue().isAfter(cutoff))
                             .map(e2 -> new ResolvedSiteDetection(e2.getValue(), e2.getKey(), e.getKey().zoneId)))
                     .collect(toUnmodifiableList());
 
@@ -142,8 +144,8 @@ public class DetectionSubscriber implements DetectionMatchListener {
 
     private void awaitLastKnownPreloaded() {
         try {
-            // N.B.: This is practical only if preloading takes a few seconds, roughly up to 500,000 detections
-            //       in the period between [now - cut-off] and [now].
+            // N.B.: This is practical only if preloading takes a few seconds, roughly up to a total of
+            //       500,000 detections in the period between [now - cut-off] and [now].
             if (!lastKnownPreloaded.await(LAST_KNOWN_DETECTIONS_PRELOAD_TIMEOUT.toMillis(), MILLISECONDS))
                 throw new RuntimeException("Timed out while waiting for preload");
         } catch (InterruptedException e) {
