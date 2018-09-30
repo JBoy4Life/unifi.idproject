@@ -10,6 +10,7 @@ import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.detection.DetectionMatchListener;
 import id.unifi.service.common.subscriptions.SubscriptionHandler;
 import id.unifi.service.common.subscriptions.SubscriptionManager;
+import id.unifi.service.common.subscriptions.Topic;
 import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.types.pk.SitePK;
 import id.unifi.service.common.types.pk.ZonePK;
@@ -40,6 +41,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class DetectionSubscriber implements DetectionMatchListener {
     private static final Logger log = LoggerFactory.getLogger(DetectionSubscriber.class);
@@ -101,46 +104,40 @@ public class DetectionSubscriber implements DetectionMatchListener {
                             MessageListener<List<ResolvedSiteDetection>> listener,
                             boolean includeLastKnown) {
         log.debug("Adding listener for {}, includeLastKnown: {}", site, includeLastKnown);
-        var topic = SiteDetectionSubscriptionType.topic(site);
-
-        if (includeLastKnown) {
-            awaitLastKnownPreloaded();
-
-            var lastKnownDetections = zoneClientReferenceTimes.entrySet().stream()
-                    .filter(e -> e.getKey().getSite().equals(site))
-                    .flatMap(e -> e.getValue().entrySet().stream()
-                            .map(e2 -> new ResolvedSiteDetection(e2.getValue(), e2.getKey(), e.getKey().zoneId)))
-                    .collect(toUnmodifiableList());
-
-            if (!lastKnownDetections.isEmpty())
-                listener.accept(SUBSCRIBE_DETECTIONS_RESULT, lastKnownDetections);
-        }
-
-        subscriptionManager.addSubscription(topic,
-                new SubscriptionHandler<>(listener.getSession(), listener.getCorrelationId(),
-                        detections -> listener.accept(SUBSCRIBE_DETECTIONS_RESULT, detections)));
+        processSubscription(
+                () -> zoneClientReferenceTimes.entrySet().stream().filter(e -> e.getKey().getSite().equals(site)),
+                SiteDetectionSubscriptionType.topic(site), SUBSCRIBE_DETECTIONS_RESULT, listener, includeLastKnown);
     }
 
     public void addListener(ZonePK zone,
                             MessageListener<List<ResolvedSiteDetection>> listener,
                             boolean includeLastKnown) {
         log.debug("Adding listener for {}, includeLastKnown: {}", zone, includeLastKnown);
-        var topic = ZoneDetectionSubscriptionType.topic(zone);
+        processSubscription(
+                () -> Stream.of(Map.entry(zone, zoneClientReferenceTimes.getOrDefault(zone, Map.of()))),
+                ZoneDetectionSubscriptionType.topic(zone), SUBSCRIBE_ZONE_DETECTIONS_RESULT, listener, includeLastKnown);
+    }
 
+    private void processSubscription(Supplier<Stream<Map.Entry<ZonePK, Map<String, Instant>>>> detectionSupplier,
+                                     Topic<List<ResolvedSiteDetection>> topic,
+                                     String resultTypeName,
+                                     MessageListener<List<ResolvedSiteDetection>> listener,
+                                     boolean includeLastKnown) {
         if (includeLastKnown) {
             awaitLastKnownPreloaded();
 
-            var lastKnownDetections = zoneClientReferenceTimes.getOrDefault(zone, Map.of()).entrySet().stream()
-                    .map(e -> new ResolvedSiteDetection(e.getValue(), e.getKey(), zone.zoneId))
+            var lastKnownDetections = detectionSupplier.get()
+                    .flatMap(e -> e.getValue().entrySet().stream()
+                            .map(e2 -> new ResolvedSiteDetection(e2.getValue(), e2.getKey(), e.getKey().zoneId)))
                     .collect(toUnmodifiableList());
 
             if (!lastKnownDetections.isEmpty())
-                listener.accept(SUBSCRIBE_ZONE_DETECTIONS_RESULT, lastKnownDetections);
+                listener.accept(resultTypeName, lastKnownDetections);
         }
 
         subscriptionManager.addSubscription(topic,
                 new SubscriptionHandler<>(listener.getSession(), listener.getCorrelationId(),
-                        detections -> listener.accept(SUBSCRIBE_ZONE_DETECTIONS_RESULT, detections)));
+                        detections -> listener.accept(resultTypeName, detections)));
     }
 
     private void awaitLastKnownPreloaded() {
