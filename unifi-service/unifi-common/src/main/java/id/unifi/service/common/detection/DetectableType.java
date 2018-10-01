@@ -2,24 +2,20 @@ package id.unifi.service.common.detection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import com.google.common.base.Converter;
+import id.unifi.service.common.types.EnumUtils;
 
 public enum DetectableType {
     UHF_EPC, UHF_TID, MIFARE_CSN, PROX_ID;
 
-    private static final Converter<String, String> inputConverter = LOWER_HYPHEN.converterTo(UPPER_UNDERSCORE);
-
     private final String stringName;
 
     DetectableType() {
-        this.stringName = UPPER_UNDERSCORE.to(LOWER_HYPHEN, name());
+        this.stringName = EnumUtils.getOutputConverter().convert(name());
     }
 
     @JsonCreator
     public static DetectableType fromString(String type) {
-        return valueOf(inputConverter.convert(type));
+        return valueOf(EnumUtils.getInputConverter().convert(type));
     }
 
     @JsonValue

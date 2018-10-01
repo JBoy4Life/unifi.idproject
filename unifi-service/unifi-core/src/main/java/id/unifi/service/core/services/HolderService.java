@@ -97,7 +97,7 @@ public class HolderService {
 
         if (filter == null) filter = ListFilter.empty();
         var filterCondition = and(
-                filterCondition(filter.holderType, ht -> HOLDER.HOLDER_TYPE.eq(ht.toString())),
+                filterCondition(filter.holderType, HOLDER.HOLDER_TYPE::eq),
                 filterCondition(filter.active, HOLDER.ACTIVE::eq));
 
         return db.execute(sql -> sql.selectFrom(calculateTableJoin(with))
@@ -192,7 +192,7 @@ public class HolderService {
                 sql.insertInto(HOLDER)
                         .set(HOLDER.CLIENT_ID, clientId)
                         .set(HOLDER.CLIENT_REFERENCE, clientReference)
-                        .set(HOLDER.HOLDER_TYPE, holderType.toString())
+                        .set(HOLDER.HOLDER_TYPE, holderType)
                         .set(HOLDER.NAME, name)
                         .set(HOLDER.ACTIVE, active != null ? active : true)
                         .set(HOLDER.NOTE, note != null ? val(note) : defaultValue(String.class))
@@ -212,7 +212,7 @@ public class HolderService {
                         sql.insertInto(CONTACT)
                                 .set(CONTACT.CLIENT_ID, clientId)
                                 .set(CONTACT.CLIENT_REFERENCE, clientReference)
-                                .set(CONTACT.HOLDER_TYPE, holderType.toString())
+                                .set(CONTACT.HOLDER_TYPE, holderType)
                                 .execute();
                         break;
                 }
@@ -306,7 +306,7 @@ public class HolderService {
                 r.get(HOLDER.CLIENT_REFERENCE),
                 r.get(HOLDER.NAME),
                 r.get(HOLDER.NOTE),
-                HolderType.fromString(r.get(HOLDER.HOLDER_TYPE)),
+                r.get(HOLDER.HOLDER_TYPE),
                 r.get(HOLDER.ACTIVE),
                 fieldValueOpt(r, HOLDER_IMAGE.IMAGE).map(i -> new ImageWithType(i, r.get(HOLDER_IMAGE.MIME_TYPE))),
                 Optional.ofNullable(r.field(HOLDER_METADATA.METADATA)).map(f -> extractMetadata(r.get(f))));

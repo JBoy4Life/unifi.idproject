@@ -8,9 +8,12 @@ import static id.unifi.service.attendance.OverriddenStatus.PRESENT;
 import static id.unifi.service.attendance.db.Attendance.ATTENDANCE;
 import id.unifi.service.attendance.db.Keys;
 import static id.unifi.service.attendance.db.Tables.*;
+import id.unifi.service.common.HolderType;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.OperatorPK;
 import static id.unifi.service.core.db.Core.CORE;
@@ -19,8 +22,6 @@ import static id.unifi.service.core.db.Tables.HOLDER;
 import static id.unifi.service.core.db.Tables.HOLDER_METADATA;
 import static id.unifi.service.core.db.Tables.ZONE;
 import id.unifi.service.core.db.tables.records.HolderRecord;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.time.ZoneOffset.UTC;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
@@ -253,7 +254,7 @@ public class ScheduleService {
             var contactNames = sql
                     .selectFrom(HOLDER)
                     .where(HOLDER.CLIENT_ID.eq(clientId))
-                    .and(HOLDER.HOLDER_TYPE.eq("contact"))
+                    .and(HOLDER.HOLDER_TYPE.eq(HolderType.CONTACT))
                     .stream()
                     .collect(toMap(HolderRecord::getClientReference, HolderRecord::getName));
 

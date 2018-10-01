@@ -2,7 +2,6 @@ package id.unifi.service.core.processing;
 
 import id.unifi.service.dbcommon.Database;
 import id.unifi.service.dbcommon.DatabaseProvider;
-import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.types.pk.AntennaPK;
@@ -74,7 +73,7 @@ public class DetectionMatcher {
                     .where(DETECTABLE.ACTIVE)
                     .stream()
                     .collect(toUnmodifiableMap(
-                            d -> new DetectablePK(d.value1(), d.value2(), DetectableType.fromString(d.value3())),
+                            d -> new DetectablePK(d.value1(), d.value2(), d.value3()),
                             r -> Optional.ofNullable(r.value4())));
 
             var antennaZones = sql

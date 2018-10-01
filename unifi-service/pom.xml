@@ -465,6 +465,16 @@
                                             <!-- See https://github.com/jOOQ/jOOQ/issues/4691 about escapes -->
                                             <types>TIMESTAMP\ WITH\ TIME\ ZONE</types>
                                         </forcedType>
+                                        <forcedType>
+                                            <userType>id.unifi.service.common.HolderType</userType>
+                                            <converter>id.unifi.service.dbcommon.HolderTypeConverter</converter>
+                                            <expression>.*\.holder_type</expression>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>id.unifi.service.common.detection.DetectableType</userType>
+                                            <converter>id.unifi.service.dbcommon.DetectableTypeConverter</converter>
+                                            <expression>.*\.detectable_type</expression>
+                                        </forcedType>
                                     </forcedTypes>
                                 </database>
                                 <generate>

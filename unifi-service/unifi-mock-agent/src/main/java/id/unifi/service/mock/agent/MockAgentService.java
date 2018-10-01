@@ -6,7 +6,6 @@ import com.statemachinesystems.envy.Prefix;
 import id.unifi.service.common.config.HexByteArrayValueParser;
 import id.unifi.service.common.config.HostAndPortValueParser;
 import id.unifi.service.common.config.UnifiConfigSource;
-import id.unifi.service.common.detection.DetectableType;
 import id.unifi.service.common.detection.SiteDetectionReport;
 import id.unifi.service.common.detection.SiteRfidDetection;
 import id.unifi.service.common.types.client.ClientDetectable;
@@ -62,7 +61,7 @@ public class MockAgentService {
                 .selectFrom(DETECTABLE)
                 .where(DETECTABLE.CLIENT_ID.eq(clientId))
                 .stream()
-                .map(r -> new ClientDetectable(r.getDetectableId(), DetectableType.fromString(r.getDetectableType())))
+                .map(r -> new ClientDetectable(r.getDetectableId(), r.getDetectableType()))
                 .collect(toUnmodifiableList()));
 
         if (detectables.isEmpty()) {

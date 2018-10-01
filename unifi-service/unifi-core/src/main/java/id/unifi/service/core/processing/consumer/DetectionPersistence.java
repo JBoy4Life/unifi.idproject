@@ -3,6 +3,9 @@ package id.unifi.service.core.processing.consumer;
 import com.google.common.collect.Iterables;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.detection.DetectionMatchMqConsumer;
 import id.unifi.service.common.mq.MqUtils;
@@ -12,8 +15,6 @@ import id.unifi.service.common.util.BatchBuffer;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import static id.unifi.service.dbcommon.DatabaseUtils.CITEXT;
 import static id.unifi.service.dbcommon.DatabaseUtils.unqualified;
 import org.jooq.Field;
@@ -37,7 +38,7 @@ public class DetectionPersistence implements DetectionMatchMqConsumer {
 
     private static final Field<String> CLIENT_ID = unqualified(RFID_DETECTION.CLIENT_ID);
     private static final Field<String> DETECTABLE_ID = unqualified(RFID_DETECTION.DETECTABLE_ID);
-    private static final Field<String> DETECTABLE_TYPE = unqualified(RFID_DETECTION.DETECTABLE_TYPE);
+    private static final Field<DetectableType> DETECTABLE_TYPE = unqualified(RFID_DETECTION.DETECTABLE_TYPE);
 
     private static final String[] RFID_DETECTION_FIELD_NAMES =
             RFID_DETECTION.fieldStream().map(Field::getName).toArray(String[]::new);
@@ -71,12 +72,12 @@ public class DetectionPersistence implements DetectionMatchMqConsumer {
         if (taggedMatches.isEmpty()) return;
 
         @SuppressWarnings("unchecked")
-        Row8<String, String, String, String, Integer, Instant, BigDecimal, Integer>[] rows = taggedMatches.stream()
+        Row8<String, String, DetectableType, String, Integer, Instant, BigDecimal, Integer>[] rows = taggedMatches.stream()
                 .map(d -> d.payload.detection)
                 .map(d -> row(
                         cast(d.detectable.clientId, CITEXT),
                         cast(d.detectable.detectableId, CITEXT),
-                        d.detectable.detectableType.toString(),
+                        d.detectable.detectableType,
                         d.readerSn,
                         d.portNumber,
                         d.detectionTime,

@@ -3,7 +3,8 @@ package id.unifi.service.core.services;
 import id.unifi.service.common.api.annotations.ApiOperation;
 import id.unifi.service.common.api.annotations.ApiService;
 import id.unifi.service.common.api.errors.Unauthorized;
-import id.unifi.service.common.detection.DetectableType;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.Detection;
 import id.unifi.service.common.operator.OperatorSessionData;
 import id.unifi.service.common.types.pk.DetectablePK;
@@ -12,8 +13,7 @@ import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
 import id.unifi.service.core.db.tables.records.RfidDetectionRecord;
 import id.unifi.service.core.processing.DetectionProcessor;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class DetectionService {
 
     private static Detection detectionFromRecord(RfidDetectionRecord r) {
         return new Detection(
-                new DetectablePK(r.getClientId(), r.getDetectableId(), DetectableType.fromString(r.getDetectableType())),
+                new DetectablePK(r.getClientId(), r.getDetectableId(), r.getDetectableType()),
                 r.getReaderSn(),
                 r.getPortNumber(),
                 r.getDetectionTime(),

@@ -67,7 +67,7 @@ public class DetectableService {
 
         var tables = calculateTableJoin(filter, with);
         var filterCondition = and(
-                filterCondition(filter.detectableType, t -> DETECTABLE.DETECTABLE_TYPE.eq(t.toString())),
+                filterCondition(filter.detectableType, DETECTABLE.DETECTABLE_TYPE::eq),
                 filterCondition(filter.active, DETECTABLE.ACTIVE::eq),
                 filterCondition(filter.assignment, ASSIGNMENT.CLIENT_REFERENCE::eq),
                 filterCondition(filter.assigned, assigned ->
@@ -79,7 +79,7 @@ public class DetectableService {
                 .fetch(r -> new DetectableInfo(
                         clientId,
                         r.get(DETECTABLE.DETECTABLE_ID),
-                        DetectableType.fromString(r.get(DETECTABLE.DETECTABLE_TYPE)),
+                        r.get(DETECTABLE.DETECTABLE_TYPE),
                         r.get(DETECTABLE.DESCRIPTION),
                         fieldValueOpt(r, ASSIGNMENT.CLIENT_REFERENCE))));
     }
@@ -99,7 +99,7 @@ public class DetectableService {
                 sql.insertInto(DETECTABLE)
                         .set(DETECTABLE.CLIENT_ID, clientId)
                         .set(DETECTABLE.DETECTABLE_ID, detectableId)
-                        .set(DETECTABLE.DETECTABLE_TYPE, detectableType.toString())
+                        .set(DETECTABLE.DETECTABLE_TYPE, detectableType)
                         .set(DETECTABLE.DESCRIPTION, description)
                         .set(DETECTABLE.ACTIVE, active != null ? active : true)
                         .execute();
@@ -136,7 +136,7 @@ public class DetectableService {
                         .set(fieldMap)
                         .where(DETECTABLE.CLIENT_ID.eq(clientId))
                         .and(DETECTABLE.DETECTABLE_ID.eq(detectableId))
-                        .and(DETECTABLE.DETECTABLE_TYPE.eq(detectableType.toString()))
+                        .and(DETECTABLE.DETECTABLE_TYPE.eq(detectableType))
                         .execute();
             }
 
@@ -157,7 +157,7 @@ public class DetectableService {
                     sql.deleteFrom(ASSIGNMENT)
                             .where(ASSIGNMENT.CLIENT_ID.eq(clientId))
                             .and(ASSIGNMENT.DETECTABLE_ID.eq(detectableId))
-                            .and(ASSIGNMENT.DETECTABLE_TYPE.eq(detectableType.toString()))
+                            .and(ASSIGNMENT.DETECTABLE_TYPE.eq(detectableType))
                             .execute();
                 }
             }
@@ -179,7 +179,7 @@ public class DetectableService {
                 .set(ASSIGNMENT.CLIENT_ID, clientId)
                 .set(ASSIGNMENT.CLIENT_REFERENCE, assignment)
                 .set(ASSIGNMENT.DETECTABLE_ID, detectableId)
-                .set(ASSIGNMENT.DETECTABLE_TYPE, detectableType.toString());
+                .set(ASSIGNMENT.DETECTABLE_TYPE, detectableType);
     }
 
     private static Table<? extends Record> calculateTableJoin(ListFilter filter, @Nullable Set<String> with) {
