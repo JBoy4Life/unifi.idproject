@@ -23,31 +23,67 @@ const menus = [{
 }]
 
 class EvacuationDemo extends Component {
-  render() {
-    return (
-      <PageContainer>
-        {/*NOTE: In the actual implementation this banner should be in the
-            `TopNavigation` component.*/}
-        <div className='evacuation-demo--banner'><span style={{verticalAlign: 'middle'}}>Evacuation in Progress</span></div>
-        <PageContent className='evacuation-demo--page-content'>
-          <PageContent.Sidebar>
-            {/*TODO: Create different styles for `Button` element.*/}
-            <Button className='evacuation-demo--end-button'>End Evacuation</Button>
-            <LinkedSideNavigation menus={menus} />
-          </PageContent.Sidebar>
-          <PageContent.Main>
-            <Switch>
-              <Route
-                exact
-                path={ROUTES.EVACUATION_DEMO}
-                component={EvacuationDemoDashboard}
-              />
-            </Switch>
-          </PageContent.Main>
-        </PageContent>
-      </PageContainer>
-    )
+
+  constructor (props) {
+    super(props)
+    this.state = {
+      evacuationActive: false
+    }
   }
+
+  storeEvacuationVideoRef = (ref) => {
+    this.videoRef = ref
+  }
+
+  toggleEvacuation = () => {
+    this.setState((oldState) => {
+      oldState.evacuationActive
+        ? this.switchVideoPlaybackStatus(this.videoRef, false)
+        : this.switchVideoPlaybackStatus(this.videoRef, true)
+      return ({evacuationActive: ! oldState.evacuationActive})
+    })
+  }
+
+  switchVideoPlaybackStatus = (videoRef, status) => {
+    videoRef.currentTime = 0
+    status
+      ? videoRef.play()
+      : videoRef.pause()
+  }
+
+  render = () => (
+    <PageContainer>
+      {/*NOTE: In the actual implementation this banner should be in the
+          `TopNavigation` component.*/}
+      {this.state.evacuationActive
+          && <div className='evacuation-demo--banner'>Evacuation in Progress</div>}
+      <PageContent className='evacuation-demo--page-content'>
+        <PageContent.Sidebar>
+          {/*TODO: Create different styles for `Button` element.*/}
+          <Button className='evacuation-demo--end-button' onClick={this.toggleEvacuation}>
+            {this.state.evacuationActive
+              ? 'End Evacuation'
+              : 'Begin Evacuation'}
+          </Button>
+          <LinkedSideNavigation menus={menus} />
+        </PageContent.Sidebar>
+        <PageContent.Main>
+          <Switch>
+            <Route
+              exact
+              path={ROUTES.EVACUATION_DEMO}
+              render={() => <EvacuationDemoDashboard refCallback={this.storeEvacuationVideoRef}/>}
+            />
+          </Switch>
+        </PageContent.Main>
+      </PageContent>
+    </PageContainer>
+  )
+
+  componentDidMount = () => {
+    this.toggleEvacuation()
+  }
+
 }
 
 export default EvacuationDemo
