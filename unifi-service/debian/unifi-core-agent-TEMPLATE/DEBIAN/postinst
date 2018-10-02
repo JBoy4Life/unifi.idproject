@@ -1,7 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
-chown unifi: -R /opt/unifi
+adduser --system unifiid
 
-systemctl enable unifi-core-agent.service
-systemctl start unifi-core-agent.service
+chown -R unifiid: /opt/unifi
 
+systemctl enable unifi-core.service
+systemctl start unifi-core.service
