@@ -132,6 +132,7 @@ bundle agent unifi_role_app {
 bundle agent unifi_role_services {
   methods:
     any::
+      "nginx";
       "rabbitmq";
       "oracle_java_jdk";
       "unifi_user";
