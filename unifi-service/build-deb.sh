@@ -62,7 +62,7 @@ cp -aR "$source_template"/* "$destination_output"
 echo "
 Package: $application
 Architecture: all
-Maintainer: Unifi.id<info@unifi.id>
+Maintainer: Unifi.id <info@unifi.id>
 Priority: optional
 Version: $version
 Description: $description
