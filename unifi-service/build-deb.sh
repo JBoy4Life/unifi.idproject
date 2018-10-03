@@ -71,7 +71,6 @@ Depends: $dependencies
 
 mkdir -p "$destination_output/opt/unifi"
 cp "$target" "$destination_output/opt/unifi/$application.jar"
-cp "misc/systemd/$application.service" "$destination_output/etc/systemd/system/$application.service"
 
 mkdir -p target
 dpkg-deb --build "$destination_output" "target/$application-$version.deb"

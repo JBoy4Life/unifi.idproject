@@ -1,15 +1,13 @@
 [Unit]
-Description=Unifi Core
-After=network.target
+Description=unifi.id Core Service
 
 [Service]
-SyslogIdentifier=SocketTest
-EnvironmentFile=/etc/unifi/unifi-core.conf
-ExecStart=/bin/sh -c "exec java -Dunifi.core.jdbc.url=${jdbc_url} -Dunifi.core.jdbc.user=${jdbc_user} -jar /opt/unifi/unifi-core.jar"
-User=unifi
 Type=simple
+User=unifiid
+WorkingDirectory=/opt/unifi
+ExecStart=/usr/bin/java -Dcom.sun.management.jmxremote.port=7998 -Dcom.sun.management.jmxremote.rmi.port=7998 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote=true -jar /opt/unifi/unifi-core.jar
 Restart=always
-RestartSec=3
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
