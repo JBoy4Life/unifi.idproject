@@ -113,7 +113,6 @@ bundle agent unifi_baseline {
       "chrony";
       "collectd";
       "syslogng";
-    !unifi_env_local::
       "unifi_apt_s3";
 }
 
@@ -183,18 +182,26 @@ bundle agent unifi_apt_s3 {
       "apt_key_added"
           expression => returnszero("APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 /usr/bin/apt-key list | /bin/fgrep \"$(gpg_sig)\"", "useshell");
   files:  
-    "/etc/apt/sources.list.d/unifi_id.list"
-      comment => "Copy APT Repository config",
-      perms => mo("644","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/unifi.list","$(unifi_environment.policy_filecopy_host)"),
+    !unifi_env_local::
+      "/etc/apt/sources.list.d/unifi_id.list"
+        comment => "Copy APT Repository config (stable)",
+        perms => mo("644","root"),
+        copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/unifi.list","$(unifi_environment.policy_filecopy_host)"),
 
-      action => if_elapsed("60");
-    "/etc/apt/s3auth.conf"
-      comment => "Copy s3 auth credentials for the apt repository",
-      perms => mo("600","root"),
-      copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/s3auth.conf","$(unifi_environment.policy_filecopy_host)"),
+        action => if_elapsed("60");
+    unifi_env_local::
+      "/etc/apt/sources.list.d/unifi_id.list"
+        comment => "Copy APT Repository config (unstable)",
+        perms => mo("644","root"),
+        copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/unifi-local.list","$(unifi_environment.policy_filecopy_host)"),
 
-      action => if_elapsed("60");
+        action => if_elapsed("60");
+      "/etc/apt/s3auth.conf"
+        comment => "Copy s3 auth credentials for the apt repository",
+        perms => mo("600","root"),
+        copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/apt/s3auth.conf","$(unifi_environment.policy_filecopy_host)"),
+
+        action => if_elapsed("60");
   commands:
     !s3_apt_installed::
       "/usr/bin/wget -O /tmp/apt_transport.deb ${apt_transport_s3_url} && dpkg -i /tmp/apt_transport.deb && rm -fv /tmp/apt_transport.deb"
