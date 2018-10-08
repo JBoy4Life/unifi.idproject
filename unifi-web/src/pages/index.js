@@ -10,6 +10,7 @@ import Directory from './directory'
 
 import Attendance from './attendance'
 import Evacuation from './evacuation'
+import EvacuationDemo from './evacuation-demo'
 
 import LiveView from './live-view'
 import Operators from './operators'
@@ -33,6 +34,7 @@ export {
 
   Attendance,
   Evacuation,
+  EvacuationDemo,
 
   LiveView,
   Operators,

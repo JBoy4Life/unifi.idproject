@@ -48,6 +48,7 @@ Other useful commands on the VM:
 ----
 psql -d unifi
 # Once inside set default schemata using: set search_path to attendance, core, public;
+# Set the session time zone: set session timezone to 'utc';
 
 # Quickly recreate and migrate service database
 dropdb --if-exists unifi && createdb unifi && mvn flyway:migrate -pl unifi-core-schema,unifi-attendance-schema

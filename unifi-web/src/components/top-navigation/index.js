@@ -1,14 +1,18 @@
 import React, { Component } from 'react'
+import { compose } from 'redux'
 import get from 'lodash/get'
 import { Menu } from '../../elements'
+import { TESTING_CLIENT_IDS } from '../../config/constants'
+import { withClientId } from 'hocs'
 
 import './index.scss'
 
-export default class TopNavigation extends Component {
+class TopNavigation extends Component {
   render() {
-    const { onMenuClick, selectedKeys, verticalConfig } = this.props;
+    const { clientId, onMenuClick, selectedKeys, verticalConfig } = this.props;
     const liveViewEnabled = get(verticalConfig, 'core.liveViewEnabled', false)
     const attendanceEnabled = Boolean(get(verticalConfig, 'attendance', false))
+    const evacDemoEnabled = (TESTING_CLIENT_IDS.includes(clientId))
 
     return (
       <Menu
@@ -54,7 +58,15 @@ export default class TopNavigation extends Component {
           {/*Evacuation*/}
         {/*</Menu.Item>*/}
 
+        {evacDemoEnabled && <Menu.Item key="/evacuation-demo">
+          Evacuation
+        </Menu.Item>}
+
       </Menu>
     )
   }
 }
+
+export default compose(
+  withClientId,
+)(TopNavigation)

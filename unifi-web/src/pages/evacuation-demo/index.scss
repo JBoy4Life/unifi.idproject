@@ -1,0 +1,39 @@
+.evacuation-demo--banner {
+  background: #e79e3f;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: fixed;
+  top: 40;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.evacuation-demo--page-content {
+  padding-top: 90px;
+}
+
+.evacuation-demo--end-button:focus,
+.evacuation-demo--end-button {
+  background: #43c990;
+  border: #43c990;
+  color: white;
+  display: block;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+}
+.evacuation-demo--end-button:hover {
+  background: #4ef0aa;
+  border: #4ef0aa;
+  color: white;
+}
+.evacuation-demo--end-button:hover:active {
+  background: #2aa16e;
+  border: #2aa16e;
+  color: white;
+}

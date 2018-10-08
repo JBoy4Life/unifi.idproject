@@ -27,8 +27,8 @@
         <java.target.version>10</java.target.version>
         <postgres.user>${user.name}</postgres.user>
 
-        <octane.version>1.30.0.0</octane.version>
-        <ltk.version>10.30.0.0</ltk.version>
+        <octane.version>1.32.0.0</octane.version>
+        <ltk.version>10.32.0.0</ltk.version>
         <jmdns.version>3.5.4</jmdns.version>
         <mina.version>2.0.16</mina.version>
         <velocity.version>1.7</velocity.version>            
@@ -458,6 +458,12 @@
                                             <userType>com.fasterxml.jackson.databind.JsonNode</userType>
                                             <binding>id.unifi.service.dbcommon.PostgresJsonbBinding</binding>
                                             <types>JSONB</types>
+                                        </forcedType>
+                                        <forcedType>
+                                            <userType>java.time.Instant</userType>
+                                            <converter>id.unifi.service.dbcommon.OffsetDateTimeToInstantConverter</converter>
+                                            <!-- See https://github.com/jOOQ/jOOQ/issues/4691 about escapes -->
+                                            <types>TIMESTAMP\ WITH\ TIME\ ZONE</types>
                                         </forcedType>
                                     </forcedTypes>
                                 </database>

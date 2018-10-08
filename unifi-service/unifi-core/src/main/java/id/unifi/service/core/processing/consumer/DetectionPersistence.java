@@ -3,20 +3,19 @@ package id.unifi.service.core.processing.consumer;
 import com.google.common.collect.Iterables;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.detection.DetectionMatchMqConsumer;
 import id.unifi.service.common.mq.MqUtils;
 import static id.unifi.service.common.mq.MqUtils.DETECTION_MATCH_TYPE;
 import id.unifi.service.common.mq.Tagged;
 import id.unifi.service.common.util.BatchBuffer;
-import static id.unifi.service.dbcommon.DatabaseUtils.CITEXT;
-import static id.unifi.service.dbcommon.DatabaseUtils.unqualified;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.DETECTABLE;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
+import static id.unifi.service.dbcommon.DatabaseUtils.CITEXT;
+import static id.unifi.service.dbcommon.DatabaseUtils.unqualified;
 import org.jooq.Field;
 import org.jooq.Row8;
 import static org.jooq.impl.DSL.*;
@@ -29,7 +28,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public class DetectionPersistence implements DetectionMatchMqConsumer {
@@ -72,7 +71,7 @@ public class DetectionPersistence implements DetectionMatchMqConsumer {
         if (taggedMatches.isEmpty()) return;
 
         @SuppressWarnings("unchecked")
-        Row8<String, String, String, String, Integer, LocalDateTime, BigDecimal, Integer>[] rows = taggedMatches.stream()
+        Row8<String, String, String, String, Integer, Instant, BigDecimal, Integer>[] rows = taggedMatches.stream()
                 .map(d -> d.payload.detection)
                 .map(d -> row(
                         cast(d.detectable.clientId, CITEXT),
@@ -80,7 +79,7 @@ public class DetectionPersistence implements DetectionMatchMqConsumer {
                         d.detectable.detectableType.toString(),
                         d.readerSn,
                         d.portNumber,
-                        utcLocalFromInstant(d.detectionTime),
+                        d.detectionTime,
                         cast(d.rssi.orElse(null), DECIMAL),
                         d.count))
                 .toArray(Row8[]::new);

@@ -7,11 +7,13 @@ import org.jooq.Field;
 import org.jooq.Record;
 import static org.jooq.SQLDialect.POSTGRES;
 import org.jooq.TableField;
+import org.jooq.impl.DSL;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.trueCondition;
 import org.jooq.impl.DefaultDataType;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -19,6 +21,8 @@ import java.util.stream.Stream;
 
 public class DatabaseUtils {
     public static final DataType<String> CITEXT = new DefaultDataType<>(POSTGRES, String.class, "public.citext");
+
+    public static final Field<Instant> CURRENT_INSTANT = DSL.currentTimestamp().cast(Instant.class);
 
     public static <T> Condition filterCondition(Optional<T> filter, Function<T, Condition> condition) {
         return filter.map(condition).orElse(trueCondition());

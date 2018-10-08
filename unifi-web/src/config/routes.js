@@ -12,6 +12,8 @@ export const EVACUATION = '/evacuation'
 export const EVACUATION_DIRECTORY_VIEW = '/evacuation/directory'
 export const EVACUATION_FLOOR_VIEW = '/evacuation/floor'
 
+export const EVACUATION_DEMO = '/evacuation-demo'
+
 export const LIVE_VIEW = '/live-view'
 export const LIVE_VIEW_FLOOR_VIEW = '/live-view/floor-view'
 export const LIVE_VIEW_DIRECTORY = '/live-view/directory'
