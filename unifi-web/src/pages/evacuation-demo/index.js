@@ -80,10 +80,6 @@ class EvacuationDemo extends Component {
     </PageContainer>
   )
 
-  componentDidMount = () => {
-    this.toggleEvacuation()
-  }
-
 }
 
 export default EvacuationDemo
