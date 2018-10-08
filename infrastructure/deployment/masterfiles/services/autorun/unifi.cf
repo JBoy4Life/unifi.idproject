@@ -164,7 +164,7 @@ bundle agent unifi_role_db {
 bundle agent unifi_user {
   users:
       "unifiid"
-          policy => present,
+          policy => "present",
           description => "Unifi.id System User",
           home_dir => "/opt/unifi",
           group_primary => "nogroup",
