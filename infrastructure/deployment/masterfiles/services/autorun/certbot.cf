@@ -1,0 +1,25 @@
+bundle agent certbot {
+  vars:
+      "apt_repo_string"
+        string => "deb http://ftp.uk.debian.org/debian/ stretch-backports main";
+  classes:
+      "apt_repo_added"
+        expression => returnszero("/bin/fgrep \"$(apt_repo_string)\" /etc/apt/sources.list", "noshell");
+  packages:
+      "software-properties-common"
+        policy => "present",
+        package_module => apt_get;
+      "certbot"
+        policy => "present",
+        version => "latest",
+        package_module => apt_get,
+        options => { "-t", "stretch-backports" }; # N.B. This won't work if certbot has already been installed from the main repo.
+  files:
+      "/opt/bin/unifi-get-cert"
+        perms => mo("755", "root"),
+        copy_from => remote_cp("$(unifi_environment.cfengine_masterfiles)/files/certbot/unifi-get-cert", "$(unifi_environment.policy_filecopy_host)");
+  commands:
+    !apt_repo_added::
+      "/usr/bin/add-apt-repository \"$(apt_repo_string)\" && /usr/bin/apt-get update"
+        contain => useshell;
+}

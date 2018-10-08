@@ -122,6 +122,7 @@ bundle agent unifi_role_app {
   methods:
     any::
       "yarn";
+      "certbot";
       "nginx";
       "unifi_user";
     !unifi_env_local::
@@ -132,6 +133,7 @@ bundle agent unifi_role_app {
 bundle agent unifi_role_services {
   methods:
     any::
+      "certbot";
       "nginx";
       "rabbitmq";
       "oracle_java_jdk";

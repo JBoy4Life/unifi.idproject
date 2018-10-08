@@ -39,3 +39,22 @@ systemctl restart unifi-core-agent
 
 . Check for error/syslog via
 journalctl -f -u unifi-core-agent
+
+== Certificate renewal
+
+The public and agent APIs, and the web app require an X.509 certificate (aka SSL certificate) for their operation. This
+certificate is obtained from Let's Encrypt, is valid for three months and must be renewed before its expiry date to
+avoid "Invalid certificate" errors. The process for obtaining a certificate (whether new, renewed or already expired) is
+as follows:
+
+. SSH into production service EC2 instance (admin@app.unifi.id) and log into your DNS provider account.
+. Run on the EC2 instance: `sudo /opt/bin/unifi-get-cert`
+. Follow the instructions, entering an email address for renewal reminders, adding the displayed `_acme-challenge.app`
+  TXT records in DNS Made Easy and removing all the old ones (there'll be one or two).
+. Once the verification succeeds run: `sudo systemctl reload nginx`
+. Open https://centralworking.app.unifi.id and https://app.unifi.id in Chrome (Not Found error is OK for the latter) and
+  check certificate validity and expiry for both sites by clicking on the padlock in the address bar. Expiry time should
+  be three months in the future.
+. Use Developer Tools (View > Developer) Security tab for more debugging information if necessary.
+
+Read the CA documentation at https://letsencrypt.org/docs/ for information on expiry, revocation, etc.

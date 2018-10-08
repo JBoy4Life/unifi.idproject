@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+certbot certonly --manual -d app.unifi.id -d '*.app.unifi.id' --preferred-challenges dns-01 --server https://acme-v02.api.letsencrypt.org/directory "$@"
