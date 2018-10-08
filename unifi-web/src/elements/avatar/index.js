@@ -14,19 +14,19 @@ const toBase64 = (data) =>
     ? base64EncodeArrayBuffer(data)
     : data
 
-const Avatar = ({ image, className }) => (
-  <div className={cx(COMPONENT_CSS_CLASSNAME, className)}>
-    <div className={bemE('image')}
-      style={{
-        backgroundImage: image
-        ? typeof image === 'string'
-          ? `url(${image})`
-          : `url(data:${image.mimeType};base64,${toBase64(image.data)})`
-        : `url(${defaultAvatar})`
-      }}
-    />
-  </div>
-)
+const Avatar = ({ image, className }) => {
+  let element
+  return (
+    <div className={cx(COMPONENT_CSS_CLASSNAME, className)}>
+      <img className={bemE('image')}
+        src={image && typeof image === 'string'
+            ? image
+            : `data:${image.mimeType};base64,${toBase64(image.data)}` }
+        onError={() => ((src) => {element.src = src})(defaultAvatar)}
+        ref={(ref) => {element = ref}} />
+    </div>
+  )
+}
 
 Avatar.propTypes = {
   className: PropTypes.string,
