@@ -52,11 +52,13 @@ Vagrant.configure("2") do |config|
   # config.vm.provision :reload
   # TODO: can we force-converge in a postboot script?
 
-  # Sometimes, bridging to the public network does not acquire an IPv4 address.
-  # Forwarding ports will always work.
-  # config.vm.network "public_network"
-  config.vm.network "forwarded_port", guest: 3000, host: 3000 # unifi-web
-  config.vm.network "forwarded_port", guest: 8000, host: 8000 # unifi-service
+  # Host-to-guest networking.
+  # Your host: 172.16.0.1; the VM: 172.16.0.2.
+  config.vm.network "private_network", ip: "172.16.0.2"
+
+  # Interface that DHCPs to whatever router is on your network.
+  # Generally used for outbound Internet access.
+  config.vm.network "public_network"
 
   config.vm.post_up_message = $post_up_msg
 end
