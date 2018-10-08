@@ -11,6 +11,12 @@
 
     <name>Impinj Octane SDK</name>
     <description>Octane SDK repackaged with managed dependencies</description>
+    <!--
+      Libraries from https://support.impinj.com/hc/en-us/articles/202755488-LTK-Libraries-for-Readers
+      and https://support.impinj.com/hc/en-us/articles/202755268-Octane-SDK installed in m2-repo directory
+      using deploy:deploy-file, e.g.:
+      mvn deploy:deploy-file -Durl=file://m2-repo -Dfile=lib/libltkjava-10.32.0.0.jar -DgroupId=com.impinj -DartifactId=ltk-java -Dversion=10.32.0.0 -Dpackaging=jar
+    -->
 
     <repositories>
         <repository>
