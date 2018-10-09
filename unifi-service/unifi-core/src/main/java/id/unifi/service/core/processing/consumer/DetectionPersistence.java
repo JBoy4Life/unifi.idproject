@@ -19,7 +19,7 @@ import static id.unifi.service.dbcommon.DatabaseUtils.unqualified;
 import org.jooq.Field;
 import org.jooq.Row8;
 import static org.jooq.impl.DSL.*;
-import static org.jooq.util.postgres.PostgresDataType.DECIMAL;
+import static org.jooq.impl.SQLDataType.DECIMAL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.ConcurrencyFailureException;

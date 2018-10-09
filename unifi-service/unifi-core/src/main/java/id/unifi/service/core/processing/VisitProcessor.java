@@ -37,11 +37,9 @@ public class VisitProcessor {
 
         var inserted = db.execute(sql -> sql.insertInto(CORE.VISIT).
                 select(selectDistinct(RFID_DETECTION.CLIENT_ID, ASSIGNMENT.CLIENT_REFERENCE,
-                        RFID_DETECTION.DETECTION_TIME.minOver()
-                                .partitionBy(
+                        min(RFID_DETECTION.DETECTION_TIME).over().partitionBy(
                                         RFID_DETECTION.CLIENT_ID, READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
-                        RFID_DETECTION.DETECTION_TIME.maxOver()
-                                .partitionBy(
+                        max(RFID_DETECTION.DETECTION_TIME).over().partitionBy(
                                         RFID_DETECTION.CLIENT_ID, READER.SITE_ID, ASSIGNMENT.CLIENT_REFERENCE),
                         val("measured-day"), READER.SITE_ID)
                         .from(RFID_DETECTION)
