@@ -5,5 +5,5 @@ adduser --system unifiid
 
 chown -R unifiid: /opt/unifi
 
-systemctl enable unifi-core-agent.service
-systemctl start unifi-core-agent.service
+systemctl enable unifi-core.service
+systemctl start unifi-core.service
