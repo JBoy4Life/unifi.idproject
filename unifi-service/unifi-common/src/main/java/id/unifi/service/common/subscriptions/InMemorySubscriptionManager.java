@@ -75,6 +75,7 @@ public class InMemorySubscriptionManager implements SubscriptionManager {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <T> void distributeMessage(Topic<T> topic, T message) {
         handlersByTopic.get(topic).forEach(h -> ((SubscriptionHandler<T>) h).accept(message));
     }

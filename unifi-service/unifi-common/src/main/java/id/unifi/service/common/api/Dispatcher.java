@@ -90,9 +90,8 @@ public class Dispatcher<S> {
         this.messageListeners = new ConcurrentHashMap<>();
 
         if (subscriptionManager != null) {
-            messageListeners.put("core.protocol.unsubscribe", (om, session, msg) -> {
-                subscriptionManager.removeSubscription(session, msg.correlationId);
-            });
+            messageListeners.put("core.protocol.unsubscribe", (om, session, msg) ->
+                    subscriptionManager.removeSubscription(session, msg.correlationId));
 
             sessionListeners.add(new SessionListener<>() {
                 public void onSessionCreated(Session session, S sessionData) {

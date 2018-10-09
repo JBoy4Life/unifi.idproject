@@ -14,7 +14,7 @@ public class OperatorPK {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        OperatorPK that = (OperatorPK) o;
+        var that = (OperatorPK) o;
         return Objects.equals(clientId, that.clientId) &&
                 Objects.equals(username, that.username);
     }

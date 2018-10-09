@@ -46,7 +46,7 @@ public class MqUtils {
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
-                T unmarshalled = unmarshal(body, type);
+                var unmarshalled = unmarshal(body, type);
                 try {
                     consumer.accept(new Tagged<>(unmarshalled, envelope.getDeliveryTag()));
                 } catch (InterruptedException e) {

@@ -21,7 +21,6 @@ public class ConfigSerialization {
     private static final SimpleModule customSerializationModule;
     private static final ObjectMapper yamlObjectMapper;
     private static final ObjectMapper jsonObjectMapper;
-;
 
     static {
         customSerializationModule = new SimpleModule();
