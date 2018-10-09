@@ -295,6 +295,7 @@
                         <target>${java.target.version}</target>
                         <compilerArgs>
                             <arg>-Xlint:deprecation</arg>
+                            <arg>-Xlint:unchecked</arg>
                             <arg>-parameters</arg>
                         </compilerArgs>
                     </configuration>
