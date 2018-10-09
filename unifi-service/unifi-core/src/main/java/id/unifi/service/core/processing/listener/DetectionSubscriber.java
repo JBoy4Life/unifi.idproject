@@ -14,8 +14,6 @@ import id.unifi.service.common.subscriptions.Topic;
 import id.unifi.service.common.types.pk.DetectablePK;
 import id.unifi.service.common.types.pk.SitePK;
 import id.unifi.service.common.types.pk.ZonePK;
-import static id.unifi.service.common.util.TimeUtils.instantFromUtcLocal;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
 import static id.unifi.service.core.db.Tables.CLIENT_CONFIG;
 import static id.unifi.service.core.db.Tables.RFID_DETECTION;
@@ -196,7 +194,7 @@ public class DetectionSubscriber implements DetectionMatchListener {
     }
 
     private void loadLastKnown(DetectionMatcher detectionMatcher, Database db) {
-        var timestampLimit = utcLocalFromInstant(now().minus(LAST_KNOWN_DETECTIONS_CUTOFF));
+        var timestampLimit = now().minus(LAST_KNOWN_DETECTIONS_CUTOFF);
 
         log.info("Preloading last known detections");
         var timerStart = System.currentTimeMillis();
@@ -235,7 +233,7 @@ public class DetectionSubscriber implements DetectionMatchListener {
                         DetectableType.fromString(r.get(RFID_DETECTION.DETECTABLE_TYPE))),
                 r.get(RFID_DETECTION.READER_SN),
                 r.get(RFID_DETECTION.PORT_NUMBER),
-                instantFromUtcLocal(r.get(RFID_DETECTION.DETECTION_TIME)),
+                r.get(RFID_DETECTION.DETECTION_TIME),
                 Optional.empty(), 1);
     }
 

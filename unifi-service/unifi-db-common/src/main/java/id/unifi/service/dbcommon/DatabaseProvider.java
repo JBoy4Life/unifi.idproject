@@ -50,6 +50,7 @@ public class DatabaseProvider {
 
         var poolConfig = new HikariConfig();
         poolConfig.setDataSource(dataSource);
+        poolConfig.setConnectionInitSql("SET TIME ZONE 'UTC'");
         var pooledDataSource = new HikariDataSource(poolConfig);
 
         return new Database(schemaName, pooledDataSource, config.getJooqDialect());

@@ -8,8 +8,6 @@ import static id.unifi.service.attendance.db.Keys.ATTENDANCE_PKEY;
 import static id.unifi.service.attendance.db.Keys.PROCESSING_STATE_PKEY;
 import static id.unifi.service.attendance.db.Tables.ATTENDANCE_;
 import static id.unifi.service.attendance.db.Tables.PROCESSING_STATE;
-import id.unifi.service.dbcommon.Database;
-import id.unifi.service.dbcommon.DatabaseProvider;
 import id.unifi.service.common.detection.DetectionMatch;
 import id.unifi.service.common.detection.DetectionMatchMqConsumer;
 import id.unifi.service.common.mq.MqUtils;
@@ -17,8 +15,9 @@ import static id.unifi.service.common.mq.MqUtils.DETECTION_MATCH_TYPE;
 import id.unifi.service.common.mq.Tagged;
 import id.unifi.service.common.types.pk.AntennaPK;
 import id.unifi.service.common.util.BatchBuffer;
-import static id.unifi.service.common.util.TimeUtils.utcLocalFromInstant;
 import static id.unifi.service.core.db.Core.CORE;
+import id.unifi.service.dbcommon.Database;
+import id.unifi.service.dbcommon.DatabaseProvider;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import org.jooq.Query;
@@ -29,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -54,8 +52,8 @@ public class AttendanceProcessor implements DetectionMatchMqConsumer {
             .values((String) null, null, null, null)
             .onConflict(PROCESSING_STATE_PKEY.getFieldsArray())
             .doUpdate()
-            .set(PROCESSING_STATE.PROCESSED_UP_TO, (LocalDateTime) null)
-            .where(PROCESSING_STATE.PROCESSED_UP_TO.lt((LocalDateTime) null));
+            .set(PROCESSING_STATE.PROCESSED_UP_TO, (Instant) null)
+            .where(PROCESSING_STATE.PROCESSED_UP_TO.lt((Instant) null));
 
     public AttendanceProcessor(DatabaseProvider dbProvider, AttendanceMatcher attendanceMatcher) {
         this.db = dbProvider.bySchema(CORE, ATTENDANCE);
@@ -113,7 +111,7 @@ public class AttendanceProcessor implements DetectionMatchMqConsumer {
                 var stateBatch = sql.batch(insertProcessingStateQuery);
                 for (var entry : newProcessingStates.entrySet()) {
                     var antenna = entry.getKey();
-                    var processedUpTo = utcLocalFromInstant(entry.getValue());
+                    var processedUpTo = entry.getValue();
                     stateBatch.bind(antenna.clientId, antenna.readerSn, antenna.portNumber,
                             processedUpTo, processedUpTo, processedUpTo);
                 }
