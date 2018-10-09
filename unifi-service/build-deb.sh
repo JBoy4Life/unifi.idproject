@@ -16,9 +16,8 @@ function usage {
   exit 1
 }
 
-if [ -z "$1" ]; then
+if [ $# -ne 3 ]; then
  usage
-
 else 
   case "$1" in
     unifi-core )
@@ -38,16 +37,6 @@ else
       usage
       ;; 
   esac
-
-  if [ -z "$2" ]; then
-    echo -en "\nMissing Version\n"
-    usage
-  fi
-
-  if [ ! -f "$3" ]; then
-    echo -en "\nInvalid file\n"
-    usage
-  fi
 fi
 
 application=$1
