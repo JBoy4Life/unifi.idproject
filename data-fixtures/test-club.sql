@@ -13,6 +13,10 @@ COPY client (client_id, display_name) FROM stdin;
 test-club	Test Club
 \.
 
+COPY client_config (client_id, live_view_enabled) FROM stdin;
+test-club	true
+\.
+
 
 COPY site (client_id, site_id, description, address) FROM stdin;
 test-club	test-site	Test Site	4 Privet Drive, Little Whingeing, Surrey
